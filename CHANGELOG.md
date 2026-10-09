@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.5.0](#v850)
   - [v8.4.0](#v840)
     - [Reduced Route Component Re-renders](#reduced-route-component-re-renders)
     - [More Efficient Route Matching (unstable)](#more-efficient-route-matching-unstable)
@@ -114,6 +115,52 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.5.0
+
+Date: 2026-10-09
+
+### Minor Changes
+
+- `react-router` - Deprecate React Router's view transition APIs in favor of React's `<ViewTransition>` component, available in React 19.3 and later ([#15493](https://github.com/remix-run/react-router/pull/15493))
+
+  This includes the `viewTransition` props/options, `useViewTransitionState`, and `NavLink`'s `isTransitioning` render prop and `transitioning` class. Existing behavior is unchanged. See the [migration guide](https://reactrouter.com/how-to/view-transitions) for a navigation example and compatibility considerations.
+
+### Patch Changes
+
+- `react-router` - Declare `@types/react` and `@types/react-dom` as optional peer dependencies so the shipped type definitions resolve React types under strict (non-hoisted) node_modules layouts ([#15528](https://github.com/remix-run/react-router/pull/15528))
+- `react-router` - Fix the `unstable_useRouterState` documentation example to call the imported alias. ([#15535](https://github.com/remix-run/react-router/pull/15535))
+- `react-router` - Fix `matchPath` not treating a static segment as optional when it contains characters outside `[\w-]` ([#15425](https://github.com/remix-run/react-router/pull/15425))
+- `@react-router/dev` - Fix critical CSS collection in dev registering server-only route imports as client dependencies, which triggered dependency re-optimization and full page reloads ([#15595](https://github.com/remix-run/react-router/pull/15595))
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `react-router` - Add a new `<HydratedRouter unstable_fetch>` prop which allows applicatons to provide a custom fetch implementation for client-side issued manifest and data requests ([#15586](https://github.com/remix-run/react-router/pull/15586))
+  - The function receives the intended request as well as context identifying the type of request
+  - Data request context includes `navigationType` (`"PUSH"`, `"REPLACE"`, or `"POP"` for navigation-initiated requests, including reloaded fetchers; `null` otherwise). Data strategies receive the same value as `unstable_navigationType`.
+  - The custom fetch context is a discriminated union, so narrowing `type` to `"navigation"` guarantees a non-null `navigationType`, while other data requests have a `null` `navigationType`. Fetchers reloaded after an initialization redirect retain the `"initialization"` type and include their fetcher key.
+  - Like other router initialization options, the implementation is captured when the singleton router is created and thus subsequent prop changes are ignored
+  - Browser-managed data prefetches from `<Link prefetch>` use native `<link rel="prefetch">` elements and do not call the custom implementation
+  - Intended use cases include custom fetch options, custom headers, automatic retry logic, response header inspection, etc.
+  - This is not intended to alter response bodies because they are turbo-stream encoded and that would beak the types expected by your component code
+- `react-router` - Support API-only Framework Mode with runtime server data loading, actions, revalidation, and lazy route discovery ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Hydrate prerendered pages from build-time data and fetch server loader data when hydrating a SPA fallback
+  - Preserve normal loader revalidation and server-action support for eagerly loaded and lazily discovered routes, and honor loader opt-outs when making server data requests
+- `@react-router/dev` - Add `ssr: "unstable_api-only"` to retain a runtime server for loaders, actions, and route discovery while disabling production document rendering ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Generate a root-only SPA shell when prerendering is disabled
+  - Support prerendered pages and data files alongside runtime loaders and actions, with a SPA fallback for non-prerendered paths
+  - Default API-only builds to lazy route discovery
+  - Reject API-only configuration in RSC Framework Mode
+  - Preserve server-only route exports in additional Vite server environments in both API-only and SSR modes
+  - Serve prerendered pages and the SPA fallback in Vite preview while retaining live data requests and route discovery
+- `@react-router/dev` - Fix source maps for route modules in unstable RSC Framework Mode ([#15479](https://github.com/remix-run/react-router/pull/15479))
+- `@react-router/dev` - Add `unstable_apiServerOrigin` to configure the origin for API-only loader, action, and route discovery requests ([#15601](https://github.com/remix-run/react-router/pull/15601))
+- `@react-router/serve` - Support API-only builds in `react-router-serve` by serving client documents and forwarding data and route discovery requests to the React Router runtime ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Serve prerendered documents when available and use the generated SPA fallback for non-prerendered paths
+
+**Full Changelog**: [`v8.4.0...v8.5.0`](https://github.com/remix-run/react-router/compare/react-router@8.4.0...react-router@8.5.0)
 
 ## v8.4.0
 

@@ -1,5 +1,21 @@
 # `@react-router/serve`
 
+## v8.5.0
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Support API-only builds in `react-router-serve` by serving client documents and forwarding data and route discovery requests to the React Router runtime ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Serve prerendered documents when available and use the generated SPA fallback for non-prerendered paths
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/express@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+
 ## v8.4.0
 
 ### Patch Changes
