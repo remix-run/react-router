@@ -355,10 +355,8 @@ export type ResolvedReactRouterConfig = Readonly<{
    * `index.html` file with your assets so your application can be deployed as a
    * SPA without server-rendering. Default's to `true`.
    *
-   * The special value 'unstable_api-only' will disable SSR, but with the
-   * following changes:
-   * - Does NOT delete the server build
-   * - Does NOT error when encountering a `loader` or `action`
+   * The special value 'unstable_api-only' will disable runtime server side 
+   * rendering of documents, but allows loader/action API responses.
    */
   ssr: boolean | "unstable_api-only";
   /**
