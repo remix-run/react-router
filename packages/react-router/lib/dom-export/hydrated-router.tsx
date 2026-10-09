@@ -27,6 +27,7 @@ import {
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
 import type { ClientInstrumentation } from "../router/instrumentation";
+import type { RouterFetch } from "../dom/ssr/single-fetch";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
@@ -44,6 +45,7 @@ type SSRInfo = {
 
 let ssrInfo: SSRInfo | null = null;
 let router: DataRouter | null = null;
+let fetchImplementation: RouterFetch = (request) => window.fetch(request);
 
 function initSsrInfo(): void {
   if (
@@ -79,9 +81,11 @@ function initSsrInfo(): void {
 function createHydratedRouter({
   getContext,
   instrumentations,
+  fetch: fetchImplementation,
 }: {
   getContext?: RouterInit["getContext"];
   instrumentations?: ClientInstrumentation[];
+  fetch: RouterFetch;
 }): DataRouter {
   initSsrInfo();
 
@@ -192,6 +196,7 @@ function createHydratedRouter({
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssr,
+      fetchImplementation,
       ssrInfo.context.unstable_apiOnly === true,
       ssrInfo.context.unstable_apiServerOrigin,
     ),
@@ -203,6 +208,7 @@ function createHydratedRouter({
       ssrInfo.context.routeDiscovery,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename,
+      fetchImplementation,
       ssrInfo.context.unstable_apiServerOrigin,
       ssrInfo.context.unstable_apiOnly === true,
     ),
@@ -329,6 +335,32 @@ export interface HydratedRouterProps {
    * For more information, please see the [docs](../../explanation/react-transitions).
    */
   useTransitions?: boolean;
+  /**
+   * <docs-warning>This prop is experimental and subject to breaking
+   * changes.</docs-warning>
+   *
+   * Provide a custom implementation for `fetch`, which will be used to perform
+   * JavaScript-issued manifest and data requests. The context identifies the
+   * operation that initiated each request. Defaults to `window.fetch`.
+   *
+   * This prop is read when the singleton router is created. Changing it after
+   * router initialization has no effect. To use changing values such as auth
+   * tokens, read current application state inside the function rather than
+   * capturing values from a component render.
+   *
+   * See the [Custom Fetch guide](../../how-to/custom-fetch) for examples of
+   * authentication headers, cross-origin credentials, traversal caching, and
+   * retries.
+   *
+   * <docs-info>
+   * Browser-managed data prefetches from {@link Link}, {@link NavLink}, or
+   * {@link PrefetchPageLinks} use native `<link rel="prefetch">` elements
+   * and do not call this function. If your data requests require custom headers
+   * or other request transformations, use `prefetch="none"` on links and avoid
+   * rendering {@link PrefetchPageLinks}.
+   * </docs-info>
+   */
+  unstable_fetch?: RouterFetch;
 }
 
 /**
@@ -341,6 +373,7 @@ export interface HydratedRouterProps {
  * @param props Props
  * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
  * @param {dom.HydratedRouterProps.onError} props.onError n/a
+ * @param {dom.HydratedRouterProps.unstable_fetch} props.unstable_fetch n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
@@ -348,7 +381,11 @@ export function HydratedRouter(props: HydratedRouterProps) {
     router = createHydratedRouter({
       getContext: props.getContext,
       instrumentations: props.instrumentations,
+      fetch: props.unstable_fetch ?? fetchImplementation,
     });
+    if (props.unstable_fetch) {
+      fetchImplementation = props.unstable_fetch;
+    }
   }
 
   // We only want to show critical CSS in dev for the initial server render to
@@ -412,6 +449,7 @@ export function HydratedRouter(props: HydratedRouterProps) {
     ssr,
     ssrInfo.context.routeDiscovery,
     ssrInfo.context.isSpaMode,
+    fetchImplementation,
     ssrInfo.context.unstable_apiServerOrigin,
     ssrInfo.context.unstable_apiOnly === true,
   );

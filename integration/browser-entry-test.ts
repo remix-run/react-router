@@ -131,6 +131,625 @@ test("allows users to pass a client side context to HydratedRouter", async ({
   appFixture.close();
 });
 
+test("allows a custom fetch implementation to read current application state", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "react-router.config.ts": js`
+        export default {
+          routeDiscovery: { mode: "lazy" },
+        };
+      `,
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition, StrictMode } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        let header = "initial";
+        window.__updateFetchHeader = () => {
+          header = "updated";
+        };
+
+        startTransition(() => {
+          hydrateRoot(
+            document,
+            <StrictMode>
+              <HydratedRouter
+                unstable_fetch={(request, context) => {
+                  window.__customFetches ??= [];
+                  window.__customFetches.push({
+                    pathname: new URL(request.url).pathname,
+                    context,
+                  });
+                  request.headers.set("X-Custom-Fetch", header);
+                  return window.fetch(request);
+                }}
+              />
+            </StrictMode>
+          );
+        });
+      `,
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+
+        export default function Index() {
+          return <Link to="/page" discover="none">Go to Page</Link>;
+        }
+      `,
+      "app/routes/page.tsx": js`
+        export function loader({ request }) {
+          return request.headers.get("X-Custom-Fetch");
+        }
+
+        export default function Page({ loaderData }) {
+          return <h1 data-custom-fetch>{loaderData}</h1>;
+        }
+      `,
+    },
+  });
+
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  await app.goto("/", true);
+  await page.evaluate(() => (window as any).__updateFetchHeader());
+  await page.click('a[href="/page"]');
+  await page.waitForSelector("[data-custom-fetch]");
+
+  await expect(page.locator("[data-custom-fetch]")).toHaveText("updated");
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual([
+    {
+      pathname: "/__manifest",
+      context: { type: "manifest" },
+    },
+    {
+      pathname: "/page.data",
+      context: { type: "navigation", fetcherKey: null, navigationType: "PUSH" },
+    },
+  ]);
+
+  appFixture.close();
+});
+
+test("composes custom fetch with API-only mode and a configured server origin", async ({
+  page,
+}) => {
+  let apiOrigin = "https://api.example.com";
+  let fixture = await createFixture({
+    files: {
+      "react-router.config.ts": js`
+        export default {
+          ssr: "unstable_api-only",
+          unstable_apiServerOrigin: "${apiOrigin}",
+          routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+        };
+      `,
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        startTransition(() => {
+          hydrateRoot(document, <HydratedRouter unstable_fetch={async (request, context) => {
+            let url = new URL(request.url);
+            window.__customFetches ??= [];
+            window.__customFetches.push({
+              origin: url.origin,
+              pathname: url.pathname,
+              method: request.method,
+              context,
+            });
+            request.headers.set("X-Custom-Fetch", "custom");
+            // Chromium requires HTTP/2 for streaming uploads, so materialize
+            // the test body before forwarding to the HTTP/1 fixture server.
+            return window.fetch(
+              window.location.origin + url.pathname + url.search,
+              {
+                method: request.method,
+                headers: request.headers,
+                signal: request.signal,
+                body: request.body ? await request.arrayBuffer() : undefined,
+              },
+            );
+          }} />);
+        });
+      `,
+      "app/root.tsx": js`
+        import { Outlet, Scripts } from "react-router";
+
+        export function Layout({ children }) {
+          return <html><head /><body>{children}<Scripts /></body></html>;
+        }
+
+        export function HydrateFallback() {
+          return <p>Loading...</p>;
+        }
+
+        export default function Root() {
+          return <Outlet />;
+        }
+      `,
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+
+        export function loader({ request }) {
+          return request.headers.get("X-Custom-Fetch");
+        }
+
+        export default function Index({ loaderData }) {
+          return <>
+            <p data-initial>{loaderData}</p>
+            <Link to="/page" discover="none">Page</Link>
+          </>;
+        }
+      `,
+      "app/routes/page.tsx": js`
+        import { Form } from "react-router";
+
+        export function loader({ request }) {
+          return request.headers.get("X-Custom-Fetch");
+        }
+
+        export function action({ request }) {
+          return request.headers.get("X-Custom-Fetch");
+        }
+
+        export default function Page({ loaderData, actionData }) {
+          return <>
+            <p data-loader>{loaderData}</p>
+            <p data-action>{actionData}</p>
+            <Form method="post"><button>Submit</button></Form>
+          </>;
+        }
+      `,
+    },
+  });
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  try {
+    await app.goto("/", true);
+    await expect(page.locator("[data-initial]")).toHaveText("custom");
+    await app.clickLink("/page");
+    await expect(page.locator("[data-loader]")).toHaveText("custom");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.locator("[data-action]")).toHaveText("custom");
+
+    let requests = await page.evaluate(() => (window as any).__customFetches);
+    expect(
+      requests.map((request: { origin: string }) => request.origin),
+    ).toEqual(requests.map(() => apiOrigin));
+    expect(requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          context: {
+            type: "initialization",
+            fetcherKey: null,
+            navigationType: null,
+          },
+        }),
+        expect.objectContaining({
+          pathname: "/__manifest",
+          context: { type: "manifest" },
+        }),
+        expect.objectContaining({
+          pathname: "/page.data",
+          method: "GET",
+          context: {
+            type: "navigation",
+            fetcherKey: null,
+            navigationType: "PUSH",
+          },
+        }),
+        expect.objectContaining({
+          pathname: "/page.data",
+          method: "POST",
+          context: {
+            type: "navigation",
+            fetcherKey: null,
+            navigationType: "REPLACE",
+          },
+        }),
+      ]),
+    );
+  } finally {
+    await appFixture.close();
+  }
+});
+
+test("preserves custom fetch context for fetcher reloads after an initialization redirect", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "react-router.config.ts": js`
+        export default {
+          ssr: "unstable_api-only",
+          routeDiscovery: { mode: "initial" },
+        };
+      `,
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        window.__initialization = new Promise((resolve) => {
+          window.__finishInitialization = resolve;
+        });
+        window.__customFetches = [];
+
+        startTransition(() => {
+          hydrateRoot(document, <HydratedRouter unstable_fetch={(request, context) => {
+            window.__customFetches.push({
+              pathname: new URL(request.url).pathname,
+              context,
+            });
+            return window.fetch(request);
+          }} />);
+        });
+      `,
+      "app/root.tsx": js`
+        import { Outlet, Scripts, useFetcher } from "react-router";
+
+        export function Layout({ children }) {
+          let fetcher = useFetcher({ key: "tracked" });
+          return <html><head /><body>
+            <p data-fetcher>{fetcher.data ?? "empty"}</p>
+            {children}
+            <Scripts />
+          </body></html>;
+        }
+
+        export function HydrateFallback() {
+          let fetcher = useFetcher({ key: "tracked" });
+          return <>
+            <button onClick={() => fetcher.load("/resource")}>Load fetcher</button>
+            <button onClick={() => window.__finishInitialization()}>Finish initialization</button>
+          </>;
+        }
+
+        export default function Root() {
+          return <Outlet />;
+        }
+      `,
+      "app/routes/_index.tsx": js`
+        import { redirect } from "react-router";
+
+        export async function clientLoader() {
+          await window.__initialization;
+          throw redirect("/target");
+        }
+
+        clientLoader.hydrate = true;
+
+        export default function Index() {
+          return null;
+        }
+      `,
+      "app/routes/target.tsx": js`
+        export function loader() {
+          return "TARGET";
+        }
+
+        export default function Target({ loaderData }) {
+          return <h1>{loaderData}</h1>;
+        }
+      `,
+      "app/routes/resource.tsx": js`
+        let count = 0;
+
+        export function loader() {
+          return ++count;
+        }
+
+        export function shouldRevalidate() {
+          return true;
+        }
+
+        export default function Resource() {
+          return null;
+        }
+      `,
+    },
+  });
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  try {
+    await app.goto("/", true);
+    await page.getByRole("button", { name: "Load fetcher" }).click();
+    await expect(page.locator("[data-fetcher]")).toHaveText("1");
+
+    await page.getByRole("button", { name: "Finish initialization" }).click();
+    await expect(page.getByRole("heading", { name: "TARGET" })).toBeVisible();
+    await expect(page.locator("[data-fetcher]")).toHaveText("2");
+
+    let requests = await page.evaluate(() => (window as any).__customFetches);
+    expect(requests).toHaveLength(3);
+    expect(requests).toEqual(
+      expect.arrayContaining([
+        {
+          pathname: "/resource.data",
+          context: {
+            type: "fetcher",
+            fetcherKey: "tracked",
+            navigationType: null,
+          },
+        },
+        {
+          pathname: "/target.data",
+          context: {
+            type: "initialization",
+            fetcherKey: null,
+            navigationType: null,
+          },
+        },
+        {
+          pathname: "/resource.data",
+          context: {
+            type: "initialization",
+            fetcherKey: "tracked",
+            navigationType: null,
+          },
+        },
+      ]),
+    );
+  } finally {
+    await appFixture.close();
+  }
+});
+
+test("identifies initiating operations and fetcher targets", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition, StrictMode } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        startTransition(() => {
+          hydrateRoot(
+            document,
+            <StrictMode>
+              <HydratedRouter
+                unstable_fetch={(request, context) => {
+                  window.__customFetches ??= [];
+                  window.__customFetches.push({
+                    pathname: new URL(request.url).pathname,
+                    method: request.method,
+                    context,
+                  });
+                  return window.fetch(request);
+                }}
+              />
+            </StrictMode>
+          );
+        });
+      `,
+      "app/root.tsx": js`
+        import {
+          Form,
+          Links,
+          Meta,
+          Outlet,
+          Scripts,
+          ScrollRestoration,
+          useFetcher,
+          useNavigate,
+          useRevalidator,
+        } from "react-router";
+
+        export function Layout({ children }) {
+          return (
+            <html>
+              <head>
+                <Meta />
+                <Links />
+              </head>
+              <body>
+                {children}
+                <ScrollRestoration />
+                <Scripts />
+              </body>
+            </html>
+          );
+        }
+
+        export default function App() {
+          let fetcher = useFetcher({ key: "tracked" });
+          let navigate = useNavigate();
+          let revalidator = useRevalidator();
+          return (
+            <>
+              <button id="load-fetcher" onClick={() => fetcher.load("/resource")}>
+                Load fetcher
+              </button>
+              <button id="revalidate" onClick={() => revalidator.revalidate()}>
+                Revalidate
+              </button>
+              <p id="fetcher-data">{fetcher.data ?? "empty"}</p>
+              <Form method="post" action="/next">
+                <button id="navigate" type="submit">Navigate</button>
+              </Form>
+              <button id="replace" onClick={() => navigate("/next?replace", { replace: true })}>
+                Replace
+              </button>
+              <button id="back" onClick={() => navigate(-1)}>Back</button>
+              <Outlet />
+            </>
+          );
+        }
+      `,
+      "app/routes/_index.tsx": js`
+        export async function loader() {
+          return null;
+        }
+
+        export default function Index() {
+          return <h1>Index</h1>;
+        }
+      `,
+      "app/routes/next.tsx": js`
+        export async function action() {
+          return null;
+        }
+
+        export async function loader() {
+          return null;
+        }
+
+        export default function Next() {
+          return <h1 id="next">Next</h1>;
+        }
+      `,
+      "app/routes/resource.tsx": js`
+        let count = 0;
+
+        export function shouldRevalidate() {
+          return true;
+        }
+
+        export async function loader() {
+          return ++count;
+        }
+      `,
+    },
+  });
+
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  await app.goto("/", true);
+  await page.click("#load-fetcher");
+  await expect(page.locator("#fetcher-data")).toHaveText("1");
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual(
+    expect.arrayContaining([
+      {
+        pathname: "/resource.data",
+        method: "GET",
+        context: {
+          type: "fetcher",
+          fetcherKey: "tracked",
+          navigationType: null,
+        },
+      },
+    ]),
+  );
+
+  await page.evaluate(() => ((window as any).__customFetches = []));
+  await page.click("#navigate");
+  await page.waitForSelector("#next");
+  await expect(page.locator("#fetcher-data")).toHaveText("2");
+
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual(
+    expect.arrayContaining([
+      {
+        pathname: "/next.data",
+        method: "POST",
+        context: {
+          type: "navigation",
+          fetcherKey: null,
+          navigationType: "PUSH",
+        },
+      },
+      {
+        pathname: "/resource.data",
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: "tracked",
+          navigationType: "PUSH",
+        },
+      },
+    ]),
+  );
+
+  await page.evaluate(() => ((window as any).__customFetches = []));
+  await page.click("#revalidate");
+  await expect(page.locator("#fetcher-data")).toHaveText("3");
+
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual(
+    expect.arrayContaining([
+      {
+        pathname: "/next.data",
+        method: "GET",
+        context: {
+          type: "revalidation",
+          fetcherKey: null,
+          navigationType: null,
+        },
+      },
+      {
+        pathname: "/resource.data",
+        method: "GET",
+        context: {
+          type: "revalidation",
+          fetcherKey: "tracked",
+          navigationType: null,
+        },
+      },
+    ]),
+  );
+
+  await page.evaluate(() => ((window as any).__customFetches = []));
+  await page.click("#replace");
+  await expect(page).toHaveURL(/\/next\?replace$/);
+  await expect(page.locator("#fetcher-data")).toHaveText("4");
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual(
+    expect.arrayContaining([
+      {
+        pathname: "/next.data",
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: null,
+          navigationType: "REPLACE",
+        },
+      },
+      {
+        pathname: "/resource.data",
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: "tracked",
+          navigationType: "REPLACE",
+        },
+      },
+    ]),
+  );
+
+  await page.evaluate(() => ((window as any).__customFetches = []));
+  await page.click("#back");
+  await expect(page.getByRole("heading", { name: "Index" })).toBeVisible();
+  await expect(page.locator("#fetcher-data")).toHaveText("5");
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: null,
+          navigationType: "POP",
+        },
+      }),
+      {
+        pathname: "/resource.data",
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: "tracked",
+          navigationType: "POP",
+        },
+      },
+    ]),
+  );
+
+  appFixture.close();
+});
+
 test("allows users to pass an onError function to HydratedRouter", async ({
   page,
   browserName,

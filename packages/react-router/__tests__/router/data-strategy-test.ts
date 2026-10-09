@@ -1,9 +1,12 @@
 import type {
   DataStrategyFunction,
+  DataStrategyInitiator,
   DataStrategyMatch,
   DataStrategyResult,
 } from "../../lib/router/utils";
 import { getSingleFetchDataStrategyImpl } from "../../lib/dom/ssr/single-fetch";
+import { createStaticHandler } from "../../lib/router/router";
+import { redirect } from "../../lib/router/utils";
 import {
   createDeferred,
   createAsyncStub,
@@ -1850,5 +1853,346 @@ describe("router dataStrategy", () => {
         },
       });
     });
+  });
+
+  describe("unstable_initiator", () => {
+    it.each(["navigation", "fetcher"] as const)(
+      "preserves the %s initiator from an action through loader and fetcher reloads",
+      async (initiator) => {
+        let calls: Array<{
+          method: string;
+          initiator: DataStrategyInitiator;
+          fetcherKey: string | null;
+          navigationType: string | null;
+        }> = [];
+        let t = setup({
+          routes: [
+            { id: "root", path: "/", loader: true, action: true },
+            { id: "resource", path: "/resource", loader: true },
+          ],
+          hydrationData: { loaderData: { root: "ROOT" } },
+          dataStrategy({
+            request,
+            matches,
+            unstable_initiator: initiator,
+            fetcherKey,
+            unstable_navigationType: navigationType,
+          }) {
+            calls.push({
+              method: request.method,
+              initiator,
+              fetcherKey,
+              navigationType,
+            });
+            return Promise.resolve(
+              Object.fromEntries(
+                matches
+                  .filter((match) => match.shouldCallHandler())
+                  .map((match) => [
+                    match.route.id,
+                    { type: "data" as const, result: match.route.id },
+                  ]),
+              ),
+            );
+          },
+        });
+
+        t.router.getFetcher("tracked");
+        await t.router.fetch("tracked", "root", "/resource");
+        calls = [];
+
+        let submission = {
+          formMethod: "post" as const,
+          formData: createFormData({}),
+        };
+        if (initiator === "navigation") {
+          await t.router.navigate("/", { ...submission, replace: true });
+        } else {
+          await t.router.fetch("submitter", "root", "/", submission);
+        }
+
+        expect(calls).toEqual([
+          {
+            method: "POST",
+            initiator,
+            fetcherKey: initiator === "fetcher" ? "submitter" : null,
+            navigationType: initiator === "navigation" ? "REPLACE" : null,
+          },
+          {
+            method: "GET",
+            initiator,
+            fetcherKey: null,
+            navigationType: initiator === "navigation" ? "REPLACE" : null,
+          },
+          {
+            method: "GET",
+            initiator,
+            fetcherKey: "tracked",
+            navigationType: initiator === "navigation" ? "REPLACE" : null,
+          },
+        ]);
+        expect(t.router.state.loaderData).toEqual({ root: "root" });
+        expect(t.fetchers.tracked.data).toBe("resource");
+      },
+    );
+
+    it.each([
+      ["initialization", "GET"],
+      ["navigation", "GET"],
+      ["navigation", "POST"],
+      ["fetcher", "GET"],
+      ["fetcher", "POST"],
+      ["revalidation", "GET"],
+    ] as const)(
+      "preserves the %s initiator through a %s redirect",
+      async (initiator, method) => {
+        let calls: Array<{
+          pathname: string;
+          method: string;
+          initiator: DataStrategyInitiator;
+          fetcherKey: string | null;
+        }> = [];
+        let t = setup({
+          routes: [
+            { id: "redirect", path: "/redirect", loader: true, action: true },
+            { id: "target", path: "/target", loader: true },
+          ],
+          initialEntries: [
+            initiator === "initialization" || initiator === "revalidation"
+              ? "/redirect"
+              : "/target",
+          ],
+          hydrationData:
+            initiator === "initialization"
+              ? undefined
+              : { loaderData: { redirect: "REDIRECT", target: "TARGET" } },
+          dataStrategy({
+            request,
+            matches,
+            unstable_initiator: initiator,
+            fetcherKey,
+          }) {
+            let pathname = new URL(request.url).pathname;
+            calls.push({
+              pathname,
+              method: request.method,
+              initiator,
+              fetcherKey,
+            });
+            return Promise.resolve(
+              Object.fromEntries(
+                matches
+                  .filter((match) => match.shouldCallHandler())
+                  .map((match) => [
+                    match.route.id,
+                    {
+                      type: "data" as const,
+                      result:
+                        pathname === "/redirect"
+                          ? redirect("/target")
+                          : "TARGET",
+                    },
+                  ]),
+              ),
+            );
+          },
+        });
+
+        let submission =
+          method === "POST"
+            ? { formMethod: "post" as const, formData: createFormData({}) }
+            : undefined;
+        if (initiator === "initialization") {
+          await tick();
+        } else if (initiator === "navigation") {
+          await t.router.navigate("/redirect", submission);
+        } else if (initiator === "fetcher") {
+          await t.router.fetch("key", "target", "/redirect", submission);
+        } else {
+          await t.router.revalidate();
+        }
+
+        expect(calls).toEqual([
+          {
+            pathname: "/redirect",
+            method,
+            initiator,
+            fetcherKey: initiator === "fetcher" ? "key" : null,
+          },
+          { pathname: "/target", method: "GET", initiator, fetcherKey: null },
+        ]);
+        expect(t.router.state.location.pathname).toBe("/target");
+        expect(t.router.state.loaderData).toEqual({ target: "TARGET" });
+      },
+    );
+
+    it("identifies client-side data strategy initiators", async () => {
+      let calls: Array<{
+        initiator: DataStrategyInitiator;
+        fetcherKey: string | null;
+        navigationType: string | null;
+      }> = [];
+      let t = setup({
+        routes: [
+          { id: "root", path: "/", loader: true },
+          { id: "page", path: "/page", loader: true },
+        ],
+        dataStrategy({
+          matches,
+          unstable_initiator: initiator,
+          fetcherKey,
+          unstable_navigationType: navigationType,
+        }) {
+          calls.push({ initiator, fetcherKey, navigationType });
+          return Promise.resolve(
+            Object.fromEntries(
+              matches
+                .filter((match) => match.shouldCallHandler())
+                .map((match) => [
+                  match.route.id,
+                  { type: "data" as const, result: match.route.id },
+                ]),
+            ),
+          );
+        },
+      });
+
+      await tick();
+      expect(calls).toEqual([
+        { initiator: "initialization", fetcherKey: null, navigationType: null },
+      ]);
+
+      calls = [];
+      await t.router.navigate("/page");
+      expect(calls).toEqual([
+        { initiator: "navigation", fetcherKey: null, navigationType: "PUSH" },
+      ]);
+
+      calls = [];
+      await t.router.fetch("key", "page", "/page");
+      expect(calls).toEqual([
+        { initiator: "fetcher", fetcherKey: "key", navigationType: null },
+      ]);
+
+      calls = [];
+      await t.router.revalidate();
+      expect(calls).toEqual(
+        expect.arrayContaining([
+          { initiator: "revalidation", fetcherKey: null, navigationType: null },
+          {
+            initiator: "revalidation",
+            fetcherKey: "key",
+            navigationType: null,
+          },
+        ]),
+      );
+    });
+
+    it("identifies static handler data strategy calls", async () => {
+      let dataStrategy = mockDataStrategy(
+        async ({ matches, unstable_initiator }) => {
+          let results = await Promise.all(
+            matches.map((match) => match.resolve()),
+          );
+          return keyedResults(matches, results);
+        },
+      );
+      let { query } = createStaticHandler([
+        { id: "root", path: "/", loader: () => "ROOT" },
+      ]);
+
+      await query(new Request("https://example.com/"), { dataStrategy });
+
+      expect(dataStrategy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          unstable_initiator: "static",
+          unstable_navigationType: null,
+          fetcherKey: null,
+        }),
+      );
+    });
+  });
+
+  describe("unstable_navigationType", () => {
+    it.each(["PUSH", "REPLACE", "POP"] as const)(
+      "passes %s to navigation loaders, middleware, and reloaded fetchers",
+      async (navigationType) => {
+        let middleware = jest.fn();
+        let calls: Array<{
+          fetcherKey: string | null;
+          navigationType: string | null;
+        }> = [];
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              loader: true,
+              children: [
+                { id: "index", index: true },
+                {
+                  id: "page",
+                  path: "page",
+                  loader: true,
+                  middleware: [middleware],
+                },
+                {
+                  id: "resource",
+                  path: "resource",
+                  loader: true,
+                  shouldRevalidate: () => true,
+                },
+              ],
+            },
+          ],
+          initialEntries: ["/", "/page"],
+          initialIndex: 0,
+          hydrationData: { loaderData: { root: "ROOT" } },
+          dataStrategy: (args) =>
+            args.runClientMiddleware(
+              async ({ matches, fetcherKey, unstable_navigationType }) => {
+                calls.push({
+                  fetcherKey,
+                  navigationType: unstable_navigationType,
+                });
+                return Object.fromEntries(
+                  matches
+                    .filter((m) => m.shouldCallHandler())
+                    .map((m) => [
+                      m.route.id,
+                      { type: "data", result: m.route.id },
+                    ]),
+                );
+              },
+            ),
+        });
+
+        t.router.getFetcher("tracked");
+        await t.router.fetch("tracked", "root", "/resource");
+        calls = [];
+
+        if (navigationType === "POP") {
+          await t.router.navigate(1);
+          await tick();
+        } else {
+          await t.router.navigate("/page", {
+            replace: navigationType === "REPLACE",
+          });
+        }
+
+        expect(calls).toHaveLength(2);
+        expect(calls).toEqual(
+          expect.arrayContaining([
+            { fetcherKey: null, navigationType },
+            { fetcherKey: "tracked", navigationType },
+          ]),
+        );
+        expect(middleware).toHaveBeenCalledWith(
+          expect.objectContaining({ unstable_navigationType: navigationType }),
+          expect.any(Function),
+        );
+        expect(t.router.state.location.pathname).toBe("/page");
+      },
+    );
   });
 });

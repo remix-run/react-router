@@ -23,7 +23,9 @@ A custom `dataStrategy` receives the `loader`/`action` arguments (`request`, `pa
 
 - `matches`: An array of `DataStrategyMatch` instances for the routes matched by the current `request`
 - `runClientMiddleware`: A helper function to run the middleware for the matched routes
-- `fetcherKey`: The fetcher key if this is for a fetcher request and not a navigation
+- `fetcherKey`: The key of the fetcher targeted by this execution, or `null` for route loader/action executions. Fetchers reloaded by a navigation or explicit revalidation also provide their key.
+- `unstable_initiator`: The operation that initiated this execution (see [Request Metadata](#request-metadata-unstable))
+- `unstable_navigationType`: The history action for a navigation-initiated execution, or `null` for other executions
 
 A `DataStrategyMatch` is a normal route match plus a few additional fields:
 
@@ -76,6 +78,26 @@ interface DataStrategyResult {
   result: unknown; // data, Error, Response, data()
 }
 ```
+
+### Request Metadata (unstable)
+
+<docs-warning>`unstable_initiator` and `unstable_navigationType` are experimental and may change in minor or patch releases.</docs-warning>
+
+`unstable_initiator` identifies why the data strategy is running:
+
+- `"initialization"`: Initial router data loading
+- `"navigation"`: A navigation, including action submissions and subsequent loader revalidation
+- `"fetcher"`: A fetcher operation, including loader revalidation after a fetcher action
+- `"revalidation"`: Explicit revalidation, such as `useRevalidator().revalidate()`
+- `"static"`: Execution by `createStaticHandler` on the server
+
+Requests that reload fetchers during a navigation or explicit revalidation retain that initiator while providing the targeted `fetcherKey`. Don't use `fetcherKey` alone to determine what initiated the execution.
+
+`unstable_navigationType` is `"PUSH"`, `"REPLACE"`, or `"POP"` for navigation-initiated executions, including fetchers reloaded by that navigation. It is `null` for initialization, standalone fetcher operations, explicit revalidation, and static handler executions. It describes the in-flight navigation rather than the previously committed location.
+
+You can use this metadata to choose a loading or caching policy. For example, a Data Mode `dataStrategy` can distinguish back/forward navigations with `unstable_initiator === "navigation" && unstable_navigationType === "POP"`. Your strategy remains responsible for executing the appropriate handlers and returning their results.
+
+Framework Mode exposes equivalent request metadata through [`unstable_fetch`](./custom-fetch#request-context), which customizes server requests without replacing loader/action execution.
 
 ### Calling Route Middleware
 
