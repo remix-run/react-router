@@ -537,12 +537,14 @@ export interface DataStrategyFunctionArgs<
   ) => Promise<Record<string, DataStrategyResult>>;
   /**
    * The operation that initiated this data strategy execution
+   *
+   * This field is experimental and subject to breaking changes.
    */
-  initiator: DataStrategyInitiator;
+  unstable_initiator: DataStrategyInitiator;
   /**
    * The key of the fetcher targeted by this data strategy execution, otherwise
    * `null`. Fetchers reloaded during a navigation or revalidation retain that
-   * `initiator` while providing their key here.
+   * `unstable_initiator` while providing their key here.
    */
   fetcherKey: string | null;
 }

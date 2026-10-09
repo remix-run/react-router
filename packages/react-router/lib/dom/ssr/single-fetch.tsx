@@ -610,11 +610,11 @@ function fetchAndDecodeViaTurboStream(
     }
     let req = new Request(url, await createRequestInit(request));
     invariant(
-      args.initiator !== "static",
+      args.unstable_initiator !== "static",
       "Static data strategy initiator used for a client data request",
     );
     let res = await fetchImplementation(req, {
-      type: args.initiator,
+      type: args.unstable_initiator,
       fetcherKey: args.fetcherKey,
     });
 

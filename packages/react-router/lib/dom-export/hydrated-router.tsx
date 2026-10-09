@@ -326,6 +326,9 @@ export interface HydratedRouterProps {
    */
   useTransitions?: boolean;
   /**
+   * <docs-warning>This prop is experimental and subject to breaking
+   * changes.</docs-warning>
+   *
    * Provide a custom implementation for `fetch`, which will be used to perform
    * JavaScript-issued manifest and data requests. The context identifies the
    * operation that initiated each request. Defaults to `window.fetch`.
@@ -341,7 +344,7 @@ export interface HydratedRouterProps {
    * tokens, read current application state inside the function rather than
    * capturing values from a component render.
    */
-  fetch?: RouterFetch;
+  unstable_fetch?: RouterFetch;
 }
 
 /**
@@ -354,7 +357,7 @@ export interface HydratedRouterProps {
  * @param props Props
  * @param {dom.HydratedRouterProps.getContext} props.getContext n/a
  * @param {dom.HydratedRouterProps.onError} props.onError n/a
- * @param {dom.HydratedRouterProps.fetch} props.fetch n/a
+ * @param {dom.HydratedRouterProps.unstable_fetch} props.unstable_fetch n/a
  * @returns A React element that represents the hydrated application.
  */
 export function HydratedRouter(props: HydratedRouterProps) {
@@ -362,10 +365,10 @@ export function HydratedRouter(props: HydratedRouterProps) {
     router = createHydratedRouter({
       getContext: props.getContext,
       instrumentations: props.instrumentations,
-      fetch: props.fetch ?? fetchImplementation,
+      fetch: props.unstable_fetch ?? fetchImplementation,
     });
-    if (props.fetch) {
-      fetchImplementation = props.fetch;
+    if (props.unstable_fetch) {
+      fetchImplementation = props.unstable_fetch;
     }
   }
 

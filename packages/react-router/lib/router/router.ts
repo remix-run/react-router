@@ -6615,7 +6615,7 @@ async function callDataStrategyImpl(
     params: matches[0].params,
     context: scopedContext,
     matches,
-    initiator,
+    unstable_initiator: initiator,
   };
   let runClientMiddleware = isStaticHandler
     ? () => {

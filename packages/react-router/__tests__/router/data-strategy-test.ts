@@ -1855,7 +1855,7 @@ describe("router dataStrategy", () => {
     });
   });
 
-  describe("initiator", () => {
+  describe("unstable_initiator", () => {
     it.each(["navigation", "fetcher"] as const)(
       "preserves the %s initiator from an action through loader and fetcher reloads",
       async (initiator) => {
@@ -1870,7 +1870,12 @@ describe("router dataStrategy", () => {
             { id: "resource", path: "/resource", loader: true },
           ],
           hydrationData: { loaderData: { root: "ROOT" } },
-          dataStrategy({ request, matches, initiator, fetcherKey }) {
+          dataStrategy({
+            request,
+            matches,
+            unstable_initiator: initiator,
+            fetcherKey,
+          }) {
             calls.push({ method: request.method, initiator, fetcherKey });
             return Promise.resolve(
               Object.fromEntries(
@@ -1943,7 +1948,12 @@ describe("router dataStrategy", () => {
             initiator === "initialization"
               ? undefined
               : { loaderData: { redirect: "REDIRECT", target: "TARGET" } },
-          dataStrategy({ request, matches, initiator, fetcherKey }) {
+          dataStrategy({
+            request,
+            matches,
+            unstable_initiator: initiator,
+            fetcherKey,
+          }) {
             let pathname = new URL(request.url).pathname;
             calls.push({
               pathname,
@@ -2008,7 +2018,7 @@ describe("router dataStrategy", () => {
           { id: "root", path: "/", loader: true },
           { id: "page", path: "/page", loader: true },
         ],
-        dataStrategy({ matches, initiator, fetcherKey }) {
+        dataStrategy({ matches, unstable_initiator: initiator, fetcherKey }) {
           calls.push({ initiator, fetcherKey });
           return Promise.resolve(
             Object.fromEntries(
@@ -2047,12 +2057,14 @@ describe("router dataStrategy", () => {
     });
 
     it("identifies static handler data strategy calls", async () => {
-      let dataStrategy = mockDataStrategy(async ({ matches, initiator }) => {
-        let results = await Promise.all(
-          matches.map((match) => match.resolve()),
-        );
-        return keyedResults(matches, results);
-      });
+      let dataStrategy = mockDataStrategy(
+        async ({ matches, unstable_initiator }) => {
+          let results = await Promise.all(
+            matches.map((match) => match.resolve()),
+          );
+          return keyedResults(matches, results);
+        },
+      );
       let { query } = createStaticHandler([
         { id: "root", path: "/", loader: () => "ROOT" },
       ]);
@@ -2061,7 +2073,7 @@ describe("router dataStrategy", () => {
 
       expect(dataStrategy).toHaveBeenCalledWith(
         expect.objectContaining({
-          initiator: "static",
+          unstable_initiator: "static",
           fetcherKey: null,
         }),
       );

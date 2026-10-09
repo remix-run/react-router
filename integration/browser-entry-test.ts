@@ -156,7 +156,7 @@ test("allows a custom fetch implementation to read current application state", a
             document,
             <StrictMode>
               <HydratedRouter
-                fetch={(request, context) => {
+                unstable_fetch={(request, context) => {
                   window.__customFetches ??= [];
                   window.__customFetches.push({
                     pathname: new URL(request.url).pathname,
@@ -227,7 +227,7 @@ test("identifies initiating operations and fetcher targets", async ({
             document,
             <StrictMode>
               <HydratedRouter
-                fetch={(request, context) => {
+                unstable_fetch={(request, context) => {
                   window.__customFetches ??= [];
                   window.__customFetches.push({
                     pathname: new URL(request.url).pathname,

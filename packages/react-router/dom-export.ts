@@ -9,8 +9,8 @@ export { RouterProvider } from "./lib/dom-export/dom-router-provider";
 export type { HydratedRouterProps } from "./lib/dom-export/hydrated-router";
 export { HydratedRouter } from "./lib/dom-export/hydrated-router";
 export type {
-  RouterFetch,
-  RouterFetchContext,
+  RouterFetch as unstable_RouterFetch,
+  RouterFetchContext as unstable_RouterFetchContext,
 } from "./lib/dom/ssr/single-fetch";
 
 // RSC
