@@ -342,6 +342,23 @@ test.describe("API-only Mode", () => {
   });
 });
 
+test("rejects API-only mode in RSC Framework Mode", async () => {
+  let cwd = await createProject(
+    {
+      "react-router.config.ts": reactRouterConfig({
+        ssr: "unstable_api-only",
+      }),
+    },
+    "rsc-vite-framework",
+  );
+
+  let result = build({ cwd });
+  expect(result.status).toBe(1);
+  expect(result.stderr.toString()).toContain(
+    'RSC Framework Mode does not currently support the following React Router config:\n - ssr: "unstable_api-only"',
+  );
+});
+
 test.describe("API-only prerender config", () => {
   test("prerenders routes with an explicit path config", async () => {
     let cwd = await createProject({

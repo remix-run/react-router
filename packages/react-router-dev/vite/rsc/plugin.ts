@@ -169,6 +169,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             if (userConfig.buildEnd) errors.push("buildEnd");
             if (userConfig.presets?.length) errors.push("presets");
             if (userConfig.serverBundles) errors.push("serverBundles");
+            if (userConfig.ssr === "unstable_api-only") {
+              errors.push('ssr: "unstable_api-only"');
+            }
             if (errors.length) {
               return `RSC Framework Mode does not currently support the following React Router config:\n${errors.map((x) => ` - ${x}`).join("\n")}\n`;
             }
@@ -411,7 +414,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       configurePreviewServer(previewServer) {
         const clientBuildDirectory = getClientBuildDirectory(config);
         if (
-          (config.prerender || config.ssr !== true) &&
+          (config.prerender || config.ssr === false) &&
           process.env.IS_RR_BUILD_REQUEST !== "yes"
         ) {
           previewServer.middlewares.use(async (req, res, next) => {
@@ -438,7 +441,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           });
 
           return () => {
-            if (config.ssr !== true) {
+            if (config.ssr === false) {
               previewServer.middlewares.use(async (req, res, next) => {
                 try {
                   res.statusCode = 404;
@@ -608,7 +611,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       load(id) {
         if (id === virtual.routeDiscovery.resolvedId) {
           return `export default ${JSON.stringify(
-            config.ssr !== true
+            config.ssr === false
               ? {
                   mode: "initial",
                 }
@@ -743,7 +746,7 @@ export default assetsManifest.clientVersion;
               ? config.basename
               : config.basename + "/";
 
-        if (config.ssr !== true) {
+        if (config.ssr === false) {
           prerenderPaths.add("/__spa-fallback.html");
         }
 
