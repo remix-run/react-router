@@ -25,10 +25,10 @@ Prefer targeting a specific action or navigation, and fall back to
 The default behavior differs between Framework and Data Modes:
 
 - **Framework Mode with SSR**
-  - Defaults to opt-out behavior - active loaders are revalidated on navigations and successful submissions ([`Link`][link], [`Form`][form], [`fetcher.submit`](fetcher-submit))
+  - Defaults to opt-out behavior - active loaders are revalidated on navigations and successful submissions ([`Link`][link], [`Form`][form], [`fetcher.submit`][use-fetcher])
   - Failed submissions returning a 4xx/5xx status do not trigger revalidations by default
 - **Framework "SPA Mode" and Data Mode**
-  - Defaults to opt-out behavior on successful submissions - active loaders are revalidated on successful submissions ([`Form`][form], [`fetcher.submit`])
+  - Defaults to opt-out behavior on successful submissions - active loaders are revalidated on successful submissions ([`Form`][form], [`fetcher.submit`][use-fetcher])
     - Failed submissions returning a 4xx/5xx status do not trigger revalidations by default
   - Defaults to opt-in behavior for GET navigations ([`Link`][link]) - active loaders are only revalidated if their dynamic params changed, or if any search params changed
     - A GET navigation to the _exact_ same URL is treated like a page refresh and all loaders are revalidated.

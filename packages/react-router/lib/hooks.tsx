@@ -822,7 +822,7 @@ export function useRoutesImpl(
         `deeper, the parent won't match anymore and therefore the child ` +
         `routes will never render.\n\n` +
         `Please change the parent <Route path="${parentPath}"> to <Route ` +
-        `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`,
+        `path="${parentPath === "/" ? "*" : `${parentPath}/` + "*"}\">.`,
     );
   }
 
@@ -2122,7 +2122,7 @@ function toRouterStateMatch(match: DataRouteMatch): unstable_RouterStateMatch {
  * @example
  * import { unstable_useRouterState as useRouterState } from "react-router";
  *
- * let { active, pending } = unstable_useRouterState();
+ * let { active, pending } = useRouterState();
  *
  * // Active is always populated with the current location
  * active.location; // replaces `useLocation()`

@@ -110,10 +110,18 @@
     "wireit": "catalog:"
   },
   "peerDependencies": {
+    "@types/react": ">=19.2.0",
+    "@types/react-dom": ">=19.2.0",
     "react": ">=19.2.7",
     "react-dom": ">=19.2.7"
   },
   "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    },
+    "@types/react-dom": {
+      "optional": true
+    },
     "react-dom": {
       "optional": true
     }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "SC Summary"
+  short_description: "Summarize React Router Steering Committee meetings"
+  default_prompt: "Use $sc-summary with the meeting notes location I provide to update GOVERNANCE.md."
