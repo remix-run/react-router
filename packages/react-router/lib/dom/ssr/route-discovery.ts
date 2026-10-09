@@ -14,6 +14,7 @@ import { useFrameworkContext } from "./components";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { ServerBuild } from "../../server-runtime/build";
+import type { RouterFetch } from "./single-fetch";
 import {
   getManifestPath,
   getPathsWithAncestors,
@@ -101,6 +102,9 @@ export class RouteDiscoveryRuntime {
         window.__reactRouterManifest = manifest;
       }
     },
+    private fetchImplementation: RouterFetch = (request) => fetch(request),
+    private serverOrigin?: string,
+    private isApiOnly: boolean = false,
   ) {
     this.enabled = isFogOfWarEnabled(config, ssr);
     this.state = this.enabled && !manifest.hmr ? "partial" : "complete";
@@ -156,6 +160,7 @@ export class RouteDiscoveryRuntime {
           this.ssr,
           this.isSpaMode,
           this.getRouter().patchRoutes,
+          this.isApiOnly,
         );
         this.nextPaths.clear();
         this.update("complete");
@@ -253,7 +258,7 @@ export class RouteDiscoveryRuntime {
     params.set("version", this.manifest.version);
     let url = new URL(
       getManifestPath(this.config.manifestPath, this.basename),
-      window.location.origin,
+      this.serverOrigin ?? window.location.origin,
     );
     url.search = params.toString();
     return url;
@@ -326,7 +331,10 @@ export class RouteDiscoveryRuntime {
         if (this.isComplete()) return { type: "success" };
         let response: Response;
         try {
-          response = await fetch(this.requestUrl(batch), { signal });
+          response = await this.fetchImplementation(
+            new Request(this.requestUrl(batch), { signal }),
+            { type: "manifest" },
+          );
         } catch (error) {
           if (signal?.aborted) return { type: "aborted" };
           if (this.isComplete()) return { type: "success" };
@@ -389,6 +397,7 @@ export class RouteDiscoveryRuntime {
           this.ssr,
           this.isSpaMode,
           patch,
+          this.isApiOnly,
         );
         batch.forEach((path) => {
           if (this.discoveredPaths.size >= 1000)
@@ -647,6 +656,7 @@ function applyManifestPatches(
   ssr: boolean,
   isSpaMode: boolean,
   patchRoutes: Router["patchRoutes"],
+  isApiOnly: boolean,
 ) {
   // Patch routes we don't know about yet into the manifest
   let knownRoutes = new Set(Object.keys(manifest.routes));
@@ -668,7 +678,17 @@ function applyManifestPatches(
   parentIds.forEach((parentId) =>
     patchRoutes(
       parentId || null,
-      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId),
+      createClientRoutes(
+        patches,
+        routeModules,
+        null,
+        ssr,
+        isSpaMode,
+        parentId,
+        undefined,
+        undefined,
+        isApiOnly,
+      ),
     ),
   );
   Object.assign(manifest.routes, patches);

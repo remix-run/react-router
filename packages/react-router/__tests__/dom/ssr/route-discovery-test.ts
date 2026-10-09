@@ -1,5 +1,6 @@
 import type { AssetsManifest } from "../../../lib/dom/ssr/entry";
 import type { EntryRoute } from "../../../lib/dom/ssr/routes";
+import type { RouterFetch } from "../../../lib/dom/ssr/single-fetch";
 import { RouteDiscoveryRuntime } from "../../../lib/dom/ssr/route-discovery";
 import { URL_LIMIT } from "../../../lib/dom/ssr/fog-of-war";
 import { createMemoryHistory } from "../../../lib/router/history";
@@ -25,6 +26,15 @@ function setup({
   complete = false,
   ssr = true,
   hmr = false,
+  fetchImplementation,
+  serverOrigin,
+}: {
+  basename?: string;
+  complete?: boolean;
+  ssr?: boolean;
+  hmr?: boolean;
+  fetchImplementation?: RouterFetch;
+  serverOrigin?: string;
 } = {}) {
   let root = entry("root", "");
   let manifest: AssetsManifest = {
@@ -53,6 +63,8 @@ function setup({
     false,
     basename,
     load,
+    fetchImplementation,
+    serverOrigin,
   );
   return { manifest, full, router, load, runtime };
 }
@@ -71,6 +83,44 @@ const mismatch = () =>
     status: 204,
     headers: { "X-Remix-Reload-Document": "true" },
   });
+
+test.each(["eager", "navigation", "fetcher", "imperative"] as const)(
+  "%s discovery uses custom fetch with the configured origin and cancellation signal",
+  async (source) => {
+    let pending = createDeferred<Response>();
+    let fetchImplementation = jest.fn<
+      ReturnType<RouterFetch>,
+      Parameters<RouterFetch>
+    >(() => pending.promise);
+    let { runtime } = setup({
+      basename: "/app",
+      fetchImplementation,
+      serverOrigin: "https://api.example.com",
+    });
+    let controller = new AbortController();
+    let discovery =
+      source === "imperative"
+        ? runtime.discoverRoutes(["/a"], { signal: controller.signal })
+        : runtime.discover(["/app/a"], source, null, controller.signal);
+    await tick();
+    expect(fetchImplementation).toHaveBeenCalledWith(expect.any(Request), {
+      type: "manifest",
+    });
+    let [request] = fetchImplementation.mock.calls[0];
+    let url = new URL(request.url);
+    expect(url.origin).toBe("https://api.example.com");
+    expect(url.pathname).toBe("/app/__manifest");
+    expect(url.searchParams.get("paths")).toContain("/app/a");
+    expect(url.searchParams.get("version")).toBe("a");
+    expect(request.signal.aborted).toBe(false);
+    controller.abort();
+    expect(request.signal.aborted).toBe(true);
+    await pending.resolve(Response.json({}));
+    expect(await discovery).toEqual({ type: "aborted" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(runtime.discoveredPaths.size).toBe(0);
+  },
+);
 
 test("shares full loading, preserves manifest identity/version, and disables incremental discovery", async () => {
   let { runtime, manifest, full, router, load } = setup();
@@ -248,7 +298,8 @@ test("batches all requested paths within the URL limit and normalizes basename/s
   await runtime.discoverRoutes(paths);
   expect(fetchMock.mock.calls.length).toBeGreaterThan(1);
   let discovered = new Set<string>();
-  for (let [url] of fetchMock.mock.calls) {
+  for (let [request] of fetchMock.mock.calls) {
+    let url = new URL(request.url);
     expect(url.href.length).toBeLessThanOrEqual(URL_LIMIT);
     expect(url.pathname).toBe("/app/__manifest");
     for (let path of url.searchParams.get("paths").split(","))

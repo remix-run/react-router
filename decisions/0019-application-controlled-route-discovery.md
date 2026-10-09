@@ -130,6 +130,14 @@ without a supported application use case.
 Multiple hook consumers share this runtime. They do not create additional DOM
 observers or independent full-manifest loads.
 
+The runtime also receives the hydrated router's initialized custom fetch
+implementation, configured API server origin, and API-only mode setting. This
+preserves those Framework features when the custom-discovery flag is enabled:
+incremental requests use `unstable_fetch` with manifest context, while both
+incrementally discovered and fully loaded routes retain API-only server-handler
+behavior. The full versioned manifest remains a static asset import outside
+custom fetch.
+
 ### 4. Keep React state compatible with concurrent rendering
 
 The runtime exposes directly readable `state` and `ready` fields plus a simple

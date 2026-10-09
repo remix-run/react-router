@@ -58,6 +58,8 @@ function Checkout() {
 
 Discovery only loads route metadata. It does not navigate, run loaders/actions, or prefetch route modules and stylesheets.
 
+Incremental discovery uses the initialized [`HydratedRouter unstable_fetch`](./custom-fetch) implementation with `{ type: "manifest" }` context, including eager, navigation, fetcher, and imperative requests. In API-only Mode, it also honors `unstable_apiServerOrigin`; discovered routes retain their server loaders/actions. `loadAllRoutes()` imports a versioned static asset, so that download does not pass through custom fetch.
+
 ## Completing discovery
 
 `loadAllRoutes()` loads the running client's versioned manifest asset. The shared `state` moves from `partial` to `loading` to `complete`. Concurrent calls share a load, and calls after completion resolve immediately. Failures reject and return the state to `partial`; applications can catch the error and choose whether to reload.
