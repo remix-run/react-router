@@ -89,6 +89,8 @@ export default {
 
 This option applies to loader, action, and route discovery requests only in API-only Mode. Use an origin without a path, query, or hash. Configure CORS on the API server and allow the client origin via [`allowedActionOrigins`](../../api/framework-conventions/react-router.config.ts#allowedactionorigins) for cross-origin action submissions. Requests use the browser's default `same-origin` credential policy; this option does not enable sending cookies to a different origin.
 
+To customize JavaScript-issued requests with authentication headers or cross-origin credentials, see [Custom Fetch](../../how-to/custom-fetch). Native data prefetches bypass custom fetch.
+
 ---
 
 Next: [Data Loading](./data-loading)

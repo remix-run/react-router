@@ -1,13 +1,13 @@
 import * as React from "react";
 
 import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
+import type { Action as NavigationType } from "../../router/history";
 import type { Router as DataRouter } from "../../router/router";
 import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
   DataRouteMatch,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  DataStrategyInitiator,
   DataStrategyResult,
 } from "../../router/utils";
 import {
@@ -178,7 +178,8 @@ export type FetchAndDecodeFunction = (
  *
  * Requests that reload fetchers as part of a navigation or revalidation keep
  * that initiating `type`. `fetcherKey` identifies the fetcher being loaded, or
- * is `null` when the request targets route loaders or actions.
+ * is `null` when the request targets route loaders or actions. Initialization
+ * requests always have a `null` fetcher key.
  *
  * `navigationType` is the history action (`"PUSH"`, `"REPLACE"`, or `"POP"`)
  * for navigation-initiated data requests, including reloaded fetchers. It is
@@ -188,9 +189,19 @@ export type FetchAndDecodeFunction = (
 export type RouterFetchContext =
   | { type: "manifest" }
   | {
-      type: Exclude<DataStrategyInitiator, "static">;
+      type: "navigation";
       fetcherKey: string | null;
-      navigationType: DataStrategyFunctionArgs["unstable_navigationType"];
+      navigationType: NavigationType;
+    }
+  | {
+      type: "initialization";
+      fetcherKey: null;
+      navigationType: null;
+    }
+  | {
+      type: "fetcher" | "revalidation";
+      fetcherKey: string | null;
+      navigationType: null;
     };
 
 export type RouterFetch = (
@@ -633,11 +644,35 @@ function fetchAndDecodeViaTurboStream(
       args.unstable_initiator !== "static",
       "Static data strategy initiator used for a client data request",
     );
-    let res = await fetchImplementation(req, {
-      type: args.unstable_initiator,
-      fetcherKey: args.fetcherKey,
-      navigationType: args.unstable_navigationType,
-    });
+    let fetchContext: RouterFetchContext;
+    if (args.unstable_initiator === "navigation") {
+      invariant(
+        args.unstable_navigationType !== null,
+        "Missing navigation type for a navigation data request",
+      );
+      fetchContext = {
+        type: "navigation",
+        fetcherKey: args.fetcherKey,
+        navigationType: args.unstable_navigationType,
+      };
+    } else if (args.unstable_initiator === "initialization") {
+      invariant(
+        args.fetcherKey === null,
+        "Unexpected fetcher key for an initialization data request",
+      );
+      fetchContext = {
+        type: "initialization",
+        fetcherKey: args.fetcherKey,
+        navigationType: null,
+      };
+    } else {
+      fetchContext = {
+        type: args.unstable_initiator,
+        fetcherKey: args.fetcherKey,
+        navigationType: null,
+      };
+    }
+    let res = await fetchImplementation(req, fetchContext);
 
     // If this error'd without hitting the running server, then bubble a normal
     // `ErrorResponse` and don't try to decode the body with `turbo-stream`.

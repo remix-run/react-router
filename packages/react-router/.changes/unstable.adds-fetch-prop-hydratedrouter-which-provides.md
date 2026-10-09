@@ -2,6 +2,7 @@ Add a new `<HydratedRouter unstable_fetch>` prop which allows applicatons to pro
 
 - The function receives the intended request as well as context identifying the type of request
 - Data request context includes `navigationType` (`"PUSH"`, `"REPLACE"`, or `"POP"` for navigation-initiated requests, including reloaded fetchers; `null` otherwise). Data strategies receive the same value as `unstable_navigationType`.
+- The custom fetch context is a discriminated union, so narrowing `type` to `"navigation"` guarantees a non-null `navigationType`, while `"initialization"` guarantees a `null` `fetcherKey` and `navigationType`.
 - Like other router initialization options, the implementation is captured when the singleton router is created and thus subsequent prop changes are ignored
 - Browser-managed data prefetches from `<Link prefetch>` use native `<link rel="prefetch">` elements and do not call the custom implementation
 - Intended use cases include custom fetch options, custom headers, automatic retry logic, response header inspection, etc.

@@ -342,20 +342,23 @@ export interface HydratedRouterProps {
    * Provide a custom implementation for `fetch`, which will be used to perform
    * JavaScript-issued manifest and data requests. The context identifies the
    * operation that initiated each request. Defaults to `window.fetch`.
-   * For navigation-initiated data requests, `context.navigationType` is
-   * `"PUSH"`, `"REPLACE"`, or `"POP"`, including fetchers reloaded by the
-   * navigation. Other data requests use `null`; manifest requests omit it.
-   *
-   * Browser-managed data prefetches from {@link Link}, {@link NavLink}, or
-   * {@link PrefetchPageLinks} use native `<link rel="prefetch">` elements
-   * and do not call this function. If your data requests require custom headers
-   * or other request transformations, use `prefetch="none"` on links and avoid
-   * rendering {@link PrefetchPageLinks}.
    *
    * This prop is read when the singleton router is created. Changing it after
    * router initialization has no effect. To use changing values such as auth
    * tokens, read current application state inside the function rather than
    * capturing values from a component render.
+   *
+   * See the [Custom Fetch guide](../../how-to/custom-fetch) for examples of
+   * authentication headers, cross-origin credentials, traversal caching, and
+   * retries.
+   *
+   * <docs-info>
+   * Browser-managed data prefetches from {@link Link}, {@link NavLink}, or
+   * {@link PrefetchPageLinks} use native `<link rel="prefetch">` elements
+   * and do not call this function. If your data requests require custom headers
+   * or other request transformations, use `prefetch="none"` on links and avoid
+   * rendering {@link PrefetchPageLinks}.
+   * </docs-info>
    */
   unstable_fetch?: RouterFetch;
 }
