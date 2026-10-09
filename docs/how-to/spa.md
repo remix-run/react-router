@@ -22,6 +22,8 @@ Typical Single Page apps send a mostly blank `index.html` template with little m
 
 <docs-info>SPA Mode is a special form of "Pre-Rendering" that allows you to serve all paths in your application from the same HTML file. Please refer to the [Pre-Rendering](./pre-rendering) guide if you want to do more extensive pre-rendering.</docs-info>
 
+<docs-info>If you want a SPA frontend backed by React Router server loaders and actions, see experimental [API-only Mode](../start/framework/rendering#api-only-mode-unstable).</docs-info>
+
 ## 1. Disable Runtime Server Rendering
 
 Server rendering is enabled by default. Set the `ssr` flag to `false` in `react-router.config.ts` to disable it.
