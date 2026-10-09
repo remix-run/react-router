@@ -10,6 +10,7 @@ import {
   type TemplateName,
   type Files,
   reactRouterConfig,
+  viteMajorTemplates,
 } from "./helpers/vite.js";
 
 const tsx = dedent;
@@ -554,4 +555,88 @@ test.describe("Vite dev", () => {
 
     expect(clientDeps).not.toMatch(/rsc[-_]server[-_]only[-_]package/);
   });
+
+  for (let { templateName } of viteMajorTemplates) {
+    test(`${templateName} does not register SSR-only route imports as client dependencies when collecting critical CSS`, async ({
+      page,
+      dev,
+    }) => {
+      let files: Files = async ({ port }) => ({
+        "vite.config.ts": await viteConfig.basic({ port, templateName }),
+        "app/routes/_index.tsx": tsx`
+          import { useLoaderData } from "react-router";
+          import { readServerSecret } from "ssr-only-package";
+          import { label } from "ui-package";
+
+          export function loader() {
+            return { secret: readServerSecret() };
+          }
+
+          export default function IndexRoute() {
+            let { secret } = useLoaderData();
+            return <h1 data-route>{label(secret)}</h1>;
+          }
+        `,
+        "node_modules/ssr-only-package/package.json": JSON.stringify({
+          name: "ssr-only-package",
+          version: "1.0.0",
+          type: "module",
+          main: "index.js",
+        }),
+        "node_modules/ssr-only-package/index.js": tsx`
+          export function readServerSecret() {
+            return "server-only";
+          }
+        `,
+        "node_modules/ui-package/package.json": JSON.stringify({
+          name: "ui-package",
+          version: "1.0.0",
+          type: "module",
+          main: "index.js",
+        }),
+        "node_modules/ui-package/index.js": tsx`
+          export function label(text) {
+            return "Label: " + text;
+          }
+        `,
+      });
+
+      let { cwd, port } = await dev(files, templateName);
+
+      // Collect critical CSS before the browser loads any client module. The
+      // browser then makes the client optimizer discover `ui-package`, so once
+      // that is optimized, anything the CSS collection registered is too.
+      let documentResponse = await fetch(`http://localhost:${port}/`);
+      expect(documentResponse.status).toBe(200);
+      await documentResponse.text();
+      let cssResponse = await fetch(
+        `http://localhost:${port}/@react-router/critical.css?pathname=/`,
+      );
+      expect(cssResponse.status).toBe(200);
+      await cssResponse.text();
+
+      await page.goto(`http://localhost:${port}/`);
+      await expect(page.locator("[data-route]")).toHaveText(
+        "Label: server-only",
+      );
+
+      let depsDirectory = path.join(cwd, "node_modules/.vite/deps");
+      let readClientDeps = async () => {
+        try {
+          return [
+            await fs.readFile(
+              path.join(depsDirectory, "_metadata.json"),
+              "utf8",
+            ),
+            ...(await fs.readdir(depsDirectory)),
+          ].join("\n");
+        } catch {
+          return "";
+        }
+      };
+
+      await expect.poll(readClientDeps).toMatch(/ui[-_]package/);
+      expect(await readClientDeps()).not.toMatch(/ssr[-_]only[-_]package/);
+    });
+  }
 });
