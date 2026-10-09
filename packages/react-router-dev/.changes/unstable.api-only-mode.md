@@ -1,9 +1,8 @@
-Add `ssr: "unstable_api-only"` to generate a static client build backed by server loaders and actions
+Add `ssr: "unstable_api-only"` to retain a runtime server for loaders, actions, and route discovery while disabling production document rendering
 
-- API-only builds continue to support client-side navigation and server data requests while not handling document requests in production.
-- Default API-only builds to lazy route discovery.
-- Reject API-only configuration in RSC Framework Mode.
-- Without configured prerender routes, this produces a "SPA mode" `index.html`
-- With prerendering enabled you can prerender a set of routes for faster initial document loads while still hitting an API server for navigations
-- Preserve server-only route exports in additional Vite server environments in both API-only and SSR modes.
-- Serve the generated SPA fallback for non-prerendered document requests in API-only Vite previews while retaining live data requests and route discovery.
+- Generate a root-only SPA shell when prerendering is disabled
+- Support prerendered pages and data files alongside runtime loaders and actions, with a SPA fallback for non-prerendered paths
+- Default API-only builds to lazy route discovery
+- Reject API-only configuration in RSC Framework Mode
+- Preserve server-only route exports in additional Vite server environments in both API-only and SSR modes
+- Serve prerendered pages and the SPA fallback in Vite preview while retaining live data requests and route discovery

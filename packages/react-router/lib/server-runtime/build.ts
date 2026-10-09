@@ -37,7 +37,8 @@ export interface ServerBuild {
    */
   unstable_apiServerOrigin?: string;
   /**
-   * Whether this server build is only intended to handle data requests.
+   * Whether production document rendering is disabled while data and route
+   * discovery requests remain supported.
    * @internal
    */
   unstable_apiOnly?: boolean;

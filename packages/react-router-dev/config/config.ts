@@ -213,25 +213,26 @@ export type ReactRouterConfig = {
    */
   serverBundles?: ServerBundlesFunction;
   /**
-   * Enable server-side rendering for your application. Disable to use "SPA
-   * Mode", which will request the `/` path at build-time and save it as an
-   * `index.html` file with your assets so your application can be deployed as a
-   * SPA without server-rendering. Default's to `true`.
+   * Control runtime server-side document rendering. Defaults to `true`.
    *
-   * The special value 'unstable_api-only' will disable runtime server side 
-   * rendering of documents, but allows loader/action API responses.  
+   * Set `false` to generate a static client build without a runtime server.
+   * Without prerendering, this generates a root-only SPA shell. With
+   * prerendering, it generates HTML and data files for selected paths plus
+   * a SPA fallback for non-prerendered paths.
    *
-   * This creates a static client build that can utilize server-side loaders
-   * and actions. With `prerender` enabled, route UI is retained in the server
-   * build to generate HTML at build time. Otherwise, only the root route UI
-   * is retained to generate the SPA shell.
+   * Set `"unstable_api-only"` to retain a runtime server for loaders, actions,
+   * and route discovery while disabling production document rendering.
+   * Documents follow the same prerendering and SPA fallback behavior as
+   * `ssr:false`, with runtime loaders and actions available for all routes.
+   * API-only mode is unstable and is not supported in RSC Framework Mode.
    */
   ssr?: boolean | "unstable_api-only";
 
   /**
    * The origin to use for server requests when `ssr` is `"unstable_api-only"`.
    * This is ignored when `ssr` is `true` or `false`. Defaults to the same
-   * origin that the static build is served at.
+   * origin that serves the client build. Applies to loader, action, and route
+   * discovery requests.
    *
    * **Note:** The server origin will need to be configured appropriately for
    * Cross-Origin Request Sharing (CORS).
@@ -350,13 +351,18 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   serverModuleFormat: ServerModuleFormat;
   /**
-   * Enable server-side rendering for your application. Disable to use "SPA
-   * Mode", which will request the `/` path at build-time and save it as an
-   * `index.html` file with your assets so your application can be deployed as a
-   * SPA without server-rendering. Default's to `true`.
+   * Control runtime server-side document rendering. Defaults to `true`.
    *
-   * The special value 'unstable_api-only' will disable runtime server side 
-   * rendering of documents, but allows loader/action API responses.
+   * Set `false` to generate a static client build without a runtime server.
+   * Without prerendering, this generates a root-only SPA shell. With
+   * prerendering, it generates HTML and data files for selected paths plus
+   * a SPA fallback for non-prerendered paths.
+   *
+   * Set `"unstable_api-only"` to retain a runtime server for loaders, actions,
+   * and route discovery while disabling production document rendering.
+   * Documents follow the same prerendering and SPA fallback behavior as
+   * `ssr:false`, with runtime loaders and actions available for all routes.
+   * API-only mode is unstable and is not supported in RSC Framework Mode.
    */
   ssr: boolean | "unstable_api-only";
   /**

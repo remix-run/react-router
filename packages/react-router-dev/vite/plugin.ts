@@ -3012,21 +3012,11 @@ function isPrerenderingEnabled(
 function isSpaModeEnabled(
   reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"],
 ) {
-  // "SPA Mode" is possible in 2 ways:
-  //  - `ssr:false` and no `prerender` config (undefined or null)
-  //  - `ssr:false` and `prerender: false`
-  //    - not an expected config but since we support `prerender:true` we allow it
-  //
-  // "SPA Mode" means we will only prerender a *single* `index.html` file which
-  // prerenders only to the root route and thus can hydrate for _any_ path and
-  // the proper routes below the root will be loaded via `route.lazy` during
-  // hydration.
-  //
-  // If `ssr:false` is specified and the user provided a `prerender` config -
-  // then it's no longer a "SPA" because we are generating multiple HTML pages.
-  // It's now a MPA and we can prerender down past the root, which unlocks the
-  // ability to use loaders on any routes and prerender the UI with build-time
-  // loaderData
+  // With `ssr:false` or API-only mode and no enabled prerender config, generate
+  // a root-only SPA shell in `index.html` that can hydrate for any path.
+  // An enabled prerender config allows full pages to be generated for selected
+  // paths alongside a SPA fallback for other paths. API-only mode retains its
+  // runtime server for loaders, actions, and route discovery in both cases.
   return (
     (!reactRouterConfig.ssr || reactRouterConfig.ssr === "unstable_api-only") &&
     !isPrerenderingEnabled(reactRouterConfig)

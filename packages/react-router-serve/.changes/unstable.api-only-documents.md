@@ -1,3 +1,3 @@
-Ensure `react-router-serve` falls back to the client HTML shell for unmatched API-only requests while forwarding data requests to React Router
+Support API-only builds in `react-router-serve` by serving client documents and forwarding data and route discovery requests to the React Router runtime
 
-- Serve prerendered documents when available and use `__spa-fallback.html` for unmatched document requests when the home page is prerendered.
+- Serve prerendered documents when available and use the generated SPA fallback for non-prerendered paths
