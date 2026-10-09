@@ -340,6 +340,62 @@ test.describe(`Prerendering`, () => {
       );
     });
 
+    test("resolves relative environment outDirs from the Vite root", async () => {
+      let cwd = await createProject(
+        {
+          ...Object.fromEntries(
+            Object.entries(files).map(([file, contents]) => [
+              `app-root/${file}`,
+              contents,
+            ]),
+          ),
+          "app-root/app/routes.ts": js`
+            import { type RouteConfig } from "@react-router/dev/routes";
+            import { flatRoutes } from "@react-router/fs-routes";
+
+            export default flatRoutes() satisfies RouteConfig;
+          `,
+          "app-root/vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              root: "app-root",
+              build: { manifest: true },
+              plugins: [
+                reactRouter(),
+                {
+                  name: "relative-environment-outdirs",
+                  configEnvironment(name) {
+                    if (name === "client") {
+                      return { build: { outDir: "build/client" } };
+                    }
+                    if (name === "ssr") {
+                      return { build: { outDir: "build/server" } };
+                    }
+                  },
+                },
+              ],
+            });
+          `,
+        },
+        "vite-7-template",
+      );
+
+      let result = build({
+        cwd,
+        env: { REACT_ROUTER_ROOT: path.join(cwd, "app-root") },
+      });
+      expect(result.stderr.toString()).toBeFalsy();
+      expect(result.status).toBe(0);
+      expect(
+        fs.existsSync(path.join(cwd, "app-root/build/client/index.html")),
+      ).toBe(true);
+      expect(fs.existsSync(path.join(cwd, "build/client/index.html"))).toBe(
+        false,
+      );
+    });
+
     test("Prerenders a static array of routes with server bundles", async () => {
       fixture = await createFixture({
         prerender: true,
