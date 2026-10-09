@@ -433,13 +433,6 @@ export function createClientRoutes(
           prefetchStylesAndCallHandler(() => {
             return fetchServerLoader(singleFetch);
           });
-        dataRoute.loader.hydrate = shouldHydrateRouteLoader(
-          route.id,
-          undefined,
-          route.hasLoader,
-          isSpaMode,
-          isApiOnly,
-        );
       }
       if (!route.hasClientAction) {
         dataRoute.action = (_: ActionFunctionArgs, singleFetch?: unknown) =>
@@ -490,25 +483,14 @@ export function createClientRoutes(
                   )
                 : await getLazyRoute();
               invariant(clientLoader, "No `clientLoader` export found");
-              let loader = (dataRoute.loader = (
-                args: LoaderFunctionArgs,
-                singleFetch?: unknown,
-              ) =>
+              return (args: LoaderFunctionArgs, singleFetch?: unknown) =>
                 clientLoader({
                   ...args,
                   async serverLoader() {
                     preventInvalidServerHandlerCall("loader", route);
                     return fetchServerLoader(singleFetch);
                   },
-                })) as NonNullable<typeof dataRoute.loader>;
-              loader.hydrate = shouldHydrateRouteLoader(
-                route.id,
-                clientLoader,
-                route.hasLoader,
-                isSpaMode,
-                isApiOnly,
-              );
-              return loader;
+                });
             }
           : undefined,
         action: route.hasClientAction
