@@ -800,9 +800,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
       export const ssr = ${ctx.reactRouterConfig.ssr === true};
       export const unstable_apiOnly = ${isApiOnlyMode(ctx.reactRouterConfig)};
-      export const unstable_serverOrigin = ${
+      export const unstable_apiServerOrigin = ${
         isApiOnlyMode(ctx.reactRouterConfig)
-          ? JSON.stringify(ctx.reactRouterConfig.unstable_serverOrigin)
+          ? JSON.stringify(ctx.reactRouterConfig.unstable_apiServerOrigin)
           : "undefined"
       };
       export const isSpaMode = ${isSpaMode};

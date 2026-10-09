@@ -236,7 +236,7 @@ export type ReactRouterConfig = {
    * **Note:** The server origin will need to be configured appropriately for
    * Cross-Origin Request Sharing (CORS).
    */
-  unstable_serverOrigin?: string;
+  unstable_apiServerOrigin?: string;
 
   /**
    * Enable subresource integrity hashes on asset script tags. Defaults to
@@ -362,7 +362,7 @@ export type ResolvedReactRouterConfig = Readonly<{
   /**
    * The origin to use for server requests in API-only mode.
    */
-  unstable_serverOrigin?: string;
+  unstable_apiServerOrigin?: string;
   /**
    * Whether to generate subresource integrity hashes for asset script tags.
    */
@@ -561,28 +561,28 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
-    unstable_serverOrigin,
+    unstable_apiServerOrigin,
   } = {
     ...defaults, // Default values should be completely overridden by user/preset config, not merged
     ...userAndPresetConfigs,
   };
 
-  if (ssr === "unstable_api-only" && unstable_serverOrigin != null) {
+  if (ssr === "unstable_api-only" && unstable_apiServerOrigin != null) {
     try {
-      let url = new URL(unstable_serverOrigin);
+      let url = new URL(unstable_apiServerOrigin);
       if (url.pathname !== "/" || url.search || url.hash) {
         return err(
-          "The `unstable_serverOrigin` config must be an origin without a path, query, or hash.",
+          "The `unstable_apiServerOrigin` config must be an origin without a path, query, or hash.",
         );
       }
-      unstable_serverOrigin = url.origin;
+      unstable_apiServerOrigin = url.origin;
     } catch {
       return err(
-        "The `unstable_serverOrigin` config must be a valid absolute URL.",
+        "The `unstable_apiServerOrigin` config must be a valid absolute URL.",
       );
     }
   } else {
-    unstable_serverOrigin = undefined;
+    unstable_apiServerOrigin = undefined;
   }
 
   if (ssr === false && serverBundles) {
@@ -811,7 +811,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
-    unstable_serverOrigin,
+    unstable_apiServerOrigin,
     splitRouteModules,
     subResourceIntegrity,
     allowedActionOrigins,

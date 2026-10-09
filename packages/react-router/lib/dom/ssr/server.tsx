@@ -110,7 +110,7 @@ export function ServerRouter({
           isSpaMode: context.isSpaMode,
           unstable_apiOnly: context.unstable_apiOnly,
           routeDiscovery: context.routeDiscovery,
-          unstable_serverOrigin: context.unstable_serverOrigin,
+          unstable_apiServerOrigin: context.unstable_apiServerOrigin,
           nonce,
           serializeError: context.serializeError,
           renderMeta: context.renderMeta,

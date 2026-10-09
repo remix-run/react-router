@@ -32,7 +32,7 @@ export interface ServerBuild {
    * The origin to use for server requests in API-only mode.
    * @internal
    */
-  unstable_serverOrigin?: string;
+  unstable_apiServerOrigin?: string;
   /**
    * Whether this server build is only intended to handle data requests.
    * @internal
