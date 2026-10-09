@@ -201,6 +201,7 @@ test.describe("API-only Mode", () => {
   test.afterAll(stopServers);
 
   test("builds an API-only server with server APIs but no route UI exports", async () => {
+    expect(fixture.build?.ssr).toBe(true);
     expect(fixture.build?.unstable_apiOnly).toBe(true);
     expect(fixture.build?.routeDiscovery).toEqual({
       mode: "lazy",
@@ -548,6 +549,24 @@ for (let splitRouteModules of [false, true]) {
       ).toEqual({ message: "RESOURCE_DATA" });
     });
 
+    test("renders prerendered routes and the SPA fallback in development", async () => {
+      let handler = createRequestHandler(
+        fixture.build!,
+        ServerMode.Development,
+      );
+      let prerendered = await handler(new Request("http://localhost/about"));
+      expect(prerendered.status).toBe(200);
+      let prerenderedDocument = await prerendered.text();
+      expect(prerenderedDocument).toContain("ABOUT_UI:");
+      expect(prerenderedDocument).toContain("ABOUT_DATA");
+
+      let fallback = await handler(new Request("http://localhost/runtime"));
+      expect(fallback.status).toBe(200);
+      let document = await fallback.text();
+      expect(document).toContain("API_ONLY_SHELL");
+      expect(document).not.toContain("RUNTIME_UI");
+    });
+
     test("hydrates prerendered data and navigates to runtime loaders and actions", async ({
       page,
     }) => {
@@ -560,6 +579,13 @@ for (let splitRouteModules of [false, true]) {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
       await expect(page.locator("[data-mounted]")).toBeVisible();
+      expect(
+        await page.evaluate(
+          () =>
+            (window as unknown as { __reactRouterContext: { ssr: boolean } })
+              .__reactRouterContext.ssr,
+        ),
+      ).toBe(true);
       await expect(page.locator("[data-index]")).toHaveText(
         "INDEX_UI: BUILD_DATA",
       );

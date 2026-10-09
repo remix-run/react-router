@@ -27,6 +27,9 @@ export interface ServerBuild {
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
+  /**
+   * Whether runtime server requests are supported, including API-only builds.
+   */
   ssr: boolean;
   /**
    * The origin to use for server requests in API-only mode.

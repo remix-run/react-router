@@ -798,7 +798,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       )};
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
-      export const ssr = ${ctx.reactRouterConfig.ssr === true};
+      export const ssr = ${Boolean(ctx.reactRouterConfig.ssr)};
       export const unstable_apiOnly = ${isApiOnlyMode(ctx.reactRouterConfig)};
       export const unstable_apiServerOrigin = ${
         isApiOnlyMode(ctx.reactRouterConfig)

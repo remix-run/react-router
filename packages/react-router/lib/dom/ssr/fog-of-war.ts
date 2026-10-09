@@ -52,9 +52,8 @@ export function getPathsWithAncestors(paths: string[]): string[] {
 export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
   ssr: boolean,
-  isApiOnly: boolean = false,
 ) {
-  return routeDiscovery.mode === "lazy" && (ssr === true || isApiOnly);
+  return routeDiscovery.mode === "lazy" && ssr;
 }
 
 export function getPartialManifest(
@@ -106,7 +105,7 @@ export function getPatchRoutesOnNavigationFunction(
   serverOrigin?: string,
   isApiOnly: boolean = false,
 ): PatchRoutesOnNavigationFunction | undefined {
-  if (!isFogOfWarEnabled(routeDiscovery, ssr, isApiOnly)) {
+  if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
     return undefined;
   }
 
@@ -149,7 +148,7 @@ export function useFogOFWarDiscovery(
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
     if (
-      !isFogOfWarEnabled(routeDiscovery, ssr, isApiOnly) ||
+      !isFogOfWarEnabled(routeDiscovery, ssr) ||
       // @ts-expect-error - TS doesn't know about this yet
       window.navigator?.connection?.saveData === true
     ) {

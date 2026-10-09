@@ -50,7 +50,7 @@ describe("API-only build-time document requests", () => {
         }
         let build = {
           ...mockServerBuild({ root: { path: "", default: {} } }),
-          ssr: false,
+          ssr: true,
           unstable_apiOnly: true,
           prerender: ["/"],
         };

@@ -811,7 +811,6 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     renderMeta,
     routeDiscovery,
     ssr,
-    unstable_apiOnly,
     nonce: contextNonce,
   } = useFrameworkContext();
   let {
@@ -821,11 +820,7 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
   } = useDataRouterContext("Scripts");
   let { matches: routerMatches } = useDataRouterState("Scripts");
   let isRSCRouterContext = useIsRSCRouterContext();
-  let enableFogOfWar = isFogOfWarEnabled(
-    routeDiscovery,
-    ssr,
-    unstable_apiOnly === true,
-  );
+  let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 
   // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
   // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the

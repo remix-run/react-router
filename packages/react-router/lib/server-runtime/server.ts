@@ -113,9 +113,9 @@ function derive(build: ServerBuild, mode?: string) {
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
-    // When runtime SSR is disabled, make our dev server behave like the deployed
-    // pre-rendered site would
-    if (!build.ssr) {
+    // When runtime document SSR is disabled, make our dev server behave like
+    // the deployed pre-rendered site would.
+    if (!build.ssr || build.unstable_apiOnly) {
       // Decode the URL path before checking against the prerender config
       let decodedPath = decodeURI(normalizedPathname);
 
@@ -146,7 +146,7 @@ function derive(build: ServerBuild, mode?: string) {
       // Without API-only mode, this file only runs during dev or prerendering
       // because we delete the server build at the end of the build.
       if (build.prerender.length === 0) {
-        // ssr:false and no prerender config indicates "SPA Mode"
+        // Without prerendered paths, render the SPA fallback.
         isSpaMode = true;
       } else if (
         !build.prerender.some(

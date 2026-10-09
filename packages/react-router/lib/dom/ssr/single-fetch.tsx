@@ -230,7 +230,7 @@ export function getSingleFetchDataStrategyImpl(
       let { hasLoader, hasClientLoader } = getRouteInfo(m);
       return m.shouldCallHandler() && hasLoader && !hasClientLoader;
     });
-    if (!ssr && !isApiOnly && !foundRevalidatingServerLoader) {
+    if (!ssr && !foundRevalidatingServerLoader) {
       // If this is SPA mode, there won't be any loaders below root and we'll
       // disable single fetch.  We have to keep the `dataStrategy` defined for
       // SPA mode because we may load a SPA fallback page but then navigate into
@@ -459,7 +459,7 @@ async function singleFetchLoaderNavigationStrategy(
     // When routes have opted out, add a `_routes` param to filter server loaders
     // Skip filtering for static `.data` files, which contain all route results.
     let targetRoutes =
-      (ssr || isApiOnly) && foundOptOutRoute && routesParams.size > 0
+      ssr && foundOptOutRoute && routesParams.size > 0
         ? [...routesParams.keys()]
         : undefined;
     try {
