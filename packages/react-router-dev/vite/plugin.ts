@@ -766,7 +766,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     ${Object.keys(routes)
       .map((key, index) => {
         let route = routes[key]!;
-        if (isSpaMode && key !== "root") {
+        if (
+          isSpaMode &&
+          !isApiOnlyMode(ctx.reactRouterConfig) &&
+          key !== "root"
+        ) {
           // In SPA mode, we only pre-render the root route and its `HydrateFallback`.
           // Therefore, we can stub all other routes with an empty module as they
           // (and their deps) may not be compatible with server-side rendering.
@@ -794,7 +798,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       )};
       export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
-      export const ssr = ${ctx.reactRouterConfig.ssr};
+      export const ssr = ${Boolean(ctx.reactRouterConfig.ssr)};
+      export const unstable_apiOnly = ${isApiOnlyMode(ctx.reactRouterConfig)};
+      export const unstable_apiServerOrigin = ${
+        isApiOnlyMode(ctx.reactRouterConfig)
+          ? JSON.stringify(ctx.reactRouterConfig.unstable_apiServerOrigin)
+          : "undefined"
+      };
       export const isSpaMode = ${isSpaMode};
       export const prerender = ${JSON.stringify(prerenderPaths)};
       export const routeDiscovery = ${JSON.stringify(
@@ -1263,8 +1273,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           appType:
             viteCommand === "serve" &&
             _viteConfigEnv.mode === "production" &&
-            ctx.reactRouterConfig.ssr === false
-              ? "spa"
+            (!ctx.reactRouterConfig.ssr ||
+              ctx.reactRouterConfig.ssr === "unstable_api-only")
+              ? isApiOnlyMode(ctx.reactRouterConfig)
+                ? "mpa"
+                : "spa"
               : "custom",
 
           ssr: {
@@ -1740,6 +1753,51 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             }
 
             try {
+              if (
+                isApiOnlyMode(ctx.reactRouterConfig) &&
+                process.env.IS_RR_BUILD_REQUEST !== "yes"
+              ) {
+                let { basename, routeDiscovery } = ctx.reactRouterConfig;
+                let manifestPath =
+                  routeDiscovery?.mode === "lazy"
+                    ? path.posix.join(
+                        basename,
+                        routeDiscovery.manifestPath ?? "/__manifest",
+                      )
+                    : undefined;
+                let pathname = new URL(
+                  req.originalUrl ?? req.url ?? "/",
+                  "http://localhost",
+                ).pathname;
+                if (!pathname.endsWith(".data") && pathname !== manifestPath) {
+                  let clientBuildDirectory = getClientBuildDirectory(
+                    ctx.reactRouterConfig,
+                  );
+                  let previewPathname = decodeURIComponent(
+                    new URL(req.url ?? "/", "http://localhost").pathname,
+                  );
+                  if (
+                    previewPathname.endsWith(".html") &&
+                    existsSync(path.join(clientBuildDirectory, previewPathname))
+                  ) {
+                    // Let Vite serve existing HTML files, including rewritten directory indexes.
+                    return next();
+                  }
+                  let fallbackFile = path.join(
+                    clientBuildDirectory,
+                    "__spa-fallback.html",
+                  );
+                  if (!existsSync(fallbackFile)) {
+                    fallbackFile = path.join(
+                      clientBuildDirectory,
+                      "index.html",
+                    );
+                  }
+                  res.setHeader("Content-Type", "text/html; charset=utf-8");
+                  res.end(await readFile(fallbackFile));
+                  return;
+                }
+              }
               let handler = await getHandler();
               let request = await fromNodeRequest(req, res);
               let response = await handler(
@@ -2236,7 +2294,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let route = getRoute(ctx.reactRouterConfig, id);
         if (!route) return;
 
-        if (!options?.ssr && isSpaModeEnabled(ctx.reactRouterConfig)) {
+        let isServerEnvironment = isReactRouterServerEnvironment(
+          ctx,
+          this.environment.name,
+        );
+
+        if (
+          !options?.ssr &&
+          isSpaModeEnabled(ctx.reactRouterConfig) &&
+          !isApiOnlyMode(ctx.reactRouterConfig)
+        ) {
           let exportNames = getExportNames(code);
           let serverOnlyExports = exportNames.filter((exp) => {
             // Root route can have a loader in SPA mode
@@ -2275,6 +2342,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let ast = parse(code, { sourceType: "module" });
         if (!options?.ssr) {
           removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        } else if (
+          isApiOnlyMode(ctx.reactRouterConfig) &&
+          isServerEnvironment &&
+          !isPrerenderingEnabled(ctx.reactRouterConfig) &&
+          viteCommand === "build" &&
+          route.id !== "root"
+        ) {
+          removeExports(ast, CLIENT_ROUTE_EXPORTS);
         }
         decorateComponentExportsWithProps(ast);
         return generate(ast, {
@@ -2541,10 +2616,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         }
 
-        // When `ssr:false` is set, we always want a SPA HTML they can use
-        // to serve non-prerendered routes.  This file will only SSR the root
-        // route and can hydrate for any path.
-        if (!ctx.reactRouterConfig.ssr) {
+        // With `ssr:false` or API-only mode, generate a SPA fallback for
+        // non-prerendered routes. Render only the root so it can hydrate any path.
+        if (
+          !ctx.reactRouterConfig.ssr ||
+          ctx.reactRouterConfig.ssr === "unstable_api-only"
+        ) {
           requests.push(createSpaModeRequest(ctx.reactRouterConfig));
         }
 
@@ -2693,8 +2770,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         let { ssr } = ctx.reactRouterConfig;
 
-        // if ssr:false is set
-        if (!ssr) {
+        // Finalize the SPA fallback for `ssr:false` and API-only builds.
+        if (!ssr || ssr === "unstable_api-only") {
           let spaFallback = path.join(buildDirectory, "__spa-fallback.html");
           let index = path.join(buildDirectory, "index.html");
 
@@ -2935,24 +3012,19 @@ function isPrerenderingEnabled(
 function isSpaModeEnabled(
   reactRouterConfig: ReactRouterPluginContext["reactRouterConfig"],
 ) {
-  // "SPA Mode" is possible in 2 ways:
-  //  - `ssr:false` and no `prerender` config (undefined or null)
-  //  - `ssr:false` and `prerender: false`
-  //    - not an expected config but since we support `prerender:true` we allow it
-  //
-  // "SPA Mode" means we will only prerender a *single* `index.html` file which
-  // prerenders only to the root route and thus can hydrate for _any_ path and
-  // the proper routes below the root will be loaded via `route.lazy` during
-  // hydration.
-  //
-  // If `ssr:false` is specified and the user provided a `prerender` config -
-  // then it's no longer a "SPA" because we are generating multiple HTML pages.
-  // It's now a MPA and we can prerender down past the root, which unlocks the
-  // ability to use loaders on any routes and prerender the UI with build-time
-  // loaderData
+  // With `ssr:false` or API-only mode and no enabled prerender config, generate
+  // a root-only SPA shell in `index.html` that can hydrate for any path.
+  // An enabled prerender config allows full pages to be generated for selected
+  // paths alongside a SPA fallback for other paths. API-only mode retains its
+  // runtime server for loaders, actions, and route discovery in both cases.
   return (
-    reactRouterConfig.ssr === false && !isPrerenderingEnabled(reactRouterConfig)
+    (!reactRouterConfig.ssr || reactRouterConfig.ssr === "unstable_api-only") &&
+    !isPrerenderingEnabled(reactRouterConfig)
   );
+}
+
+function isApiOnlyMode(reactRouterConfig: ResolvedReactRouterConfig) {
+  return reactRouterConfig.ssr === "unstable_api-only";
 }
 
 function getStaticPrerenderPaths(routes: DataRouteObject[]) {
@@ -3824,7 +3896,9 @@ function createDataRequest(
   }
 
   return {
-    request: new Request(url),
+    request: new Request(url, {
+      headers: { "X-React-Router-Prerender": "yes" },
+    }),
     metadata: { type: "data", path: prerenderPath, isResourceRoute },
   };
 }
@@ -3839,7 +3913,7 @@ function createRouteRequest(
     "/",
   );
 
-  let headers = new Headers();
+  let headers = new Headers({ "X-React-Router-Prerender": "yes" });
 
   if (data) {
     let encodedData = encodeURI(data);
@@ -3866,8 +3940,14 @@ function createResourceRouteRequest(
     .replace(/\/\/+/g, "/")
     .replace(/\/$/g, "");
 
+  let headers = new Headers(requestInit?.headers);
+  headers.set("X-React-Router-Prerender", "yes");
+
   return {
-    request: new Request(`http://localhost${normalizedPath}`, requestInit),
+    request: new Request(`http://localhost${normalizedPath}`, {
+      ...requestInit,
+      headers,
+    }),
     metadata: { type: "resource", path: prerenderPath },
   };
 }

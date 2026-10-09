@@ -213,12 +213,31 @@ export type ReactRouterConfig = {
    */
   serverBundles?: ServerBundlesFunction;
   /**
-   * Enable server-side rendering for your application. Disable to use "SPA
-   * Mode", which will request the `/` path at build-time and save it as an
-   * `index.html` file with your assets so your application can be deployed as a
-   * SPA without server-rendering. Default's to `true`.
+   * Control runtime server-side document rendering. Defaults to `true`.
+   *
+   * Set `false` to generate a static client build without a runtime server.
+   * Without prerendering, this generates a root-only SPA shell. With
+   * prerendering, it generates HTML and data files for selected paths plus
+   * a SPA fallback for non-prerendered paths.
+   *
+   * Set `"unstable_api-only"` to retain a runtime server for loaders, actions,
+   * and route discovery while disabling production document rendering.
+   * Documents follow the same prerendering and SPA fallback behavior as
+   * `ssr:false`, with runtime loaders and actions available for all routes.
+   * API-only mode is unstable and is not supported in RSC Framework Mode.
    */
-  ssr?: boolean;
+  ssr?: boolean | "unstable_api-only";
+
+  /**
+   * The origin to use for server requests when `ssr` is `"unstable_api-only"`.
+   * This is ignored when `ssr` is `true` or `false`. Defaults to the same
+   * origin that serves the client build. Applies to loader, action, and route
+   * discovery requests.
+   *
+   * **Note:** The server origin will need to be configured appropriately for
+   * Cross-Origin Request Sharing (CORS).
+   */
+  unstable_apiServerOrigin?: string;
 
   /**
    * Enable subresource integrity hashes on asset script tags. Defaults to
@@ -332,12 +351,24 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   serverModuleFormat: ServerModuleFormat;
   /**
-   * Enable server-side rendering for your application. Disable to use "SPA
-   * Mode", which will request the `/` path at build-time and save it as an
-   * `index.html` file with your assets so your application can be deployed as a
-   * SPA without server-rendering. Default's to `true`.
+   * Control runtime server-side document rendering. Defaults to `true`.
+   *
+   * Set `false` to generate a static client build without a runtime server.
+   * Without prerendering, this generates a root-only SPA shell. With
+   * prerendering, it generates HTML and data files for selected paths plus
+   * a SPA fallback for non-prerendered paths.
+   *
+   * Set `"unstable_api-only"` to retain a runtime server for loaders, actions,
+   * and route discovery while disabling production document rendering.
+   * Documents follow the same prerendering and SPA fallback behavior as
+   * `ssr:false`, with runtime loaders and actions available for all routes.
+   * API-only mode is unstable and is not supported in RSC Framework Mode.
    */
-  ssr: boolean;
+  ssr: boolean | "unstable_api-only";
+  /**
+   * The origin to use for server requests in API-only mode.
+   */
+  unstable_apiServerOrigin?: string;
   /**
    * Whether to generate subresource integrity hashes for asset script tags.
    */
@@ -536,10 +567,29 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_apiServerOrigin,
   } = {
     ...defaults, // Default values should be completely overridden by user/preset config, not merged
     ...userAndPresetConfigs,
   };
+
+  if (ssr === "unstable_api-only" && unstable_apiServerOrigin != null) {
+    try {
+      let url = new URL(unstable_apiServerOrigin);
+      if (url.pathname !== "/" || url.search || url.hash) {
+        return err(
+          "The `unstable_apiServerOrigin` config must be an origin without a path, query, or hash.",
+        );
+      }
+      unstable_apiServerOrigin = url.origin;
+    } catch {
+      return err(
+        "The `unstable_apiServerOrigin` config must be a valid absolute URL.",
+      );
+    }
+  } else {
+    unstable_apiServerOrigin = undefined;
+  }
 
   if (!ssr && serverBundles) {
     serverBundles = undefined;
@@ -767,6 +817,7 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_apiServerOrigin,
     splitRouteModules,
     subResourceIntegrity,
     allowedActionOrigins,
