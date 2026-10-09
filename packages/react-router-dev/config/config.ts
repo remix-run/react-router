@@ -218,11 +218,8 @@ export type ReactRouterConfig = {
    * `index.html` file with your assets so your application can be deployed as a
    * SPA without server-rendering. Default's to `true`.
    *
-   * The special value 'unstable_api-only' will disable SSR, but with the
-   * following changes:
-   * - Does NOT error when encountering a `loader` or `action`
-   * - Does NOT delete the server build, instead the server build will *only*
-   *   handle data requests.
+   * The special value 'unstable_api-only' will disable runtime server side 
+   * rendering of documents, but allows loader/action API responses.  
    *
    * This creates a static client build that can utilize server-side loaders
    * and actions. With `prerender` enabled, route UI is retained in the server
