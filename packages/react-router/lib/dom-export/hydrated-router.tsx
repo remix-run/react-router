@@ -21,6 +21,9 @@ import {
   UNSAFE_getTurboStreamSingleFetchDataStrategy as getTurboStreamSingleFetchDataStrategy,
   UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
+  UNSAFE_RouteDiscoveryRuntime as RouteDiscoveryRuntime,
+  UNSAFE_useCustomRouteDiscovery as useCustomRouteDiscovery,
+  UNSAFE_getCustomPatchRoutesOnNavigationFunction as getCustomPatchRoutesOnNavigationFunction,
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
@@ -40,6 +43,7 @@ type SSRInfo = {
       })
     | undefined;
   router: DataRouter | undefined;
+  routeDiscoveryRuntime: RouteDiscoveryRuntime | undefined;
   routerInitialized: boolean;
 };
 
@@ -73,6 +77,7 @@ function initSsrInfo(): void {
       routeModules: window.__reactRouterRouteModules,
       stateDecodingPromise: undefined,
       router: undefined,
+      routeDiscoveryRuntime: undefined,
       routerInitialized: false,
     };
   }
@@ -180,11 +185,31 @@ function createHydratedRouter({
     );
   }
 
+  let discoveryRuntime = ssrInfo.context.future.unstable_customRouteDiscovery
+    ? new RouteDiscoveryRuntime(
+        () => router,
+        ssrInfo.manifest,
+        ssrInfo.routeModules,
+        ssrInfo.context.ssr,
+        ssrInfo.context.routeDiscovery,
+        ssrInfo.context.isSpaMode,
+        ssrInfo.context.basename,
+        undefined,
+        fetchImplementation,
+        ssrInfo.context.unstable_apiServerOrigin,
+        isApiOnly,
+      )
+    : undefined;
+
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
     routes,
     history: createBrowserHistory(),
+    future: {
+      unstable_customRouteDiscovery:
+        ssrInfo.context.future.unstable_customRouteDiscovery,
+    },
     basename: ssrInfo.context.basename,
     getContext,
     hydrationData,
@@ -200,21 +225,24 @@ function createHydratedRouter({
       ssrInfo.context.unstable_apiOnly === true,
       ssrInfo.context.unstable_apiServerOrigin,
     ),
-    patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
-      () => router,
-      ssrInfo.manifest,
-      ssrInfo.routeModules,
-      ssr,
-      ssrInfo.context.routeDiscovery,
-      ssrInfo.context.isSpaMode,
-      ssrInfo.context.basename,
-      fetchImplementation,
-      ssrInfo.context.unstable_apiServerOrigin,
-      ssrInfo.context.unstable_apiOnly === true,
-    ),
+    patchRoutesOnNavigation: discoveryRuntime
+      ? getCustomPatchRoutesOnNavigationFunction(() => router, discoveryRuntime)
+      : getPatchRoutesOnNavigationFunction(
+          () => router,
+          ssrInfo.manifest,
+          ssrInfo.routeModules,
+          ssr,
+          ssrInfo.context.routeDiscovery,
+          ssrInfo.context.isSpaMode,
+          ssrInfo.context.basename,
+          fetchImplementation,
+          ssrInfo.context.unstable_apiServerOrigin,
+          isApiOnly,
+        ),
   });
 
   ssrInfo.router = router;
+  ssrInfo.routeDiscoveryRuntime = discoveryRuntime;
 
   // We can call initialize() immediately if the router doesn't have any
   // loaders to run on hydration
@@ -442,17 +470,26 @@ export function HydratedRouter(props: HydratedRouterProps) {
   invariant(ssrInfo, "ssrInfo unavailable for HydratedRouter");
   let ssr = ssrInfo.context.ssr;
 
-  useFogOFWarDiscovery(
-    router,
-    ssrInfo.manifest,
-    ssrInfo.routeModules,
-    ssr,
-    ssrInfo.context.routeDiscovery,
-    ssrInfo.context.isSpaMode,
-    fetchImplementation,
-    ssrInfo.context.unstable_apiServerOrigin,
-    ssrInfo.context.unstable_apiOnly === true,
-  );
+  let discoveryRuntime = ssrInfo.routeDiscoveryRuntime;
+  let discoveryState: ReturnType<typeof useCustomRouteDiscovery> | undefined;
+  // The future flag and runtime are fixed for the lifetime of this router.
+  if (discoveryRuntime) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    discoveryState = useCustomRouteDiscovery(discoveryRuntime, props.onError);
+  } else {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useFogOFWarDiscovery(
+      router,
+      ssrInfo.manifest,
+      ssrInfo.routeModules,
+      ssr,
+      ssrInfo.context.routeDiscovery,
+      ssrInfo.context.isSpaMode,
+      fetchImplementation,
+      ssrInfo.context.unstable_apiServerOrigin,
+      ssrInfo.context.unstable_apiOnly === true,
+    );
+  }
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
   // boundary also throws and we need to bubble up outside of the router entirely.
@@ -464,6 +501,8 @@ export function HydratedRouter(props: HydratedRouterProps) {
     <>
       <FrameworkContext.Provider
         value={{
+          routeDiscoveryRuntime: discoveryRuntime,
+          routeDiscoveryState: discoveryState,
           manifest: ssrInfo.manifest,
           routeModules: ssrInfo.routeModules,
           future: ssrInfo.context.future,

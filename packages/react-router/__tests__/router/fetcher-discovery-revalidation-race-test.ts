@@ -19,7 +19,13 @@ import { createDeferred, tick } from "./utils/utils";
 
 let router: Router;
 
-describe("fetcher revalidation vs. lazy route discovery race", () => {
+for (let customDiscovery of [false, true]) {
+  describe(`fetcher discovery race (custom discovery: ${customDiscovery})`, () => {
+    testDiscoveryRace(customDiscovery);
+  });
+}
+
+function testDiscoveryRace(unstable_customRouteDiscovery: boolean) {
   afterEach(() => {
     router.dispose();
     // @ts-expect-error
@@ -33,6 +39,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     const apiLoaderCalls: string[] = [];
 
     router = createRouter({
+      future: { unstable_customRouteDiscovery },
       history: createMemoryHistory(),
       routes: [
         {
@@ -83,9 +90,8 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
 
     expect(splatLoaderCalls.length).toBe(0);
 
-    // 3. The original in-flight load survives (it was never abortable —
-    //    fetchControllers isn't registered until after discovery) and fires
-    //    the *correct* request once discovery completes.
+    // 3. Revalidation leaves discovery running, so the original load fires
+    //    the correct request once discovery completes.
     manifestDfd.resolve([
       {
         id: "api",
@@ -112,6 +118,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     const apiLoaderCalls: string[] = [];
 
     router = createRouter({
+      future: { unstable_customRouteDiscovery },
       history: createMemoryHistory(),
       routes: [
         {
@@ -171,6 +178,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
         let splatLoader = jest.fn(() => "SPLAT");
 
         router = createRouter({
+          future: { unstable_customRouteDiscovery },
           history: createMemoryHistory(),
           routes: [
             {
@@ -258,6 +266,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
       let initialSignal: AbortSignal | undefined;
 
       router = createRouter({
+        future: { unstable_customRouteDiscovery },
         history: createMemoryHistory(),
         routes: [
           { id: "root", path: "/", action: () => actionDfd.promise },
@@ -342,6 +351,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
       let splatLoader = jest.fn(() => "SPLAT");
 
       router = createRouter({
+        future: { unstable_customRouteDiscovery },
         history: createMemoryHistory(),
         routes: [
           { id: "root", path: "/", action: () => null },
@@ -430,6 +440,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     let discoveringPaths: string[] = [];
 
     router = createRouter({
+      future: { unstable_customRouteDiscovery },
       history: createMemoryHistory(),
       routes: [
         { id: "root", path: "/" },
@@ -455,11 +466,13 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     await tick();
     expect(discoveringPaths).toEqual(["/first", "/second"]);
 
-    // Both discoveries are pending for the same key. Completing the older one
-    // must only update its own load record, not the record for /second.
+    // Opting in makes discovery abortable when reusing a fetcher key. Neither
+    // mode should let the older load clear the new load's discovery state.
     await firstDiscoveryDfd.resolve();
     await tick();
-    expect(firstLoader).toHaveBeenCalledTimes(1);
+    expect(firstLoader).toHaveBeenCalledTimes(
+      unstable_customRouteDiscovery ? 0 : 1,
+    );
     expect(secondLoader).not.toHaveBeenCalled();
 
     let revalidation = router.revalidate();
@@ -477,4 +490,4 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     expect(router.getFetcher(key).state).toBe("idle");
     expect(router.state.errors).toBeNull();
   });
-});
+}

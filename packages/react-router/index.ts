@@ -433,3 +433,17 @@ export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 
 /** @internal */
 export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";
+
+export { useRouteDiscovery as unstable_useRouteDiscovery } from "./lib/dom/ssr/route-discovery";
+export type {
+  RouteDiscoveryEvent as unstable_RouteDiscoveryEvent,
+  ManifestMismatchEvent as unstable_ManifestMismatchEvent,
+  DiscoveryResult as unstable_DiscoveryResult,
+  RouteDiscoveryOptions as unstable_RouteDiscoveryOptions,
+} from "./lib/dom/ssr/route-discovery";
+/** @internal */
+export {
+  RouteDiscoveryRuntime as UNSAFE_RouteDiscoveryRuntime,
+  useCustomRouteDiscovery as UNSAFE_useCustomRouteDiscovery,
+  getCustomPatchRoutesOnNavigationFunction as UNSAFE_getCustomPatchRoutesOnNavigationFunction,
+} from "./lib/dom/ssr/route-discovery";

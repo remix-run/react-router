@@ -1,0 +1,67 @@
+:root {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color-scheme: light dark;
+}
+main {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+fieldset,
+section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid #888;
+  border-radius: 6px;
+}
+label {
+  display: block;
+  margin: 0.5rem 0;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+select {
+  padding: 0.3rem 0.6rem;
+}
+input,
+select {
+  margin-right: 0.5rem;
+}
+select {
+  margin-left: 0.5rem;
+  max-width: 100%;
+}
+button {
+  cursor: pointer;
+}
+.row,
+.states {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 1rem 0;
+}
+.states {
+  gap: 2rem;
+}
+dt {
+  font-weight: bold;
+}
+dd {
+  margin: 0;
+  font-family: monospace;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+[role="alert"] {
+  border: 2px solid orange;
+  padding: 1rem;
+}

@@ -1,3 +1,4 @@
+import type { DiscoveryState, RouteDiscoveryRuntime } from "./route-discovery";
 import type { StaticHandlerContext } from "../../router/router";
 
 import type { EntryRoute } from "./routes";
@@ -16,6 +17,8 @@ type SerializedError = {
 
 // Object passed to RemixContext.Provider
 export interface FrameworkContextObject {
+  routeDiscoveryRuntime?: RouteDiscoveryRuntime;
+  routeDiscoveryState?: DiscoveryState;
   manifest: AssetsManifest;
   routeModules: RouteModules;
   criticalCss?: CriticalCss;
@@ -55,7 +58,9 @@ export interface EntryContext extends FrameworkContextObject {
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
-export type FutureConfig = Record<string, never>;
+export interface FutureConfig {
+  unstable_customRouteDiscovery?: boolean;
+}
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };
 
