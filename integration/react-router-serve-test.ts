@@ -7,7 +7,7 @@ import {
   createFixture,
   js,
 } from "./helpers/create-fixture.js";
-import { type TemplateName } from "./helpers/vite.js";
+import { reactRouterConfig, type TemplateName } from "./helpers/vite.js";
 
 const templateNames = [
   "vite-7-template",
@@ -81,6 +81,49 @@ test.describe("react-router-serve", () => {
       });
     });
   }
+
+  test.describe("API-only mode", () => {
+    let fixture: Fixture;
+    let appFixture: AppFixture;
+
+    test.beforeAll(async () => {
+      fixture = await createFixture({
+        useReactRouterServe: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: "unstable_api-only",
+          }),
+          "app/routes/api.tsx": js`
+            export function loader() {
+              return { message: "api-only-loader" };
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+    });
+
+    test.afterAll(() => {
+      appFixture.close();
+    });
+
+    test("serves the SPA fallback and forwards data requests", async () => {
+      let documentResponse = await fetch(`${appFixture.serverUrl}/`);
+      expect(documentResponse.status).toBe(200);
+      let document = await documentResponse.text();
+      expect(document).toContain("window.__reactRouterContext");
+
+      let fallbackResponse = await fetch(
+        `${appFixture.serverUrl}/does-not-exist`,
+      );
+      expect(fallbackResponse.status).toBe(200);
+      expect(await fallbackResponse.text()).toBe(document);
+
+      let dataResponse = await fetch(`${appFixture.serverUrl}/api.data`);
+      expect(dataResponse.status).toBe(200);
+      expect(await dataResponse.text()).toContain("api-only-loader");
+    });
+  });
 
   test.describe("well-known URIs", () => {
     for (const templateName of templateNames) {

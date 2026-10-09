@@ -84,10 +84,11 @@ export default {
 
 ## Pre-Rendering with/without a Runtime Server
 
-Pre-Rendering can be used in two ways based on the `ssr` config value:
+Pre-Rendering can be used with these `ssr` config values:
 
 - Alongside a runtime SSR server with `ssr:true` (the default value)
 - Deployed to a static file server with `ssr:false`
+- Alongside a runtime API server with `ssr:"unstable_api-only"` (experimental)
 
 ### Pre-rendering with `ssr:true`
 
@@ -223,3 +224,24 @@ When pre-rendering with `ssr:false`, React Router will error at build time if yo
   - If you are using a `loader` on a pre-rendered route that has child routes, you will need to make sure the parent `loaderData` can be determined at run-time properly by either:
     - Pre-rendering all child routes so that the parent `loader` can be called at build-time for each child route path and rendered into a `.data` file, or
     - Use a `clientLoader` on the parent that can be called at run-time for non-pre-rendered child paths
+
+### Pre-rendering with API-only Mode (unstable)
+
+<docs-warning>API-only Mode is experimental and may change in minor or patch releases. It is not supported in RSC Framework Mode.</docs-warning>
+
+Use `ssr: "unstable_api-only"` with `prerender` to generate documents at build time while keeping a runtime server for loaders, actions, and route discovery:
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  ssr: "unstable_api-only",
+  prerender: ["/"],
+} satisfies Config;
+```
+
+Document generation follows the same behavior as `ssr:false`: selected paths produce HTML and `.data` files, and other paths use a SPA fallback. The fallback is `__spa-fallback.html` when `/` is prerendered, or `index.html` otherwise.
+
+Prerendered pages hydrate using their build-time data. Pages using the fallback fetch server loader data during initialization. Server loaders and actions are available on all routes, including those outside the prerender list, and normal loader revalidation remains enabled.
+
+See [API-only Mode](../start/framework/rendering#api-only-mode-unstable) for deployment routing and configuring a separate API origin.

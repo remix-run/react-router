@@ -54,7 +54,7 @@ export function isFogOfWarEnabled(
   routeDiscovery: ServerBuild["routeDiscovery"],
   ssr: boolean,
 ) {
-  return routeDiscovery.mode === "lazy" && ssr === true;
+  return routeDiscovery.mode === "lazy" && ssr;
 }
 
 export function getPartialManifest(
@@ -104,6 +104,8 @@ export function getPatchRoutesOnNavigationFunction(
   isSpaMode: boolean,
   basename: string | undefined,
   fetchImplementation: RouterFetch = (request) => fetch(request),
+  serverOrigin?: string,
+  isApiOnly: boolean = false,
 ): PatchRoutesOnNavigationFunction | undefined {
   if (!isFogOfWarEnabled(routeDiscovery, ssr)) {
     return undefined;
@@ -130,6 +132,8 @@ export function getPatchRoutesOnNavigationFunction(
       patch,
       signal,
       fetchImplementation,
+      serverOrigin,
+      isApiOnly,
     );
   };
 }
@@ -142,6 +146,8 @@ export function useFogOFWarDiscovery(
   routeDiscovery: ServerBuild["routeDiscovery"],
   isSpaMode: boolean,
   fetchImplementation: RouterFetch = (request) => fetch(request),
+  serverOrigin?: string,
+  isApiOnly: boolean = false,
 ) {
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
@@ -204,6 +210,8 @@ export function useFogOFWarDiscovery(
           router.patchRoutes,
           undefined,
           fetchImplementation,
+          serverOrigin,
+          isApiOnly,
         );
       } catch (e) {
         console.error("Failed to fetch manifest patches", e);
@@ -235,6 +243,8 @@ export function useFogOFWarDiscovery(
     router,
     routeDiscovery,
     fetchImplementation,
+    serverOrigin,
+    isApiOnly,
   ]);
 }
 
@@ -356,6 +366,8 @@ export async function fetchAndApplyManifestPatches(
   patchRoutes: DataRouter["patchRoutes"],
   signal?: AbortSignal,
   fetchImplementation: RouterFetch = (request) => fetch(request),
+  serverOrigin?: string,
+  isApiOnly: boolean = false,
 ): Promise<void> {
   paths = getPathsWithAncestors(paths);
 
@@ -368,7 +380,7 @@ export async function fetchAndApplyManifestPatches(
   searchParams.set("version", manifest.version);
   let url = new URL(
     getManifestPath(manifestPath, basename),
-    window.location.origin,
+    serverOrigin ?? window.location.origin,
   );
   url.search = searchParams.toString();
 
@@ -440,7 +452,17 @@ export async function fetchAndApplyManifestPatches(
   parentIds.forEach((parentId) =>
     patchRoutes(
       parentId || null,
-      createClientRoutes(patches, routeModules, null, ssr, isSpaMode, parentId),
+      createClientRoutes(
+        patches,
+        routeModules,
+        null,
+        ssr,
+        isSpaMode,
+        parentId,
+        undefined,
+        undefined,
+        isApiOnly,
+      ),
     ),
   );
 }

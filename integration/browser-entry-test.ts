@@ -212,6 +212,140 @@ test("allows a custom fetch implementation to read current application state", a
   appFixture.close();
 });
 
+test("composes custom fetch with API-only mode and a configured server origin", async ({
+  page,
+}) => {
+  let apiOrigin = "https://api.example.com";
+  let fixture = await createFixture({
+    files: {
+      "react-router.config.ts": js`
+        export default {
+          ssr: "unstable_api-only",
+          unstable_apiServerOrigin: "${apiOrigin}",
+          routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+        };
+      `,
+      "app/entry.client.tsx": js`
+        import { HydratedRouter } from "react-router/dom";
+        import { startTransition } from "react";
+        import { hydrateRoot } from "react-dom/client";
+
+        startTransition(() => {
+          hydrateRoot(document, <HydratedRouter unstable_fetch={async (request, context) => {
+            let url = new URL(request.url);
+            window.__customFetches ??= [];
+            window.__customFetches.push({
+              origin: url.origin,
+              pathname: url.pathname,
+              method: request.method,
+              context,
+            });
+            request.headers.set("X-Custom-Fetch", "custom");
+            // Chromium requires HTTP/2 for streaming uploads, so materialize
+            // the test body before forwarding to the HTTP/1 fixture server.
+            return window.fetch(
+              window.location.origin + url.pathname + url.search,
+              {
+                method: request.method,
+                headers: request.headers,
+                signal: request.signal,
+                body: request.body ? await request.arrayBuffer() : undefined,
+              },
+            );
+          }} />);
+        });
+      `,
+      "app/root.tsx": js`
+        import { Outlet, Scripts } from "react-router";
+
+        export function Layout({ children }) {
+          return <html><head /><body>{children}<Scripts /></body></html>;
+        }
+
+        export function HydrateFallback() {
+          return <p>Loading...</p>;
+        }
+
+        export default function Root() {
+          return <Outlet />;
+        }
+      `,
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+
+        export function loader({ request }) {
+          return request.headers.get("X-Custom-Fetch");
+        }
+
+        export default function Index({ loaderData }) {
+          return <>
+            <p data-initial>{loaderData}</p>
+            <Link to="/page" discover="none">Page</Link>
+          </>;
+        }
+      `,
+      "app/routes/page.tsx": js`
+        import { Form } from "react-router";
+
+        export function loader({ request }) {
+          return request.headers.get("X-Custom-Fetch");
+        }
+
+        export function action({ request }) {
+          return request.headers.get("X-Custom-Fetch");
+        }
+
+        export default function Page({ loaderData, actionData }) {
+          return <>
+            <p data-loader>{loaderData}</p>
+            <p data-action>{actionData}</p>
+            <Form method="post"><button>Submit</button></Form>
+          </>;
+        }
+      `,
+    },
+  });
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  try {
+    await app.goto("/", true);
+    await expect(page.locator("[data-initial]")).toHaveText("custom");
+    await app.clickLink("/page");
+    await expect(page.locator("[data-loader]")).toHaveText("custom");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.locator("[data-action]")).toHaveText("custom");
+
+    let requests = await page.evaluate(() => (window as any).__customFetches);
+    expect(
+      requests.map((request: { origin: string }) => request.origin),
+    ).toEqual(requests.map(() => apiOrigin));
+    expect(requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          context: { type: "initialization", fetcherKey: null },
+        }),
+        expect.objectContaining({
+          pathname: "/__manifest",
+          context: { type: "manifest" },
+        }),
+        expect.objectContaining({
+          pathname: "/page.data",
+          method: "GET",
+          context: { type: "navigation", fetcherKey: null },
+        }),
+        expect.objectContaining({
+          pathname: "/page.data",
+          method: "POST",
+          context: { type: "navigation", fetcherKey: null },
+        }),
+      ]),
+    );
+  } finally {
+    await appFixture.close();
+  }
+});
+
 test("identifies initiating operations and fetcher targets", async ({
   page,
 }) => {
