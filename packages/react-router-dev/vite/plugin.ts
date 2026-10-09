@@ -1888,8 +1888,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         },
       },
-      async buildEnd() {
-        if (viteConfig?.command !== "build") {
+      async buildEnd(error) {
+        if (viteConfig?.command !== "build" || error) {
           await closePluginResources();
         }
       },
@@ -2688,6 +2688,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           `Prerender (${metadata.type}): ${metadata.path} -> ${colors.bold(outputPath)}`,
         );
       },
+      cleanup() {
+        return closePluginResources();
+      },
       async finalize(buildDirectory) {
         invariant(viteConfig);
 
@@ -2725,6 +2728,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     }),
     {
       name: "react-router-build-end",
+      enforce: "post",
       sharedDuringBuild: true,
       config: {
         order: "post",
@@ -2734,22 +2738,31 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               async buildApp(builder) {
                 try {
                   await buildApp?.(builder);
-
-                  invariant(viteConfig);
-                  let { buildManifest, reactRouterConfig } = ctx;
-                  invariant(buildManifest, "Expected build manifest");
-
-                  await reactRouterConfig.buildEnd?.({
-                    buildManifest,
-                    reactRouterConfig,
-                    viteConfig,
-                  });
-                } finally {
+                } catch (error) {
                   await closePluginResources();
+                  throw error;
                 }
               },
             },
           };
+        },
+      },
+      buildApp: {
+        order: "post",
+        async handler() {
+          try {
+            invariant(viteConfig);
+            let { buildManifest, reactRouterConfig } = ctx;
+            invariant(buildManifest, "Expected build manifest");
+
+            await reactRouterConfig.buildEnd?.({
+              buildManifest,
+              reactRouterConfig,
+              viteConfig,
+            });
+          } finally {
+            await closePluginResources();
+          }
         },
       },
     },

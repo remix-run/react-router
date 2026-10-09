@@ -467,11 +467,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           };
         }
       },
-      buildApp: {
-        order: "post",
-        async handler() {
+      async buildEnd(error) {
+        if (error) {
           await configLoader.close();
-        },
+        }
       },
     },
     (() => {
@@ -726,6 +725,7 @@ export default assetsManifest.clientVersion;
         };
       },
       logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
+      cleanup: () => configLoader.close(),
       async requests() {
         const prerenderPaths = new Set(
           await getPrerenderPaths(
@@ -867,6 +867,17 @@ export default assetsManifest.clientVersion;
         return files;
       },
     }),
+    {
+      name: "react-router/rsc/build-end",
+      enforce: "post",
+      sharedDuringBuild: true,
+      buildApp: {
+        order: "post",
+        async handler() {
+          await configLoader.close();
+        },
+      },
+    },
   ];
 }
 
