@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { Equal, Expect } from "../types/utils";
-import type { Location, Path, To } from "./history";
+import type { Action as NavigationType, Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 import {
   ABSOLUTE_URL_REGEX,
@@ -541,6 +541,14 @@ export interface DataStrategyFunctionArgs<
    * This field is experimental and subject to breaking changes.
    */
   unstable_initiator: DataStrategyInitiator;
+  /**
+   * The history action (`"PUSH"`, `"REPLACE"`, or `"POP"`) for a navigation-
+   * initiated execution, including fetchers reloaded by that navigation.
+   * `null` for initialization, fetcher, revalidation, and static executions.
+   *
+   * This field is experimental and subject to breaking changes.
+   */
+  unstable_navigationType: NavigationType | null;
   /**
    * The key of the fetcher targeted by this data strategy execution, otherwise
    * `null`. Fetchers reloaded during a navigation or revalidation retain that

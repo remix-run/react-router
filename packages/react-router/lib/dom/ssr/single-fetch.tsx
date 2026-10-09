@@ -179,12 +179,18 @@ export type FetchAndDecodeFunction = (
  * Requests that reload fetchers as part of a navigation or revalidation keep
  * that initiating `type`. `fetcherKey` identifies the fetcher being loaded, or
  * is `null` when the request targets route loaders or actions.
+ *
+ * `navigationType` is the history action (`"PUSH"`, `"REPLACE"`, or `"POP"`)
+ * for navigation-initiated data requests, including reloaded fetchers. It is
+ * `null` for initialization, fetcher, and revalidation requests. Manifest
+ * requests have no navigation type.
  */
 export type RouterFetchContext =
   | { type: "manifest" }
   | {
       type: Exclude<DataStrategyInitiator, "static">;
       fetcherKey: string | null;
+      navigationType: DataStrategyFunctionArgs["unstable_navigationType"];
     };
 
 export type RouterFetch = (
@@ -630,6 +636,7 @@ function fetchAndDecodeViaTurboStream(
     let res = await fetchImplementation(req, {
       type: args.unstable_initiator,
       fetcherKey: args.fetcherKey,
+      navigationType: args.unstable_navigationType,
     });
 
     // If this error'd without hitting the running server, then bubble a normal

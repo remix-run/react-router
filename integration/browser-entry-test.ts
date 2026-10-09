@@ -205,7 +205,7 @@ test("allows a custom fetch implementation to read current application state", a
     },
     {
       pathname: "/page.data",
-      context: { type: "navigation", fetcherKey: null },
+      context: { type: "navigation", fetcherKey: null, navigationType: "PUSH" },
     },
   ]);
 
@@ -323,7 +323,11 @@ test("composes custom fetch with API-only mode and a configured server origin", 
     expect(requests).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          context: { type: "initialization", fetcherKey: null },
+          context: {
+            type: "initialization",
+            fetcherKey: null,
+            navigationType: null,
+          },
         }),
         expect.objectContaining({
           pathname: "/__manifest",
@@ -332,12 +336,20 @@ test("composes custom fetch with API-only mode and a configured server origin", 
         expect.objectContaining({
           pathname: "/page.data",
           method: "GET",
-          context: { type: "navigation", fetcherKey: null },
+          context: {
+            type: "navigation",
+            fetcherKey: null,
+            navigationType: "PUSH",
+          },
         }),
         expect.objectContaining({
           pathname: "/page.data",
           method: "POST",
-          context: { type: "navigation", fetcherKey: null },
+          context: {
+            type: "navigation",
+            fetcherKey: null,
+            navigationType: "REPLACE",
+          },
         }),
       ]),
     );
@@ -384,6 +396,7 @@ test("identifies initiating operations and fetcher targets", async ({
           Scripts,
           ScrollRestoration,
           useFetcher,
+          useNavigate,
           useRevalidator,
         } from "react-router";
 
@@ -405,6 +418,7 @@ test("identifies initiating operations and fetcher targets", async ({
 
         export default function App() {
           let fetcher = useFetcher({ key: "tracked" });
+          let navigate = useNavigate();
           let revalidator = useRevalidator();
           return (
             <>
@@ -418,12 +432,20 @@ test("identifies initiating operations and fetcher targets", async ({
               <Form method="post" action="/next">
                 <button id="navigate" type="submit">Navigate</button>
               </Form>
+              <button id="replace" onClick={() => navigate("/next?replace", { replace: true })}>
+                Replace
+              </button>
+              <button id="back" onClick={() => navigate(-1)}>Back</button>
               <Outlet />
             </>
           );
         }
       `,
       "app/routes/_index.tsx": js`
+        export async function loader() {
+          return null;
+        }
+
         export default function Index() {
           return <h1>Index</h1>;
         }
@@ -444,6 +466,10 @@ test("identifies initiating operations and fetcher targets", async ({
       "app/routes/resource.tsx": js`
         let count = 0;
 
+        export function shouldRevalidate() {
+          return true;
+        }
+
         export async function loader() {
           return ++count;
         }
@@ -462,7 +488,11 @@ test("identifies initiating operations and fetcher targets", async ({
       {
         pathname: "/resource.data",
         method: "GET",
-        context: { type: "fetcher", fetcherKey: "tracked" },
+        context: {
+          type: "fetcher",
+          fetcherKey: "tracked",
+          navigationType: null,
+        },
       },
     ]),
   );
@@ -477,12 +507,20 @@ test("identifies initiating operations and fetcher targets", async ({
       {
         pathname: "/next.data",
         method: "POST",
-        context: { type: "navigation", fetcherKey: null },
+        context: {
+          type: "navigation",
+          fetcherKey: null,
+          navigationType: "PUSH",
+        },
       },
       {
         pathname: "/resource.data",
         method: "GET",
-        context: { type: "navigation", fetcherKey: "tracked" },
+        context: {
+          type: "navigation",
+          fetcherKey: "tracked",
+          navigationType: "PUSH",
+        },
       },
     ]),
   );
@@ -496,12 +534,73 @@ test("identifies initiating operations and fetcher targets", async ({
       {
         pathname: "/next.data",
         method: "GET",
-        context: { type: "revalidation", fetcherKey: null },
+        context: {
+          type: "revalidation",
+          fetcherKey: null,
+          navigationType: null,
+        },
       },
       {
         pathname: "/resource.data",
         method: "GET",
-        context: { type: "revalidation", fetcherKey: "tracked" },
+        context: {
+          type: "revalidation",
+          fetcherKey: "tracked",
+          navigationType: null,
+        },
+      },
+    ]),
+  );
+
+  await page.evaluate(() => ((window as any).__customFetches = []));
+  await page.click("#replace");
+  await expect(page).toHaveURL(/\/next\?replace$/);
+  await expect(page.locator("#fetcher-data")).toHaveText("4");
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual(
+    expect.arrayContaining([
+      {
+        pathname: "/next.data",
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: null,
+          navigationType: "REPLACE",
+        },
+      },
+      {
+        pathname: "/resource.data",
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: "tracked",
+          navigationType: "REPLACE",
+        },
+      },
+    ]),
+  );
+
+  await page.evaluate(() => ((window as any).__customFetches = []));
+  await page.click("#back");
+  await expect(page.getByRole("heading", { name: "Index" })).toBeVisible();
+  await expect(page.locator("#fetcher-data")).toHaveText("5");
+  expect(await page.evaluate(() => (window as any).__customFetches)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: null,
+          navigationType: "POP",
+        },
+      }),
+      {
+        pathname: "/resource.data",
+        method: "GET",
+        context: {
+          type: "navigation",
+          fetcherKey: "tracked",
+          navigationType: "POP",
+        },
       },
     ]),
   );

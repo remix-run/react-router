@@ -342,6 +342,9 @@ export interface HydratedRouterProps {
    * Provide a custom implementation for `fetch`, which will be used to perform
    * JavaScript-issued manifest and data requests. The context identifies the
    * operation that initiated each request. Defaults to `window.fetch`.
+   * For navigation-initiated data requests, `context.navigationType` is
+   * `"PUSH"`, `"REPLACE"`, or `"POP"`, including fetchers reloaded by the
+   * navigation. Other data requests use `null`; manifest requests omit it.
    *
    * Browser-managed data prefetches from {@link Link}, {@link NavLink}, or
    * {@link PrefetchPageLinks} use native `<link rel="prefetch">` elements

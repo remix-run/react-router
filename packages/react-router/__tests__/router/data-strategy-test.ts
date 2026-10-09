@@ -1863,6 +1863,7 @@ describe("router dataStrategy", () => {
           method: string;
           initiator: DataStrategyInitiator;
           fetcherKey: string | null;
+          navigationType: string | null;
         }> = [];
         let t = setup({
           routes: [
@@ -1875,8 +1876,14 @@ describe("router dataStrategy", () => {
             matches,
             unstable_initiator: initiator,
             fetcherKey,
+            unstable_navigationType: navigationType,
           }) {
-            calls.push({ method: request.method, initiator, fetcherKey });
+            calls.push({
+              method: request.method,
+              initiator,
+              fetcherKey,
+              navigationType,
+            });
             return Promise.resolve(
               Object.fromEntries(
                 matches
@@ -1899,7 +1906,7 @@ describe("router dataStrategy", () => {
           formData: createFormData({}),
         };
         if (initiator === "navigation") {
-          await t.router.navigate("/", submission);
+          await t.router.navigate("/", { ...submission, replace: true });
         } else {
           await t.router.fetch("submitter", "root", "/", submission);
         }
@@ -1909,9 +1916,20 @@ describe("router dataStrategy", () => {
             method: "POST",
             initiator,
             fetcherKey: initiator === "fetcher" ? "submitter" : null,
+            navigationType: initiator === "navigation" ? "REPLACE" : null,
           },
-          { method: "GET", initiator, fetcherKey: null },
-          { method: "GET", initiator, fetcherKey: "tracked" },
+          {
+            method: "GET",
+            initiator,
+            fetcherKey: null,
+            navigationType: initiator === "navigation" ? "REPLACE" : null,
+          },
+          {
+            method: "GET",
+            initiator,
+            fetcherKey: "tracked",
+            navigationType: initiator === "navigation" ? "REPLACE" : null,
+          },
         ]);
         expect(t.router.state.loaderData).toEqual({ root: "root" });
         expect(t.fetchers.tracked.data).toBe("resource");
@@ -2012,14 +2030,20 @@ describe("router dataStrategy", () => {
       let calls: Array<{
         initiator: DataStrategyInitiator;
         fetcherKey: string | null;
+        navigationType: string | null;
       }> = [];
       let t = setup({
         routes: [
           { id: "root", path: "/", loader: true },
           { id: "page", path: "/page", loader: true },
         ],
-        dataStrategy({ matches, unstable_initiator: initiator, fetcherKey }) {
-          calls.push({ initiator, fetcherKey });
+        dataStrategy({
+          matches,
+          unstable_initiator: initiator,
+          fetcherKey,
+          unstable_navigationType: navigationType,
+        }) {
+          calls.push({ initiator, fetcherKey, navigationType });
           return Promise.resolve(
             Object.fromEntries(
               matches
@@ -2035,23 +2059,31 @@ describe("router dataStrategy", () => {
 
       await tick();
       expect(calls).toEqual([
-        { initiator: "initialization", fetcherKey: null },
+        { initiator: "initialization", fetcherKey: null, navigationType: null },
       ]);
 
       calls = [];
       await t.router.navigate("/page");
-      expect(calls).toEqual([{ initiator: "navigation", fetcherKey: null }]);
+      expect(calls).toEqual([
+        { initiator: "navigation", fetcherKey: null, navigationType: "PUSH" },
+      ]);
 
       calls = [];
       await t.router.fetch("key", "page", "/page");
-      expect(calls).toEqual([{ initiator: "fetcher", fetcherKey: "key" }]);
+      expect(calls).toEqual([
+        { initiator: "fetcher", fetcherKey: "key", navigationType: null },
+      ]);
 
       calls = [];
       await t.router.revalidate();
       expect(calls).toEqual(
         expect.arrayContaining([
-          { initiator: "revalidation", fetcherKey: null },
-          { initiator: "revalidation", fetcherKey: "key" },
+          { initiator: "revalidation", fetcherKey: null, navigationType: null },
+          {
+            initiator: "revalidation",
+            fetcherKey: "key",
+            navigationType: null,
+          },
         ]),
       );
     });
@@ -2074,9 +2106,93 @@ describe("router dataStrategy", () => {
       expect(dataStrategy).toHaveBeenCalledWith(
         expect.objectContaining({
           unstable_initiator: "static",
+          unstable_navigationType: null,
           fetcherKey: null,
         }),
       );
     });
+  });
+
+  describe("unstable_navigationType", () => {
+    it.each(["PUSH", "REPLACE", "POP"] as const)(
+      "passes %s to navigation loaders, middleware, and reloaded fetchers",
+      async (navigationType) => {
+        let middleware = jest.fn();
+        let calls: Array<{
+          fetcherKey: string | null;
+          navigationType: string | null;
+        }> = [];
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              loader: true,
+              children: [
+                { id: "index", index: true },
+                {
+                  id: "page",
+                  path: "page",
+                  loader: true,
+                  middleware: [middleware],
+                },
+                {
+                  id: "resource",
+                  path: "resource",
+                  loader: true,
+                  shouldRevalidate: () => true,
+                },
+              ],
+            },
+          ],
+          initialEntries: ["/", "/page"],
+          initialIndex: 0,
+          hydrationData: { loaderData: { root: "ROOT" } },
+          dataStrategy: (args) =>
+            args.runClientMiddleware(
+              async ({ matches, fetcherKey, unstable_navigationType }) => {
+                calls.push({
+                  fetcherKey,
+                  navigationType: unstable_navigationType,
+                });
+                return Object.fromEntries(
+                  matches
+                    .filter((m) => m.shouldCallHandler())
+                    .map((m) => [
+                      m.route.id,
+                      { type: "data", result: m.route.id },
+                    ]),
+                );
+              },
+            ),
+        });
+
+        t.router.getFetcher("tracked");
+        await t.router.fetch("tracked", "root", "/resource");
+        calls = [];
+
+        if (navigationType === "POP") {
+          await t.router.navigate(1);
+          await tick();
+        } else {
+          await t.router.navigate("/page", {
+            replace: navigationType === "REPLACE",
+          });
+        }
+
+        expect(calls).toHaveLength(2);
+        expect(calls).toEqual(
+          expect.arrayContaining([
+            { fetcherKey: null, navigationType },
+            { fetcherKey: "tracked", navigationType },
+          ]),
+        );
+        expect(middleware).toHaveBeenCalledWith(
+          expect.objectContaining({ unstable_navigationType: navigationType }),
+          expect.any(Function),
+        );
+        expect(t.router.state.location.pathname).toBe("/page");
+      },
+    );
   });
 });
