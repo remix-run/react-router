@@ -59,6 +59,14 @@ function tick() {
   return new Promise((resolve) => setTimeout(resolve, 20));
 }
 
+// Lets the stream machinery run its promise jobs (write, close, then `flush()`)
+// without leaving the current macrotask, so a pending `setTimeout(..., 0)` does not fire.
+async function settleMicrotasks() {
+  for (let i = 0; i < 20; i++) {
+    await Promise.resolve();
+  }
+}
+
 async function withTimeout<T>(promise: Promise<T>, message: string) {
   let timeout: ReturnType<typeof setTimeout>;
   try {
@@ -187,6 +195,37 @@ describe("injectRSCPayload", () => {
     expect(unhandledRejections).toEqual([]);
     expect(rsc.isCancelled()).toBe(true);
     expect(rsc.cancelReason()).toBe(reason);
+  });
+
+  it("does not crash when the readable side is cancelled while flush waits for the RSC payload", async () => {
+    let rsc = createRSCStream();
+    let transform = injectRSCPayload(rsc.stream);
+    let writer = transform.writable.getWriter();
+    let reader = transform.readable.getReader();
+
+    let unhandledRejections = await withUnhandledRejections(async () => {
+      // The response body is being read, as on a server, so the transform is not held
+      // back by backpressure. A short document is written and closed before the flush
+      // timer fires, so `flush()` starts and waits for the RSC payload that the timer
+      // starts.
+      let read = reader.read().catch(() => {});
+      writer
+        .write(encoder.encode("<html><body>hi</body></html>"))
+        .catch(() => {});
+      writer.close().catch(() => {});
+      await settleMicrotasks();
+
+      // While `flush()` runs, the Streams spec does not call the transformer's
+      // `cancel()`: the cancellation alone does not stop the pending flush timer.
+      let cancelled = reader
+        .cancel(new Error("client aborted"))
+        .catch(() => {});
+      await tick();
+      await withTimeout(cancelled, "Timed out cancelling the readable side");
+      await read;
+    });
+
+    expect(unhandledRejections).toEqual([]);
   });
 });
 

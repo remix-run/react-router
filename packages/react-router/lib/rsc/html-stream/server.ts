@@ -23,6 +23,39 @@ export function injectRSCPayload(
   // invalid HTML by injecting RSC in between two partial chunks of HTML.
   let buffered: Uint8Array[] = [];
   let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Stops all pending work after the readable side went away. Safe to call more than once.
+  async function stop(reason: unknown) {
+    cancelled = true;
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+    buffered.length = 0;
+    if (rscReader) {
+      await rscReader.cancel(reason).catch(() => {});
+    } else {
+      await rscStream.cancel(reason).catch(() => {});
+    }
+    resolveFlightDataPromise();
+  }
+
+  // Enqueues a chunk and returns `false` if the readable side is closed. The transformer's
+  // `cancel()` does not run when the readable side is cancelled while `flush()` is in
+  // progress, so a closed stream can only be detected here.
+  function tryEnqueue(
+    controller: TransformStreamDefaultController<Uint8Array>,
+    chunk: Uint8Array,
+  ) {
+    try {
+      controller.enqueue(chunk);
+      return true;
+    } catch (error) {
+      void stop(error);
+      return false;
+    }
+  }
+
   function flushBufferedChunks(
     controller: TransformStreamDefaultController<Uint8Array>,
   ) {
@@ -31,7 +64,9 @@ export function injectRSCPayload(
       if (buf.endsWith(trailer)) {
         buf = buf.slice(0, -trailer.length);
       }
-      controller.enqueue(encoder.encode(buf));
+      if (!tryEnqueue(controller, encoder.encode(buf))) {
+        return;
+      }
     }
 
     buffered.length = 0;
@@ -54,36 +89,40 @@ export function injectRSCPayload(
           return;
         }
         flushBufferedChunks(controller);
+        if (cancelled) {
+          return;
+        }
         if (!startedRSC) {
           startedRSC = true;
           rscReader = rscStream.getReader();
           writeRSCStream(rscReader, controller, () => cancelled, nonce)
-            .catch((err) => controller.error(err))
+            .catch((err) => {
+              if (cancelled) {
+                return;
+              }
+              try {
+                controller.error(err);
+              } catch (error) {
+                return stop(error);
+              }
+            })
             .then(resolveFlightDataPromise);
         }
       }, 0);
     },
     async flush(controller) {
       await flightDataPromise;
+      if (cancelled) {
+        return;
+      }
       if (timeout) {
         clearTimeout(timeout);
         flushBufferedChunks(controller);
       }
-      controller.enqueue(encoder.encode("</body></html>"));
+      tryEnqueue(controller, encoder.encode("</body></html>"));
     },
     async cancel(reason) {
-      cancelled = true;
-      if (timeout) {
-        clearTimeout(timeout);
-        timeout = null;
-      }
-      buffered.length = 0;
-      if (rscReader) {
-        await rscReader.cancel(reason).catch(() => {});
-      } else {
-        await rscStream.cancel(reason).catch(() => {});
-      }
-      resolveFlightDataPromise();
+      await stop(reason);
     },
   };
   return new TransformStream(transformer);
