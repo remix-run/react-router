@@ -3135,7 +3135,7 @@ export function createRouter(init: RouterInit): Router {
         loaderData: mergeLoaderData(
           state.loaderData,
           loaderData,
-          matches,
+          state.matches,
           errors,
         ),
         fetchers: finalFetchers,
