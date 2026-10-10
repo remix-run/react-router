@@ -2128,7 +2128,9 @@ export function ScrollRestoration({
       }
     } catch (error: unknown) {
       console.error(error);
-      sessionStorage.removeItem(storageKey);
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {}
     }
   }).toString();
 
