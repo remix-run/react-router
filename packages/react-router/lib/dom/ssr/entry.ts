@@ -30,6 +30,9 @@ export interface FrameworkContextObject {
   serializeError?(error: Error): SerializedError;
   renderMeta?: {
     didRenderScripts?: boolean;
+    onScriptsRendered?: () => void;
+    scriptsPromise?: Promise<void>;
+    scriptsTimedOut?: boolean;
     streamCache?: Record<
       number,
       Promise<void> & {
