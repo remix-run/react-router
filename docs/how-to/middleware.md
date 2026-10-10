@@ -639,7 +639,7 @@ export async function loader({
 [datastrategy]: ../api/data-routers/createBrowserRouter#optsdatastrategy
 [cms-redirect]: #cms-redirect-on-404
 [createContext]: ../api/utils/createContext
-[getContext]: ../api/data-routers/createBrowserRouter#optsgetContext
+[getContext]: ../api/data-routers/createBrowserRouter#optsgetcontext
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
 [data-action]: ../start/data/route-object#action
 [data-loader]: ../start/data/route-object#loader
