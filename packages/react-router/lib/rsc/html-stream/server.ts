@@ -24,7 +24,7 @@ export function injectRSCPayload(
   let buffered: Uint8Array[] = [];
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
-  // Stops all pending work after the readable side went away. Safe to call more than once.
+  // Stops all pending work after the readable side closes. You can call it more than once.
   async function stop(reason: unknown) {
     cancelled = true;
     if (timeout) {
@@ -32,11 +32,11 @@ export function injectRSCPayload(
       timeout = null;
     }
     buffered.length = 0;
-    // Resolve before the cancel: when `rscStream` is a tee branch, its cancel waits
-    // for the other branch, and `flush()` must not wait for it.
+    // Resolve before the cancel. If `rscStream` is a tee branch, its cancel waits for
+    // the other branch, and `flush()` must not wait.
     resolveFlightDataPromise();
-    // `writeRSCStream` releases the reader lock when it stops, and a released reader
-    // cannot cancel the stream.
+    // `writeRSCStream` releases the reader lock when it stops. A released reader cannot
+    // cancel the stream.
     if (rscReader && rscStream.locked) {
       await rscReader.cancel(reason).catch(() => {});
     } else {
@@ -44,9 +44,9 @@ export function injectRSCPayload(
     }
   }
 
-  // Enqueues a chunk and returns `false` if the readable side is closed. The transformer's
-  // `cancel()` does not run when the readable side is cancelled while `flush()` is in
-  // progress, so a closed stream can only be detected here.
+  // Returns `false` if the readable side is closed. If the readable side is cancelled
+  // while `flush()` runs, the transformer's `cancel()` does not run. A failed enqueue is
+  // then the only signal, so the RSC stream stays open until the next enqueue.
   function tryEnqueue(
     controller: TransformStreamDefaultController<Uint8Array>,
     chunk: Uint8Array,

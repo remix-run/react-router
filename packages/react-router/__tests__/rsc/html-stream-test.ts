@@ -59,8 +59,8 @@ function tick() {
   return new Promise((resolve) => setTimeout(resolve, 20));
 }
 
-// Lets the stream machinery run its promise jobs (write, close, then `flush()`)
-// without leaving the current macrotask, so a pending `setTimeout(..., 0)` does not fire.
+// Runs the pending promise jobs of the streams (write, close, then `flush()`). It uses
+// no timer, so a pending `setTimeout(..., 0)` does not fire.
 async function settleMicrotasks() {
   for (let i = 0; i < 20; i++) {
     await Promise.resolve();
@@ -205,10 +205,9 @@ describe("injectRSCPayload", () => {
     let cancelHookSkipped = false;
 
     let unhandledRejections = await withUnhandledRejections(async () => {
-      // The response body is being read, as on a server, so the transform is not held
-      // back by backpressure. A short document is written and closed before the flush
-      // timer fires, so `flush()` starts and waits for the RSC payload that the timer
-      // starts.
+      // A pending read removes the backpressure, as on a server. The document is written
+      // and closed before the flush timer fires. `flush()` then waits for the RSC
+      // payload, and only the timer starts it.
       let read = reader.read().catch(() => {});
       writer
         .write(encoder.encode("<html><body>hi</body></html>"))
@@ -217,7 +216,7 @@ describe("injectRSCPayload", () => {
       await settleMicrotasks();
 
       // While `flush()` runs, the Streams spec does not call the transformer's
-      // `cancel()`: the cancellation alone does not stop the pending flush timer.
+      // `cancel()`. The flush timer stays pending.
       let cancelled = reader
         .cancel(new Error("client aborted"))
         .catch(() => {});
@@ -228,7 +227,7 @@ describe("injectRSCPayload", () => {
       await read;
     });
 
-    // Proves that `flush()` was in progress when the reader was cancelled.
+    // The RSC stream stays open after the cancel only if `flush()` was in progress.
     expect(cancelHookSkipped).toBe(true);
     expect(unhandledRejections).toEqual([]);
     expect(rsc.isCancelled()).toBe(true);
@@ -273,8 +272,8 @@ describe("injectRSCPayload", () => {
   });
 
   it("does not wait for the RSC payload to finish when the readable side is cancelled during flush", async () => {
-    // In production the RSC stream is one branch of a tee. Cancelling one branch
-    // settles only when the other branch is cancelled too or the source closes.
+    // In production, the RSC stream is a tee branch. The cancel of one branch settles
+    // only after the other branch is cancelled or the source closes.
     let [rscBranch] = createRSCStream({ keepOpen: true }).stream.tee();
     let transform = injectRSCPayload(rscBranch);
     let writer = transform.writable.getWriter();
