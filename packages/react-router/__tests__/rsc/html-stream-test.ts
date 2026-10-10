@@ -198,10 +198,11 @@ describe("injectRSCPayload", () => {
   });
 
   it("does not crash when the readable side is cancelled while flush waits for the RSC payload", async () => {
-    let rsc = createRSCStream();
+    let rsc = createRSCStream({ keepOpen: true });
     let transform = injectRSCPayload(rsc.stream);
     let writer = transform.writable.getWriter();
     let reader = transform.readable.getReader();
+    let cancelHookSkipped = false;
 
     let unhandledRejections = await withUnhandledRejections(async () => {
       // The response body is being read, as on a server, so the transform is not held
@@ -220,12 +221,17 @@ describe("injectRSCPayload", () => {
       let cancelled = reader
         .cancel(new Error("client aborted"))
         .catch(() => {});
+      await settleMicrotasks();
+      cancelHookSkipped = !rsc.isCancelled();
       await tick();
       await withTimeout(cancelled, "Timed out cancelling the readable side");
       await read;
     });
 
+    // Proves that `flush()` was in progress when the reader was cancelled.
+    expect(cancelHookSkipped).toBe(true);
     expect(unhandledRejections).toEqual([]);
+    expect(rsc.isCancelled()).toBe(true);
   });
 
   it("cancels the RSC stream when the readable side is cancelled during flush while the RSC payload is still streaming", async () => {
@@ -264,6 +270,33 @@ describe("injectRSCPayload", () => {
 
     expect(unhandledRejections).toEqual([]);
     expect(rscCancelled).toBe(true);
+  });
+
+  it("does not wait for the RSC payload to finish when the readable side is cancelled during flush", async () => {
+    // In production the RSC stream is one branch of a tee. Cancelling one branch
+    // settles only when the other branch is cancelled too or the source closes.
+    let [rscBranch] = createRSCStream({ keepOpen: true }).stream.tee();
+    let transform = injectRSCPayload(rscBranch);
+    let writer = transform.writable.getWriter();
+    let reader = transform.readable.getReader();
+
+    let unhandledRejections = await withUnhandledRejections(async () => {
+      let read = reader.read().catch(() => {});
+      writer
+        .write(encoder.encode("<html><body>hi</body></html>"))
+        .catch(() => {});
+      writer.close().catch(() => {});
+      await settleMicrotasks();
+
+      let cancelled = reader
+        .cancel(new Error("client aborted"))
+        .catch(() => {});
+      await tick();
+      await withTimeout(cancelled, "Timed out cancelling the readable side");
+      await read;
+    });
+
+    expect(unhandledRejections).toEqual([]);
   });
 });
 

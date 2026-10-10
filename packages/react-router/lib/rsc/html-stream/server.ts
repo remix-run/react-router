@@ -32,6 +32,9 @@ export function injectRSCPayload(
       timeout = null;
     }
     buffered.length = 0;
+    // Resolve before the cancel: when `rscStream` is a tee branch, its cancel waits
+    // for the other branch, and `flush()` must not wait for it.
+    resolveFlightDataPromise();
     // `writeRSCStream` releases the reader lock when it stops, and a released reader
     // cannot cancel the stream.
     if (rscReader && rscStream.locked) {
@@ -39,7 +42,6 @@ export function injectRSCPayload(
     } else {
       await rscStream.cancel(reason).catch(() => {});
     }
-    resolveFlightDataPromise();
   }
 
   // Enqueues a chunk and returns `false` if the readable side is closed. The transformer's
@@ -99,13 +101,8 @@ export function injectRSCPayload(
           rscReader = rscStream.getReader();
           writeRSCStream(rscReader, controller, () => cancelled, nonce)
             .catch((err) => {
-              if (cancelled) {
-                return;
-              }
-              try {
+              if (!cancelled) {
                 controller.error(err);
-              } catch (error) {
-                return stop(error);
               }
             })
             .then(resolveFlightDataPromise);
@@ -120,6 +117,9 @@ export function injectRSCPayload(
       if (timeout) {
         clearTimeout(timeout);
         flushBufferedChunks(controller);
+        if (cancelled) {
+          return;
+        }
       }
       tryEnqueue(controller, encoder.encode("</body></html>"));
     },
