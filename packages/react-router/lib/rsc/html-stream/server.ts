@@ -93,33 +93,20 @@ export function injectRSCPayload(
           return;
         }
         flushBufferedChunks(controller);
-        if (cancelled) {
-          return;
-        }
         if (!startedRSC) {
           startedRSC = true;
           rscReader = rscStream.getReader();
           writeRSCStream(rscReader, controller, () => cancelled, nonce)
-            .catch((err) => {
-              if (!cancelled) {
-                controller.error(err);
-              }
-            })
+            .catch((err) => controller.error(err))
             .then(resolveFlightDataPromise);
         }
       }, 0);
     },
     async flush(controller) {
       await flightDataPromise;
-      if (cancelled) {
-        return;
-      }
       if (timeout) {
         clearTimeout(timeout);
         flushBufferedChunks(controller);
-        if (cancelled) {
-          return;
-        }
       }
       tryEnqueue(controller, encoder.encode("</body></html>"));
     },
