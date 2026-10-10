@@ -1,11 +1,14 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
+import { matchesGlob } from "node:path";
 import * as ViteRunner from "../vite/vite-runner";
 import type * as Vite from "vite";
 import Path from "pathe";
 import chokidar, {
+  type ChokidarOptions,
   type FSWatcher,
+  type Matcher,
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
 import {
@@ -852,11 +855,18 @@ export type ConfigLoader = {
 export async function createConfigLoader({
   rootDirectory: root,
   watch,
+  watchOptions,
   mode,
   skipRoutes,
   validateConfig,
 }: {
   watch: boolean;
+  /**
+   * Options passed to the file watcher, e.g. Vite's `server.watch`.
+   * The `ignored` option is merged with the paths that React Router
+   * always ignores, rather than replacing them.
+   */
+  watchOptions?: ChokidarOptions;
   rootDirectory?: string;
   mode: string;
   skipRoutes?: boolean;
@@ -927,8 +937,14 @@ export async function createConfigLoader({
 
       if (!fsWatcher) {
         fsWatcher = chokidar.watch([root, appDirectory], {
+          ...watchOptions,
           ignoreInitial: true,
-          ignored: (path) => isIgnoredByWatcher(path, { root, appDirectory }),
+          ignored: [
+            ...toArray(watchOptions?.ignored).map((matcher) =>
+              toIgnoredMatcher(matcher, root),
+            ),
+            (path) => isIgnoredByWatcher(path, { root, appDirectory }),
+          ],
         });
 
         fsWatcher.on("error", (error: unknown) => {
@@ -1277,6 +1293,38 @@ function isEntryFileDependency(
   }
 
   return false;
+}
+
+function toArray(matcher: Matcher | Matcher[] | undefined): Matcher[] {
+  if (matcher === undefined) {
+    return [];
+  }
+  return Array.isArray(matcher) ? matcher : [matcher];
+}
+
+/**
+ * Chokidar 5 only matches string matchers exactly and no longer supports glob
+ * patterns, but Vite's `server.watch.ignored` is anymatch-compatible, where
+ * strings can be globs or directory paths, and relative paths are resolved
+ * before matching. We convert string matchers to functions so that the ignore
+ * patterns that work in Vite also work here: patterns are resolved against
+ * the project root, globs are matched with Node's `path.matchesGlob`, and
+ * non-glob paths match everything inside of them.
+ */
+function toIgnoredMatcher(matcher: Matcher, root: string): Matcher {
+  if (typeof matcher !== "string") {
+    // Functions and regular expressions are matched by chokidar as-is
+    return matcher;
+  }
+
+  let pattern = Path.normalize(
+    Path.isAbsolute(matcher) ? matcher : Path.join(root, matcher),
+  ).replace(/\/+$/, "");
+
+  return (path) =>
+    matchesGlob(path, pattern) ||
+    path === pattern || // The pattern itself
+    path.startsWith(pattern + "/"); // Anything inside a directory pattern
 }
 
 export function isIgnoredByWatcher(
