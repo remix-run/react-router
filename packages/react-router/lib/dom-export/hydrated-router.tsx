@@ -242,7 +242,7 @@ export interface HydratedRouterProps {
    * Context factory function to be passed through to {@link createBrowserRouter}.
    * This function will be called to create a fresh `context` instance on each
    * navigation/fetch and made available to
-   * [`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+   * [`clientAction`](../../start/framework/route-module#clientaction)/[`clientLoader`](../../start/framework/route-module#clientloader)
    * functions.
    */
   getContext?: RouterInit["getContext"];

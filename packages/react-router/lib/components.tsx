@@ -1076,7 +1076,7 @@ export interface PathRouteProps {
   action?: NonIndexRouteObject["action"];
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
    */
   shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
   /**
@@ -1168,7 +1168,7 @@ export interface IndexRouteProps {
   action?: IndexRouteObject["action"];
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
    */
   shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
   /**
