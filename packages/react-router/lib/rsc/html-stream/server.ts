@@ -32,7 +32,9 @@ export function injectRSCPayload(
       timeout = null;
     }
     buffered.length = 0;
-    if (rscReader) {
+    // `writeRSCStream` releases the reader lock when it stops, and a released reader
+    // cannot cancel the stream.
+    if (rscReader && rscStream.locked) {
       await rscReader.cancel(reason).catch(() => {});
     } else {
       await rscStream.cancel(reason).catch(() => {});

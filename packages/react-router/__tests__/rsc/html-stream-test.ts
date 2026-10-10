@@ -227,6 +227,44 @@ describe("injectRSCPayload", () => {
 
     expect(unhandledRejections).toEqual([]);
   });
+
+  it("cancels the RSC stream when the readable side is cancelled during flush while the RSC payload is still streaming", async () => {
+    let rscController!: ReadableStreamDefaultController<Uint8Array>;
+    let rscCancelled = false;
+    let rscStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        rscController = controller;
+        controller.enqueue(encoder.encode('S1:"hello"'));
+      },
+      cancel() {
+        rscCancelled = true;
+      },
+    });
+    let transform = injectRSCPayload(rscStream);
+    let writer = transform.writable.getWriter();
+    let reader = transform.readable.getReader();
+
+    let unhandledRejections = await withUnhandledRejections(async () => {
+      let read = reader.read().catch(() => {});
+      writer
+        .write(encoder.encode("<html><body>hi</body></html>"))
+        .catch(() => {});
+      await tick();
+
+      writer.close().catch(() => {});
+      await settleMicrotasks();
+      let cancelled = reader
+        .cancel(new Error("client aborted"))
+        .catch(() => {});
+      rscController.enqueue(encoder.encode('S2:"world"'));
+      await tick();
+      await withTimeout(cancelled, "Timed out cancelling the readable side");
+      await read;
+    });
+
+    expect(unhandledRejections).toEqual([]);
+    expect(rscCancelled).toBe(true);
+  });
 });
 
 describe("routeRSCServerRequest", () => {
