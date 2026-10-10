@@ -102,3 +102,7 @@ DeployHQ maintains their own guide for deploying React Router to your own server
 ### Hostinger
 
 Hostinger supports deploying React Router applications with server rendering on its managed Node.js hosting, including automatic deployments from GitHub. Checkout the [Hostinger Guide](https://www.hostinger.com/web-apps-hosting/react-router-hosting) for more information.
+
+### Pethost
+
+Pethost builds the default template from its `Dockerfile` and serves it over HTTPS with one command, `pethost deploy`. Checkout the [Pethost Guide](https://pethost.dev/blog/deploy-react-router-app/) for more information.
