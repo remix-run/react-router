@@ -8,6 +8,8 @@ export type ServerHandoff = {
   future: FutureConfig;
   ssr: boolean;
   isSpaMode: boolean;
+  unstable_apiOnly?: boolean;
+  unstable_apiServerOrigin?: string;
   routeDiscovery: ServerBuild["routeDiscovery"];
   // SPA documents are prerendered for one URL and then reused for every path.
   // The client hydrates against this location so the first render matches that
