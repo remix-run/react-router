@@ -1269,6 +1269,17 @@ export function createRouter(init: RouterInit): Router {
   //  - X-Remix-Revalidate (from redirect)
   let isRevalidationRequired = false;
 
+  // Track if a revalidation required by a successful mutation action was
+  // cancelled before its loaders could commit (e.g. interrupted by a subsequent
+  // navigation or aborted by abortStaleFetchLoads).
+  let hasCancelledMutationRevalidation = false;
+
+  // Track if the pending navigation was triggered by a successful mutation action.
+  let isPendingNavigationMutation = false;
+
+  // Track which in-flight fetchers were triggered by successful mutation actions.
+  let mutationFetchers = new Set<string>();
+
   // Use this internal array to capture fetcher loads that were cancelled by an
   // action navigation and require revalidation
   let cancelledFetcherLoads: Set<string> = new Set();
@@ -1532,7 +1543,10 @@ export function createRouter(init: RouterInit): Router {
   function completeNavigation(
     location: Location,
     newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>,
-    { flushSync }: { flushSync?: boolean } = {},
+    {
+      flushSync,
+      isShortCircuit,
+    }: { flushSync?: boolean; isShortCircuit?: boolean } = {},
   ): void {
     // Deduce if we're in a loading/actionReload state:
     // - We have committed actionData in the store
@@ -1674,6 +1688,10 @@ export function createRouter(init: RouterInit): Router {
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
+    if (!isShortCircuit) {
+      hasCancelledMutationRevalidation = false;
+      isPendingNavigationMutation = false;
+    }
     pendingPopstateNavigationDfd?.resolve();
     pendingPopstateNavigationDfd = null;
     pendingRevalidationDfd?.resolve();
@@ -1948,8 +1966,14 @@ export function createRouter(init: RouterInit): Router {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
     // uninterrupted revalidations unless told otherwise, since we want this
     // new navigation to update history normally
-    pendingNavigationController && pendingNavigationController.abort();
+    if (pendingNavigationController) {
+      if (isPendingNavigationMutation) {
+        hasCancelledMutationRevalidation = true;
+      }
+      pendingNavigationController.abort();
+    }
     pendingNavigationController = null;
+    isPendingNavigationMutation = false;
     pendingAction = historyAction;
     isUninterruptedRevalidation =
       (opts && opts.startUninterruptedRevalidation) === true;
@@ -2326,6 +2350,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isErrorResult(result)) {
+      isPendingNavigationMutation = false;
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
@@ -2347,6 +2372,13 @@ export function createRouter(init: RouterInit): Router {
           actionMatch.route.id,
         ],
       };
+    }
+
+    let actionStatus = result.statusCode;
+    if (!actionStatus || actionStatus < 400) {
+      isPendingNavigationMutation = true;
+    } else {
+      isPendingNavigationMutation = false;
     }
 
     return {
@@ -2481,6 +2513,7 @@ export function createRouter(init: RouterInit): Router {
       dataRouteMatcher,
       pendingActionResult,
       callSiteDefaultShouldRevalidate,
+      hasCancelledMutationRevalidation,
     );
 
     pendingNavigationLoadId = ++incrementingLoadId;
@@ -2511,7 +2544,7 @@ export function createRouter(init: RouterInit): Router {
           ...getActionDataForCommit(pendingActionResult),
           ...(didUpdateFetcherRedirects ? { fetchers: workingFetchers } : {}),
         },
-        { flushSync },
+        { flushSync, isShortCircuit: true },
       );
       return { shortCircuited: true };
     }
@@ -2952,6 +2985,16 @@ export function createRouter(init: RouterInit): Router {
 
     invariant(matches, "Didn't find any matches after fetcher action");
 
+    let actionStatus = actionResult.statusCode;
+    if (!actionStatus || actionStatus < 400) {
+      mutationFetchers.add(key);
+    } else {
+      if (mutationFetchers.has(key)) {
+        hasCancelledMutationRevalidation = true;
+      }
+      mutationFetchers.delete(key);
+    }
+
     let loadId = ++incrementingLoadId;
     fetchReloadIds.set(key, loadId);
 
@@ -2975,6 +3018,7 @@ export function createRouter(init: RouterInit): Router {
       dataRouteMatcher,
       [match.route.id, actionResult],
       callSiteDefaultShouldRevalidate,
+      hasCancelledMutationRevalidation,
     );
 
     // Build an updated fetchers map for the updateState call below without
@@ -3141,6 +3185,13 @@ export function createRouter(init: RouterInit): Router {
         fetchers: finalFetchers,
       });
       isRevalidationRequired = false;
+      mutationFetchers.delete(key);
+      let didRunLoaders = dsMatches.some((m) => m.shouldLoad);
+      if (didRunLoaders) {
+        hasCancelledMutationRevalidation = false;
+      } else if (hasCancelledMutationRevalidation) {
+        revalidate();
+      }
     }
   }
 
@@ -3733,6 +3784,10 @@ export function createRouter(init: RouterInit): Router {
           abortFetcher(key);
           fetchReloadIds.delete(key);
           yeetedKeys.push(key);
+          if (mutationFetchers.has(key)) {
+            mutationFetchers.delete(key);
+            hasCancelledMutationRevalidation = true;
+          }
         }
       }
     }
@@ -5416,6 +5471,7 @@ function getMatchesToLoad(
   dataRouteMatcher: DataRouteMatcher,
   pendingActionResult?: PendingActionResult,
   callSiteDefaultShouldRevalidate?: boolean,
+  hasCancelledMutationRevalidation?: boolean,
 ): {
   dsMatches: DataStrategyMatch[];
   revalidatingFetchers: RevalidatingFetcher[];
@@ -5515,6 +5571,9 @@ function getMatchesToLoad(
     if (typeof callSiteDefaultShouldRevalidate === "boolean") {
       // Use call-site value verbatim if provided
       defaultShouldRevalidate = callSiteDefaultShouldRevalidate;
+    } else if (hasCancelledMutationRevalidation) {
+      // Prior successful mutation needs revalidation even if this action was 4xx/5xx
+      defaultShouldRevalidate = true;
     } else if (shouldSkipRevalidation) {
       // Skip due to 4xx/5xx action result
       defaultShouldRevalidate = false;
@@ -5647,6 +5706,8 @@ function getMatchesToLoad(
       if (typeof callSiteDefaultShouldRevalidate === "boolean") {
         // Use call-site value verbatim if provided
         defaultShouldRevalidate = callSiteDefaultShouldRevalidate;
+      } else if (hasCancelledMutationRevalidation) {
+        defaultShouldRevalidate = true;
       } else if (shouldSkipRevalidation) {
         defaultShouldRevalidate = false;
       } else {
