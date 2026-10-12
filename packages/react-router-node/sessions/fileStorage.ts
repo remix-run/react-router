@@ -93,14 +93,15 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
       await fsp.mkdir(path.dirname(file), { recursive: true });
       // Write to a temporary file and rename it into place so a concurrent
       // commit or read of the same session never sees a partially written file.
-      let randomBytes = crypto.getRandomValues(new Uint8Array(4));
-      let tmpFile = `${file}.${Buffer.from(randomBytes).toString("hex")}.tmp`;
+      // The temporary directory sits next to the session file because rename()
+      // fails with EXDEV across filesystems (e.g. a tmpfs os.tmpdir()).
+      let tmpDir = await fsp.mkdtemp(path.join(path.dirname(file), ".tmp-"));
       try {
+        let tmpFile = path.join(tmpDir, "session");
         await fsp.writeFile(tmpFile, content, "utf-8");
         await fsp.rename(tmpFile, file);
-      } catch (error) {
-        await fsp.rm(tmpFile, { force: true });
-        throw error;
+      } finally {
+        await fsp.rm(tmpDir, { recursive: true, force: true });
       }
     },
     async deleteData(id) {
