@@ -91,7 +91,17 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
         return;
       }
       await fsp.mkdir(path.dirname(file), { recursive: true });
-      await fsp.writeFile(file, content, "utf-8");
+      // Write to a temporary file and rename it into place so a concurrent
+      // commit or read of the same session never sees a partially written file.
+      let randomBytes = crypto.getRandomValues(new Uint8Array(4));
+      let tmpFile = `${file}.${Buffer.from(randomBytes).toString("hex")}.tmp`;
+      try {
+        await fsp.writeFile(tmpFile, content, "utf-8");
+        await fsp.rename(tmpFile, file);
+      } catch (error) {
+        await fsp.rm(tmpFile, { force: true });
+        throw error;
+      }
     },
     async deleteData(id) {
       // Return early if the id is empty, otherwise we'll end up trying to

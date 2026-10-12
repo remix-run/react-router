@@ -125,6 +125,58 @@ describe("File session storage", () => {
     expect(typeof fileData.expires).toBe("string");
   });
 
+  it("keeps the session readable when it is committed concurrently", async () => {
+    let { getSession, commitSession } = createFileSessionStorage({
+      dir,
+      cookie: { secrets: ["secret1"] },
+    });
+    let cookie = getCookieFromSetCookie(
+      await commitSession(await getSession()),
+    );
+
+    for (let i = 0; i < 10; i++) {
+      let longSession = await getSession(cookie);
+      longSession.set("value", "a".repeat(20_000));
+      let shortSession = await getSession(cookie);
+      shortSession.set("value", "b");
+
+      await Promise.all([
+        commitSession(longSession),
+        commitSession(shortSession),
+      ]);
+
+      let session = await getSession(cookie);
+      expect(["a".repeat(20_000), "b"]).toContain(session.get("value"));
+    }
+  });
+
+  it("doesn't throw when reading a session that is being committed", async () => {
+    let { getSession, commitSession } = createFileSessionStorage({
+      dir,
+      cookie: { secrets: ["secret1"] },
+    });
+    let session = await getSession();
+    session.set("value", "a".repeat(64 * 1024));
+    let cookie = getCookieFromSetCookie(await commitSession(session));
+    session = await getSession(cookie);
+
+    let reads: Promise<unknown>[] = [];
+    for (let i = 0; i < 20; i++) {
+      let committed = false;
+      let commit = commitSession(session).finally(() => (committed = true));
+      while (!committed) {
+        reads.push(getSession(cookie));
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+      await commit;
+    }
+
+    let results = await Promise.allSettled(reads);
+    expect(results.filter((result) => result.status === "rejected")).toEqual(
+      [],
+    );
+  });
+
   describe("when a new secret shows up in the rotation", () => {
     it("unsigns old session cookies using the old secret and encodes new cookies using the new secret", async () => {
       let { getSession, commitSession } = createFileSessionStorage({
