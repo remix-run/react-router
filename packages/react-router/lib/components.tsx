@@ -61,6 +61,7 @@ import {
 import {
   _renderMatches,
   useActionData,
+  useAsyncValue,
   useInRouterContext,
   useLoaderData,
   useLocation,
@@ -1732,7 +1733,7 @@ class AwaitErrorBoundary extends React.Component<
       }
       return (
         <AwaitContext.Provider
-          value={{ _error: this.state.error }}
+          value={{ status: "rejected", reason: this.state.error }}
           children={errorElement}
         />
       );
@@ -1789,15 +1790,13 @@ function ResolveAwait({
     }
     result = React.use(promise);
   }
-  let context = React.useMemo(() => {
-    if (result?.status === "rejected") {
-      return { _error: result.reason };
-    }
-    return { _data: result ? result.value : resolve };
-  }, [result, resolve]);
-  if (result?.status === "rejected") {
+  let context = React.useMemo<PromiseSettledResult<unknown>>(
+    () => result ?? { status: "fulfilled", value: resolve },
+    [result, resolve],
+  );
+  if (context.status === "rejected") {
     if (!errorElement) {
-      throw result.reason;
+      throw context.reason;
     }
     return <AwaitContext.Provider value={context} children={errorElement} />;
   }
@@ -1820,7 +1819,7 @@ function AwaitChildren({
 }: {
   children: React.ReactNode | AwaitResolveRenderFunction;
 }) {
-  let data = React.useContext(AwaitContext)?._data;
+  let data = useAsyncValue();
   return <>{typeof children === "function" ? children(data) : children}</>;
 }
 

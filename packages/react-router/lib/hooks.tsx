@@ -1761,8 +1761,8 @@ export function useRouteError(): unknown {
  * @returns The resolved value from the nearest {@link Await} component
  */
 export function useAsyncValue(): unknown {
-  let value = React.useContext(AwaitContext);
-  return value?._data;
+  let result = React.useContext(AwaitContext);
+  return result?.status === "fulfilled" ? result.value : undefined;
 }
 
 /**
@@ -1791,8 +1791,8 @@ export function useAsyncValue(): unknown {
  * @returns The error that was thrown in the nearest {@link Await} component
  */
 export function useAsyncError(): unknown {
-  let value = React.useContext(AwaitContext);
-  return value?._error;
+  let result = React.useContext(AwaitContext);
+  return result?.status === "rejected" ? result.reason : undefined;
 }
 
 let blockerId = 0;

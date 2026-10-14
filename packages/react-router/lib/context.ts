@@ -89,10 +89,8 @@ export const FetchersContext =
   React.createContext<FetchersContextObject | null>(null);
 FetchersContext.displayName = "Fetchers";
 
-export const AwaitContext = React.createContext<{
-  _data?: unknown;
-  _error?: unknown;
-} | null>(null);
+export const AwaitContext =
+  React.createContext<PromiseSettledResult<unknown> | null>(null);
 AwaitContext.displayName = "Await";
 
 export const AwaitContextProvider = (

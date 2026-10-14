@@ -6,6 +6,7 @@ import {
   Await,
   RouterProvider,
   createMemoryRouter,
+  UNSAFE_AwaitContextProvider as AwaitContextProvider,
   useAsyncError,
   useAsyncValue,
 } from "../index";
@@ -20,6 +21,46 @@ async function renderAsync(element: React.ReactElement) {
 }
 
 describe("Await", () => {
+  it.each<PromiseSettledResult<unknown>>([
+    { status: "fulfilled", value: "Resolved" },
+    { status: "fulfilled", value: undefined },
+    { status: "rejected", reason: new Error("Rejected") },
+    { status: "rejected", reason: undefined },
+    { status: "rejected", reason: null },
+    { status: "rejected", reason: false },
+    { status: "rejected", reason: 0 },
+  ])("reads a settled context result: %p", (result) => {
+    let receivedValue: unknown;
+    let receivedError: unknown;
+    function Content() {
+      receivedValue = useAsyncValue();
+      receivedError = useAsyncError();
+      return <p>Content</p>;
+    }
+    render(
+      <AwaitContextProvider value={result}>
+        <Content />
+      </AwaitContextProvider>,
+    );
+    expect(screen.getByText("Content")).toBeVisible();
+    expect(receivedValue).toBe(
+      result.status === "fulfilled" ? result.value : undefined,
+    );
+    expect(receivedError).toBe(
+      result.status === "rejected" ? result.reason : undefined,
+    );
+  });
+
+  it("returns undefined from async hooks outside Await", () => {
+    function Content() {
+      expect(useAsyncValue()).toBeUndefined();
+      expect(useAsyncError()).toBeUndefined();
+      return <p>Content</p>;
+    }
+    render(<Content />);
+    expect(screen.getByText("Content")).toBeVisible();
+  });
+
   it("does not show a fallback when reusing a shared promise from its fulfillment callback", async () => {
     let deferred = createDeferred<string>();
     let showSharedPromise!: () => void;

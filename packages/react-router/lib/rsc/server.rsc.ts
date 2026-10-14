@@ -155,7 +155,7 @@ export const Await: typeof AwaitType = (async ({
   if (resolved.status === "rejected") {
     return React.createElement(UNSAFE_AwaitContextProvider, {
       children: React.createElement(React.Fragment, null, errorElement),
-      value: { _error: resolved.reason },
+      value: resolved,
     });
   }
 
@@ -164,7 +164,7 @@ export const Await: typeof AwaitType = (async ({
 
   return React.createElement(UNSAFE_AwaitContextProvider, {
     children: toRender,
-    value: { _data: resolved.value },
+    value: resolved,
   });
 }) as any;
 
