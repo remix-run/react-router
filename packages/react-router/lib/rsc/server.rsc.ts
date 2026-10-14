@@ -780,7 +780,7 @@ async function generateResourceResponse(
       async generateMiddlewareResponse(queryRoute) {
         try {
           let response = await queryRoute(request);
-          return generateResourceResponse(response);
+          return tagResourceResponse(response);
         } catch (error) {
           return generateErrorResponse(error);
         }
@@ -788,7 +788,7 @@ async function generateResourceResponse(
       normalizePath: (r) => getNormalizedPath(r),
     });
     // Middleware can short-circuit before the response-generation callback runs.
-    return generateResourceResponse(response);
+    return tagResourceResponse(response);
   } catch (error) {
     return generateErrorResponse(error);
   }
@@ -810,10 +810,10 @@ async function generateResourceResponse(
       response = new Response("Internal Server Error", { status: 500 });
     }
 
-    return generateResourceResponse(response);
+    return tagResourceResponse(response);
   }
 
-  function generateResourceResponse(response: Response) {
+  function tagResourceResponse(response: Response) {
     const headers = new Headers(response.headers);
     headers.set("React-Router-Resource", "true");
     return new Response(response.body, {
