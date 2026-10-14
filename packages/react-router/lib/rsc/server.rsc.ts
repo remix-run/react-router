@@ -23,6 +23,7 @@ import {
 import {
   type ActionFunction,
   type LoaderFunction,
+  type MiddlewareFunction,
   type Params,
   type ShouldRevalidateFunction,
   type RouteMatch,
@@ -187,6 +188,7 @@ type RSCRouteConfigEntryBase = {
 export type RSCRouteConfigEntry = RSCRouteConfigEntryBase & {
   id: string;
   path?: string;
+  middleware?: MiddlewareFunction<any>[];
   Component?: React.ComponentType<any>;
   lazy?: () => Promise<
     RSCRouteConfigEntryBase &
@@ -856,6 +858,7 @@ async function generateRenderResponse(
       : null;
 
   let actionResult: Promise<unknown> | undefined;
+  let didRender = false;
   const ctx: ServerContext = {
     request,
     runningAction: false,
@@ -871,6 +874,7 @@ async function generateRenderResponse(
         : {}),
       normalizePath: (r) => getNormalizedPath(r),
       async generateMiddlewareResponse(query) {
+        didRender = true;
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
         // `processServerAction` will fall through as a no-op and we'll pass the
@@ -995,6 +999,17 @@ async function generateRenderResponse(
   }
 
   invariant(isResponse(result), "Expected a response from query");
+
+  if (!didRender) {
+    let headers = new Headers(result.headers);
+    headers.set("React-Router-Resource", "true");
+    return new Response(result.body, {
+      status: result.status,
+      statusText: result.statusText,
+      headers,
+    });
+  }
+
   return result;
 }
 
