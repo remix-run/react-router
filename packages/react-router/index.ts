@@ -35,6 +35,7 @@ export type {
   DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
+  DataStrategyInitiator as unstable_DataStrategyInitiator,
   DataStrategyMatch,
   DataStrategyResult,
   DataWithResponseInit as UNSAFE_DataWithResponseInit,

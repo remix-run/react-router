@@ -355,3 +355,259 @@ Matt outlined a bug fix related to inconsistent request path names provided to t
 Matt also noted that the future flag provides an opportunity to collapse the `_root.data` format into the new trailing slash format, resulting in two standardized formats for data requests in the future. Bryan asked for clarification on various URL and query parameter configurations, and Matt explained the distinction between the new trailing slash format and the use of the index query parameter, confirming that the new format will be opt-in and mostly non-breaking for users upon adoption
 
 </details>
+
+<details>
+<summary>2026-01-22 Meeting Notes</summary>
+
+**Link Rewriting and Parallel Routes**
+
+Matt, Bryan, and Jacob discussed whether link rewriting can support use cases such as rendering a modal over another route while keeping the underlying page visible. Feedback from Unsplash highlighted a problem with relative links: it is unclear whether they should resolve against the URL in the address bar or the route being rendered. The group considered parallel routes as a way to give each view its own routing context and data loading, rather than trying to handle every case through URL rewriting. Bryan suggested treating parallel routes and URL rewriting as separate features, with rewriting potentially layered on later. Matt and Jacob will also explore whether query-only links can resolve against the visible URL as a smaller improvement to the current proposal.
+
+**Route Pattern Matching**
+
+Matt and Pedro discussed bringing a faster route pattern matcher developed for Remix 3 into React Router to address performance problems seen in large Shopify apps. Pedro proposed introducing it behind a future flag that translates existing `routes.ts` configurations into the new matcher internally, so applications could see the performance benefit without changing their route trees. The matcher would not support regular expressions or OR conditions in route patterns. Pedro suggested using path parameters with validation in loaders for more complex cases. He plans to finish testing and benchmarking the matcher before bringing it to React Router.
+
+**Loader Revalidation Requests**
+
+Bryan raised the need to distinguish revalidation requests from initial navigations in loaders for analytics and instrumentation. Matt noted that React Router does not currently expose this distinction because it could encourage loaders to return different data for the same route. Matt and Jacob discussed having the browser add a header to client data requests, which would make the information available without changing loader APIs or modifying requests on the server. They noted that applications choosing to vary responses based on that header would need to consider cache behavior, including `Vary`. Matt will continue the discussion with the committee and consider how it fits with the instrumentation work.
+
+</details>
+
+<details>
+<summary>2026-02-03 Meeting Notes</summary>
+
+**Client Loader Batching**
+
+Matt described how a route with a client loader currently opts out of Single Fetch because the framework cannot know whether the client loader will call its server loader. This can create an extra request when the server loader is always needed. The committee favored an unstable, static `batch: true` option over a more complex runtime decision. Matt plans to release the flag in an alpha so the contributor who raised the issue can test it. The separate case of debouncing requests while search parameters change may be better handled with a resource route or UI-level debouncing.
+
+**Requests and Instrumentation**
+
+Matt proposed a future flag that passes the original request through to loaders and actions, along with a separate logical URL for code that needs the normalized route location. The group also revisited a request header for identifying revalidations. Bryan asked for route patterns and other information to be available to instrumentation after a navigation completes; Jacob suggested allowing instrumentation implementations to return structured metadata for that purpose.
+
+**RSC and Route Matching**
+
+Jacob proposed explicit server versions of RSC framework route exports, such as server components and layouts, so an error boundary could remain a client component when needed. Pedro outlined a first phase of route pattern integration that would translate existing route syntax internally. The group preferred the new matcher's deterministic specificity rules over carrying forward the existing route scoring system. They left the choice of default matcher and configuration details for further discussion.
+
+</details>
+
+<details>
+<summary>2026-02-17 Meeting Notes</summary>
+
+**Release and Request Work**
+
+Matt discussed removing unused UI-agnostic rendering code and moving React Router releases from changesets to an automated publishing process. He also described progress on passing the original adapter request through to loaders and actions, with a separate normalized path available during migration. The committee paused the proposed revalidation header: one data request can contain both new and revalidating loaders, while listing route IDs in a header could make it too large.
+
+**V8 Planning and Location Cleanup**
+
+Matt and Brooks discussed a regular major-release cadence around May, aligned with the end of Node support cycles. They reviewed the remaining V8 work and expected RSC framework prerendering to continue after the initial V8 release. Bryan proposed an abort signal for the current location that could help applications clean up work when navigating away. Matt noted that it might also make element-level scroll restoration possible when a navigation has no loading state. The API needs further investigation.
+
+**Version Mismatches During Deploys**
+
+Sergio raised the risk of losing action form data when a new deployment causes a route-manifest version mismatch. The group explored rejecting mismatched action submissions with a recognizable response so applications could preserve state and decide how to recover, rather than always forcing a reload. They also discussed keeping React in a stable bundle across deployments and whether that could reduce the need for automatic reloads. No version-skew API was settled at this meeting.
+
+</details>
+
+<details>
+<summary>2026-03-17 Meeting Notes</summary>
+
+**Route Manifest Performance**
+
+Matt described a performance problem in the server endpoint used for lazy route discovery: matching many paths repeatedly rebuilds route information. He and Jacob discussed caching the flattened route branches while considering development behavior and serverless deployments. Pedro's faster matcher may eventually address some of this cost, but the existing matcher needs attention in the meantime. Matt also reported a fix for escaping prerendered redirect HTML.
+
+**V8 and RSC**
+
+The committee discussed starting a V8 development branch for breaking changes, including ESM-only packages and dropping Node 20 support. Jacob offered to work on the ESM migration. The group considered React 19 as the minimum supported React version but planned to seek community feedback before deciding. Jacob reported that RSC Data mode was closer to stability than RSC Framework mode, where route module conventions, prerendering, and configuration still needed work.
+
+**Client Loader Batching**
+
+Matt revisited the proposed batching flag and noted that the build-time route manifest cannot currently see a flag defined at runtime. That gap can make prefetching a route with a client loader choose the wrong request strategy. The group considered statically analyzable configuration or parsing route modules earlier, while avoiding a broader configuration change just for this feature.
+
+</details>
+
+<details>
+<summary>2026-03-31 Meeting Notes</summary>
+
+**Router State Updates**
+
+Matt, Bryan, and Jacob discussed how `useRouterState` should update without causing components to rerender for unrelated changes. Splitting navigation and location state into separate contexts might help, but Bryan and Jacob noted that updates in the root router could still rerender the tree. A subscription-based design would be a much larger change. Matt plans to test the actual render behavior before choosing whether the new hook should wrap existing hooks or become their shared implementation.
+
+**V7 and V8 Work**
+
+Matt planned to test the upcoming 7.14 release against the React Router website and organize the remaining V8 work with Brooks. Jacob discussed replacing dependencies that complicate ESM bundling, including cookie utilities. The group reaffirmed that V8 should ship ESM-only packages without CommonJS builds. They did not want the router-state hook to force a major change to React Router's state architecture in the current release.
+
+</details>
+
+<details>
+<summary>2026-04-14 Meeting Notes</summary>
+
+**V8 Roadmap**
+
+Matt and Brooks reviewed the work needed for a V8 release targeted for late May. They planned to track stabilizations, deprecation warnings, dependency updates, and code cleanup on a shared board. The committee discussed moving to ESM-only packages, raising minimum supported versions of React and Vite, and removing old build paths where possible. They also decided to leave RSC and several less-tested flags unstable rather than rush their stabilization for V8.
+
+**Feature Stabilization**
+
+The group discussed stabilizing `useRoute` and `useRouterState` together, as well as the call-site default revalidation API and route masking. Subresource Integrity appeared close to stabilization after a community bug report had been addressed. The pass-through request flag needed more time before stabilization. Trailing-slash-aware requests would remain unstable because the behavior also affects prerendering and document requests.
+
+**Release Process**
+
+Matt described a new per-package change-file process to replace changesets. The team also planned installable preview builds for pull requests so users could test changes before release. They discussed offering fixed experimental releases for users who need a stable reference, rather than relying only on moving preview branches.
+
+</details>
+
+<details>
+<summary>2026-04-28 Meeting Notes</summary>
+
+**V8 Release Work**
+
+Matt and Brooks reviewed the V8 roadmap board and agreed to finish V7 stabilizations and deprecation warnings before removing old code on the V8 branch. This order should reduce merge conflicts while both branches are active. They discussed using V8 prereleases to test the ESM migration, though the exact prerelease process was left for later. Brooks planned a V8 post explaining the project's growth, new features, and intended yearly major-release cadence.
+
+**Hooks and Trailing Slashes**
+
+Matt said trailing-slash-aware routing would remain unstable for V8 while the team worked through its effects on prerendering. Pedro and Matt agreed to hold the `useRoute` stabilization until `useRouterState` is ready so the two hooks can stabilize together. Matt expected the new router-state hook to be simpler after the earlier discussion about splitting router contexts.
+
+**View Transitions**
+
+The committee reviewed limitations in React Router's View Transitions API and considered how it should coexist with React's own implementation. Matt planned to check the React 19.3 timeline before deciding whether to remove the current API in V8 or deprecate it first and remove it in a later major release.
+
+</details>
+
+<details>
+<summary>2026-05-12 Meeting Notes</summary>
+
+**Recent Fixes and Stabilizations**
+
+Matt reported recent React Router stabilizations, a fix to call-site revalidation behavior, and the merge of `useRouterState` for the next release. He and Jacob discussed correcting `useFetchers` by removing direct mutation of router state and memoizing its result. The change was treated as a correctness fix that could also avoid unnecessary effects. Matt planned to merge warnings for deprecated future flags after the week's release.
+
+**V8 Branch and Release Planning**
+
+Jacob planned to rebase the V8 branch onto `dev` to resolve conflicts. Matt proposed removing the long-standing split between `main` and `dev` to simplify CI and documentation, with Brooks updating the website's version links. The group discussed targeting mid-June for a stable V8 release after a prerelease period. Route pattern work was expected to follow as an unstable feature after the ESM migration, rather than block the initial V8 release.
+
+**Future Proposals**
+
+Bryan asked about a proposed “layers” primitive for composing multiple builds. Matt asked that the use cases and design be worked through in an RFC for consideration after V8. The group also discussed dependency and publishing-workflow security as part of release maintenance.
+
+</details>
+
+<details>
+<summary>2026-05-26 Meeting Notes</summary>
+
+**Skills and Documentation**
+
+Brooks proposed moving React Router's agent skills into the main repository so users can find and maintain them alongside the project. The group discussed whether the CLI should include those skills in new apps by default, while leaving the exact installation experience open. Mark and Bryan emphasized keeping the underlying documentation useful to people as well as agents. The committee also favored shipping selected explanatory Markdown docs with npm packages and splitting large changelogs into version-specific files. They did not plan to include generated API documentation in those packages.
+
+**V8 and the Website**
+
+Matt reviewed the remaining V8 cleanup and dependency updates ahead of a prerelease. The group considered the implications of updating the React Router Serve adapter to Express 5, including changes to route matching and error handling. They also agreed to simplify the documentation website by sourcing released docs from version tags while retaining a way to read upcoming docs. This would remove the need to maintain separate `main` and `dev` documentation branches.
+
+</details>
+
+<details>
+<summary>2026-06-09 Meeting Notes</summary>
+
+**V8 Release and Support Policy**
+
+Matt reported that the V8 prerelease had drawn few new issues and planned one more prerelease before targeting a stable release the following week. The team wanted more testing from applications using the prerelease. The V8 announcement would explain the project's community-led governance and ESM transition. The documentation would retain future-flag guidance while leaving the older “upgrading from Remix” guide with V7. The committee agreed to mark React Router V6 and Remix V2 end of life, except for possible critical security fixes.
+
+**AI-Generated Contributions**
+
+Matt and Jacob discussed the growing number of AI-generated pull requests and how to preserve useful community contributions while screening low-quality ones. They considered tooling that could flag likely automated submissions and a process for asking contributors to confirm human review before maintainers proceed. The group had not finalized a policy or chosen a tool.
+
+</details>
+
+<details>
+<summary>2026-06-23 Meeting Notes</summary>
+
+**RSC and Route Patterns**
+
+With V8 released, Matt identified stabilizing React Server Components and integrating the faster route pattern matcher as priorities for the next phase. Route pattern work had been delayed by ESM and CommonJS compatibility concerns. The committee did not want to restore arbitrary regular-expression route matching because of performance costs. Bryan suggested a possible custom matching escape hatch, while Sergio and Mark raised parameter validation and typing needs. Matt planned to examine whether route patterns could cover those cases through coercion or constrained values before adding a new callback API.
+
+**Fetcher and Composition Proposals**
+
+The group revisited fetcher APIs that could handle completion and errors without `useEffect` and improve type safety. Matt described an inline handler approach and planned to compare existing proposals and community work before choosing an API. For a separate proposal to compose routes from multiple packages, Matt and Bryan asked for a small monorepo example to make the file and TypeScript behavior concrete.
+
+**Instrumentation**
+
+Matt proposed exposing information such as matched route details and response status to instrumentation handlers. Bryan supported making that information directly available so applications would not need custom middleware for basic reporting. The group also planned to monitor reports about the recently released full-bundle mode.
+
+</details>
+
+<details>
+<summary>2026-07-07 Meeting Notes</summary>
+
+**Navigation Caching and Fetching**
+
+Jacob proposed making back and forward navigations use cached data so they remain fast even when normal cache headers would require another request. The group discussed an opt-in configuration to avoid changing existing behavior, along with how this would interact with a custom fetch implementation. They considered whether custom fetch should be configured globally or by route for use cases such as logging and request headers.
+
+**Streams, Route Patterns, and RSC**
+
+The committee considered restoring `renderToReadableStream` support for non-Node runtimes and eventually removing the translation between Node and web streams. Matt and Pedro planned to compare their route pattern work, including support for pathname-only patterns and more efficient route-branch caching. Jacob described the remaining work to stabilize RSC Framework mode, including manifest versioning and non-Node support. The React Router documentation site was discussed as a useful application for testing RSC in practice.
+
+**Router Hooks**
+
+The group continued reviewing `useRoute` and `useRouterState` before stabilization, particularly their TypeScript behavior and the shape of matched-route data. They did not settle those public APIs at this meeting.
+
+</details>
+
+<details>
+<summary>2026-08-04 Meeting Notes</summary>
+
+**Routing and Performance**
+
+Matt reviewed a highly requested feature issue and concluded that the reported rerenders follow React Router's current relationship between location and loader data. The group favored explaining that behavior and pointing users toward profiling tools rather than changing the API based on that report. Matt also raised extra server requests during lazy route discovery. The committee considered build-time analysis and caching improvements, while Mark cautioned that an incorrect cache key could hide routes. Work on mapping existing route syntax to the new route pattern matcher continued behind a future flag.
+
+**V9 and Maintenance**
+
+The team opened a V9 discussion to collect future API proposals. Matt planned to make the newer readable-stream behavior opt-in while its runtime compatibility was evaluated, and to remove Prettier from runtime dependencies by moving TypeScript-to-JavaScript conversion to build time. They also discussed whether an open-redirect fix could be backported to the V6 maintenance branch and what release tooling that would require.
+
+</details>
+
+<details>
+<summary>2026-09-01 Meeting Notes</summary>
+
+**Server Builds and SSR Configuration**
+
+Bryan proposed retaining the server build when SSR is disabled so applications can still use a custom fetch implementation and related server behavior. Matt agreed that deleting the build was not technically required. The group then considered how to represent hybrid applications that render pages statically but still serve data requests. They left the configuration design open, with an emphasis on avoiding changes to existing SPA Mode behavior.
+
+**RSC Stabilization**
+
+Matt and Bryan discussed authentication for RSC server actions, which do not currently run through route middleware in the same way as route handlers. Matt planned to review the security model with Jacob before stabilizing the feature. Brooks and Matt also discussed running the React Router website with RSC to test the framework against a real application. Matt reported work on reducing unnecessary rerenders and integrating the route pattern matcher with data routing.
+
+**Repository Automation**
+
+Matt demonstrated GitHub Actions workflows for issue triage and pull request review. The group discussed using these workflows to reduce routine maintenance work while keeping maintainers responsible for reviewing agent-generated findings and final decisions. They emphasized limiting workflow permissions and checking low-quality submissions without dismissing valid issues.
+
+</details>
+
+<details>
+<summary>2026-09-15 Meeting Notes</summary>
+
+**V8.4 Routing Improvements**
+
+Matt reported that V8.4 shipped more granular router context updates to reduce rerenders and an opt-in route pattern matcher. He explained that the initial matcher increased bundle size substantially, so the implementation moved to a separate export that only affects applications opting in. The group hoped to get more production feedback before expanding the feature.
+
+**Hybrid Serving and Custom Fetch**
+
+Bryan described deployment cases that combine an API server with a static or prerendered client app. The committee agreed that React Router Serve should recognize these builds and serve them appropriately using information in the build manifest. Matt and Bryan also discussed a first-party data origin setting for custom fetch, since requests to another origin can otherwise break prefetching. Jacob suggested using React's preload APIs for resources. Matt planned to extend custom fetch with context about what triggered a request, which could help navigation tracing and cache behavior.
+
+**React APIs and Testing**
+
+Jacob proposed replacing some internal async rendering code with React 19 APIs, though the group left the release timing open. Matt noted limited feedback on recently shipped proposals and planned experimental releases for upcoming features so users could test them before a stable release.
+
+</details>
+
+<details>
+<summary>2026-10-06 Meeting Notes</summary>
+
+**RSC Stabilization**
+
+Matt, Brooks, and Jacob discussed a goal of stabilizing RSC Framework mode by the end of the year. The unstable framework implementation was considered feature-complete, with broader application testing still needed. They discussed trying it on the React Router website and other real applications. Jacob wanted to review the public RSC Data mode API separately and proposed a simpler boundary in which RSC rendering returns a result for the HTML renderer rather than receiving a rendering callback.
+
+**Rolling Deployments and Route Discovery**
+
+Matt described how users can encounter repeated reloads when a rolling deployment serves mismatched client and server versions. He proposed storing versioned client manifests on a CDN so lazy route discovery can recover the manifest for the version already running in the browser. Jacob noted that RSC applications also need to reach the matching server deployment for loaders and actions. The group discussed future hooks that could let applications preserve user work before any required reload; the recovery design remained under investigation.
+
+**Framework Integration**
+
+Matt said the custom fetch and hybrid API backend work was nearing completion. Pedro raised requests for better coordination between React Router's Vite plugin and the official React plugin, particularly around when React Refresh should run after server updates. The team planned to gauge demand for plugin hooks and review pending Cloudflare Vite plugin compatibility work.
+
+</details>
