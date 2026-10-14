@@ -126,6 +126,52 @@ describe("RSC server", () => {
   });
 
   describe("middleware short-circuit responses", () => {
+    test("preserves cached Flight responses returned by middleware", async () => {
+      let cachedResponse: Response | undefined;
+      let renderCount = 0;
+      let routes: RSCRouteConfigEntry[] = [
+        {
+          id: "root",
+          path: "/",
+          Component: () => null,
+          middleware: [
+            async (_, next) => {
+              if (cachedResponse) {
+                return cachedResponse.clone();
+              }
+              let response = await next();
+              cachedResponse = response.clone();
+              return response;
+            },
+          ],
+        },
+      ];
+      let generateResponse = (match: RSCMatch) => {
+        renderCount++;
+        return new Response("Encoded Flight", {
+          status: match.statusCode,
+          headers: match.headers,
+        });
+      };
+
+      for (let i = 0; i < 2; i++) {
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/"),
+          routes,
+          generateResponse,
+        });
+
+        expect(response.headers.get("React-Router-Resource")).toBeNull();
+        expect(await response.text()).toBe("Encoded Flight");
+      }
+
+      expect(renderCount).toBe(1);
+      expect(cachedResponse?.headers.get("Content-Type")).toBe(
+        "text/x-component",
+      );
+    });
+
     test.each(["return", "throw"])(
       "passes through resource route middleware responses (%s)",
       async (behavior) => {

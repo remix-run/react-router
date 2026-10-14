@@ -415,7 +415,7 @@ export async function matchRSCServerRequest({
   onError,
   request,
   routes,
-  generateResponse,
+  generateResponse: encodeResponse,
 }: {
   allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
@@ -441,6 +441,13 @@ export async function matchRSCServerRequest({
     },
   ) => Response;
 }): Promise<Response> {
+  let generateResponse: typeof encodeResponse = (match, options) => {
+    let response = encodeResponse(match, options);
+    // Preserve the payload type when middleware caches or clones this response.
+    response.headers.set("Content-Type", "text/x-component");
+    return response;
+  };
+
   let url = new URL(request.url);
 
   basename = basename || "/";
@@ -822,16 +829,16 @@ async function generateResourceResponse(
 
     return tagResourceResponse(response);
   }
+}
 
-  function tagResourceResponse(response: Response) {
-    const headers = new Headers(response.headers);
-    headers.set("React-Router-Resource", "true");
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    });
-  }
+function tagResourceResponse(response: Response) {
+  const headers = new Headers(response.headers);
+  headers.set("React-Router-Resource", "true");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 async function generateRenderResponse(
@@ -869,7 +876,6 @@ async function generateRenderResponse(
       : null;
 
   let actionResult: Promise<unknown> | undefined;
-  let didRender = false;
   const ctx: ServerContext = {
     request,
     runningAction: false,
@@ -885,7 +891,6 @@ async function generateRenderResponse(
         : {}),
       normalizePath: (r) => getNormalizedPath(r),
       async generateMiddlewareResponse(query) {
-        didRender = true;
         // If this is an RSC server action, process that and then call query as a
         // revalidation.  If this is a RR Form/Fetcher submission,
         // `processServerAction` will fall through as a no-op and we'll pass the
@@ -1011,14 +1016,13 @@ async function generateRenderResponse(
 
   invariant(isResponse(result), "Expected a response from query");
 
-  if (!didRender) {
-    let headers = new Headers(result.headers);
-    headers.set("React-Router-Resource", "true");
-    return new Response(result.body, {
-      status: result.status,
-      statusText: result.statusText,
-      headers,
-    });
+  let contentType = result.headers
+    .get("Content-Type")
+    ?.split(";")[0]
+    .trim()
+    .toLowerCase();
+  if (contentType !== "text/x-component") {
+    return tagResourceResponse(result);
   }
 
   return result;
