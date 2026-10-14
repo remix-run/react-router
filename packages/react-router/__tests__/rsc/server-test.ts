@@ -78,6 +78,81 @@ describe("RSC server", () => {
   });
 
   describe("middleware short-circuit responses", () => {
+    test.each(["return", "throw"])(
+      "passes through resource route middleware responses (%s)",
+      async (behavior) => {
+        let request = new Request("https://remix.run/resource");
+        let serverResponse = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request,
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              middleware: [
+                async () => {
+                  let response = new Response("Access denied", {
+                    status: 403,
+                    statusText: "Forbidden",
+                    headers: {
+                      "Content-Type": "text/plain; charset=utf-8",
+                      "Set-Cookie": "session=; Max-Age=0; Path=/",
+                    },
+                  });
+                  if (behavior === "throw") {
+                    throw response;
+                  }
+                  return response;
+                },
+              ],
+              children: [
+                {
+                  id: "resource",
+                  path: "resource",
+                  loader() {
+                    throw new Error("Resource loader should not be called");
+                  },
+                },
+              ],
+            },
+          ],
+          generateResponse() {
+            throw new Error(
+              "Resource response should not be encoded as Flight",
+            );
+          },
+        });
+
+        expect(serverResponse.headers.get("React-Router-Resource")).toBe(
+          "true",
+        );
+
+        let response = await routeRSCServerRequest({
+          request,
+          serverResponse,
+          createFromReadableStream() {
+            throw new Error(
+              "Resource response should not be decoded as Flight",
+            );
+          },
+          renderHTML() {
+            throw new Error("Resource response should not be rendered as HTML");
+          },
+        });
+
+        expect(response).toBe(serverResponse);
+        expect(response.status).toBe(403);
+        expect(response.statusText).toBe("Forbidden");
+        expect(response.headers.get("Content-Type")).toBe(
+          "text/plain; charset=utf-8",
+        );
+        expect(response.headers.get("Set-Cookie")).toBe(
+          "session=; Max-Age=0; Path=/",
+        );
+        expect(await response.text()).toBe("Access denied");
+      },
+    );
+
     test("tags non-RSC middleware responses as React-Router-Resource", async () => {
       let generateResponseCalled = false;
       let response = await matchRSCServerRequest({

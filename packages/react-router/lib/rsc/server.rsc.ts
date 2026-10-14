@@ -787,7 +787,8 @@ async function generateResourceResponse(
       },
       normalizePath: (r) => getNormalizedPath(r),
     });
-    return response;
+    // Middleware can short-circuit before the response-generation callback runs.
+    return generateResourceResponse(response);
   } catch (error) {
     return generateErrorResponse(error);
   }
