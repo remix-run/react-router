@@ -351,6 +351,9 @@ export type {
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
+export { primeHydrationPromises as UNSAFE_primeHydrationPromises } from "./lib/await";
+
+/** @internal */
 export {
   createMemoryHistory as UNSAFE_createMemoryHistory,
   createBrowserHistory as UNSAFE_createBrowserHistory,

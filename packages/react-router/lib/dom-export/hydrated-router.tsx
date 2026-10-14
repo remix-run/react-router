@@ -23,6 +23,7 @@ import {
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_hydrationRouteProperties as hydrationRouteProperties,
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
+  UNSAFE_primeHydrationPromises as primeHydrationPromises,
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
 import { RouterProvider } from "./dom-router-provider";
@@ -113,6 +114,9 @@ function createHydratedRouter({
       .then((value) => {
         ssrInfo!.context.state =
           value.value as typeof localSsrInfo.context.state;
+        // Create Await's use() wrappers before hydration reaches their Suspense
+        // boundaries, so already-settled loader promises can be read immediately.
+        primeHydrationPromises(ssrInfo!.context.state.loaderData);
         localSsrInfo.stateDecodingPromise!.value = true;
       })
       .catch((e) => {
