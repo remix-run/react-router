@@ -35,7 +35,6 @@ import type {
   RouteManifest,
   RouteMatch,
   RouteObject,
-  TrackedPromise,
 } from "./router/utils";
 import {
   defaultMapRouteProperties,
@@ -62,7 +61,6 @@ import {
 import {
   _renderMatches,
   useActionData,
-  useAsyncValue,
   useInRouterContext,
   useLoaderData,
   useLocation,
@@ -1644,8 +1642,21 @@ export function Await<Resolve>({
   let dataRouterContext = React.useContext(DataRouterContext);
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
 
+  // Once a child throws, keep its error UI visible for promise inputs without
+  // suspending on a replacement promise. Raw values still bypass that error.
+  let [hasRenderError, setHasRenderError] = React.useState(false);
+
+  // Cached promise callbacks need the latest router metadata, including while
+  // a previously mounted Await is suspended on a replacement promise.
+  let onErrorContext = React.useRef({
+    dataRouterContext,
+    dataRouterStateContext,
+  });
+  onErrorContext.current = { dataRouterContext, dataRouterStateContext };
   let onError = React.useCallback(
     (error: unknown, errorInfo?: React.ErrorInfo) => {
+      let { dataRouterContext, dataRouterStateContext } =
+        onErrorContext.current;
       if (
         dataRouterContext &&
         dataRouterContext.onError &&
@@ -1659,35 +1670,32 @@ export function Await<Resolve>({
         });
       }
     },
-    [dataRouterContext, dataRouterStateContext],
+    [],
   );
 
   return (
-    <AwaitErrorBoundary
+    <ResolveAwait
       resolve={resolve}
       errorElement={errorElement}
       onError={onError}
+      hasRenderError={hasRenderError}
+      onRenderError={(error) => setHasRenderError(Boolean(error))}
     >
-      <ResolveAwait>{children}</ResolveAwait>
-    </AwaitErrorBoundary>
+      {children}
+    </ResolveAwait>
   );
 }
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
-  resolve: TrackedPromise | any;
+  resolve: unknown;
   onError?: (error: unknown, errorInfo?: React.ErrorInfo) => void;
+  onRenderError: (error: unknown) => void;
 }>;
 
 type AwaitErrorBoundaryState = {
   error: any;
 };
-
-enum AwaitRenderStatus {
-  pending,
-  success,
-  error,
-}
 
 class AwaitErrorBoundary extends React.Component<
   AwaitErrorBoundaryProps,
@@ -1703,6 +1711,7 @@ class AwaitErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
+    this.props.onRenderError(error);
     if (this.props.onError) {
       // Log render errors
       this.props.onError(error, errorInfo);
@@ -1716,77 +1725,96 @@ class AwaitErrorBoundary extends React.Component<
   }
 
   render() {
-    let { children, errorElement, resolve } = this.props;
-
-    let promise: TrackedPromise | null = null;
-    let status: AwaitRenderStatus = AwaitRenderStatus.pending;
-
-    if (!(resolve instanceof Promise)) {
-      // Didn't get a promise - provide as a resolved promise
-      status = AwaitRenderStatus.success;
-      promise = Promise.resolve();
-      Object.defineProperty(promise, "_tracked", { get: () => true });
-      Object.defineProperty(promise, "_data", { get: () => resolve });
-    } else if (this.state.error) {
-      // Caught a render error, provide it as a rejected promise
-      status = AwaitRenderStatus.error;
-      let renderError = this.state.error;
-      promise = Promise.reject().catch(() => {}); // Avoid unhandled rejection warnings
-      Object.defineProperty(promise, "_tracked", { get: () => true });
-      Object.defineProperty(promise, "_error", { get: () => renderError });
-    } else if ((resolve as TrackedPromise)._tracked) {
-      // Already tracked promise - check contents
-      promise = resolve;
-      status =
-        "_error" in promise
-          ? AwaitRenderStatus.error
-          : "_data" in promise
-            ? AwaitRenderStatus.success
-            : AwaitRenderStatus.pending;
-    } else {
-      // Raw (untracked) promise - track it
-      status = AwaitRenderStatus.pending;
-      Object.defineProperty(resolve, "_tracked", { get: () => true });
-      promise = resolve.then(
-        (data: any) =>
-          Object.defineProperty(resolve, "_data", { get: () => data }),
-        (error: any) => {
-          // Log promise rejections
-          this.props.onError?.(error);
-          Object.defineProperty(resolve, "_error", { get: () => error });
-        },
+    let { children, errorElement } = this.props;
+    if (this.state.error && this.props.resolve instanceof Promise) {
+      if (!errorElement) {
+        throw this.state.error;
+      }
+      return (
+        <AwaitContext.Provider
+          value={{ _error: this.state.error }}
+          children={errorElement}
+        />
       );
     }
-
-    if (status === AwaitRenderStatus.error && !errorElement) {
-      // No errorElement, throw to the nearest route-level error boundary
-      throw promise._error;
-    }
-
-    if (status === AwaitRenderStatus.error) {
-      // Render via our errorElement
-      return <AwaitContext.Provider value={promise} children={errorElement} />;
-    }
-
-    if (status === AwaitRenderStatus.success) {
-      // Render children with resolved value
-      return <AwaitContext.Provider value={promise} children={children} />;
-    }
-
-    // Throw to the suspense boundary
-    throw promise;
+    return children;
   }
 }
 
-// Indirection to leverage useAsyncValue for a render-prop API on `<Await>`
+// Cache the wrapper across Suspense retries and shared consumers. Resolving to a
+// settled result lets errorElement handle rejections during server rendering,
+// where React error boundaries do not catch errors.
+let awaitPromises = new WeakMap<
+  Promise<unknown>,
+  Promise<PromiseSettledResult<unknown>>
+>();
+
 function ResolveAwait({
+  children,
+  resolve,
+  errorElement,
+  onError,
+  hasRenderError,
+  onRenderError,
+}: {
+  children: React.ReactNode | AwaitResolveRenderFunction;
+  resolve: unknown;
+  errorElement?: React.ReactNode;
+  onError: (error: unknown) => void;
+  hasRenderError: boolean;
+  onRenderError: (error: unknown) => void;
+}) {
+  let result: PromiseSettledResult<unknown> | undefined;
+  if (resolve instanceof Promise && !hasRenderError) {
+    let promise = awaitPromises.get(resolve);
+    if (!promise) {
+      promise = resolve.then(
+        (value): PromiseSettledResult<unknown> => ({
+          status: "fulfilled",
+          value,
+        }),
+        (reason): PromiseSettledResult<unknown> => {
+          onError(reason);
+          return { status: "rejected", reason };
+        },
+      );
+      awaitPromises.set(resolve, promise);
+    }
+    result = React.use(promise);
+  }
+  let context = React.useMemo(() => {
+    if (result?.status === "rejected") {
+      return { _error: result.reason };
+    }
+    return { _data: result ? result.value : resolve };
+  }, [result, resolve]);
+  if (result?.status === "rejected") {
+    if (!errorElement) {
+      throw result.reason;
+    }
+    return <AwaitContext.Provider value={context} children={errorElement} />;
+  }
+  return (
+    <AwaitContext.Provider value={context}>
+      <AwaitErrorBoundary
+        resolve={resolve}
+        errorElement={errorElement}
+        onError={onError}
+        onRenderError={onRenderError}
+      >
+        <AwaitChildren>{children}</AwaitChildren>
+      </AwaitErrorBoundary>
+    </AwaitContext.Provider>
+  );
+}
+
+function AwaitChildren({
   children,
 }: {
   children: React.ReactNode | AwaitResolveRenderFunction;
 }) {
-  let data = useAsyncValue();
-  let toRender = typeof children === "function" ? children(data) : children;
-  return <>{toRender}</>;
+  let data = React.useContext(AwaitContext)?._data;
+  return <>{typeof children === "function" ? children(data) : children}</>;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -27,7 +27,6 @@ import {
   type ShouldRevalidateFunction,
   type RouteMatch,
   type RouterContextProvider,
-  type TrackedPromise,
   isAbsoluteUrl,
   isRouteErrorResponse,
   prependBasename,
@@ -156,7 +155,7 @@ export const Await: typeof AwaitType = (async ({
   if (resolved.status === "rejected") {
     return React.createElement(UNSAFE_AwaitContextProvider, {
       children: React.createElement(React.Fragment, null, errorElement),
-      value: { _tracked: true, _error: resolved.reason } as TrackedPromise,
+      value: { _error: resolved.reason },
     });
   }
 
@@ -165,7 +164,7 @@ export const Await: typeof AwaitType = (async ({
 
   return React.createElement(UNSAFE_AwaitContextProvider, {
     children: toRender,
-    value: { _tracked: true, _data: resolved.value } as TrackedPromise,
+    value: { _data: resolved.value },
   });
 }) as any;
 

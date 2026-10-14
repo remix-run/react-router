@@ -11,7 +11,7 @@ import type {
   Router,
   StaticHandlerContext,
 } from "./router/router";
-import type { TrackedPromise, RouteMatch } from "./router/utils";
+import type { RouteMatch } from "./router/utils";
 
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
@@ -89,7 +89,10 @@ export const FetchersContext =
   React.createContext<FetchersContextObject | null>(null);
 FetchersContext.displayName = "Fetchers";
 
-export const AwaitContext = React.createContext<TrackedPromise | null>(null);
+export const AwaitContext = React.createContext<{
+  _data?: unknown;
+  _error?: unknown;
+} | null>(null);
 AwaitContext.displayName = "Await";
 
 export const AwaitContextProvider = (
