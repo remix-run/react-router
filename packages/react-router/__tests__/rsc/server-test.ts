@@ -40,6 +40,54 @@ describe("RSC server", () => {
     expect(match?.payload.type).toBe("render");
   });
 
+  test("runs eager and lazy middleware before resource loaders", async () => {
+    let calls: string[] = [];
+    let lazyModule: Awaited<
+      ReturnType<NonNullable<RSCRouteConfigEntry["lazy"]>>
+    > = {
+      middleware: [
+        async (_, next) => {
+          calls.push("lazy middleware");
+          let response = await next();
+          response.headers.set("X-Lazy-Middleware", "true");
+          return response;
+        },
+      ],
+      loader() {
+        calls.push("loader");
+        return new Response("Resource body");
+      },
+    };
+
+    let response = await matchRSCServerRequest({
+      createTemporaryReferenceSet: () => ({}),
+      request: new Request("https://remix.run/resource"),
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          middleware: [
+            async (_, next) => {
+              calls.push("eager middleware");
+              return next();
+            },
+          ],
+          children: [
+            { id: "resource", path: "resource", lazy: async () => lazyModule },
+          ],
+        },
+      ],
+      generateResponse() {
+        throw new Error("Resource response should not be encoded as Flight");
+      },
+    });
+
+    expect(calls).toEqual(["eager middleware", "lazy middleware", "loader"]);
+    expect(response.headers.get("X-Lazy-Middleware")).toBe("true");
+    expect(response.headers.get("React-Router-Resource")).toBe("true");
+    expect(await response.text()).toBe("Resource body");
+  });
+
   describe("manifest requests", () => {
     test("rejects manifest requests over the URL limit", async () => {
       let path = `/${"a".repeat(URL_LIMIT)}.manifest`;

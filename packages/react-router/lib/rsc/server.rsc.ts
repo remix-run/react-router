@@ -27,6 +27,7 @@ import {
   type Params,
   type ShouldRevalidateFunction,
   type RouteMatch,
+  type RouteObject,
   type RouterContextProvider,
   type TrackedPromise,
   isAbsoluteUrl,
@@ -182,13 +183,13 @@ type RSCRouteConfigEntryBase = {
   links?: LinksFunction;
   loader?: LoaderFunction;
   meta?: MetaFunction;
+  middleware?: MiddlewareFunction<any>[];
   shouldRevalidate?: ShouldRevalidateFunction;
 };
 
 export type RSCRouteConfigEntry = RSCRouteConfigEntryBase & {
   id: string;
   path?: string;
-  middleware?: MiddlewareFunction<any>[];
   Component?: React.ComponentType<any>;
   lazy?: () => Promise<
     RSCRouteConfigEntryBase &
@@ -214,7 +215,9 @@ export type RSCRouteConfigEntry = RSCRouteConfigEntryBase & {
 
 export type RSCRouteConfig = Array<RSCRouteConfigEntry>;
 
-type RSCRouteDataMatch = RouteMatch<string, RSCRouteConfigEntry>;
+type RSCRouteDataMatch = Omit<RouteMatch, "route"> & {
+  route: RSCRouteConfigEntry;
+};
 
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
@@ -488,7 +491,11 @@ export async function matchRSCServerRequest({
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
   // and if we move to `lazy: {}` then we lose all the other things from the
   // `RSCRouteConfigEntry` like `Layout` etc.
-  let staticHandler = createStaticHandler(routes, { basename });
+  // RSC lazy modules can export middleware, unlike core router lazy functions.
+  // We resolve them below before querying the static handler.
+  let staticHandler = createStaticHandler(routes as RouteObject[], {
+    basename,
+  });
   let matches = staticHandler.match(url.pathname) as RSCRouteDataMatch[] | null;
   if (matches) {
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
@@ -590,8 +597,11 @@ async function generateManifestResponse(
   let pathnames = pathParam
     ? pathParam.split(",").filter(Boolean)
     : [url.pathname.replace(/\.manifest$/, "")];
+  // Only use the core router for matching; getManifestRoute loads RSC lazy modules.
   let staticHandler =
-    routes.length > 0 ? createStaticHandler(routes, { basename }) : undefined;
+    routes.length > 0
+      ? createStaticHandler(routes as RouteObject[], { basename })
+      : undefined;
   let routeIds = new Set<string>();
   let matchedRoutes = staticHandler
     ? pathnames
@@ -1128,7 +1138,7 @@ async function generateStaticContextResponse(
 
   let headers = getDocumentHeadersImpl(
     staticContext,
-    (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers,
+    (match) => (match as RSCRouteDataMatch).route.headers,
     sideEffectRedirectHeaders,
   );
 
