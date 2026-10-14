@@ -91,6 +91,13 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
         return;
       }
       await fsp.mkdir(path.dirname(file), { recursive: true });
+      let mode: number | undefined;
+      try {
+        mode = (await fsp.stat(file)).mode & 0o777;
+      } catch (error: any) {
+        if (error.code !== "ENOENT") throw error;
+      }
+
       // Write to a temporary file and rename it into place so a concurrent
       // commit or read of the same session never sees a partially written file.
       // The temporary directory sits next to the session file because rename()
@@ -99,6 +106,10 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
       try {
         let tmpFile = path.join(tmpDir, "session");
         await fsp.writeFile(tmpFile, content, "utf-8");
+        if (mode !== undefined) {
+          // Preserve existing permissions independently of the current umask.
+          await fsp.chmod(tmpFile, mode);
+        }
         await fsp.rename(tmpFile, file);
       } finally {
         await fsp.rm(tmpDir, { recursive: true, force: true });
