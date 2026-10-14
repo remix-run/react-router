@@ -1768,16 +1768,23 @@ function ResolveAwait({
   if (resolve instanceof Promise && !hasRenderError) {
     let promise = awaitPromises.get(resolve);
     if (!promise) {
-      promise = resolve.then(
-        (value): PromiseSettledResult<unknown> => ({
-          status: "fulfilled",
-          value,
-        }),
+      let wrappedPromise = resolve.then(
+        (value) => settle({ status: "fulfilled", value }),
         (reason): PromiseSettledResult<unknown> => {
           onError(reason);
-          return { status: "rejected", reason };
+          return settle({ status: "rejected", reason });
         },
       );
+      function settle(
+        result: PromiseSettledResult<unknown>,
+      ): PromiseSettledResult<unknown> {
+        // Let use() read the result before a later source-promise callback can
+        // trigger a render, without waiting for the wrapper's next microtask.
+        // https://react.dev/reference/react/use#how-to-implement-a-promise-cache
+        Object.assign(wrappedPromise, { value: result, status: "fulfilled" });
+        return result;
+      }
+      promise = wrappedPromise;
       awaitPromises.set(resolve, promise);
     }
     result = React.use(promise);

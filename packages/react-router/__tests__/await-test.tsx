@@ -56,6 +56,55 @@ describe("Await", () => {
     expect(valueWasVisible).toBe(true);
   });
 
+  it("does not show a fallback when reusing a shared promise from its rejection callback", async () => {
+    let deferred = createDeferred<string>();
+    let error = new Error("Rejected");
+    let showSharedPromise!: () => void;
+    function ErrorElement({ name }: { name: string }) {
+      expect(useAsyncError()).toBe(error);
+      return <p>{name}:Rejected</p>;
+    }
+    function Content() {
+      let [resolve, setResolve] = React.useState<string | Promise<string>>(
+        "Initial",
+      );
+      showSharedPromise = () => setResolve(deferred.promise);
+      return (
+        <>
+          <React.Suspense fallback={<p>First loading</p>}>
+            <Await
+              resolve={deferred.promise}
+              errorElement={<ErrorElement name="First" />}
+            >
+              {(value) => <p>First:{value}</p>}
+            </Await>
+          </React.Suspense>
+          <React.Suspense fallback={<p>Second loading</p>}>
+            <Await
+              resolve={resolve}
+              errorElement={<ErrorElement name="Second" />}
+            >
+              {(value) => <p>Second:{value}</p>}
+            </Await>
+          </React.Suspense>
+        </>
+      );
+    }
+    await renderAsync(<Content />);
+    expect(screen.getByText("Second:Initial")).toBeVisible();
+    let fallbackWasVisible: boolean | undefined;
+    let errorWasVisible: boolean | undefined;
+    deferred.promise.catch(() => {
+      flushSync(showSharedPromise);
+      fallbackWasVisible = screen.queryByText("Second loading") != null;
+      errorWasVisible = screen.queryByText("Second:Rejected") != null;
+    });
+    await act(() => deferred.reject(error));
+    expect(screen.getByText("Second:Rejected")).toBeVisible();
+    expect(fallbackWasVisible).toBe(false);
+    expect(errorWasVisible).toBe(true);
+  });
+
   it("keeps a render error visible when resolve changes to a pending promise", async () => {
     let consoleError = jest
       .spyOn(console, "error")
