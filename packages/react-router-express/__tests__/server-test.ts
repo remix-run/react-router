@@ -386,6 +386,21 @@ describe("express createRemixRequest", () => {
     expect(remixRequest.url).toBe("http://[fd00:1234::1]:8443/foo/bar");
   });
 
+  it("does not take the port from a later forwarded host", async () => {
+    let app = express();
+    app.set("trust proxy", true);
+    app.use((req, res) => {
+      res.send(createRemixRequest(req, res).url);
+    });
+
+    let response = await supertest(app)
+      .get("/foo/bar")
+      .set("Host", "localhost")
+      .set("X-Forwarded-Host", "[::1], proxy.example:8443");
+
+    expect(response.text).toBe("http://[::1]/foo/bar");
+  });
+
   it("ignores invalid characters in host values", async () => {
     let expressRequest = createRequest({
       url: "/foo/bar",
