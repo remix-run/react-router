@@ -3155,7 +3155,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBeGreaterThan(0);
+      expect(getAwaitRenderCount()).toBe(1);
 
       // Abort the deferred by navigating to /baz
       fireEvent.click(screen.getByText("Link to Baz"));
@@ -3175,6 +3175,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
+      expect(getAwaitRenderCount()).toBe(1);
 
       // complete /baz navigation
       bazDefer.resolve(null);
@@ -3193,7 +3194,6 @@ describe("createMemoryRouter", () => {
       `);
 
       // Does nothing now
-      let abortedRenderCount = getAwaitRenderCount();
       await act(() => barValueDfd.resolve("LAZY"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -3207,7 +3207,7 @@ describe("createMemoryRouter", () => {
           </h1>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(abortedRenderCount);
+      expect(getAwaitRenderCount()).toBe(1);
     });
 
     it("should permit direct access to resolved values", async () => {
