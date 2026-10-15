@@ -1,5 +1,6 @@
 import type { Babel, NodePath, ParseResult } from "./babel";
 import { traverse, t } from "./babel";
+import { isRouteChunkModuleId } from "./route-chunks";
 
 const namedComponentExports = ["HydrateFallback", "ErrorBoundary"] as const;
 type NamedComponentExport = (typeof namedComponentExports)[number];
@@ -22,8 +23,14 @@ export const decorateComponentExportsWithProps = (
     return uid;
   }
 
+  const generated = new WeakSet<Babel.Node>();
+  // Wrapped local bindings (i.e., `export { Page as default }`) are appended
+  // to the end of the module so the binding is initialized before we read it
+  const trailingStatements: Babel.Statement[] = [];
+
   traverse(ast, {
     ExportDeclaration(path) {
+      if (generated.has(path.node)) return;
       if (path.isExportDefaultDeclaration()) {
         const declaration = path.get("declaration");
         // prettier-ignore
@@ -39,6 +46,81 @@ export const decorateComponentExportsWithProps = (
       }
 
       if (path.isExportNamedDeclaration()) {
+        // Handle export specifiers such as:
+        //   export { default } from "./component";
+        //   export { Component as default };
+        //   export { ErrorBoundary } from "./error-boundary";
+        if (path.node.specifiers.length > 0) {
+          const source = path.node.source;
+          // Route chunk modules are decorated individually, so re-exports from
+          // them (i.e., the route chunk "index" module) must be left alone
+          if (source && isRouteChunkModuleId(source.value)) return;
+          const statements: Babel.Statement[] = [];
+          for (const specifier of path.get("specifiers")) {
+            if (!specifier.isExportSpecifier()) continue;
+            const exported = specifier.node.exported;
+            const exportedName = t.isIdentifier(exported)
+              ? exported.name
+              : exported.value;
+            const hocName: HocName | undefined =
+              exportedName === "default"
+                ? "UNSAFE_withComponentProps"
+                : isNamedComponentExport(exportedName)
+                  ? `UNSAFE_with${exportedName}Props`
+                  : undefined;
+            if (!hocName) continue;
+
+            let local: Babel.Identifier = specifier.node.local;
+            if (source) {
+              // Import the re-exported binding so we can wrap it locally
+              const imported = path.scope.generateUidIdentifier(
+                exportedName === "default" ? "Component" : exportedName,
+              );
+              statements.push(
+                t.importDeclaration(
+                  [
+                    local.name === "default"
+                      ? t.importDefaultSpecifier(imported)
+                      : t.importSpecifier(imported, t.identifier(local.name)),
+                  ],
+                  t.stringLiteral(source.value),
+                ),
+              );
+              local = imported;
+            }
+
+            const uid = getHocUid(path, hocName);
+            const wrapped = path.scope.generateUidIdentifier(
+              exportedName === "default" ? "default" : exportedName,
+            );
+            const exportDecl = t.exportNamedDeclaration(null, [
+              t.exportSpecifier(wrapped, t.identifier(exportedName)),
+            ]);
+            generated.add(exportDecl);
+            (source ? statements : trailingStatements).push(
+              t.variableDeclaration("const", [
+                t.variableDeclarator(
+                  wrapped,
+                  t.callExpression(uid, [t.identifier(local.name)]),
+                ),
+              ]),
+              exportDecl,
+            );
+            specifier.remove();
+          }
+
+          if (path.node.specifiers.length === 0) {
+            if (statements.length > 0) {
+              path.replaceWithMultiple(statements);
+            } else {
+              path.remove();
+            }
+          } else if (statements.length > 0) {
+            path.insertAfter(statements);
+          }
+          return;
+        }
+
         const decl = path.get("declaration");
 
         if (decl.isVariableDeclaration()) {
@@ -75,6 +157,8 @@ export const decorateComponentExportsWithProps = (
       }
     },
   });
+
+  ast.program.body.push(...trailingStatements);
 
   if (hocs.length > 0) {
     ast.program.body.unshift(
