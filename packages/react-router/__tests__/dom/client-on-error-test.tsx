@@ -217,6 +217,103 @@ describe(`handleError`, () => {
     expect(getHtml(container)).toContain("Error");
   });
 
+  it.each(
+    ["navigation", "action", "revalidation", "fetcher"].flatMap((update) =>
+      ["none", "early", "late"].map((subscriber) => ({ update, subscriber })),
+    ),
+  )(
+    "reports the $update error completed before RouterProvider first mounts (external subscriber: $subscriber)",
+    async ({ update, subscriber }) => {
+      let spy = jest.fn();
+      let error = new Error("client error!");
+      function ErrorBoundary() {
+        return <h1>Error:{(useRouteError() as Error).message}</h1>;
+      }
+      let router = createMemoryRouter(
+        [
+          {
+            id: "home",
+            path: "/",
+            loader() {
+              throw error;
+            },
+            Component: () => <h1>Home</h1>,
+            ErrorBoundary,
+          },
+          {
+            id: "page",
+            path: "/page",
+            loader() {
+              throw error;
+            },
+            action() {
+              throw error;
+            },
+            Component: () => <h1>Page</h1>,
+            ErrorBoundary,
+          },
+        ],
+        { hydrationData: { loaderData: { home: "Home" } } },
+      );
+      expect(router.state.initialized).toBe(true);
+      expect(router.state.errors).toBeNull();
+
+      try {
+        if (subscriber === "early") {
+          router.subscribe(() => {});
+        }
+
+        // These errors happen after initialization but before the provider mounts.
+        if (update === "navigation") {
+          await router.navigate("/page");
+        } else if (update === "action") {
+          await router.navigate("/page", {
+            formMethod: "post",
+            formData: new FormData(),
+          });
+        } else if (update === "revalidation") {
+          await router.revalidate();
+        } else {
+          await router.fetch("fetcher", "home", "/page");
+        }
+        let pathname =
+          update === "navigation" || update === "action" ? "/page" : "/";
+        expect(router.state.errors).toEqual({
+          [pathname === "/page" ? "page" : "home"]: error,
+        });
+
+        if (subscriber === "late") {
+          router.subscribe(() => {});
+        }
+
+        let { rerender } = render(
+          <React.StrictMode>
+            <RouterProvider router={router} onError={spy} />
+          </React.StrictMode>,
+        );
+
+        expect(screen.getByText("Error:client error!")).toBeDefined();
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith(error, {
+          location: expect.objectContaining({ pathname }),
+          params: {},
+          pattern: pathname,
+        });
+
+        let nextSpy = jest.fn();
+        rerender(
+          <React.StrictMode>
+            <RouterProvider router={router} onError={nextSpy} />
+          </React.StrictMode>,
+        );
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(nextSpy).not.toHaveBeenCalled();
+      } finally {
+        router.dispose();
+      }
+    },
+  );
+
   it("handles navigation action errors", async () => {
     let spy = jest.fn();
     let router = createMemoryRouter([
@@ -789,24 +886,67 @@ describe(`handleError`, () => {
     },
   );
 
-  it("does not replay initial errors when onError is added after mounting", async () => {
-    let spy = jest.fn();
-    let router = createMemoryRouter([
-      {
-        path: "/",
-        loader() {
-          throw new Error("initial error!");
+  it.each(["initialization", "navigation"])(
+    "does not replay %s errors when onError is added after mounting",
+    async (update) => {
+      let spy = jest.fn();
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          loader() {
+            throw new Error("client error!");
+          },
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => <h1>Error</h1>,
         },
-        Component: () => <h1>Home</h1>,
-        ErrorBoundary: () => <h1>Error</h1>,
-      },
-    ]);
-    await tick();
+      ]);
+      await tick();
+      if (update === "navigation") {
+        await router.navigate("/?again");
+      }
 
-    let { rerender } = render(<RouterProvider router={router} />);
-    expect(screen.getByText("Error")).toBeDefined();
-    rerender(<RouterProvider router={router} onError={spy} />);
-    expect(spy).not.toHaveBeenCalled();
+      let { rerender } = render(<RouterProvider router={router} />);
+      expect(screen.getByText("Error")).toBeDefined();
+      rerender(<RouterProvider router={router} onError={spy} />);
+      expect(spy).not.toHaveBeenCalled();
+    },
+  );
+
+  it("reports a client error matching a hydrated server error before mounting", async () => {
+    let spy = jest.fn();
+    let error = new Error("shared error!");
+    let router = createMemoryRouter(
+      [
+        {
+          id: "home",
+          path: "/",
+          loader() {
+            throw error;
+          },
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ],
+      {
+        hydrationData: {
+          loaderData: {},
+          errors: { home: error },
+        },
+      },
+    );
+    expect(router.state.initialized).toBe(true);
+    router.subscribe(() => {});
+    await router.revalidate();
+
+    render(
+      <React.StrictMode>
+        <RouterProvider router={router} onError={spy} />
+      </React.StrictMode>,
+    );
+    expect(screen.getByText("Error:shared error!")).toBeDefined();
+    expect(spy.mock.calls.map(([reported]) => reported)).toEqual([error]);
   });
 
   it("reports initial errors independently to each RouterProvider", async () => {
@@ -936,7 +1076,9 @@ describe(`handleError`, () => {
           update === "revalidation" ? "Home" : "Error:later error!",
         ),
       ).toBeDefined();
-      expect(spy).not.toHaveBeenCalled();
+      expect(spy.mock.calls.map(([error]) => error)).toEqual(
+        update === "revalidation" ? [] : [laterError],
+      );
     },
   );
 

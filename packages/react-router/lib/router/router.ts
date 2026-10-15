@@ -1031,10 +1031,10 @@ class DataRoutes {
   }
 }
 
-// Initial client errors keyed by the error collection committed to router state.
+// Current client errors keyed by the error collection committed to router state.
 // A collection may also contain preserved SSR errors, which must not be reported.
-// Kept independently of subscribers for RouterProvider's initialization recovery.
-export const initialClientErrors = new WeakMap<RouteData, RouteData | null>();
+// Kept independently of subscribers for RouterProvider's missed-error recovery.
+export const clientErrors = new WeakMap<RouteData, RouteData | null>();
 
 /**
  * Create a router and listen to history POP navigations
@@ -1439,18 +1439,17 @@ export function createRouter(init: RouterInit): Router {
     } = {},
   ): void {
     let newErrors = newState.errors ?? null;
-    let cachedErrors = newErrors
-      ? initialClientErrors.get(newErrors)
-      : undefined;
+    let cachedErrors = newErrors ? clientErrors.get(newErrors) : undefined;
     if (cachedErrors !== undefined) {
       newErrors = cachedErrors;
     }
-    if (!state.initialized && newState.initialized && newState.errors) {
-      initialClientErrors.set(newState.errors, newErrors);
-    } else if (newState.errors !== undefined || newState.initialized) {
-      // A later navigation or error update supersedes the initial errors.
+    if (newState.errors !== undefined || newState.initialized) {
+      // A later navigation or error update supersedes the previous errors.
       if (state.errors) {
-        initialClientErrors.delete(state.errors);
+        clientErrors.delete(state.errors);
+      }
+      if (newState.errors) {
+        clientErrors.set(newState.errors, newErrors);
       }
     }
 
@@ -2635,11 +2634,11 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Preserve SSR errors during partial hydration, but only report new client
-    // errors to subscribers and RouterProvider's initialization recovery.
+    // errors to subscribers and RouterProvider's missed-error recovery.
     if (initialHydration && state.errors) {
-      let clientErrors = errors ?? null;
+      let newClientErrors = errors ?? null;
       errors = { ...state.errors, ...errors };
-      initialClientErrors.set(errors, clientErrors);
+      clientErrors.set(errors, newClientErrors);
     }
 
     let didUpdateFetcherRedirects = markFetchRedirectsDone(workingFetchers);

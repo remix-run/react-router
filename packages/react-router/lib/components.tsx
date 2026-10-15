@@ -23,7 +23,7 @@ import type {
   RouterSubscriber,
   RouterInit,
 } from "./router/router";
-import { createRouter, initialClientErrors } from "./router/router";
+import { createRouter, clientErrors } from "./router/router";
 import type {
   DataRouteObject,
   DataStrategyFunction,
@@ -413,7 +413,7 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
-  let handledInitialErrors = React.useRef(
+  let handledErrors = React.useRef(
     new WeakSet<NonNullable<RouterState["errors"]>>(),
   );
 
@@ -424,17 +424,13 @@ export function RouterProvider({
     ) => {
       lastState.current = newState;
 
-      if (
-        newErrors &&
-        newState.errors &&
-        initialClientErrors.has(newState.errors)
-      ) {
-        if (handledInitialErrors.current.has(newState.errors)) {
+      if (newErrors && newState.errors && clientErrors.has(newState.errors)) {
+        if (handledErrors.current.has(newState.errors)) {
           newErrors = null;
         } else {
           // Mark these before invoking user code, including when onError is
           // absent, so effect replays/resubscriptions don't report them again.
-          handledInitialErrors.current.add(newState.errors);
+          handledErrors.current.add(newState.errors);
         }
       }
 
@@ -571,13 +567,13 @@ export function RouterProvider({
 
   // State may change before our first render or between render and
   // subscription. Recover missed state/errors without relying on other
-  // subscribers or replaying initial errors during StrictMode effect replays.
+  // subscribers or reporting errors again during StrictMode effect replays.
   React.useLayoutEffect(() => {
     let errors = router.state.errors;
-    let newErrors = errors ? initialClientErrors.get(errors) : null;
+    let newErrors = errors ? clientErrors.get(errors) : null;
     if (
       lastState.current !== router.state ||
-      (errors && newErrors && !handledInitialErrors.current.has(errors))
+      (errors && newErrors && !handledErrors.current.has(errors))
     ) {
       setState(router.state, {
         deletedFetchers: [],
