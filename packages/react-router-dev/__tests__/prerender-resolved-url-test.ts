@@ -2,7 +2,10 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import type * as Vite from "vite";
 
-import { getResolvedUrl } from "../vite/plugins/prerender";
+import { getResolvedUrl, prerender } from "../vite/plugins/prerender";
+
+const preview = jest.fn() as jest.MockedFunction<typeof Vite.preview>;
+(jest as any).unstable_mockModule("vite", () => ({ preview }));
 
 describe("getResolvedUrl", () => {
   let server: http.Server;
@@ -49,4 +52,105 @@ describe("getResolvedUrl", () => {
     expect(url.hostname).toBe("localhost");
     expect(url.port).toBe(String(address.port));
   });
+});
+
+describe("prerender HTTP requests", () => {
+  let server: http.Server;
+
+  async function closeServer() {
+    if (server?.listening) {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    }
+  }
+
+  afterEach(async () => {
+    await closeServer();
+    preview.mockReset();
+  });
+
+  test.each([
+    { host: "127.0.0.1", printableHost: "[::1]" },
+    { host: "::1", printableHost: "127.0.0.1" },
+  ])(
+    "fetches data and HTML from $host when the printable URL advertises $printableHost",
+    async ({ host, printableHost }) => {
+      let receivedPaths: string[] = [];
+      server = http.createServer((request, response) => {
+        receivedPaths.push(request.url!);
+        response.end(`Prerendered ${request.url}`);
+      });
+      await new Promise<void>((resolve, reject) => {
+        server.once("error", reject);
+        server.listen({ port: 0, host, ipv6Only: host === "::1" }, resolve);
+      });
+      let { port } = server.address() as AddressInfo;
+
+      // The opposite address family makes the old printable-URL behavior fail
+      // deterministically, without relying on the machine's localhost DNS order.
+      preview.mockResolvedValue({
+        httpServer: server,
+        resolvedUrls: {
+          local: [`http://${printableHost}:${port}/`],
+          network: [],
+        },
+        close: closeServer,
+      } as unknown as Vite.PreviewServer);
+
+      let responses: { status: number; body: string }[] = [];
+      let plugin = prerender({
+        config: { buildDirectory: ".", retryCount: 0 },
+        requests: ["http://localhost/products.data?_routes=routes%2Fproducts"],
+        async postProcess(request, response) {
+          responses.push({
+            status: response.status,
+            body: await response.text(),
+          });
+          return new URL(request.url).pathname.endsWith(".data")
+            ? {
+                files: [],
+                requests: ["http://localhost/products?view=full"],
+              }
+            : [];
+        },
+      });
+
+      // Drive the plugin's build hook without performing a Vite build. Only
+      // preview server creation is mocked; the HTTP transport remains real.
+      let configResolved = plugin.configResolved!;
+      await (
+        typeof configResolved === "function"
+          ? configResolved
+          : configResolved.handler
+      ).call(
+        {} as Vite.MinimalPluginContextWithoutEnvironment,
+        { configFile: undefined } as Vite.ResolvedConfig,
+      );
+      let configHook = plugin.config!;
+      let config = await (
+        typeof configHook === "function" ? configHook : configHook.handler
+      ).call(
+        {} as Vite.ConfigPluginContext,
+        {},
+        {
+          command: "build",
+          mode: "production",
+        },
+      );
+      await config!.builder!.buildApp!({} as Vite.ViteBuilder);
+
+      expect(receivedPaths).toEqual([
+        "/products.data?_routes=routes%2Fproducts",
+        "/products?view=full",
+      ]);
+      expect(responses).toEqual([
+        {
+          status: 200,
+          body: "Prerendered /products.data?_routes=routes%2Fproducts",
+        },
+        { status: 200, body: "Prerendered /products?view=full" },
+      ]);
+    },
+  );
 });
