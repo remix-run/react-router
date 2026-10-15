@@ -23,9 +23,11 @@ import {
 import {
   type ActionFunction,
   type LoaderFunction,
+  type MiddlewareFunction,
   type Params,
   type ShouldRevalidateFunction,
   type RouteMatch,
+  type RouteObject,
   type RouterContextProvider,
   isAbsoluteUrl,
   isRouteErrorResponse,
@@ -180,6 +182,7 @@ type RSCRouteConfigEntryBase = {
   links?: LinksFunction;
   loader?: LoaderFunction;
   meta?: MetaFunction;
+  middleware?: MiddlewareFunction<any>[];
   shouldRevalidate?: ShouldRevalidateFunction;
 };
 
@@ -211,7 +214,9 @@ export type RSCRouteConfigEntry = RSCRouteConfigEntryBase & {
 
 export type RSCRouteConfig = Array<RSCRouteConfigEntry>;
 
-type RSCRouteDataMatch = RouteMatch<string, RSCRouteConfigEntry>;
+type RSCRouteDataMatch = Omit<RouteMatch, "route"> & {
+  route: RSCRouteConfigEntry;
+};
 
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
@@ -409,7 +414,7 @@ export async function matchRSCServerRequest({
   onError,
   request,
   routes,
-  generateResponse,
+  generateResponse: encodeResponse,
 }: {
   allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
@@ -435,6 +440,13 @@ export async function matchRSCServerRequest({
     },
   ) => Response;
 }): Promise<Response> {
+  let generateResponse: typeof encodeResponse = (match, options) => {
+    let response = encodeResponse(match, options);
+    // Preserve the payload type when middleware caches or clones this response.
+    response.headers.set("Content-Type", "text/x-component");
+    return response;
+  };
+
   let url = new URL(request.url);
 
   basename = basename || "/";
@@ -485,7 +497,11 @@ export async function matchRSCServerRequest({
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
   // and if we move to `lazy: {}` then we lose all the other things from the
   // `RSCRouteConfigEntry` like `Layout` etc.
-  let staticHandler = createStaticHandler(routes, { basename });
+  // RSC lazy modules can export middleware, unlike core router lazy functions.
+  // We resolve them below before querying the static handler.
+  let staticHandler = createStaticHandler(routes as RouteObject[], {
+    basename,
+  });
   let matches = staticHandler.match(url.pathname) as RSCRouteDataMatch[] | null;
   if (matches) {
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
@@ -587,8 +603,11 @@ async function generateManifestResponse(
   let pathnames = pathParam
     ? pathParam.split(",").filter(Boolean)
     : [url.pathname.replace(/\.manifest$/, "")];
+  // Only use the core router for matching; getManifestRoute loads RSC lazy modules.
   let staticHandler =
-    routes.length > 0 ? createStaticHandler(routes, { basename }) : undefined;
+    routes.length > 0
+      ? createStaticHandler(routes as RouteObject[], { basename })
+      : undefined;
   let routeIds = new Set<string>();
   let matchedRoutes = staticHandler
     ? pathnames
@@ -777,14 +796,15 @@ async function generateResourceResponse(
       async generateMiddlewareResponse(queryRoute) {
         try {
           let response = await queryRoute(request);
-          return generateResourceResponse(response);
+          return tagResourceResponse(response);
         } catch (error) {
           return generateErrorResponse(error);
         }
       },
       normalizePath: (r) => getNormalizedPath(r),
     });
-    return response;
+    // Middleware can short-circuit before the response-generation callback runs.
+    return tagResourceResponse(response);
   } catch (error) {
     return generateErrorResponse(error);
   }
@@ -806,18 +826,18 @@ async function generateResourceResponse(
       response = new Response("Internal Server Error", { status: 500 });
     }
 
-    return generateResourceResponse(response);
+    return tagResourceResponse(response);
   }
+}
 
-  function generateResourceResponse(response: Response) {
-    const headers = new Headers(response.headers);
-    headers.set("React-Router-Resource", "true");
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    });
-  }
+function tagResourceResponse(response: Response) {
+  const headers = new Headers(response.headers);
+  headers.set("React-Router-Resource", "true");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 async function generateRenderResponse(
@@ -994,6 +1014,16 @@ async function generateRenderResponse(
   }
 
   invariant(isResponse(result), "Expected a response from query");
+
+  let contentType = result.headers
+    .get("Content-Type")
+    ?.split(";")[0]
+    .trim()
+    .toLowerCase();
+  if (contentType !== "text/x-component") {
+    return tagResourceResponse(result);
+  }
+
   return result;
 }
 
@@ -1111,7 +1141,7 @@ async function generateStaticContextResponse(
 
   let headers = getDocumentHeadersImpl(
     staticContext,
-    (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers,
+    (match) => (match as RSCRouteDataMatch).route.headers,
     sideEffectRedirectHeaders,
   );
 

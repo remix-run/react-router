@@ -2458,6 +2458,14 @@ export function createRouter(init: RouterInit): Router {
         };
       } else {
         matches = discoverResult.matches;
+
+        // We don't enter a navigation state during initial hydration, so the
+        // discovered matches would otherwise not reach `state.matches` until
+        // the loaders complete. Expose them now so the UI can render down to
+        // the `HydrateFallback` of a newly discovered route while it loads.
+        if (initialHydration && !request.signal.aborted) {
+          updateState({ matches });
+        }
       }
     }
 
@@ -3654,6 +3662,8 @@ export function createRouter(init: RouterInit): Router {
 
   function resetFetcher(key: string, opts?: { reason?: unknown }) {
     abortFetcher(key, opts?.reason);
+    fetchLoadMatches.delete(key);
+    cancelledFetcherLoads.delete(key);
     updateFetcherState(key, getDoneFetcher(null));
   }
 
