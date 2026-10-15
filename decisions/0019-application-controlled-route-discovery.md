@@ -524,18 +524,6 @@ off and on. In particular, the tests protect:
 - Pending revalidation settling without replacement loaders, redirecting or
   interrupted fetchers becoming idle, and independent fetchers continuing.
 
-For manual testing, `playground/route-discovery` uses one production build and a
-cookie-controlled Express middleware that returns a synthetic manifest mismatch.
-The real versioned manifest asset remains available for `loadAllRoutes()`. The
-playground provides cancel/full-load/default choices, a delay for pending-state
-tests, and an `/a` mutation redirecting to undiscovered `/b` to expose stale data.
-Simulation changes need no new deployment or rebuild. A document reset starts
-with a fresh partial manifest; development/HMR supplies a full manifest and
-therefore does not exercise these discovery paths.
-
-This validates client mechanics without pretending to model incompatible
-server contracts across actual deployments.
-
 ### Implementation references
 
 - [Route discovery guide](../docs/how-to/route-discovery.md)
@@ -547,4 +535,3 @@ server contracts across actual deployments.
 - [Cancellation regression tests](../packages/react-router/__tests__/router/discovery-cancellation-test.ts)
 - [Framework browser tests](../integration/route-discovery-test.ts)
 - [Legacy discovery compatibility tests](../integration/fog-of-war-test.ts)
-- [Manual playground instructions](../playground/route-discovery/README.md)
