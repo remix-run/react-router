@@ -152,7 +152,7 @@ test.describe("Client Data", () => {
                       splitRouteModules,
                     }),
                     "app/root.tsx": js`
-                      import { Form, Outlet, Scripts } from "react-router"
+                      import { Form, Outlet, ${templateName === "rsc-vite-framework" ? "" : "Scripts"} } from "react-router"
 
                       export const middleware = [
                         async ({ request }, next) => {
@@ -181,7 +181,7 @@ test.describe("Client Data", () => {
                               <main>
                                 <Outlet />
                               </main>
-                              <Scripts />
+                              ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                             </body>
                           </html>
                         );
@@ -951,6 +951,9 @@ test.describe("Client Data", () => {
                         return redirect('/client-loader-critical/hydrating-clientloader-redirects-trigger-new-data-requests-to-the-server/parent/b');
                       }
                       clientLoader.hydrate = true;
+                      export function HydrateFallback() {
+                        return null;
+                      }
                       export default function Component({ loaderData }) {
                         return <p>Should not see me</p>;
                       }
