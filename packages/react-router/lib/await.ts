@@ -18,7 +18,10 @@ export function getAwaitPromise(
 ): Promise<PromiseSettledResult<unknown>> {
   let cached = awaitPromises.get(resolve);
   if (!cached) {
-    let wrappedPromise = resolve.then(
+    // Wrap in `Promise.resolve()` because React Flight's `ReactPromise`
+    // chunks pass `instanceof Promise` but return `undefined` from `.then()`.
+    // Native promises are returned as-is by `Promise.resolve()`.
+    let wrappedPromise = Promise.resolve(resolve).then(
       (value) => settle({ status: "fulfilled", value }),
       (reason): PromiseSettledResult<unknown> => {
         cached!.onError?.(reason);
