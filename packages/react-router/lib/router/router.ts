@@ -1034,6 +1034,11 @@ class DataRoutes {
   }
 }
 
+// Current client errors keyed by the error collection committed to router state.
+// A collection may also contain preserved SSR errors, which must not be reported.
+// Kept independently of subscribers for RouterProvider's missed-error recovery.
+export const clientErrors = new WeakMap<RouteData, RouteData | null>();
+
 /**
  * Create a router and listen to history POP navigations
  */
@@ -1107,11 +1112,6 @@ export function createRouter(init: RouterInit): Router {
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
   let subscribers = new Set<RouterSubscriber>();
-  // Buffer the most recent state update when there are no subscribers, so
-  // the first subscriber to attach gets caught up. Without this, states
-  // that update during `initialize()` (before <RouterProvider>
-  // mounts and registers its subscriber) would be silently lost
-  let bufferedInitialStateUpdate: { newErrors: RouteData | null } | null = null;
   // Externally-provided object to hold scroll restoration locations during routing
   let savedScrollPositions: Record<string, number> | null = null;
   // Externally-provided function to get scroll restoration keys
@@ -1436,16 +1436,6 @@ export function createRouter(init: RouterInit): Router {
   // Subscribe to state updates for the router
   function subscribe(fn: RouterSubscriber) {
     subscribers.add(fn);
-    if (bufferedInitialStateUpdate) {
-      let { newErrors } = bufferedInitialStateUpdate;
-      bufferedInitialStateUpdate = null;
-      fn(state, {
-        deletedFetchers: [],
-        newErrors,
-        viewTransitionOpts: undefined,
-        flushSync: false,
-      });
-    }
     return () => subscribers.delete(fn);
   }
 
@@ -1457,6 +1447,21 @@ export function createRouter(init: RouterInit): Router {
       viewTransitionOpts?: ViewTransitionOpts;
     } = {},
   ): void {
+    let newErrors = newState.errors ?? null;
+    let cachedErrors = newErrors ? clientErrors.get(newErrors) : undefined;
+    if (cachedErrors !== undefined) {
+      newErrors = cachedErrors;
+    }
+    if (newState.errors !== undefined || newState.initialized) {
+      // A later navigation or error update supersedes the previous errors.
+      if (state.errors) {
+        clientErrors.delete(state.errors);
+      }
+      if (newState.errors) {
+        clientErrors.set(newState.errors, newErrors);
+      }
+    }
+
     // We may have patched routes during the navigation and if so we need to
     // get references to the latest elements here
     if (newState.matches) {
@@ -1510,17 +1515,13 @@ export function createRouter(init: RouterInit): Router {
       }
     });
 
-    if (subscribers.size === 0) {
-      bufferedInitialStateUpdate = { newErrors: newState.errors ?? null };
-    }
-
     // Iterate over a local copy so that if flushSync is used and we end up
     // removing and adding a new subscriber due to the useCallback dependencies,
     // we don't get ourselves into a loop calling the new subscriber immediately
     [...subscribers].forEach((subscriber) =>
       subscriber(state, {
         deletedFetchers: unmountedFetchers,
-        newErrors: newState.errors ?? null,
+        newErrors,
         viewTransitionOpts: opts.viewTransitionOpts,
         flushSync: opts.flushSync === true,
       }),
@@ -2719,9 +2720,12 @@ export function createRouter(init: RouterInit): Router {
       workingFetchers,
     );
 
-    // Preserve SSR errors during partial hydration
+    // Preserve SSR errors during partial hydration, but only report new client
+    // errors to subscribers and RouterProvider's missed-error recovery.
     if (initialHydration && state.errors) {
+      let newClientErrors = errors ?? null;
       errors = { ...state.errors, ...errors };
+      clientErrors.set(errors, newClientErrors);
     }
 
     let didUpdateFetcherRedirects = markFetchRedirectsDone(workingFetchers);
