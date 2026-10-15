@@ -365,6 +365,47 @@ describe(`ScrollRestoration`, () => {
       expect(script).toHaveAttribute("nonce", "explicit-nonce");
     });
 
+    it("fails gracefully in the inline script if sessionStorage is not available", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration data-testid="scroll-script" />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+      render(
+        <FrameworkContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+      let script = screen.getByTestId("scroll-script");
+
+      let consoleErrorMock = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      // e.g. Chrome with "Block all cookies" or a sandboxed cross-origin iframe
+      let sessionStorageMock = jest
+        .spyOn(window, "sessionStorage", "get")
+        .mockImplementation(() => {
+          throw new DOMException("Access is denied", "SecurityError");
+        });
+
+      // The browser runs this script before hydration, so a throw here is an
+      // uncaught page error
+      // eslint-disable-next-line no-new-func
+      expect(() => new Function(script.innerHTML)()).not.toThrow();
+      expect(consoleErrorMock).toHaveBeenCalled();
+
+      sessionStorageMock.mockRestore();
+      consoleErrorMock.mockRestore();
+    });
+
     it("should restore scroll position", () => {
       let scrollToMock = jest.spyOn(window, "scrollTo");
       let router = createMemoryRouter([
