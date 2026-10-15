@@ -248,6 +248,16 @@ export function useFogOFWarDiscovery(
   ]);
 }
 
+// Paths are comma-delimited in the `paths` search param, so any literal commas
+// within a path must be encoded. The server decodes each path when matching.
+export function getManifestPathsParam(paths: string[]) {
+  return paths
+    .slice()
+    .sort()
+    .map((path) => path.replace(/,/g, "%2C"))
+    .join(",");
+}
+
 export function getManifestPath(
   _manifestPath: string | undefined,
   basename: string | undefined,
@@ -376,7 +386,7 @@ export async function fetchAndApplyManifestPatches(
   // https://issues.chromium.org/issues/331406951
   // https://github.com/nodejs/node/issues/51518
   const searchParams = new URLSearchParams();
-  searchParams.set("paths", paths.sort().join(","));
+  searchParams.set("paths", getManifestPathsParam(paths));
   searchParams.set("version", manifest.version);
   let url = new URL(
     getManifestPath(manifestPath, basename),
