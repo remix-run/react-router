@@ -3702,6 +3702,78 @@ describe("fetchers", () => {
       t.router.resetFetcher("a", { reason: "BECAUSE I SAID SO" });
       expect(A.loaders.fetch.signal.reason).toBe("BECAUSE I SAID SO");
     });
+
+    it("does not revalidate reset fetchers", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/", action: true },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      await A.loaders.fetch.resolve("FETCH");
+      t.router.resetFetcher("a");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+
+      let B = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "navigation", "loader", "fetch");
+      await B.actions.root.resolve("ACTION");
+      expect(B.loaders.fetch.stub).not.toHaveBeenCalled();
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+    });
+
+    it("does not force a revalidation after resetting an interrupted load", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/", action: true },
+          {
+            id: "fetch",
+            path: "/fetch",
+            loader: true,
+            shouldRevalidate: () => false,
+          },
+        ],
+      });
+
+      // A submission interrupts the in-flight load, then the fetcher is reset
+      let A = await t.fetch("/fetch", "a", "root");
+      let B = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "navigation", "loader", "fetch");
+      expect(A.loaders.fetch.signal.aborted).toBe(true);
+      t.router.resetFetcher("a");
+      await B.actions.root.resolve("ACTION");
+      expect(B.loaders.fetch.stub).not.toHaveBeenCalled();
+
+      // A new load must not inherit the forced revalidation of the cancelled one
+      let C = await t.fetch("/fetch", "a", "root");
+      await C.loaders.fetch.resolve("FETCH");
+
+      let D = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(D.loaders, "navigation", "loader", "fetch");
+      await D.actions.root.resolve("ACTION");
+      expect(D.loaders.fetch.stub).not.toHaveBeenCalled();
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: "FETCH",
+      });
+    });
   });
 
   describe("fetchReloadIds cleanup", () => {

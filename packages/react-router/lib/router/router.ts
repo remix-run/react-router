@@ -3662,6 +3662,8 @@ export function createRouter(init: RouterInit): Router {
 
   function resetFetcher(key: string, opts?: { reason?: unknown }) {
     abortFetcher(key, opts?.reason);
+    fetchLoadMatches.delete(key);
+    cancelledFetcherLoads.delete(key);
     updateFetcherState(key, getDoneFetcher(null));
   }
 
