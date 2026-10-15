@@ -48,24 +48,34 @@ function setup({
     ...manifest,
     routes: { root, a: entry("a", "a", "root"), b: entry("b", "b", "root") },
   };
+  let ssrInfo: ConstructorParameters<typeof RouteDiscoveryRuntime>[0] = {
+    manifest,
+    routeModules: {},
+    router: undefined,
+    context: {
+      ssr,
+      routeDiscovery: {
+        mode: complete ? "initial" : "lazy",
+        manifestPath: "/__manifest",
+      },
+      isSpaMode: false,
+      basename,
+      unstable_apiServerOrigin: serverOrigin,
+    },
+  };
+  let load = jest.fn(async () => full);
+  let runtime = new RouteDiscoveryRuntime(ssrInfo, {
+    loadManifest: load,
+    fetch: fetchImplementation,
+  });
+  // Match HydratedRouter's order: create the runtime first, then assign the
+  // router before initialization can start discovery.
   let router = createRouter({
     basename,
     history: createMemoryHistory({ initialEntries: [basename] }),
     routes: [{ id: "root", path: "" }],
   });
-  let load = jest.fn(async () => full);
-  let runtime = new RouteDiscoveryRuntime(
-    () => router,
-    manifest,
-    {},
-    ssr,
-    { mode: complete ? "initial" : "lazy", manifestPath: "/__manifest" },
-    false,
-    basename,
-    load,
-    fetchImplementation,
-    serverOrigin,
-  );
+  ssrInfo.router = router;
   return { manifest, full, router, load, runtime };
 }
 let originalFetch = global.fetch;
@@ -153,51 +163,66 @@ test("rejects version mismatches without completing and allows retry", async () 
   expect(runtime.state).toBe("complete");
 });
 
-test("cancels after a mismatch full-load failure and reports it once", async () => {
-  let { runtime, load } = setup();
-  fetchMock.mockImplementation(async () => mismatch());
-  let error = new Error("retained asset missing");
-  let onError = jest.fn();
-  runtime.onError = onError;
-  load.mockRejectedValue(error);
-  let earlier = jest.fn();
-  runtime.register({ current: { onManifestMismatch: earlier } });
-  runtime.register({
-    current: { onManifestMismatch: (event) => event.loadAllRoutes() },
-  });
-  expect(await runtime.discoverRoutes(["/a"])).toEqual({
-    type: "version-mismatch",
-  });
-  expect(earlier).not.toHaveBeenCalled();
-  expect(onError).toHaveBeenCalledTimes(1);
-  expect(onError.mock.calls[0][0]).toBe(error);
-  expect(fetchMock).toHaveBeenCalledTimes(1);
-  expect(runtime.state).toBe("partial");
-});
-
-test("consumers can catch full-load failure without a framework error", async () => {
-  let { runtime, load } = setup();
-  load.mockRejectedValue(new Error("missing"));
-  runtime.onError = jest.fn();
-  let caught = jest.fn();
-  runtime.register({
-    current: {
-      onManifestMismatch: async (event) => {
-        try {
-          await event.loadAllRoutes();
-        } catch (error) {
-          caught(error);
-        }
+test.each(["event", "hook"])(
+  "cancels after a mismatch full-load failure through the %s reference and reports it once",
+  async (reference) => {
+    let { runtime, load } = setup();
+    fetchMock.mockImplementation(async () => mismatch());
+    let error = new Error("retained asset missing");
+    let onError = jest.fn();
+    runtime.onError = onError;
+    load.mockRejectedValue(error);
+    let earlier = jest.fn();
+    runtime.register({ current: { onManifestMismatch: earlier } });
+    let { loadAllRoutes } = runtime;
+    runtime.register({
+      current: {
+        onManifestMismatch: (event) =>
+          reference === "event" ? event.loadAllRoutes() : loadAllRoutes(),
       },
-    },
-  });
-  fetchMock.mockImplementation(async () => mismatch());
-  expect(await runtime.discoverRoutes(["/a"])).toEqual({
-    type: "version-mismatch",
-  });
-  expect(caught).toHaveBeenCalledTimes(1);
-  expect(runtime.onError).not.toHaveBeenCalled();
-});
+    });
+    expect(await runtime.discoverRoutes(["/a"])).toEqual({
+      type: "version-mismatch",
+    });
+    expect(earlier).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0][0]).toBe(error);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(runtime.state).toBe("partial");
+  },
+);
+
+test.each(["event", "hook"])(
+  "consumers can catch full-load failure through the %s reference without a framework error",
+  async (reference) => {
+    let { runtime, load } = setup();
+    let error = new Error("missing");
+    load.mockRejectedValue(error);
+    runtime.onError = jest.fn();
+    let caught = jest.fn();
+    let { loadAllRoutes } = runtime;
+    runtime.register({
+      current: {
+        onManifestMismatch: async (event) => {
+          try {
+            await (reference === "event"
+              ? event.loadAllRoutes()
+              : loadAllRoutes());
+          } catch (error) {
+            caught(error);
+          }
+        },
+      },
+    });
+    fetchMock.mockImplementation(async () => mismatch());
+    expect(await runtime.discoverRoutes(["/a"])).toEqual({
+      type: "version-mismatch",
+    });
+    expect(caught).toHaveBeenCalledTimes(1);
+    expect(caught).toHaveBeenCalledWith(error);
+    expect(runtime.onError).not.toHaveBeenCalled();
+  },
+);
 
 test("runs handlers in reverse registration order, with identity cleanup and stable update priority", async () => {
   let { runtime } = setup();
@@ -367,6 +392,34 @@ test("actual handler errors reject and stop propagation", async () => {
   expect(fetchMock).toHaveBeenCalledTimes(1);
 });
 
+test.each(["event", "hook"])(
+  "an unrelated handler error after a caught %s full-load failure still rejects",
+  async (reference) => {
+    let { runtime, load } = setup();
+    fetchMock.mockImplementation(async () => mismatch());
+    load.mockRejectedValue(new Error("missing retained asset"));
+    runtime.onError = jest.fn();
+    let handlerError = new Error("handler failed");
+    let { loadAllRoutes } = runtime;
+    runtime.register({
+      current: {
+        onManifestMismatch: async (event) => {
+          try {
+            await (reference === "event"
+              ? event.loadAllRoutes()
+              : loadAllRoutes());
+          } catch {
+            throw handlerError;
+          }
+        },
+      },
+    });
+    await expect(runtime.discoverRoutes(["/a"])).rejects.toBe(handlerError);
+    expect(runtime.onError).not.toHaveBeenCalled();
+    expect(runtime.state).toBe("partial");
+  },
+);
+
 test.each([
   "../a",
   "a",
@@ -402,14 +455,17 @@ test("a cached wrong-version module still rejects when loading is retried", asyn
     import.meta.url,
   ).href;
   window.__reactRouterManifest = manifest;
-  let runtime = new RouteDiscoveryRuntime(
-    () => router,
+  let runtime = new RouteDiscoveryRuntime({
+    router,
     manifest,
-    {},
-    true,
-    { mode: "lazy", manifestPath: "/__manifest" },
-    false,
-  );
+    routeModules: {},
+    context: {
+      ssr: true,
+      routeDiscovery: { mode: "lazy", manifestPath: "/__manifest" },
+      isSpaMode: false,
+      basename: undefined,
+    },
+  });
   try {
     await expect(runtime.loadAllRoutes()).rejects.toThrow("client version");
     await expect(runtime.loadAllRoutes()).rejects.toThrow("client version");
@@ -455,22 +511,19 @@ test("default eager recovery is available before hooks mount", async () => {
   );
 });
 
-test("custom handlers override defaults regardless of registration order; removing them restores defaults", async () => {
+test("custom handlers override default recovery until removed", async () => {
   let { runtime } = setup();
   let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
   fetchMock.mockImplementation(async () => mismatch());
   let custom = jest.fn();
   let remove = runtime.register({ current: { onManifestMismatch: custom } });
   runtime.register({ current: {} });
-  let defaultHandler = jest.fn((event) => event.defaultBehavior());
-  runtime.register({ current: { onManifestMismatch: defaultHandler } }, true);
   await runtime.discover(["/a"], "eager", null);
   expect(custom).toHaveBeenCalledTimes(1);
-  expect(defaultHandler).not.toHaveBeenCalled();
   expect(warn).not.toHaveBeenCalled();
   remove();
   await runtime.discover(["/a"], "eager", null);
-  expect(defaultHandler).toHaveBeenCalledTimes(1);
+  expect(custom).toHaveBeenCalledTimes(1);
   expect(warn).toHaveBeenCalledTimes(1);
 });
 

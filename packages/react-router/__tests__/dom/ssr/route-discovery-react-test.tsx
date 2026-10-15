@@ -25,14 +25,13 @@ function setup(unstable_customRouteDiscovery = true) {
   let routeDiscovery = { mode: "lazy" as const, manifestPath: "/__manifest" };
   let manifestLoad = createDeferred<AssetsManifest>();
   let runtime = new RouteDiscoveryRuntime(
-    () => router,
-    manifest,
-    {},
-    true,
-    routeDiscovery,
-    false,
-    "/",
-    () => manifestLoad.promise,
+    {
+      router,
+      manifest,
+      routeModules: {},
+      context: { ssr: true, routeDiscovery, isSpaMode: false, basename: "/" },
+    },
+    { loadManifest: () => manifestLoad.promise },
   );
   function Provider({ children }: { children: React.ReactNode }) {
     let state = useCustomRouteDiscovery(runtime);

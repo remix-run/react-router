@@ -1677,17 +1677,20 @@ export function createRouter(init: RouterInit): Router {
       },
     );
 
+    resetPendingNavigation();
+    pendingPopstateNavigationDfd?.resolve();
+    pendingPopstateNavigationDfd = null;
+    pendingRevalidationDfd?.resolve();
+    pendingRevalidationDfd = null;
+  }
+
+  function resetPendingNavigation() {
     pendingPopstateDelta = 0;
-    // Reset stateful navigation vars
     pendingAction = NavigationType.Pop;
     pendingPreventScrollReset = false;
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
-    pendingPopstateNavigationDfd?.resolve();
-    pendingPopstateNavigationDfd = null;
-    pendingRevalidationDfd?.resolve();
-    pendingRevalidationDfd = null;
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -2178,31 +2181,19 @@ export function createRouter(init: RouterInit): Router {
     });
   }
 
-  async function cancelDiscoveryNavigation() {
-    // Browser POP restoration is asynchronous. Queue new work until both the
-    // history position and pending router state have been restored.
+  function cancelDiscoveryNavigation() {
+    // Install the gate before notifying subscribers, which may start new work.
     let cancellation = createDeferred<void>();
     pendingDiscoveryCancellation = cancellation.promise;
+    let delta = pendingPopstateDelta;
+    let popstateNavigationDfd = pendingPopstateNavigationDfd;
+    pendingPopstateNavigationDfd = null;
+
+    // Settle router state synchronously. An independent fetcher finishing during
+    // POP restoration must not mistake this for a navigation it can complete.
     pendingNavigationController?.abort();
     pendingNavigationController = null;
-    if (pendingPopstateDelta) {
-      let delta = pendingPopstateDelta;
-      pendingPopstateDelta = 0;
-      let restoration = createDeferred<void>();
-      // Use the same compensating POP as navigation blockers. Additional native
-      // Back/Forward presses during restoration have the same known limitation:
-      // history does not identify which traversal caused the next POP event.
-      unblockBlockerHistoryUpdate = () => restoration.resolve();
-      init.history.go(-delta);
-      await restoration.promise;
-    }
-    pendingAction = NavigationType.Pop;
-    pendingPreventScrollReset = false;
-    pendingViewTransitionEnabled = false;
-    isUninterruptedRevalidation = false;
-    isRevalidationRequired = false;
-    pendingPopstateNavigationDfd?.resolve();
-    pendingPopstateNavigationDfd = null;
+    resetPendingNavigation();
     pendingRevalidationDfd?.resolve();
     pendingRevalidationDfd = null;
     let blockers = new Map(state.blockers);
@@ -2227,8 +2218,24 @@ export function createRouter(init: RouterInit): Router {
       blockers,
       ...(didUpdateFetchers ? { fetchers } : {}),
     });
-    pendingDiscoveryCancellation = undefined;
-    cancellation.resolve();
+
+    // Only history restoration remains asynchronous. Keep the POP navigation's
+    // promise and any new work waiting until the browser is back in place.
+    function finishCancellation() {
+      pendingDiscoveryCancellation = undefined;
+      popstateNavigationDfd?.resolve();
+      cancellation.resolve();
+    }
+    if (delta) {
+      // Use the same compensating POP as navigation blockers. Additional native
+      // Back/Forward presses during restoration have the same known limitation:
+      // history does not identify which traversal caused the next POP event.
+      unblockBlockerHistoryUpdate = finishCancellation;
+      init.history.go(-delta);
+    } else {
+      finishCancellation();
+    }
+    return cancellation.promise;
   }
 
   // Call the action matched by the leaf route for this navigation and handle

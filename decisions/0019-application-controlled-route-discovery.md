@@ -125,6 +125,14 @@ initialization, store it on `ssrInfo`, and pass it to discovery helpers and hook
 consumers through Framework context. It owns the discovery caches, handler
 registrations, full-manifest load, and pending custom mismatch handling.
 
+Pass `ssrInfo` directly to the runtime, typed to only the manifest, route modules,
+router, and context fields it needs. Read its router lazily: hydrated-router setup
+assigns that field after creating the runtime and before initialization starts
+discovery. A separate options argument supplies custom fetch and an optional
+manifest-loading override for tests. This avoids duplicating hydration context
+as a long list of constructor arguments or importing the hydrated entry point's
+full `SSRInfo` type.
+
 We removed the `WeakMap<AssetsManifest, RouteDiscoveryRuntime>` registry and
 lookup helper. Conventional hydrated Framework Mode already has one router and
 running manifest. Full loading preserves the manifest's identity, so it does not
@@ -180,11 +188,11 @@ specific navigation until interaction.
 
 ### 6. Custom callbacks replace defaults; explicit delegation restores them
 
-Use the same internal registration machinery for the built-in policy and public
-hook callbacks. The built-in registration has explicit default priority instead
-of depending on React effect ordering. The public hook itself needs Framework
-context, so the internal driver shares the registration helper rather than
-calling that public wrapper before its provider exists.
+Register only application callbacks. When no custom mismatch handler is present,
+the runtime invokes the built-in policy directly. Default recovery is therefore
+available before hooks mount and has no registration or cleanup lifecycle. The
+public hook owns custom registration; the internal driver owns eager discovery
+and state subscriptions.
 
 Choose mismatch handlers as follows:
 
@@ -308,10 +316,13 @@ Consumers must be able to catch `loadAllRoutes()` failures and decide whether to
 retry, retain the page, or hard reload. A full-manifest failure must not render a
 route error boundary merely because an application awaited it in a callback.
 
-If the promise offered on the event rejects out of a handler, stop the remaining
-handler chain and report through `HydratedRouter`'s `onError`, or `console.error`
-when no reporter is present. Cancel affected operations if the tree remains
-incomplete. If the application catches the failure itself, it owns the response.
+The hook and mismatch event expose the same `loadAllRoutes()` function. Track
+full-load failures in the shared runtime for the duration of each handler chain,
+so either reference has the same error behavior without wrapping the original
+error. If a full-load failure rejects out of a handler, stop the remaining chain
+and report through `HydratedRouter`'s `onError`, or `console.error` when no reporter
+is present. Cancel affected operations if the tree remains incomplete. If the
+application catches the failure itself, it owns the response.
 
 Unrelated errors thrown by handlers retain normal discovery error semantics:
 navigation/fetcher error handling, eager error reporting, or rejection of the
@@ -414,9 +425,16 @@ before discovery finishes. Cancellation must compensate for that movement to kee
 the address bar aligned with the retained screen.
 
 Use the same compensating POP approach as navigation blockers for router-managed
-history entries. Wait for restoration before declaring cancellation finished,
-and queue new navigation/revalidation work until history and pending state are
-restored. Otherwise a newly started navigation could race the restoration.
+history entries. Settle navigation, pending revalidation, and affected fetchers
+synchronously, then restore browser history separately. Leaving navigation in a
+loading state during restoration allows an independently finishing fetcher
+revalidation to commit the canceled destination. Independent fetcher requests
+remain active and may update data on the retained screen.
+
+Resolve the canceled `revalidate()` promise when router state settles. Keep the
+POP `navigate()` promise pending until history is restored, and queue new
+navigation, revalidation, and fetcher work behind that restoration. Install this
+gate before notifying subscribers so their updates cannot race the restoration.
 
 This is not limited to leaving the app. For example, after `/a → /b` and a hard
 reload on `/b`, the new partial manifest may not include `/a`; Back can therefore

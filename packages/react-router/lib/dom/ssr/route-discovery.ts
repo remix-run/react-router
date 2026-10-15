@@ -13,7 +13,7 @@ import { getRoutePattern } from "../../router/utils";
 import { useFrameworkContext } from "./components";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
-import type { ServerBuild } from "../../server-runtime/build";
+import type { WindowReactRouterContext } from "../global";
 import type { RouterFetch } from "./single-fetch";
 import {
   getManifestPath,
@@ -46,10 +46,22 @@ export type RouteDiscoveryOptions = {
 };
 
 type Registration = { current: RouteDiscoveryOptions };
-const defaultRouteDiscoveryOptions: RouteDiscoveryOptions = {
-  onManifestMismatch: (event) => event.defaultBehavior(),
-};
 export type DiscoveryState = "partial" | "loading" | "complete";
+
+type RouteDiscoverySsrInfo = {
+  manifest: AssetsManifest;
+  routeModules: RouteModules;
+  router: Router | undefined;
+  context: Pick<
+    WindowReactRouterContext,
+    | "ssr"
+    | "routeDiscovery"
+    | "isSpaMode"
+    | "basename"
+    | "unstable_apiServerOrigin"
+    | "unstable_apiOnly"
+  >;
+};
 
 // Owned by the hydrated router and shared by every hook and discovery source.
 export class RouteDiscoveryRuntime {
@@ -59,50 +71,62 @@ export class RouteDiscoveryRuntime {
   state: DiscoveryState;
   ready = false;
   private registrations = new Set<Registration>();
-  private defaultRegistration?: Registration;
   private listeners = new Set<() => void>();
+  private fullLoadErrorListeners = new Set<(error: unknown) => void>();
   private fullLoad?: Promise<void>;
   private loadedManifest?: AssetsManifest;
   private mismatch?: Promise<void>;
+  private fetchImplementation: RouterFetch;
+  private loadManifest: () => Promise<AssetsManifest>;
   onError?: ClientOnErrorFunction;
 
   constructor(
-    private getRouter: () => Router,
-    readonly manifest: AssetsManifest,
-    private routeModules: RouteModules,
-    private ssr: boolean,
-    private config: ServerBuild["routeDiscovery"],
-    private isSpaMode: boolean,
-    private basename?: string,
-    private loadManifest: () => Promise<AssetsManifest> = async () => {
-      // The existing versioned asset assigns the manifest to this global. Keep
-      // the running manifest's identity (and SRI map) after reading that asset.
-      if (this.loadedManifest) return this.loadedManifest;
-      try {
-        await import(/* @vite-ignore */ /* webpackIgnore: true */ manifest.url);
-        invariant(
-          window.__reactRouterManifest,
-          "Unable to load the client manifest",
-        );
-        invariant(
-          window.__reactRouterManifest !== manifest,
-          "The full route manifest asset did not provide a manifest.",
-        );
-        // Module evaluation is cached by the browser, even if version validation
-        // below rejects. Retrying must inspect this same asset, not the restored
-        // partial manifest global.
-        this.loadedManifest = window.__reactRouterManifest;
-        return this.loadedManifest;
-      } finally {
-        window.__reactRouterManifest = manifest;
-      }
-    },
-    private fetchImplementation: RouterFetch = (request) => fetch(request),
-    private serverOrigin?: string,
-    private isApiOnly: boolean = false,
+    private ssrInfo: RouteDiscoverySsrInfo,
+    {
+      fetch: fetchImplementation = (request) => fetch(request),
+      loadManifest,
+    }: {
+      fetch?: RouterFetch;
+      loadManifest?: () => Promise<AssetsManifest>;
+    } = {},
   ) {
-    this.enabled = isFogOfWarEnabled(config, ssr);
+    this.fetchImplementation = fetchImplementation;
+    this.loadManifest = loadManifest ?? (() => this.loadManifestAsset());
+    let { manifest, context } = ssrInfo;
+    this.enabled = isFogOfWarEnabled(context.routeDiscovery, context.ssr);
     this.state = this.enabled && !manifest.hmr ? "partial" : "complete";
+  }
+
+  private get router() {
+    // The runtime is created before the router, which is assigned before any
+    // discovery work starts during router initialization.
+    invariant(this.ssrInfo.router, "Router unavailable for route discovery");
+    return this.ssrInfo.router;
+  }
+
+  private async loadManifestAsset(): Promise<AssetsManifest> {
+    let { manifest } = this.ssrInfo;
+    // The existing versioned asset assigns the manifest to this global. Keep
+    // the running manifest's identity (and SRI map) after reading that asset.
+    if (this.loadedManifest) return this.loadedManifest;
+    try {
+      await import(/* @vite-ignore */ /* webpackIgnore: true */ manifest.url);
+      invariant(
+        window.__reactRouterManifest,
+        "Unable to load the client manifest",
+      );
+      invariant(
+        window.__reactRouterManifest !== manifest,
+        "The full route manifest asset did not provide a manifest.",
+      );
+      // Module evaluation is cached by the browser, even if version validation
+      // below rejects. Retrying must inspect this same asset, not the restored
+      // partial manifest global.
+      this.loadedManifest = window.__reactRouterManifest;
+      return this.loadedManifest;
+    } finally {
+      window.__reactRouterManifest = manifest;
+    }
   }
 
   subscribe = (listener: () => void) => {
@@ -119,15 +143,7 @@ export class RouteDiscoveryRuntime {
   markReady = () => {
     if (!this.ready) this.update(this.state, true);
   };
-  register(registration: Registration, isDefault = false) {
-    if (isDefault) {
-      this.defaultRegistration = registration;
-      return () => {
-        if (this.defaultRegistration === registration) {
-          this.defaultRegistration = undefined;
-        }
-      };
-    }
+  register(registration: Registration) {
     this.registrations.add(registration);
     return () => {
       this.registrations.delete(registration);
@@ -140,26 +156,28 @@ export class RouteDiscoveryRuntime {
   loadAllRoutes = (): Promise<void> => {
     if (this.isComplete()) return Promise.resolve();
     if (this.fullLoad) return this.fullLoad;
+    let { manifest, routeModules, context } = this.ssrInfo;
     // Install the shared promise before notifying consumers or calling user code.
     this.fullLoad = Promise.resolve().then(async () => {
       try {
         let fullManifest = await this.loadManifest();
         invariant(
-          fullManifest.version === this.manifest.version,
+          fullManifest.version === manifest.version,
           "The full route manifest does not match the running client version.",
         );
         applyManifestPatches(
           fullManifest.routes,
-          this.manifest,
-          this.routeModules,
-          this.ssr,
-          this.isSpaMode,
-          this.getRouter().patchRoutes,
-          this.isApiOnly,
+          manifest,
+          routeModules,
+          context.ssr,
+          context.isSpaMode,
+          this.router.patchRoutes,
+          context.unstable_apiOnly === true,
         );
         this.nextPaths.clear();
         this.update("complete");
       } catch (error) {
+        this.fullLoadErrorListeners.forEach((listener) => listener(error));
         this.update("partial");
         throw error;
       } finally {
@@ -172,7 +190,7 @@ export class RouteDiscoveryRuntime {
 
   reportError(error: unknown) {
     if (this.onError) {
-      let { location, matches } = this.getRouter().state;
+      let { location, matches } = this.router.state;
       this.onError(error, {
         location,
         params: matches[0]?.params || {},
@@ -187,31 +205,21 @@ export class RouteDiscoveryRuntime {
     source: ManifestMismatchEvent["source"],
     reloadUrl: string | null,
   ) {
+    let { version } = this.ssrInfo.manifest;
     let stopped = false;
     let defaultBehavior: Promise<void> | undefined;
-    // Remember only failures from the load offered to this chain. Unrelated
-    // exceptions in application handlers still use normal discovery errors.
-    let loadErrors = new Set<unknown>();
     let event: ManifestMismatchEvent = {
       source,
       reloadUrl,
-      version: this.manifest.version,
+      version,
       stopPropagation() {
         stopped = true;
       },
-      loadAllRoutes: () =>
-        this.loadAllRoutes().catch((error) => {
-          loadErrors.add(error);
-          throw error;
-        }),
+      loadAllRoutes: this.loadAllRoutes,
       defaultBehavior: () => {
         defaultBehavior ??= Promise.resolve().then(async () => {
           if (source !== "imperative" && !this.isComplete()) {
-            await handleClientVersionMismatch(
-              true,
-              this.manifest.version,
-              reloadUrl,
-            );
+            await handleClientVersionMismatch(true, version, reloadUrl);
           }
         });
         return defaultBehavior;
@@ -220,38 +228,41 @@ export class RouteDiscoveryRuntime {
     let registrations = [...this.registrations]
       .reverse()
       .filter((registration) => registration.current.onManifestMismatch);
-    // Default recovery is available during initialization, before hooks mount.
-    // Its priority is explicit instead of depending on React effect ordering.
-    let defaultRegistration = this.defaultRegistration || {
-      current: defaultRouteDiscoveryOptions,
-    };
-    if (registrations.length === 0) registrations.push(defaultRegistration);
-    for (let registration of registrations) {
-      if (
-        registration !== defaultRegistration &&
-        !this.registrations.has(registration)
-      )
-        continue;
-      try {
-        await registration.current.onManifestMismatch?.(event);
-      } catch (error) {
-        if (!loadErrors.has(error)) throw error;
-        // Full-load errors remain catchable by applications and never render a
-        // route error boundary. The incomplete operation will be canceled.
-        this.reportError(error);
-        break;
+    // Default recovery does not depend on React's mount or effect ordering.
+    if (registrations.length === 0) return event.defaultBehavior();
+
+    // Track full-load failures during this chain, whether handlers use the
+    // event method or the function returned by useRouteDiscovery.
+    let loadErrors = new Set<unknown>();
+    let onLoadError = (error: unknown) => loadErrors.add(error);
+    this.fullLoadErrorListeners.add(onLoadError);
+    try {
+      for (let registration of registrations) {
+        if (!this.registrations.has(registration)) continue;
+        try {
+          await registration.current.onManifestMismatch?.(event);
+        } catch (error) {
+          if (!loadErrors.has(error)) throw error;
+          // Full-load errors remain catchable by applications and never render a
+          // route error boundary. The incomplete operation will be canceled.
+          this.reportError(error);
+          break;
+        }
+        if (stopped) break;
       }
-      if (stopped) break;
+    } finally {
+      this.fullLoadErrorListeners.delete(onLoadError);
     }
   }
 
   private requestUrl(paths: string[]) {
+    let { manifest, context } = this.ssrInfo;
     let params = new URLSearchParams();
     params.set("paths", paths.slice().sort().join(","));
-    params.set("version", this.manifest.version);
+    params.set("version", manifest.version);
     let url = new URL(
-      getManifestPath(this.config.manifestPath, this.basename),
-      this.serverOrigin ?? window.location.origin,
+      getManifestPath(context.routeDiscovery.manifestPath, context.basename),
+      context.unstable_apiServerOrigin ?? window.location.origin,
     );
     url.search = params.toString();
     return url;
@@ -270,7 +281,7 @@ export class RouteDiscoveryRuntime {
       );
       return prependBasename({
         pathname: new URL(path, window.location.origin).pathname,
-        basename: this.basename || "/",
+        basename: this.ssrInfo.context.basename || "/",
       });
     });
     return this.discover(pathnames, "imperative", null, options.signal);
@@ -281,8 +292,9 @@ export class RouteDiscoveryRuntime {
     source: ManifestMismatchEvent["source"],
     reloadUrl: string | null,
     signal?: AbortSignal,
-    patch = this.getRouter().patchRoutes,
+    patch = this.router.patchRoutes,
   ): Promise<DiscoveryResult> {
+    let { manifest, routeModules, context } = this.ssrInfo;
     if (signal?.aborted) return { type: "aborted" };
     if (this.isComplete()) return { type: "success" };
     let pending = getPathsWithAncestors(
@@ -362,11 +374,7 @@ export class RouteDiscoveryRuntime {
           if (signal?.aborted) return { type: "aborted" };
           return { type: this.isComplete() ? "success" : "version-mismatch" };
         }
-        await handleClientVersionMismatch(
-          false,
-          this.manifest.version,
-          reloadUrl,
-        );
+        await handleClientVersionMismatch(false, manifest.version, reloadUrl);
         let patches: AssetsManifest["routes"];
         try {
           patches = await response.json();
@@ -379,12 +387,12 @@ export class RouteDiscoveryRuntime {
         if (this.isComplete()) return { type: "success" };
         applyManifestPatches(
           patches,
-          this.manifest,
-          this.routeModules,
-          this.ssr,
-          this.isSpaMode,
+          manifest,
+          routeModules,
+          context.ssr,
+          context.isSpaMode,
           patch,
-          this.isApiOnly,
+          context.unstable_apiOnly === true,
         );
         batch.forEach((path) => {
           if (this.discoveredPaths.size >= 1000)
@@ -477,7 +485,14 @@ export function useRouteDiscovery(options: RouteDiscoveryOptions = {}) {
     "unstable_useRouteDiscovery is not supported in RSC mode.",
   );
   let runtime = context.routeDiscoveryRuntime;
-  useRouteDiscoveryHandlers(runtime, options);
+  let registration = React.useRef<Registration>({ current: options });
+  let hasHandlers = Boolean(options.onManifestMismatch);
+  React.useLayoutEffect(() => {
+    registration.current.current = options;
+  });
+  React.useLayoutEffect(() => {
+    if (hasHandlers) return runtime?.register(registration.current);
+  }, [runtime, hasHandlers]);
   let state: DiscoveryState =
     context.routeDiscoveryState ??
     (isFogOfWarEnabled(context.routeDiscovery, context.ssr) &&
@@ -490,21 +505,6 @@ export function useRouteDiscovery(options: RouteDiscoveryOptions = {}) {
     loadAllRoutes: runtime?.loadAllRoutes || serverLoad,
     discoverRoutes: runtime?.discoverRoutes || serverDiscover,
   };
-}
-
-function useRouteDiscoveryHandlers(
-  runtime: RouteDiscoveryRuntime | undefined,
-  options: RouteDiscoveryOptions,
-  isDefault = false,
-) {
-  let registration = React.useRef<Registration>({ current: options });
-  let hasHandlers = Boolean(options.onManifestMismatch);
-  React.useLayoutEffect(() => {
-    registration.current.current = options;
-  });
-  React.useLayoutEffect(() => {
-    if (hasHandlers) return runtime?.register(registration.current, isDefault);
-  }, [runtime, hasHandlers, isDefault]);
 }
 
 export function getCustomPatchRoutesOnNavigationFunction(
@@ -534,7 +534,6 @@ export function useCustomRouteDiscovery(
   runtime: RouteDiscoveryRuntime,
   onError?: ClientOnErrorFunction,
 ) {
-  useRouteDiscoveryHandlers(runtime, defaultRouteDiscoveryOptions, true);
   React.useLayoutEffect(() => {
     runtime.onError = onError;
   }, [runtime, onError]);

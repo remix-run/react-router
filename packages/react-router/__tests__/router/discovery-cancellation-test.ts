@@ -446,6 +446,74 @@ test("settles a fetcher interrupted by a canceled revalidation without restartin
   }
 });
 
+test("a fetcher revalidation cannot commit a canceled POP during history restoration", async () => {
+  let history = createMemoryHistory({ initialEntries: ["/undiscovered", "/"] });
+  let restoration = createDeferred();
+  let loaderData = createDeferred();
+  let signal: AbortSignal | undefined;
+  let loader = jest.fn(({ request }: { request: Request }) => {
+    signal = request.signal;
+    return loaderData.promise;
+  });
+  let go = history.go;
+  jest.spyOn(history, "go").mockImplementation((delta) => {
+    if (delta === 1) {
+      restoration.promise.then(() => go(delta));
+    } else {
+      go(delta);
+    }
+  });
+  let router = createRouter({
+    future: { unstable_customRouteDiscovery: true },
+    history,
+    routes: [{ id: "root", path: "/", loader, action: () => "action data" }],
+    hydrationData: { loaderData: { root: "stale data" } },
+    patchRoutesOnNavigation() {
+      throw new DiscoveryCancelledError();
+    },
+  }).initialize();
+  let data = getFetcherData(router);
+  try {
+    let fetch = router.fetch("editor", "root", "/", {
+      formMethod: "post",
+      formData: createFormData({ draft: "save" }),
+    });
+    await tick();
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(router.getFetcher("editor").state).toBe("loading");
+    let location = router.state.location;
+    let matches = router.state.matches;
+
+    let pop = router.navigate(-1);
+    await tick();
+    expect(history.go).toHaveBeenLastCalledWith(1);
+    expect(history.location.pathname).toBe("/undiscovered");
+    expect(router.state.navigation.state).toBe("idle");
+    expect(signal?.aborted).toBe(false);
+
+    // An independent action revalidation can finish while the browser is
+    // restoring history, but must not complete the canceled navigation.
+    await loaderData.resolve("new data");
+    await fetch;
+    expect(router.state.location).toBe(location);
+    expect(router.state.matches).toBe(matches);
+    expect(router.state.loaderData).toEqual({ root: "new data" });
+    expect(router.getFetcher("editor").state).toBe("idle");
+    expect(data.get("editor")).toBe("action data");
+
+    await restoration.resolve();
+    await pop;
+    expect(history.location).toEqual(location);
+    expect(history.index).toBe(1);
+    expect(router.state.location).toBe(location);
+    expect(router.state.navigation.state).toBe("idle");
+    expect(router.state.errors).toBeNull();
+    expect(loader).toHaveBeenCalledTimes(1);
+  } finally {
+    router.dispose();
+  }
+});
+
 test("a navigation queued during POP restoration starts after revalidation is canceled", async () => {
   let history = createMemoryHistory({ initialEntries: ["/undiscovered", "/"] });
   let discovery = createDeferred();
@@ -478,7 +546,10 @@ test("a navigation queued during POP restoration starts after revalidation is ca
     },
   }).initialize();
   try {
-    let pop = router.navigate(-1);
+    let popped = false;
+    let pop = router.navigate(-1).then(() => {
+      popped = true;
+    });
     let revalidated = false;
     let revalidation = router.revalidate().then(() => {
       revalidated = true;
@@ -487,14 +558,21 @@ test("a navigation queued during POP restoration starts after revalidation is ca
     await tick();
     expect(history.go).toHaveBeenLastCalledWith(1);
     expect(loader).not.toHaveBeenCalled();
-    expect(revalidated).toBe(false);
+    expect(router.state.navigation.state).toBe("idle");
+    expect(router.state.revalidation).toBe("idle");
+    expect(revalidated).toBe(true);
+    expect(popped).toBe(false);
     let next = router.navigate("/next");
+    await tick();
+    expect(router.state.navigation.state).toBe("idle");
+    expect(history.location.pathname).toBe("/undiscovered");
 
     await restoration.resolve();
     await tick();
     expect(loader).not.toHaveBeenCalled();
     expect(router.state.location.pathname).toBe("/");
     expect(router.state.navigation.location?.pathname).toBe("/next");
+    expect(popped).toBe(true);
     expect(revalidated).toBe(true);
     expect(router.state.revalidation).toBe("idle");
     expect(router.state.loaderData).toEqual({ root: "stale data" });
@@ -511,6 +589,74 @@ test("a navigation queued during POP restoration starts after revalidation is ca
     router.dispose();
   }
 });
+
+test.each(["revalidation", "fetcher"])(
+  "a %s started by an idle subscriber waits for POP restoration",
+  async (operation) => {
+    let history = createMemoryHistory({
+      initialEntries: ["/undiscovered", "/"],
+    });
+    let restoration = createDeferred();
+    let loader = jest.fn(() => "new data");
+    let go = history.go;
+    jest.spyOn(history, "go").mockImplementation((delta) => {
+      if (delta === 1) {
+        restoration.promise.then(() => go(delta));
+      } else {
+        go(delta);
+      }
+    });
+    let router = createRouter({
+      future: { unstable_customRouteDiscovery: true },
+      history,
+      routes: [{ id: "root", path: "/", loader }],
+      hydrationData: { loaderData: { root: "stale data" } },
+      patchRoutesOnNavigation() {
+        throw new DiscoveryCancelledError();
+      },
+    }).initialize();
+    let data = getFetcherData(router);
+    let wasNavigating = false;
+    let queued: Promise<void> | undefined;
+    router.subscribe((state) => {
+      if (state.navigation.state === "loading") {
+        wasNavigating = true;
+      } else if (wasNavigating) {
+        wasNavigating = false;
+        queued =
+          operation === "revalidation"
+            ? router.revalidate()
+            : router.fetch("resource", "root", "/");
+      }
+    });
+    try {
+      let pop = router.navigate(-1);
+      await tick();
+      expect(queued).toBeDefined();
+      expect(history.location.pathname).toBe("/undiscovered");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.revalidation).toBe("idle");
+      expect(router.getFetcher("resource").state).toBe("idle");
+      expect(loader).not.toHaveBeenCalled();
+
+      await restoration.resolve();
+      await Promise.all([pop, queued]);
+      expect(history.location.pathname).toBe("/");
+      expect(history.index).toBe(1);
+      expect(router.state.location.pathname).toBe("/");
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(router.state.loaderData).toEqual({
+        root: operation === "revalidation" ? "new data" : "stale data",
+      });
+      expect(data.get("resource")).toBe(
+        operation === "fetcher" ? "new data" : undefined,
+      );
+      expect(router.state.errors).toBeNull();
+    } finally {
+      router.dispose();
+    }
+  },
+);
 
 test("cancels revalidation when discovery cancels its loader redirect", async () => {
   let discovery = createDeferred();

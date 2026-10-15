@@ -186,19 +186,7 @@ function createHydratedRouter({
   }
 
   let discoveryRuntime = ssrInfo.context.future.unstable_customRouteDiscovery
-    ? new RouteDiscoveryRuntime(
-        () => router,
-        ssrInfo.manifest,
-        ssrInfo.routeModules,
-        ssrInfo.context.ssr,
-        ssrInfo.context.routeDiscovery,
-        ssrInfo.context.isSpaMode,
-        ssrInfo.context.basename,
-        undefined,
-        fetchImplementation,
-        ssrInfo.context.unstable_apiServerOrigin,
-        isApiOnly,
-      )
+    ? new RouteDiscoveryRuntime(ssrInfo, { fetch: fetchImplementation })
     : undefined;
 
   // We don't use createBrowserRouter here because we need fine-grained control

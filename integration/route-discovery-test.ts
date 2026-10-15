@@ -47,7 +47,7 @@ test.beforeAll(async () => {
             if (window.discoveryStrategy === "cancel") return;
             if (window.discoveryStrategy === "default") return event.defaultBehavior();
             if (window.discoveryStrategy === "wait") await new Promise(resolve => window.finishRecovery = resolve);
-            await event.loadAllRoutes();
+            await (window.discoveryLoadReference === "hook" ? loadAllRoutes() : event.loadAllRoutes());
           },
         });
         let fetcher = useFetcher();
@@ -221,25 +221,30 @@ test("a canceled fetcher submission never posts or replays after completion", as
   await expect(page.locator("#error-boundary")).toHaveCount(0);
 });
 
-test("missing retained manifests reject direct loads and cancel recovery without an error boundary", async ({
-  page,
-}) => {
-  let app = new PlaywrightFixture(appFixture, page);
-  await app.goto("/", true);
-  await page.route("**/assets/manifest-*.js", (route) =>
-    route.fulfill({ status: 404, body: "missing retained asset" }),
-  );
-  await page.getByRole("button", { name: "Complete", exact: true }).click();
-  await expect(page.locator("#result")).toContainText("caught:");
-  await mismatchRequests(page);
-  await page.getByRole("link", { name: "Target", exact: true }).click();
-  await expect
-    .poll(() => page.evaluate(() => (window as any).discoveryErrors.length))
-    .toBe(1);
-  await expect(page.locator("#navigation")).toHaveText("idle");
-  await expect(page.locator("#discovery-state")).toHaveText("partial");
-  await expect(page.getByRole("heading")).toHaveText("Home");
-  await expect(page.locator("#error-boundary")).toHaveCount(0);
+["event", "hook"].forEach((reference) => {
+  test(`missing retained manifests reject direct loads and cancel ${reference} recovery without an error boundary`, async ({
+    page,
+  }) => {
+    await page.addInitScript((reference) => {
+      (window as any).discoveryLoadReference = reference;
+    }, reference);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+    await page.route("**/assets/manifest-*.js", (route) =>
+      route.fulfill({ status: 404, body: "missing retained asset" }),
+    );
+    await page.getByRole("button", { name: "Complete", exact: true }).click();
+    await expect(page.locator("#result")).toContainText("caught:");
+    await mismatchRequests(page);
+    await page.getByRole("link", { name: "Target", exact: true }).click();
+    await expect
+      .poll(() => page.evaluate(() => (window as any).discoveryErrors.length))
+      .toBe(1);
+    await expect(page.locator("#navigation")).toHaveText("idle");
+    await expect(page.locator("#discovery-state")).toHaveText("partial");
+    await expect(page.getByRole("heading")).toHaveText("Home");
+    await expect(page.locator("#error-boundary")).toHaveCount(0);
+  });
 });
 
 test("a canceled Back navigation restores the URL and displayed route", async ({
