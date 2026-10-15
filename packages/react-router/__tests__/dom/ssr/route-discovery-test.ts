@@ -153,18 +153,21 @@ test("rejects version mismatches without completing and allows retry", async () 
   expect(runtime.state).toBe("complete");
 });
 
-test("falls back after a before-discovery full-load failure and reports it once", async () => {
+test("cancels after a mismatch full-load failure and reports it once", async () => {
   let { runtime, load } = setup();
+  fetchMock.mockImplementation(async () => mismatch());
   let error = new Error("retained asset missing");
   let onError = jest.fn();
   runtime.onError = onError;
   load.mockRejectedValue(error);
   let earlier = jest.fn();
-  runtime.register({ current: { onBeforeDiscovery: earlier } });
+  runtime.register({ current: { onManifestMismatch: earlier } });
   runtime.register({
-    current: { onBeforeDiscovery: (event) => event.loadAllRoutes() },
+    current: { onManifestMismatch: (event) => event.loadAllRoutes() },
   });
-  expect(await runtime.discoverRoutes(["/a"])).toEqual({ type: "success" });
+  expect(await runtime.discoverRoutes(["/a"])).toEqual({
+    type: "version-mismatch",
+  });
   expect(earlier).not.toHaveBeenCalled();
   expect(onError).toHaveBeenCalledTimes(1);
   expect(onError.mock.calls[0][0]).toBe(error);
@@ -198,17 +201,18 @@ test("consumers can catch full-load failure without a framework error", async ()
 
 test("runs handlers in reverse registration order, with identity cleanup and stable update priority", async () => {
   let { runtime } = setup();
+  fetchMock.mockImplementation(async () => mismatch());
   let calls: string[] = [];
   let first = {
     current: {
-      onBeforeDiscovery: () => {
+      onManifestMismatch: () => {
         calls.push("first");
       },
     },
   };
   let second = {
     current: {
-      onBeforeDiscovery: () => {
+      onManifestMismatch: () => {
         calls.push("second");
       },
     },
@@ -216,7 +220,7 @@ test("runs handlers in reverse registration order, with identity cleanup and sta
   let removeFirst = runtime.register(first);
   let removeSecond = runtime.register(second);
   first.current = {
-    onBeforeDiscovery: () => {
+    onManifestMismatch: () => {
       calls.push("updated first");
     },
   };
@@ -323,13 +327,10 @@ test("warns and skips individually oversized paths without caching them", async 
   expect(runtime.discoveredPaths.has("/b")).toBe(true);
 });
 
-test("cached discoveries skip handlers and requests", async () => {
+test("cached discoveries skip requests", async () => {
   let { runtime } = setup();
-  let before = jest.fn();
-  runtime.register({ current: { onBeforeDiscovery: before } });
   await runtime.discoverRoutes(["/a"]);
   await runtime.discoverRoutes(["/a"]);
-  expect(before).toHaveBeenCalledTimes(1);
   expect(fetchMock).toHaveBeenCalledTimes(1);
 });
 
@@ -349,11 +350,12 @@ test("full completion supersedes an in-flight incremental mismatch", async () =>
 
 test("actual handler errors reject and stop propagation", async () => {
   let { runtime } = setup();
+  fetchMock.mockImplementation(async () => mismatch());
   let earlier = jest.fn();
-  runtime.register({ current: { onBeforeDiscovery: earlier } });
+  runtime.register({ current: { onManifestMismatch: earlier } });
   runtime.register({
     current: {
-      onBeforeDiscovery: () => {
+      onManifestMismatch: () => {
         throw new Error("handler failed");
       },
     },
@@ -362,7 +364,7 @@ test("actual handler errors reject and stop propagation", async () => {
     "handler failed",
   );
   expect(earlier).not.toHaveBeenCalled();
-  expect(fetchMock).not.toHaveBeenCalled();
+  expect(fetchMock).toHaveBeenCalledTimes(1);
 });
 
 test.each([
@@ -384,7 +386,7 @@ test.each([
 ] as const)("%s manifests need no loading or handlers", async (_, options) => {
   let { runtime, load } = setup(options);
   let handler = jest.fn();
-  runtime.register({ current: { onBeforeDiscovery: handler } });
+  runtime.register({ current: { onManifestMismatch: handler } });
   await runtime.loadAllRoutes();
   await runtime.discoverRoutes(["/a"]);
   expect(runtime.state).toBe("complete");
@@ -453,14 +455,13 @@ test("default eager recovery is available before hooks mount", async () => {
   );
 });
 
-test("custom overrides are per callback, independent of default registration order", async () => {
+test("custom handlers override defaults regardless of registration order; removing them restores defaults", async () => {
   let { runtime } = setup();
   let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
   fetchMock.mockImplementation(async () => mismatch());
   let custom = jest.fn();
   let remove = runtime.register({ current: { onManifestMismatch: custom } });
-  let before = jest.fn();
-  runtime.register({ current: { onBeforeDiscovery: before } });
+  runtime.register({ current: {} });
   let defaultHandler = jest.fn((event) => event.defaultBehavior());
   runtime.register({ current: { onManifestMismatch: defaultHandler } }, true);
   await runtime.discover(["/a"], "eager", null);
@@ -471,7 +472,6 @@ test("custom overrides are per callback, independent of default registration ord
   await runtime.discover(["/a"], "eager", null);
   expect(defaultHandler).toHaveBeenCalledTimes(1);
   expect(warn).toHaveBeenCalledTimes(1);
-  expect(before).toHaveBeenCalledTimes(2);
 });
 
 test.each(["eager", "imperative"] as const)(

@@ -51,9 +51,6 @@ Expose `unstable_useRouteDiscovery` with:
 ```tsx
 let { version, state, loadAllRoutes, discoverRoutes } =
   unstable_useRouteDiscovery({
-    onBeforeDiscovery: async (event) => {
-      // Optionally complete the tree before an incremental request.
-    },
     onManifestMismatch: async (event) => {
       // Choose recovery or allow the affected operation to be canceled.
     },
@@ -65,10 +62,9 @@ let { version, state, loadAllRoutes, discoverRoutes } =
 every requested pathname has already been discovered. Selective discovery does
 not transition the runtime to complete.
 
-Both callbacks are awaited. They receive the operation's `source` (`"eager"`,
+The mismatch callback is awaited. It receives the operation's `source` (`"eager"`,
 `"navigation"`, `"fetcher"`, or `"imperative"`), the client `version`,
-`loadAllRoutes()`, and `stopPropagation()`. The mismatch callback additionally
-receives `reloadUrl` and `defaultBehavior()`.
+`loadAllRoutes()`, `stopPropagation()`, `reloadUrl`, and `defaultBehavior()`.
 
 The hook supports conventional Framework Mode. When initial discovery mode, SPA
 Mode, or development already provides the full manifest, it reports `complete`
@@ -76,11 +72,19 @@ and discovery operations are successful no-ops. Server rendering has no client
 runtime and exposes inert operations. Declarative Mode, Data Mode, and both RSC
 modes are outside the public API's scope.
 
-This keeps policy in application code instead of adding configuration modes for
-each trigger, such as first discovery, first navigation/fetcher demand, or first
-version mismatch. Applications can express those policies with callbacks or call
-the imperative operations after authentication, before a workflow, or at an
-application-chosen idle point. No timing policy is built into the hook.
+This keeps mismatch recovery and discovery timing in application code.
+Applications can call the imperative operations after authentication, before a
+workflow, or at an application-chosen idle point. No timing policy is built into
+the hook.
+
+We dropped `onBeforeDiscovery` from the initial API to keep the scope focused on
+manifest-mismatch recovery and imperative discovery. It originated in this RFC's
+hybrid discovery strategies, rather than a separate linked proposal's requirement.
+Automatically completing the tree on first discovery or navigation/fetcher demand
+adds a lifecycle policy beyond those primary use cases. Applications still choose
+when to call `loadAllRoutes()` or `discoverRoutes()`; a before-discovery callback
+can be revisited if concrete needs emerge. `ManifestMismatchEvent` retains all
+its fields directly, without a shared `RouteDiscoveryEvent` base type.
 
 ### 2. Select the complete implementation with a static future flag
 
@@ -182,12 +186,11 @@ of depending on React effect ordering. The public hook itself needs Framework
 context, so the internal driver shares the registration helper rather than
 calling that public wrapper before its provider exists.
 
-Choose handlers separately for each callback:
+Choose mismatch handlers as follows:
 
-- With no custom handler for that callback, run its default implementation.
+- With no custom mismatch handler, run the default implementation.
 - With custom handlers, run only those handlers.
 - A no-argument hook consumer does not override anything.
-- Registering only `onBeforeDiscovery` leaves default mismatch recovery active.
 - Removing the last custom mismatch handler restores default recovery.
 
 There is no automatic default action after custom handlers, and no
@@ -307,8 +310,7 @@ route error boundary merely because an application awaited it in a callback.
 
 If the promise offered on the event rejects out of a handler, stop the remaining
 handler chain and report through `HydratedRouter`'s `onError`, or `console.error`
-when no reporter is present. Before discovery, permit incremental discovery to
-proceed. During mismatch handling, cancel affected operations if the tree remains
+when no reporter is present. Cancel affected operations if the tree remains
 incomplete. If the application catches the failure itself, it owns the response.
 
 Unrelated errors thrown by handlers retain normal discovery error semantics:
@@ -436,7 +438,7 @@ of the current screen is not guaranteed in that overlap case.
 
 | Alternative                                                                                     | Reason not selected                                                                                                                                                        |
 | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Add several hybrid `routeDiscovery.mode` values                                                 | A hook expresses those policies and application-specific timing without expanding the configuration vocabulary for each strategy.                                          |
+| Add several hybrid `routeDiscovery.mode` values                                                 | Keep the initial API focused on mismatch recovery and imperative discovery; additional automatic timing policies are deferred.                                             |
 | Modify the existing fog-of-war implementation for every app                                     | An unused unstable hook would still change timing and concurrency behavior; the static future flag gives existing apps a compatibility boundary.                           |
 | Always run defaults after custom callbacks, with `preventDefault()`                             | Custom registration should transfer recovery ownership. Explicit `defaultBehavior()` is sufficient for logging, conditional intervention, and fallback reloads.            |
 | Make defaults the last ordinary handler                                                         | Priority would depend on registration/effect ordering and mix default suppression with custom propagation. Defaults instead have an explicit fallback role.                |

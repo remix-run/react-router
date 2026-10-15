@@ -436,7 +436,6 @@ export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/l
 
 export { useRouteDiscovery as unstable_useRouteDiscovery } from "./lib/dom/ssr/route-discovery";
 export type {
-  RouteDiscoveryEvent as unstable_RouteDiscoveryEvent,
   ManifestMismatchEvent as unstable_ManifestMismatchEvent,
   DiscoveryResult as unstable_DiscoveryResult,
   RouteDiscoveryOptions as unstable_RouteDiscoveryOptions,

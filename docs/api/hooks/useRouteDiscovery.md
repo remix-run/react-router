@@ -56,7 +56,7 @@ function useRouteDiscovery(options: RouteDiscoveryOptions = {})
 
 ### options
 
-Awaited discovery and version-mismatch handlers.
+An awaited manifest-mismatch handler.
 
 ## Returns
 

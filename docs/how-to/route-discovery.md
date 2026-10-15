@@ -76,26 +76,19 @@ Paths are batched within the manifest request URL limit and previously discovere
 
 The result is `{ type: "success" }`, `{ type: "version-mismatch" }`, or `{ type: "aborted" }`. Success does not guarantee that each pathname matches a route. Actual request and handler failures reject. An imperative mismatch does not automatically reload the document. Aborting a caller does not abort a full-manifest load or mismatch recovery shared with other operations.
 
-## Handling discovery and manifest mismatches
+## Handling manifest mismatches
 
 ```tsx
 unstable_useRouteDiscovery({
-  onBeforeDiscovery: async ({ source, loadAllRoutes }) => {
-    if (source === "navigation" || source === "fetcher") {
-      await loadAllRoutes();
-    }
-  },
   onManifestMismatch: async ({ loadAllRoutes }) => {
     await loadAllRoutes();
   },
 });
 ```
 
-`onBeforeDiscovery` runs when an incremental request would otherwise occur, after cache and request-size checks. The `source` is `eager`, `navigation`, `fetcher`, or `imperative`. Completing the tree skips that request. A full-manifest failure falls back to incremental discovery and reports through `<HydratedRouter onError>` when provided, without rendering an error boundary. The load promise remains catchable by the handler.
+`onManifestMismatch` is awaited and receives the discovery `source` (`eager`, `navigation`, `fetcher`, or `imperative`), the running client `version`, `loadAllRoutes()`, `stopPropagation()`, `defaultBehavior()`, and `reloadUrl`: the navigation destination, the current document URL for a fetcher, or `null` for eager/imperative discovery. A mismatch indicates different versions, not which version is newer.
 
-`onManifestMismatch` additionally receives `defaultBehavior()` and `reloadUrl`: the navigation destination, the current document URL for a fetcher, or `null` for eager/imperative discovery. A mismatch indicates different versions, not which version is newer.
-
-After mismatch handlers settle, surviving operations continue only if the tree is complete. Otherwise navigations and fetchers are canceled and their pending state settles. Router-managed Back/Forward cancellations restore the prior history position. Later completion does not replay a canceled navigation or submission. Full-manifest load failures do not render error boundaries; unrelated handler exceptions use normal discovery error handling.
+After mismatch handlers settle, surviving operations continue only if the tree is complete. Otherwise navigations and fetchers are canceled and their pending state settles. Router-managed Back/Forward cancellations restore the prior history position. Later completion does not replay a canceled navigation or submission. Full-manifest load failures remain catchable by the handler and do not render error boundaries. Uncaught full-load failures report through `<HydratedRouter onError>` when provided, or `console.error`; unrelated handler exceptions use normal discovery error handling.
 
 Canceling a navigation also cancels its pending revalidation. Both return to idle, the revalidation promise resolves, and the current page and data remain in place without another loader pass. Interrupted fetcher loads settle with their existing data; independent requests continue. If an action already changed server data, the displayed data may remain stale until a later navigation or explicit revalidation.
 
@@ -105,7 +98,7 @@ Concurrent mismatches share one pending custom handler chain. Its `source` and `
 
 ## Temporary overrides
 
-Custom callbacks override the corresponding built-in callback. Registering only `onBeforeDiscovery` does not suppress default mismatch recovery, and calling the hook without handlers does not override anything. Removing the last custom mismatch handler restores automatic recovery.
+Custom mismatch handlers override built-in recovery. Calling the hook without a handler does not override anything. Removing the last custom mismatch handler restores automatic recovery.
 
 Call `event.defaultBehavior()` to explicitly run built-in recovery: eager mismatches warn, navigation mismatches reload the destination, fetcher mismatches reload the current document, and imperative mismatches return without reloading. Repeated calls for one shared mismatch event reuse the same promise. It does not invoke other custom handlers or stop their propagation.
 

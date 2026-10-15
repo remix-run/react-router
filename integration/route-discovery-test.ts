@@ -42,10 +42,6 @@ test.beforeAll(async () => {
         let [editor, setEditor] = useState(false);
         let [result, setResult] = useState("");
         let { state, version, loadAllRoutes, discoverRoutes } = unstable_useRouteDiscovery({
-          onBeforeDiscovery: async event => {
-            window.discoveryEvents.push("before:" + event.source);
-            if (window.discoveryStrategy === "before") await event.loadAllRoutes();
-          },
           onManifestMismatch: async event => {
             window.discoveryEvents.push("mismatch:" + event.source);
             if (window.discoveryStrategy === "cancel") return;
@@ -154,13 +150,13 @@ test("selective discovery does not navigate or download route modules/data", asy
   expect(requests.filter((url) => url.includes("/__manifest"))).toHaveLength(1);
 });
 
-test("waits for hydrated route commitment before the first eager request", async ({
+test("waits for hydrated route commitment so the root can recover the first eager mismatch", async ({
   page,
 }) => {
+  await mismatchRequests(page);
   await page.addInitScript(() => {
     (window as any).deferHydration = true;
     (window as any).eagerLink = true;
-    (window as any).discoveryStrategy = "before";
   });
   let requests: string[] = [];
   page.on("request", (r) => requests.push(r.url()));
@@ -173,9 +169,9 @@ test("waits for hydrated route commitment before the first eager request", async
   await page.evaluate(() => (window as any).finishHydration());
   await expect(page.locator("#discovery-state")).toHaveText("complete");
   expect(await page.evaluate(() => (window as any).discoveryEvents)).toContain(
-    "before:eager",
+    "mismatch:eager",
   );
-  expect(requests.some((url) => url.includes("/__manifest"))).toBe(false);
+  expect(requests.filter((url) => url.includes("/__manifest"))).toHaveLength(1);
 });
 
 test("a later editor intercepts recovery and cleanup reveals the root handler", async ({
@@ -285,10 +281,12 @@ test("shared recovery survives a superseded navigation and resumes a fetcher exa
   await page.waitForFunction(
     () => typeof (window as any).finishRecovery === "function",
   );
+  let fetcherDiscovery = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/__manifest",
+  );
   await page.getByRole("button", { name: "Submit", exact: true }).click();
-  await expect
-    .poll(() => page.evaluate(() => (window as any).discoveryEvents))
-    .toContain("before:fetcher");
+  await fetcherDiscovery;
+  await expect(page.locator("#fetcher")).toHaveText("submitting");
   await page.getByRole("link", { name: "Other", exact: true }).click();
   await page.evaluate(() => (window as any).finishRecovery());
   await expect(page.getByRole("heading")).toHaveText("Other route");
@@ -331,26 +329,6 @@ test("a navigation immediately after canceled Back preserves subsequent history 
   await expect(page).toHaveURL(/\/target$/);
   await expect(page.getByRole("heading")).toHaveText("Target route");
   await expect(page.locator("#navigation")).toHaveText("idle");
-});
-
-test("before-discovery full-load failures report and fall back to incremental discovery", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    (window as any).discoveryStrategy = "before";
-  });
-  let app = new PlaywrightFixture(appFixture, page);
-  await app.goto("/", true);
-  await page.route("**/assets/manifest-*.js", (route) =>
-    route.fulfill({ status: 404, body: "missing" }),
-  );
-  await page.getByRole("link", { name: "Target", exact: true }).click();
-  await expect(page.getByRole("heading")).toHaveText("Target route");
-  expect(
-    await page.evaluate(() => (window as any).discoveryErrors.length),
-  ).toBe(1);
-  await expect(page.locator("#discovery-state")).toHaveText("partial");
-  await expect(page.locator("#error-boundary")).toHaveCount(0);
 });
 
 (["navigation", "fetcher"] as const).forEach((source) => {

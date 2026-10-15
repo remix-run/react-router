@@ -23,17 +23,13 @@ import {
   URL_LIMIT,
 } from "./fog-of-war";
 
-/** An incremental route discovery operation. */
-export type RouteDiscoveryEvent = {
+/** A discovery response from a different build. */
+export type ManifestMismatchEvent = {
   source: "eager" | "navigation" | "fetcher" | "imperative";
   version: string;
+  reloadUrl: string | null;
   loadAllRoutes(): Promise<void>;
   stopPropagation(): void;
-};
-
-/** A discovery response from a different build. */
-export type ManifestMismatchEvent = RouteDiscoveryEvent & {
-  reloadUrl: string | null;
   /** Run built-in recovery for this source, at most once per mismatch event. */
   defaultBehavior(): Promise<void>;
 };
@@ -46,7 +42,6 @@ export type DiscoveryResult =
 
 /** Options for {@link unstable_useRouteDiscovery}. */
 export type RouteDiscoveryOptions = {
-  onBeforeDiscovery?: (event: RouteDiscoveryEvent) => void | Promise<void>;
   onManifestMismatch?: (event: ManifestMismatchEvent) => void | Promise<void>;
 };
 
@@ -188,9 +183,8 @@ export class RouteDiscoveryRuntime {
     }
   }
 
-  private async dispatch(
-    kind: keyof RouteDiscoveryOptions,
-    source: RouteDiscoveryEvent["source"],
+  private async dispatchMismatch(
+    source: ManifestMismatchEvent["source"],
     reloadUrl: string | null,
   ) {
     let stopped = false;
@@ -225,7 +219,7 @@ export class RouteDiscoveryRuntime {
     };
     let registrations = [...this.registrations]
       .reverse()
-      .filter((registration) => registration.current[kind]);
+      .filter((registration) => registration.current.onManifestMismatch);
     // Default recovery is available during initialization, before hooks mount.
     // Its priority is explicit instead of depending on React effect ordering.
     let defaultRegistration = this.defaultRegistration || {
@@ -239,12 +233,11 @@ export class RouteDiscoveryRuntime {
       )
         continue;
       try {
-        await registration.current[kind]?.(event);
+        await registration.current.onManifestMismatch?.(event);
       } catch (error) {
         if (!loadErrors.has(error)) throw error;
         // Full-load errors remain catchable by applications and never render a
-        // route error boundary. Before discovery, incremental discovery can try;
-        // after a mismatch the incomplete operation will instead be canceled.
+        // route error boundary. The incomplete operation will be canceled.
         this.reportError(error);
         break;
       }
@@ -285,7 +278,7 @@ export class RouteDiscoveryRuntime {
 
   async discover(
     paths: string[],
-    source: RouteDiscoveryEvent["source"],
+    source: ManifestMismatchEvent["source"],
     reloadUrl: string | null,
     signal?: AbortSignal,
     patch = this.getRouter().patchRoutes,
@@ -323,10 +316,6 @@ export class RouteDiscoveryRuntime {
     }
     for (let batch of batches) {
       try {
-        await waitForDiscovery(
-          this.dispatch("onBeforeDiscovery", source, reloadUrl),
-          signal,
-        );
         if (signal?.aborted) return { type: "aborted" };
         if (this.isComplete()) return { type: "success" };
         let response: Response;
@@ -356,9 +345,7 @@ export class RouteDiscoveryRuntime {
           ) {
             if (!this.mismatch) {
               this.mismatch = Promise.resolve()
-                .then(() =>
-                  this.dispatch("onManifestMismatch", source, reloadUrl),
-                )
+                .then(() => this.dispatchMismatch(source, reloadUrl))
                 .finally(() => {
                   this.mismatch = undefined;
                 });
@@ -368,7 +355,7 @@ export class RouteDiscoveryRuntime {
             // Defaults recover each operation independently: an eager warning
             // must not suppress a concurrent navigation's document reload.
             await waitForDiscovery(
-              this.dispatch("onManifestMismatch", source, reloadUrl),
+              this.dispatchMismatch(source, reloadUrl),
               signal,
             );
           }
@@ -476,7 +463,7 @@ const serverDiscover = async (): Promise<DiscoveryResult> => ({
  * @public
  * @category Hooks
  * @mode framework
- * @param options Awaited discovery and version-mismatch handlers.
+ * @param options An awaited manifest-mismatch handler.
  * @returns The client version, full-manifest loading state, and discovery operations.
  */
 export function useRouteDiscovery(options: RouteDiscoveryOptions = {}) {
@@ -511,9 +498,7 @@ function useRouteDiscoveryHandlers(
   isDefault = false,
 ) {
   let registration = React.useRef<Registration>({ current: options });
-  let hasHandlers = Boolean(
-    options.onBeforeDiscovery || options.onManifestMismatch,
-  );
+  let hasHandlers = Boolean(options.onManifestMismatch);
   React.useLayoutEffect(() => {
     registration.current.current = options;
   });
