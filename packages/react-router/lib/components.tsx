@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getAwaitPromise } from "./await";
 
 import type {
   InitialEntry,
@@ -1742,14 +1743,6 @@ class AwaitErrorBoundary extends React.Component<
   }
 }
 
-// Cache the wrapper across Suspense retries and shared consumers. Resolving to a
-// settled result lets errorElement handle rejections during server rendering,
-// where React error boundaries do not catch errors.
-let awaitPromises = new WeakMap<
-  Promise<unknown>,
-  Promise<PromiseSettledResult<unknown>>
->();
-
 function ResolveAwait({
   children,
   resolve,
@@ -1767,31 +1760,7 @@ function ResolveAwait({
 }) {
   let result: PromiseSettledResult<unknown> | undefined;
   if (resolve instanceof Promise && !hasRenderError) {
-    let promise = awaitPromises.get(resolve);
-    if (!promise) {
-      // Wrap in `Promise.resolve()` because React Flight's `ReactPromise`
-      // chunks pass `instanceof Promise` but return `undefined` from `.then()`.
-      // Native promises are returned as-is by `Promise.resolve()`.
-      let wrappedPromise = Promise.resolve(resolve).then(
-        (value) => settle({ status: "fulfilled", value }),
-        (reason): PromiseSettledResult<unknown> => {
-          onError(reason);
-          return settle({ status: "rejected", reason });
-        },
-      );
-      function settle(
-        result: PromiseSettledResult<unknown>,
-      ): PromiseSettledResult<unknown> {
-        // Let use() read the result before a later source-promise callback can
-        // trigger a render, without waiting for the wrapper's next microtask.
-        // https://react.dev/reference/react/use#how-to-implement-a-promise-cache
-        Object.assign(wrappedPromise, { value: result, status: "fulfilled" });
-        return result;
-      }
-      promise = wrappedPromise;
-      awaitPromises.set(resolve, promise);
-    }
-    result = React.use(promise);
+    result = React.use(getAwaitPromise(resolve, onError));
   }
   let context = React.useMemo<PromiseSettledResult<unknown>>(
     () => result ?? { status: "fulfilled", value: resolve },

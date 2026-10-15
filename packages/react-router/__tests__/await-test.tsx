@@ -11,6 +11,7 @@ import {
   useAsyncValue,
 } from "../index";
 import { createDeferred } from "./router/utils/utils";
+import { primeHydrationPromises } from "../lib/await";
 
 async function renderAsync(element: React.ReactElement) {
   let result!: ReturnType<typeof render>;
@@ -21,6 +22,121 @@ async function renderAsync(element: React.ReactElement) {
 }
 
 describe("Await", () => {
+  it.each(["fulfilled", "rejected"] as const)(
+    "reads a primed %s promise on its first render without suspending",
+    async (status) => {
+      let deferred = createDeferred<string>();
+      let error = new Error("Primed rejection");
+      primeHydrationPromises({ route: { nested: [deferred.promise] } });
+      if (status === "fulfilled") {
+        deferred.resolve("Primed value");
+      } else {
+        deferred.reject(error);
+      }
+      await Promise.resolve();
+
+      function ErrorElement() {
+        expect(useAsyncError()).toBe(error);
+        return <p>Primed error</p>;
+      }
+      render(
+        <React.Suspense fallback={<p>Loading</p>}>
+          <Await resolve={deferred.promise} errorElement={<ErrorElement />}>
+            {(value) => <p>{value}</p>}
+          </Await>
+        </React.Suspense>,
+      );
+      expect(
+        screen.getByText(
+          status === "fulfilled" ? "Primed value" : "Primed error",
+        ),
+      ).toBeVisible();
+      expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+      await act(async () => {});
+    },
+  );
+
+  it("primes shared frozen promises in cyclic objects, arrays, Maps, and Sets", async () => {
+    let key = Object.freeze(Promise.resolve("Map key"));
+    let value = Object.freeze(Promise.resolve("Set value"));
+    let arrayValue = Promise.resolve("Array value");
+    let keyProperties = Reflect.ownKeys(key);
+    let valueProperties = Reflect.ownKeys(value);
+    let data: Record<string, unknown> = {
+      array: [arrayValue, arrayValue],
+      map: new Map([[key, new Set([value])]]),
+    };
+    data.self = data;
+    primeHydrationPromises(data);
+    primeHydrationPromises(data);
+    await Promise.resolve();
+
+    render(
+      <React.Suspense fallback={<p>Loading</p>}>
+        <Await resolve={key}>{(result) => <p>{result}</p>}</Await>
+        <Await resolve={value}>{(result) => <p>{result}</p>}</Await>
+        <Await resolve={arrayValue}>{(result) => <p>{result}</p>}</Await>
+      </React.Suspense>,
+    );
+    expect(screen.getByText("Map key")).toBeVisible();
+    expect(screen.getByText("Set value")).toBeVisible();
+    expect(screen.getByText("Array value")).toBeVisible();
+    expect(screen.queryByText("Loading")).not.toBeInTheDocument();
+    expect(Reflect.ownKeys(key)).toEqual(keyProperties);
+    expect(Reflect.ownKeys(value)).toEqual(valueProperties);
+  });
+
+  it("keeps primed pending promises suspended until they settle", async () => {
+    let deferred = createDeferred<string>();
+    primeHydrationPromises({ lazy: deferred.promise });
+    await renderAsync(
+      <React.Suspense fallback={<p>Loading</p>}>
+        <Await resolve={deferred.promise}>{(value) => <p>{value}</p>}</Await>
+      </React.Suspense>,
+    );
+    expect(screen.getByText("Loading")).toBeVisible();
+    await act(() => deferred.resolve("Resolved"));
+    expect(screen.getByText("Resolved")).toBeVisible();
+  });
+
+  it.each([undefined, null, false, 0])(
+    "reports a rejection that settled before its first consumer once: %p",
+    async (error) => {
+      let deferred = createDeferred();
+      primeHydrationPromises({ lazy: deferred.promise });
+      deferred.reject(error);
+      await Promise.resolve();
+      let onError = jest.fn();
+      function ErrorElement() {
+        expect(useAsyncError()).toBe(error);
+        return <p>Rejected</p>;
+      }
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          element: (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Await resolve={deferred.promise} errorElement={<ErrorElement />}>
+                <p>Success</p>
+              </Await>
+              <Await resolve={deferred.promise} errorElement={<ErrorElement />}>
+                <p>Success</p>
+              </Await>
+            </React.Suspense>
+          ),
+        },
+      ]);
+      await renderAsync(<RouterProvider router={router} onError={onError} />);
+      expect(screen.getAllByText("Rejected")).toHaveLength(2);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(error, {
+        location: expect.objectContaining({ pathname: "/" }),
+        params: {},
+        pattern: "/",
+      });
+    },
+  );
+
   it.each<PromiseSettledResult<unknown>>([
     { status: "fulfilled", value: "Resolved" },
     { status: "fulfilled", value: undefined },
