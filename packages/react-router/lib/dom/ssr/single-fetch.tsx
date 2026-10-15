@@ -209,7 +209,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
-  fetchImplementation: RouterFetch,
+  fetchImplementation: RouterFetch = (request) => fetch(request),
   isApiOnly: boolean = false,
   serverOrigin?: string,
 ): DataStrategyFunction {
