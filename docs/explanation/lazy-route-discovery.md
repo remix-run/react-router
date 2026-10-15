@@ -76,3 +76,7 @@ When using lazy route discovery, ensure your deployment setup handles manifest r
 - **Route Handling** - Ensure `/__manifest` requests reach your React Router handler
 - **CDN Caching** - If using CDN/edge caching, include `version` and `paths` query parameters in your cache key for the manifest endpoint
 - **Multiple Applications** - Use a custom `manifestPath` if running multiple React Router applications on the same domain
+
+## Application-Controlled Discovery
+
+Use the experimental `unstable_useRouteDiscovery` hook to discover selected destinations, complete the route tree after startup, or control manifest-mismatch recovery. See [Application-Controlled Route Discovery](../how-to/route-discovery).

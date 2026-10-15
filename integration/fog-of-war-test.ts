@@ -3,11 +3,11 @@ import { PassThrough } from "node:stream";
 
 import {
   createAppFixture,
-  createFixture,
+  createFixture as createFixtureBase,
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { reactRouterConfig } from "./helpers/vite.js";
+import { reactRouterConfig as reactRouterConfigBase } from "./helpers/vite.js";
 
 function getFiles() {
   return {
@@ -15,10 +15,13 @@ function getFiles() {
       import * as React from "react";
       import { Link, Links, Meta, Outlet, Scripts } from "react-router";
       export default function Root() {
+        let id = React.useId();
+        React.useEffect(() => { window.hydratedId = id; }, [id]);
         let [showLink, setShowLink] = React.useState(false);
         return (
           <html lang="en">
             <head>
+              <meta name="use-id" content={id} />
               <Meta />
               <Links />
             </head>
@@ -85,7 +88,28 @@ function getFiles() {
   };
 }
 
-test.describe("Fog of War", () => {
+for (let customDiscovery of [false, true]) {
+  test.describe(`Fog of War (custom discovery: ${customDiscovery})`, () => {
+    testFogOfWar(customDiscovery);
+  });
+}
+
+function testFogOfWar(unstable_customRouteDiscovery: boolean) {
+  let reactRouterConfig = (
+    config: Parameters<typeof reactRouterConfigBase>[0] = {},
+  ) =>
+    reactRouterConfigBase({
+      ...config,
+      future: { ...config.future, unstable_customRouteDiscovery },
+    });
+  let createFixture = (init: Parameters<typeof createFixtureBase>[0]) =>
+    createFixtureBase({
+      ...init,
+      files: {
+        "react-router.config.ts": reactRouterConfig(),
+        ...init.files,
+      },
+    });
   let oldConsoleError: typeof console.error;
 
   test.beforeEach(() => {
@@ -128,8 +152,20 @@ test.describe("Fog of War", () => {
     expect(html).toContain('"routes/_index": {');
     expect(html).not.toContain('"routes/a"');
 
+    let serverId = html.match(/<meta name="use-id" content="([^"]+)"/)?.[1];
+    expect(serverId).toBeTruthy();
+    let errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
     // Linking to A loads A and succeeds
     await app.goto("/", true);
+    await expect(page.locator('meta[name="use-id"]')).toHaveAttribute(
+      "content",
+      serverId!,
+    );
+    await expect
+      .poll(() => page.evaluate(() => (window as any).hydratedId))
+      .toBe(serverId);
+    expect(errors).toEqual([]);
     await app.clickLink("/a");
     await page.waitForSelector("#a");
     expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
@@ -1894,4 +1930,4 @@ test.describe("Fog of War", () => {
       console.error = ogConsole;
     });
   });
-});
+}
