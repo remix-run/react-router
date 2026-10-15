@@ -399,6 +399,8 @@ export function RouterProvider({
 
   let [_state, setStateImpl] = React.useState(router.state);
   let [state, setOptimisticState] = useOptimistic(_state);
+  // Rendered state may lag behind notifications during a transition.
+  let lastState = React.useRef(state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -420,6 +422,8 @@ export function RouterProvider({
       newState: RouterState,
       { deletedFetchers, newErrors, flushSync, viewTransitionOpts },
     ) => {
+      lastState.current = newState;
+
       if (
         newErrors &&
         newState.errors &&
@@ -565,15 +569,14 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
-  // Initialization may finish before our first render or between render and
+  // State may change before our first render or between render and
   // subscription. Recover missed state/errors without relying on other
   // subscribers or replaying initial errors during StrictMode effect replays.
-  let initialized = state.initialized;
   React.useLayoutEffect(() => {
     let errors = router.state.errors;
     let newErrors = errors ? initialClientErrors.get(errors) : null;
     if (
-      (!initialized && router.state.initialized) ||
+      lastState.current !== router.state ||
       (errors && newErrors && !handledInitialErrors.current.has(errors))
     ) {
       setState(router.state, {
@@ -582,7 +585,7 @@ export function RouterProvider({
         newErrors: newErrors ?? null,
       });
     }
-  }, [initialized, router, setState]);
+  }, [router, setState]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render

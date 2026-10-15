@@ -620,6 +620,91 @@ function testDomRouter(
         expect(initializedAtSubscription[0]).toBe(true);
       });
 
+      it("renders a discovered HydrateFallback before subscription while initialization is still pending", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+        let suspensePromise = sleep(100);
+        let loader = createDeferred();
+        let rootFallback = jest.fn(() => <p>Root Fallback</p>);
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              Component: Outlet,
+              HydrateFallback: rootFallback,
+            },
+          ],
+          {
+            window: getWindow("/child"),
+            async patchRoutesOnNavigation({ patch }) {
+              await sleep(200);
+              patch("root", [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: () => loader.promise,
+                  Component: () => <p>Child</p>,
+                  HydrateFallback: () => <p>Child Fallback</p>,
+                },
+              ]);
+            },
+          },
+        );
+        expect(router.state.initialized).toBe(false);
+
+        let subscribe = router.subscribe;
+        let statesAtSubscription: {
+          initialized: boolean;
+          routeIds: string[];
+        }[] = [];
+        router.subscribe = (subscriber) => {
+          statesAtSubscription.push({
+            initialized: router.state.initialized,
+            routeIds: router.state.matches.map((match) => match.route.id),
+          });
+          return subscribe(subscriber);
+        };
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
+        try {
+          await act(async () => {
+            render(
+              <React.Suspense fallback="Suspense Fallback">
+                <App />
+              </React.Suspense>,
+            );
+          });
+
+          await waitFor(() => expect(statesAtSubscription).toHaveLength(1));
+          // Discovery must finish after the initial render but before subscription,
+          // while the child loader keeps initialized false throughout the race.
+          expect(rootFallback).toHaveBeenCalled();
+          expect(statesAtSubscription[0]).toEqual({
+            initialized: false,
+            routeIds: ["root", "child"],
+          });
+          expect(router.state.initialized).toBe(false);
+          await waitFor(() => screen.getByText("Child Fallback"));
+          expect(screen.queryByText("Root Fallback")).toBeNull();
+
+          await act(async () => {
+            await loader.resolve("data");
+          });
+          await waitFor(() => screen.getByText("Child"));
+        } finally {
+          router.dispose();
+          await act(async () => {
+            await loader.resolve("data");
+          });
+        }
+      });
+
       it("only reports initial loader errors once when initialization completes before subscription", async () => {
         const sleep = (ms: number) =>
           new Promise((resolve) => setTimeout(resolve, ms));
@@ -696,6 +781,38 @@ function testDomRouter(
     });
 
     describe("navigations", () => {
+      it("renders a navigation from a route layout effect before subscription", async () => {
+        function Home() {
+          let navigate = useNavigate();
+          React.useLayoutEffect(() => {
+            void navigate("/other");
+          }, [navigate]);
+          return <h1>Home</h1>;
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Home },
+            { path: "/other", Component: () => <h1>Other</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        expect(router.state.initialized).toBe(true);
+
+        try {
+          render(<RouterProvider router={router} />);
+
+          // The child layout effect navigates before RouterProvider subscribes,
+          // without changing initialized from its initial value of true.
+          expect(router.state.location.pathname).toBe("/other");
+          expect(router.state.initialized).toBe(true);
+          await waitFor(() => screen.getByText("Other"));
+          expect(screen.queryByText("Home")).toBeNull();
+        } finally {
+          router.dispose();
+        }
+      });
+
       it("handles link navigations", async () => {
         let router = createTestRouter(
           [
