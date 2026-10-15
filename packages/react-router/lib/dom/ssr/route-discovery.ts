@@ -426,25 +426,6 @@ function waitForDiscovery(
   });
 }
 
-// Keep one committed React state value for all hook consumers. Operations and eager
-// discovery still read the runtime directly, independent of render scheduling.
-function useRouteDiscoveryState(runtime: RouteDiscoveryRuntime) {
-  let [state, setState] = React.useState(runtime.state);
-  React.useLayoutEffect(() => {
-    let updateState = () => {
-      let nextState = runtime.state;
-      // Like RouterProvider, these updates must be able to participate in
-      // transitions instead of forcing already-visible content to fall back.
-      React.startTransition(() => setState(nextState));
-    };
-    let unsubscribe = runtime.subscribe(updateState);
-    // Catch updates between render and subscription, including hydration.
-    updateState();
-    return unsubscribe;
-  }, [runtime]);
-  return state;
-}
-
 const serverLoad = () => Promise.resolve();
 const serverDiscover = async (): Promise<DiscoveryResult> => ({
   type: "success",
@@ -541,7 +522,21 @@ export function useCustomRouteDiscovery(
   React.useLayoutEffect(() => {
     runtime.onError = onError;
   }, [runtime, onError]);
-  let state = useRouteDiscoveryState(runtime);
+  // Keep one committed React state value for all hook consumers. Operations and
+  // eager discovery read the runtime directly, independent of render scheduling.
+  let [state, setState] = React.useState(runtime.state);
+  React.useLayoutEffect(() => {
+    let updateState = () => {
+      let nextState = runtime.state;
+      // Like RouterProvider, these updates must be able to participate in
+      // transitions instead of forcing already-visible content to fall back.
+      React.startTransition(() => setState(nextState));
+    };
+    let unsubscribe = runtime.subscribe(updateState);
+    // Catch updates between render and subscription, including hydration.
+    updateState();
+    return unsubscribe;
+  }, [runtime]);
   React.useEffect(() => {
     // Don't prefetch if not enabled or if the user has `saveData` enabled
     if (
