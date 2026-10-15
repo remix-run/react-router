@@ -5,15 +5,13 @@ export function usePlaygroundDiscovery() {
   let [behavior, setBehavior] = useState("cancel");
   let [events, setEvents] = useState<string[]>([]);
   function log(message: string) {
+    console.log(message);
     setEvents((previous) => [...previous.slice(-19), message]);
   }
 
   let discovery = unstable_useRouteDiscovery({
-    onBeforeDiscovery(event) {
-      log(`Before discovery: ${event.source}`);
-    },
     async onManifestMismatch(event) {
-      log(`Mismatch: ${event.source} → ${behavior}`);
+      log(`Mismatch: ${JSON.stringify(event)} → ${behavior}`);
       if (behavior === "load-all") {
         try {
           await event.loadAllRoutes();

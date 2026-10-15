@@ -69,121 +69,129 @@ export default function App({ loaderData }: Route.ComponentProps) {
         </p>
       ) : null}
 
-      <fieldset>
-        <legend>Discovery controls</legend>
-        <label>
-          <input
-            type="checkbox"
-            checked={mismatch}
-            onChange={(event) =>
-              setSimulation("mismatch", event.target.checked)
-            }
-          />
-          Simulate manifest mismatch
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={delay}
-            onChange={(event) => setSimulation("delay", event.target.checked)}
-          />
-          Delay manifest requests by 1.5 seconds
-        </label>
-        <label>
-          On mismatch
-          <select
-            value={discovery.behavior}
-            onChange={(event) => discovery.setBehavior(event.target.value)}
-          >
-            <option value="cancel">Cancel</option>
-            <option value="load-all">Load all routes and continue</option>
-            <option value="default">
-              Default behavior (reload for navigation/fetcher)
-            </option>
-          </select>
-        </label>
-        <div className="row">
+      <div className="playground-layout">
+        <div>
+          <fieldset>
+            <legend>Discovery controls</legend>
+            <label>
+              <input
+                type="checkbox"
+                checked={mismatch}
+                onChange={(event) =>
+                  setSimulation("mismatch", event.target.checked)
+                }
+              />
+              Simulate manifest mismatch
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={delay}
+                onChange={(event) =>
+                  setSimulation("delay", event.target.checked)
+                }
+              />
+              Delay manifest requests by 1.5 seconds
+            </label>
+            <label>
+              On mismatch
+              <select
+                value={discovery.behavior}
+                onChange={(event) => discovery.setBehavior(event.target.value)}
+              >
+                <option value="cancel">Cancel</option>
+                <option value="load-all">Load all routes and continue</option>
+                <option value="default">
+                  Default behavior (reload for navigation/fetcher)
+                </option>
+              </select>
+            </label>
+            <div className="row">
+              <button
+                onClick={() =>
+                  discovery.loadAllRoutes().then(
+                    () => discovery.log("loadAllRoutes: complete"),
+                    (error) => discovery.log(String(error)),
+                  )
+                }
+              >
+                Load all routes
+              </button>
+              <button
+                onClick={() =>
+                  discovery.discoverRoutes(["/b"]).then(
+                    (result) => discovery.log(`discoverRoutes: ${result.type}`),
+                    (error) => discovery.log(String(error)),
+                  )
+                }
+              >
+                Discover /b
+              </button>
+              <a href="/a">Reset to /a (document reload)</a>
+            </div>
+          </fieldset>
+
+          <dl className="states">
+            <div>
+              <dt>Discovery</dt>
+              <dd data-testid="discovery-state">{discovery.state}</dd>
+            </div>
+            <div>
+              <dt>Navigation</dt>
+              <dd data-testid="navigation-state">{navigation.state}</dd>
+            </div>
+            <div>
+              <dt>Revalidation</dt>
+              <dd data-testid="revalidation-state">{revalidator.state}</dd>
+            </div>
+            <div>
+              <dt>Fetcher</dt>
+              <dd data-testid="fetcher-state">{fetcher.state}</dd>
+            </div>
+          </dl>
+          <p>
+            Client version: <code>{discovery.version}</code>
+          </p>
+          <nav className="row">
+            <Link to="/a" discover="none">
+              Navigate to /a
+            </Link>
+            <Link to="/b" discover="none">
+              Navigate to /b
+            </Link>
+            <button
+              onClick={() =>
+                revalidator.revalidate().then(
+                  () => discovery.log("Revalidation settled"),
+                  (error) => discovery.log(String(error)),
+                )
+              }
+            >
+              Revalidate
+            </button>
+            <button onClick={() => fetcher.load("/b")}>Fetch /b</button>
+          </nav>
           <button
             onClick={() =>
-              discovery.loadAllRoutes().then(
-                () => discovery.log("loadAllRoutes: complete"),
-                (error) => discovery.log(String(error)),
-              )
+              fetcher.submit(null, { method: "post", action: "/a" })
             }
           >
-            Load all routes
+            Fetcher: increment counter and redirect to /b
           </button>
-          <button
-            onClick={() =>
-              discovery.discoverRoutes(["/b"]).then(
-                (result) => discovery.log(`discoverRoutes: ${result.type}`),
-                (error) => discovery.log(String(error)),
-              )
-            }
-          >
-            Discover /b
-          </button>
-          <a href="/a">Reset to /a (document reload)</a>
-        </div>
-      </fieldset>
+          <p>
+            Fetcher data: <code>{JSON.stringify(fetcher.data) ?? "none"}</code>
+          </p>
 
-      <dl className="states">
-        <div>
-          <dt>Discovery</dt>
-          <dd data-testid="discovery-state">{discovery.state}</dd>
+          <Outlet />
         </div>
-        <div>
-          <dt>Navigation</dt>
-          <dd data-testid="navigation-state">{navigation.state}</dd>
-        </div>
-        <div>
-          <dt>Revalidation</dt>
-          <dd data-testid="revalidation-state">{revalidator.state}</dd>
-        </div>
-        <div>
-          <dt>Fetcher</dt>
-          <dd data-testid="fetcher-state">{fetcher.state}</dd>
-        </div>
-      </dl>
-      <p>
-        Client version: <code>{discovery.version}</code>
-      </p>
-      <nav className="row">
-        <Link to="/a" discover="none">
-          Navigate to /a
-        </Link>
-        <Link to="/b" discover="none">
-          Navigate to /b
-        </Link>
-        <button
-          onClick={() =>
-            revalidator.revalidate().then(
-              () => discovery.log("Revalidation settled"),
-              (error) => discovery.log(String(error)),
-            )
-          }
-        >
-          Revalidate
-        </button>
-        <button onClick={() => fetcher.load("/b")}>Fetch /b</button>
-      </nav>
-      <button
-        onClick={() => fetcher.submit(null, { method: "post", action: "/a" })}
-      >
-        Fetcher: increment counter and redirect to /b
-      </button>
-      <p>
-        Fetcher data: <code>{JSON.stringify(fetcher.data) ?? "none"}</code>
-      </p>
 
-      <Outlet />
-
-      <section>
-        <h2>Discovery events</h2>
-        <pre data-testid="events">
-          {discovery.events.join("\n") || "No discovery yet"}
-        </pre>
-      </section>
+        <section className="discovery-events">
+          <h2>Discovery events</h2>
+          <pre data-testid="events">
+            {discovery.events.join("\n") || "No discovery yet"}
+          </pre>
+        </section>
+      </div>
     </main>
   );
 }
