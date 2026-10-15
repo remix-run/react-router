@@ -562,7 +562,7 @@ function testDomRouter(
         `);
       });
 
-      it("handles race conditions if router initialization completes prior to the layout effect router.subscribe() call", async () => {
+      it("handles lazy route initialization before subscription when another subscriber is already attached", async () => {
         const sleep = (ms: number) =>
           new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -570,16 +570,27 @@ function testDomRouter(
         let suspensePromise = sleep(100).then(() => "DATA");
 
         // Create a router that will initialize shortly after the suspense boundary resolves
+        let hydrateFallback = jest.fn(() => "Hydrate Fallback");
         let router = createTestRouter([
           {
             path: "/",
-            // Only fails when this is around 200ms - passes if you bump it to ~500ms
-            loader: () => sleep(200).then(() => "LOADER"),
-            Component: () => <p>Data:{useLoaderData()}</p>,
-            HydrateFallback: () => "Hydrate Fallback",
+            lazy: async () => {
+              await sleep(200);
+              return { Component: () => <p>Lazy Route</p> };
+            },
+            HydrateFallback: hydrateFallback,
           },
         ]);
         expect(router.state.initialized).toBe(false);
+
+        // Instrumentation may subscribe before RouterProvider mounts.
+        router.subscribe(() => {});
+        let subscribe = router.subscribe;
+        let initializedAtSubscription: boolean[] = [];
+        router.subscribe = (subscriber) => {
+          initializedAtSubscription.push(router.state.initialized);
+          return subscribe(subscriber);
+        };
 
         // Render a component that will suspend until `suspensePromise` resolves, then
         // renders RouterProvider which sets up listeners for the router state
@@ -591,6 +602,85 @@ function testDomRouter(
 
         // Needs to be wrapped in `act()` for suspense to work properly
         // https://github.com/testing-library/react-testing-library/issues/1375
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Lazy Route"));
+        expect(screen.queryByText("Suspense Fallback")).toBeNull();
+        expect(screen.queryByText("Hydrate Fallback")).toBeNull();
+        // Ensure initialization happened after the provider rendered its fallback
+        // but before it subscribed, so this actually exercises the race.
+        expect(hydrateFallback).toHaveBeenCalled();
+        expect(initializedAtSubscription[0]).toBe(true);
+      });
+
+      it("only reports initial loader errors once when initialization completes before subscription", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        let suspensePromise = sleep(100).then(() => "DATA");
+        let onError = jest.fn();
+        let router = createTestRouter([
+          {
+            path: "/",
+            loader: () =>
+              sleep(200).then(() => {
+                throw new Error("Loader failed");
+              }),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            ErrorBoundary: () => <p>Route Error Boundary</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        expect(router.state.initialized).toBe(false);
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} onError={onError} />;
+        }
+
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Route Error Boundary"));
+        expect(onError).toHaveBeenCalledTimes(1);
+      });
+
+      it("handles initialization races when another subscriber is already attached", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        let suspensePromise = sleep(100).then(() => "DATA");
+        let router = createTestRouter([
+          {
+            path: "/",
+            loader: () => sleep(200).then(() => "LOADER"),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        router.subscribe(() => {});
+        expect(router.state.initialized).toBe(false);
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
         await act(async () => {
           render(
             <React.Suspense fallback="Suspense Fallback">

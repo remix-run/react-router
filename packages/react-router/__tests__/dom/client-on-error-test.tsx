@@ -642,6 +642,304 @@ describe(`handleError`, () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
+  it("handles initial load synchronous loader errors in SPA mode (delayed render)", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader() {
+          throw new Error("immediate loader error!");
+        },
+        Component: () => <h1>Home</h1>,
+        HydrateFallback: () => <h1>Loading...</h1>,
+        ErrorBoundary: () => (
+          <h1>Error:{(useRouteError() as Error).message}</h1>
+        ),
+      },
+    ]);
+
+    // Make sure the router completely initializes
+    await tick();
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:immediate loader error!"));
+
+    expect(spy).toHaveBeenCalledWith(new Error("immediate loader error!"), {
+      location: expect.objectContaining({ pathname: "/" }),
+      params: {},
+      pattern: "/",
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([false, true])(
+    "reports initial errors once in StrictMode when initialization completes before subscription (external subscriber: %s)",
+    async (externalSubscriber) => {
+      let sleep = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
+      let suspensePromise = sleep(100);
+      let spy = jest.fn();
+      let hydrateFallback = jest.fn(() => <h1>Loading...</h1>);
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          async loader() {
+            await sleep(200);
+            throw new Error("initial loader error!");
+          },
+          Component: () => <h1>Home</h1>,
+          HydrateFallback: hydrateFallback,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ]);
+      if (externalSubscriber) {
+        router.subscribe(() => {});
+      }
+      let subscribe = router.subscribe;
+      let initializedAtSubscription: boolean[] = [];
+      router.subscribe = (subscriber) => {
+        initializedAtSubscription.push(router.state.initialized);
+        return subscribe(subscriber);
+      };
+
+      function App() {
+        // @ts-expect-error Needs React 19 types
+        React.use(suspensePromise);
+        return <RouterProvider router={router} onError={spy} />;
+      }
+
+      await act(async () => {
+        render(
+          <React.StrictMode>
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>
+          </React.StrictMode>,
+        );
+      });
+
+      await waitFor(() => screen.getByText("Error:initial loader error!"));
+      expect(hydrateFallback).toHaveBeenCalled();
+      expect(initializedAtSubscription[0]).toBe(true);
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(new Error("initial loader error!"), {
+        location: expect.objectContaining({ pathname: "/" }),
+        params: {},
+        pattern: "/",
+      });
+    },
+  );
+
+  it.each(["early", "late"])(
+    "reports initial errors once after delayed mounting in StrictMode (external subscriber: %s)",
+    async (externalSubscriber) => {
+      let spy = jest.fn();
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          loader() {
+            throw new Error("immediate loader error!");
+          },
+          Component: () => <h1>Home</h1>,
+          HydrateFallback: () => <h1>Loading...</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ]);
+
+      if (externalSubscriber === "early") {
+        router.subscribe(() => {});
+      }
+
+      // Make sure the router completely initializes before the provider renders.
+      await tick();
+      expect(router.state.initialized).toBe(true);
+      if (externalSubscriber === "late") {
+        router.subscribe(() => {});
+      }
+
+      let { rerender } = render(
+        <React.StrictMode>
+          <RouterProvider router={router} onError={spy} />
+        </React.StrictMode>,
+      );
+
+      await waitFor(() => screen.getByText("Error:immediate loader error!"));
+
+      expect(spy).toHaveBeenCalledWith(new Error("immediate loader error!"), {
+        location: expect.objectContaining({ pathname: "/" }),
+        params: {},
+        pattern: "/",
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      // A callback change resubscribes the provider without introducing a new error.
+      let nextSpy = jest.fn();
+      rerender(
+        <React.StrictMode>
+          <RouterProvider router={router} onError={nextSpy} />
+        </React.StrictMode>,
+      );
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(nextSpy).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not replay initial errors when onError is added after mounting", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader() {
+          throw new Error("initial error!");
+        },
+        Component: () => <h1>Home</h1>,
+        ErrorBoundary: () => <h1>Error</h1>,
+      },
+    ]);
+    await tick();
+
+    let { rerender } = render(<RouterProvider router={router} />);
+    expect(screen.getByText("Error")).toBeDefined();
+    rerender(<RouterProvider router={router} onError={spy} />);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("reports initial errors independently to each RouterProvider", async () => {
+    let firstSpy = jest.fn();
+    let secondSpy = jest.fn();
+    let error = new Error("initial error!");
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader() {
+          throw error;
+        },
+        Component: () => <h1>Home</h1>,
+        ErrorBoundary: () => <h1>Error</h1>,
+      },
+    ]);
+    await tick();
+
+    render(
+      <React.StrictMode>
+        <RouterProvider router={router} onError={firstSpy} />
+        <RouterProvider router={router} onError={secondSpy} />
+      </React.StrictMode>,
+    );
+
+    expect(screen.getAllByText("Error")).toHaveLength(2);
+    expect(firstSpy.mock.calls.map(([reported]) => reported)).toEqual([error]);
+    expect(secondSpy.mock.calls.map(([reported]) => reported)).toEqual([error]);
+  });
+
+  it("does not replay initial errors after a hash-only navigation before mounting", async () => {
+    let spy = jest.fn();
+    let loader = jest.fn(() => {
+      throw new Error("initial error!");
+    });
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader,
+        Component: () => <h1>Home</h1>,
+        ErrorBoundary: () => <h1>Error</h1>,
+      },
+    ]);
+    await tick();
+    let initialErrors = router.state.errors;
+    expect(initialErrors).not.toBeNull();
+
+    await router.navigate("/#section");
+    expect(router.state.errors).toBe(initialErrors);
+    expect(loader).toHaveBeenCalledTimes(1);
+
+    render(<RouterProvider router={router} onError={spy} />);
+    expect(screen.getByText("Error")).toBeDefined();
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("reports a reused initial error again on a later navigation", async () => {
+    let spy = jest.fn();
+    let error = new Error("reused error!");
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        loader() {
+          throw error;
+        },
+        Component: () => <h1>Home</h1>,
+        ErrorBoundary: () => <h1>Error</h1>,
+      },
+    ]);
+    await tick();
+
+    render(<RouterProvider router={router} onError={spy} />);
+    expect(spy).toHaveBeenCalledTimes(1);
+    await act(() => router.navigate("/?again"));
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy.mock.calls.map(([reported]) => reported)).toEqual([
+      error,
+      error,
+    ]);
+  });
+
+  it.each(["navigation", "revalidation", "fetcher"])(
+    "does not replay initial errors superseded by a %s before mounting",
+    async (update) => {
+      let spy = jest.fn();
+      let initialError = new Error("initial error!");
+      let laterError = new Error("later error!");
+      let loader = jest
+        .fn()
+        .mockRejectedValueOnce(initialError)
+        .mockResolvedValue("Home");
+      let router = createMemoryRouter([
+        {
+          id: "home",
+          path: "/",
+          loader,
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+        {
+          path: "/next",
+          loader() {
+            throw laterError;
+          },
+          Component: () => <h1>Next</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ]);
+      await tick();
+      expect(router.state.errors).toEqual({ home: initialError });
+
+      if (update === "navigation") {
+        await router.navigate("/next");
+      } else if (update === "revalidation") {
+        await router.revalidate();
+      } else {
+        await router.fetch("fetcher", "home", "/next");
+      }
+
+      render(<RouterProvider router={router} onError={spy} />);
+      expect(
+        screen.getByText(
+          update === "revalidation" ? "Home" : "Error:later error!",
+        ),
+      ).toBeDefined();
+      expect(spy).not.toHaveBeenCalled();
+    },
+  );
+
   it("does not fire onError for errors from hydrationData", async () => {
     let spy = jest.fn();
     let router = createMemoryRouter(
@@ -671,4 +969,115 @@ describe(`handleError`, () => {
 
     expect(spy).not.toHaveBeenCalled();
   });
+
+  it("does not fire onError for errors from hydrationData (delayed render)", async () => {
+    let spy = jest.fn();
+    let router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          loader() {
+            throw new Error("hydration error!");
+          },
+          Component: () => <h1>Home</h1>,
+          ErrorBoundary: () => (
+            <h1>Error:{(useRouteError() as Error).message}</h1>
+          ),
+        },
+      ],
+      {
+        hydrationData: {
+          errors: { "0": new Error("hydration error!") },
+          loaderData: {},
+        },
+      },
+    );
+
+    // Make sure the router completely initializes
+    await tick();
+
+    render(<RouterProvider router={router} onError={spy} />);
+
+    await waitFor(() => screen.getByText("Error:hydration error!"));
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { clientError: false, delayedRender: false },
+    { clientError: false, delayedRender: true },
+    { clientError: true, delayedRender: false },
+    { clientError: true, delayedRender: true },
+  ])(
+    "only reports new client errors during partial hydration (client error: $clientError, delayed render: $delayedRender)",
+    async ({ clientError, delayedRender }) => {
+      let spy = jest.fn();
+      let loader = Object.assign(
+        jest.fn(async () => {
+          if (clientError) {
+            // A fresh client error can equal an existing server error, including
+            // a primitive at the same boundary. Equality cannot establish origin.
+            // eslint-disable-next-line no-throw-literal
+            throw "shared error";
+          }
+          return "client root data";
+        }),
+        { hydrate: true },
+      );
+      let router = createMemoryRouter(
+        [
+          {
+            id: "root",
+            path: "/",
+            loader,
+            Component: () => <h1>Home</h1>,
+            ErrorBoundary: () => <h1>Error:{useRouteError() as string}</h1>,
+            children: [
+              {
+                index: true,
+                loader: () => null,
+                Component: () => <h1>Child</h1>,
+              },
+            ],
+          },
+        ],
+        {
+          hydrationData: {
+            // The root loaded successfully on the server, but a descendant's
+            // error bubbled to its boundary. Force its loader to run again.
+            loaderData: { root: "server root data" },
+            errors: { root: "shared error" },
+          },
+        },
+      );
+      expect(router.state.initialized).toBe(false);
+      router.subscribe(() => {});
+
+      if (delayedRender) {
+        await tick();
+      }
+      expect(router.state.initialized).toBe(delayedRender);
+
+      render(
+        <React.StrictMode>
+          <RouterProvider router={router} onError={spy} />
+        </React.StrictMode>,
+      );
+
+      await waitFor(() => expect(router.state.initialized).toBe(true));
+      expect(screen.getByText("Error:shared error")).toBeDefined();
+      expect(loader).toHaveBeenCalledTimes(1);
+      let errorInfo = {
+        location: expect.objectContaining({ pathname: "/" }),
+        params: {},
+        pattern: "/",
+      };
+      expect(spy.mock.calls).toEqual(
+        clientError ? [["shared error", errorInfo]] : [],
+      );
+      expect(router.state.loaderData.root).toBe(
+        clientError ? undefined : "client root data",
+      );
+    },
+  );
 });

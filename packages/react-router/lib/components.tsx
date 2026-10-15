@@ -23,7 +23,7 @@ import type {
   RouterSubscriber,
   RouterInit,
 } from "./router/router";
-import { createRouter } from "./router/router";
+import { createRouter, initialClientErrors } from "./router/router";
 import type {
   DataRouteObject,
   DataStrategyFunction,
@@ -411,12 +411,29 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
+  let handledInitialErrors = React.useRef(
+    new WeakSet<NonNullable<RouterState["errors"]>>(),
+  );
 
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
       { deletedFetchers, newErrors, flushSync, viewTransitionOpts },
     ) => {
+      if (
+        newErrors &&
+        newState.errors &&
+        initialClientErrors.has(newState.errors)
+      ) {
+        if (handledInitialErrors.current.has(newState.errors)) {
+          newErrors = null;
+        } else {
+          // Mark these before invoking user code, including when onError is
+          // absent, so effect replays/resubscriptions don't report them again.
+          handledInitialErrors.current.add(newState.errors);
+        }
+      }
+
       // Send router errors through onError
       if (newErrors && onError) {
         Object.values(newErrors).forEach((error) =>
@@ -548,19 +565,24 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
-  // Track race conditions where we finish initializing prior to the layout
-  // effect above running to register our listener.  If we manually detect a
-  // change in `state.initialized`, automatically sync state.
+  // Initialization may finish before our first render or between render and
+  // subscription. Recover missed state/errors without relying on other
+  // subscribers or replaying initial errors during StrictMode effect replays.
   let initialized = state.initialized;
   React.useLayoutEffect(() => {
-    if (!initialized && router.state.initialized) {
+    let errors = router.state.errors;
+    let newErrors = errors ? initialClientErrors.get(errors) : null;
+    if (
+      (!initialized && router.state.initialized) ||
+      (errors && newErrors && !handledInitialErrors.current.has(errors))
+    ) {
       setState(router.state, {
         deletedFetchers: [],
         flushSync: false,
-        newErrors: router.state.errors, // Initial data load errors
+        newErrors: newErrors ?? null,
       });
     }
-  }, [initialized, setState, router.state]);
+  }, [initialized, router, setState]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
