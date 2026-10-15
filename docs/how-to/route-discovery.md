@@ -21,80 +21,90 @@ export default {
 
 Without this flag, React Router keeps its existing discovery implementation and the hook is unavailable. The flag supports conventional Framework Mode only.
 
-Keep `routeDiscovery.mode: "lazy"` (the default for SSR) and use `unstable_useRouteDiscovery` to choose when to discover destinations or load the complete route manifest:
+Keep `routeDiscovery.mode: "lazy"` (the default for SSR) and use `unstable_useRouteDiscovery` to choose when to discover destinations or load the complete route manifest.
 
 ```tsx
-import { unstable_useRouteDiscovery } from "react-router";
+let { state, discoverRoutes, loadAllRoutes } =
+  unstable_useRouteDiscovery({
+    onManifestMismatch: async (event) => {
+      // Handle mismatch, potentially by loading the entire manifest
+      await loadAllRoutes();
+    },
+  });
 
-function Checkout() {
-  let { state, discoverRoutes, loadAllRoutes } =
-    unstable_useRouteDiscovery();
+// state: "partial" | "loading" | "complete"
 
-  async function prepareCheckout() {
-    let result = await discoverRoutes([
-      "/checkout/shipping",
-      "/checkout/billing",
-    ]);
-    if (result.type === "version-mismatch") {
-      // Offer to save drafts and refresh the document.
-    }
-  }
+// Eagerly discover specific paths
+let result = await discoverRoutes(paths);
+```
+
+## Imperative Route Discovery
+
+You can control route discovery through `discoverRoutes()` without having to render links/forms on the page - this allows you to eagerly discover routes that are not directly linked from the current UI. Note that discovery only loads route metadata - it does not navigate, run loaders/actions, or prefetch route modules/stylesheets. Paths are batched within the manifest request URL limit and previously discovered paths are skipped.
+
+`discoverRoutes(paths, { signal })` accepts application-root paths beginning with `/`. React Router applies the configured `basename` and ignores query strings and hashes. Relative paths and external URLs are not supported.
+
+The result is `{ type: "success" }`, `{ type: "version-mismatch" }`, or `{ type: "aborted" }`. Success means the discovery operation completed successfully; it does not guarantee that a request was sent or that each pathname matches a route. Cached paths need no request, and a concurrent full-manifest load can supersede an incremental request failure. Unrecovered request failures and unrelated handler errors reject. Imperative mismatches do not automatically trigger a reload.
+
+For example, the cart's checkout link automatically discovers the shipping route. Use the hook to discover later checkout steps when the cart mounts, even though those steps aren't linked from the cart:
+
+```tsx
+import { useEffect } from "react";
+import {
+  Link,
+  unstable_useRouteDiscovery,
+} from "react-router";
+
+function Cart() {
+  let { discoverRoutes } = unstable_useRouteDiscovery();
+
+  useEffect(() => {
+    let controller = new AbortController();
+
+    discoverRoutes(
+      ["/checkout/billing", "/checkout/review"],
+      { signal: controller.signal },
+    ).catch(console.error);
+
+    return () => controller.abort();
+  }, [discoverRoutes]);
 
   return (
     <>
-      <button onClick={prepareCheckout}>
-        Prepare checkout
-      </button>
-      <button
-        disabled={state === "loading"}
-        onClick={() => loadAllRoutes().catch(console.error)}
-      >
-        Load all route metadata
-      </button>
+      {/* Render cart items and totals here. */}
+      <Link to="/checkout/shipping">
+        Proceed to checkout
+      </Link>
     </>
   );
 }
 ```
 
-Discovery only loads route metadata. It does not navigate, run loaders/actions, or prefetch route modules and stylesheets.
-
-Incremental discovery uses the initialized [`HydratedRouter unstable_fetch`](./custom-fetch) implementation with `{ type: "manifest" }` context, including eager, navigation, fetcher, and imperative requests. In API-only Mode, it also honors `unstable_apiServerOrigin`; discovered routes retain their server loaders/actions. `loadAllRoutes()` imports a versioned static asset, so that download does not pass through custom fetch.
-
 ## Completing discovery
 
-`loadAllRoutes()` loads the running client's versioned manifest asset. The shared `state` moves from `partial` to `loading` to `complete`. Concurrent calls share a load, and calls after completion resolve immediately. Failures reject and return the state to `partial`; applications can catch the error and choose whether to reload.
+`loadAllRoutes()` loads the running client's versioned manifest asset to complete its route tree, even if that client is stale. This merges all missing routes into the running router and thus prevents further incremental discovery. The exposed `version` remains the version of the running client. With `routeDiscovery.mode: "initial"`, SPA Mode, or development's full manifest, the state is already `complete` and the operations are successful no-ops.
 
-Completion merges missing routes into the running router and stops further incremental discovery. The exposed `version` remains the version of the running client. With `routeDiscovery.mode: "initial"`, SPA Mode, or development's full manifest, the state is already `complete` and the operations are successful no-ops.
+The shared `state` moves from `partial` to `loading` to `complete`. Concurrent calls share a load, and calls after completion resolve immediately. Failures reject and return the state to `partial`; applications can catch the error and choose whether to reload.
 
 Retain the client's versioned manifest **and its referenced assets** for as long as that client is supported. Server routing and loader/action contracts must also remain compatible. Loading build A's manifest does not make an incompatible build B backend safe for build A's client.
 
-## Selective discovery
-
-`discoverRoutes(paths, { signal })` accepts application-root paths beginning with `/`. React Router applies the configured `basename` and ignores query strings and hashes. Relative paths and external URLs are not supported.
-
-Paths are batched within the manifest request URL limit and previously discovered paths are skipped. An individually oversized path produces a warning and is omitted without being cached; other paths are still discovered. Selective discovery leaves the shared state `partial`.
-
-The result is `{ type: "success" }`, `{ type: "version-mismatch" }`, or `{ type: "aborted" }`. Success does not guarantee that each pathname matches a route. Actual request and handler failures reject. An imperative mismatch does not automatically reload the document. Aborting a caller does not abort a full-manifest load or mismatch recovery shared with other operations.
-
 ## Handling manifest mismatches
+
+You can provide custom handling for manifest version mismatches to avoid hard reloads, giving you a chance to complete the route tree, or cancel the navigation and provide a prompt for the user to reload (see below). A mismatch indicates different versions, not which version is newer.
 
 ```tsx
 unstable_useRouteDiscovery({
-  onManifestMismatch: async ({ loadAllRoutes }) => {
-    await loadAllRoutes();
+  onManifestMismatch: async (event) => {
+    await event.loadAllRoutes();
   },
 });
 ```
 
-`onManifestMismatch` is awaited and receives the discovery `source` (`eager`, `navigation`, `fetcher`, or `imperative`), the running client `version`, `loadAllRoutes()`, `stopPropagation()`, `defaultBehavior()`, and `reloadUrl`: the navigation destination, the current document URL for a fetcher, or `null` for eager/imperative discovery. A mismatch indicates different versions, not which version is newer.
+After mismatch handlers settle, surviving operations continue only if the tree is complete. Otherwise navigations and fetchers are canceled and their pending state settles. Canceling a navigation also cancels any pending revalidation - both return to idle and the current page and data remain in place without another loader pass. Similarly, interrupted fetcher loads settle with their existing data. If an action already changed server data, the displayed data may remain stale until a later navigation or explicit revalidation.
 
-After mismatch handlers settle, surviving operations continue only if the tree is complete. Otherwise navigations and fetchers are canceled and their pending state settles. Router-managed Back/Forward cancellations restore the prior history position. Later completion does not replay a canceled navigation or submission. Full-manifest load failures remain catchable by the handler and do not render error boundaries, whether it calls `event.loadAllRoutes()` or the `loadAllRoutes()` returned by the hook. Uncaught full-load failures report through `<HydratedRouter onError>` when provided, or `console.error`; unrelated handler exceptions use normal discovery error handling.
+Router-managed Back/Forward cancellations restore the prior history position. Additional browser Back/Forward presses during restoration can leave the URL and rendered route out of sync or navigate to another entry; preserving the current screen is not guaranteed in that case.
 
-Canceling a navigation also cancels its pending revalidation. Both return to idle, the revalidation promise resolves, and the current page and data remain in place without another loader pass. Interrupted fetcher loads settle with their existing data; independent requests continue. If an action already changed server data, the displayed data may remain stale until a later navigation or explicit revalidation.
-
-Back/Forward restoration supports a single pending traversal, using the same approach as navigation blockers. If additional browser Back/Forward presses overlap the restoration, the URL and displayed route may get out of sync, or a queued traversal may navigate to another route. Preserving the current screen and its unsaved state is not guaranteed in that case.
-
-Concurrent mismatches share one pending custom handler chain. Its `source` and `reloadUrl` describe the initiating request, while each participant retains its own destination and cancellation signal. Handlers may await a user decision. A later mismatch can start another chain after the previous one settles.
+Full-manifest load failures remain catchable and do not render route error boundaries, whether the handler calls `event.loadAllRoutes()` or the function returned by the hook. Uncaught full-load failures are reported through `<HydratedRouter onError>` or `console.error`, and the incomplete operation is canceled. Unrelated handler errors follow normal discovery error handling.
 
 ## Temporary overrides
 

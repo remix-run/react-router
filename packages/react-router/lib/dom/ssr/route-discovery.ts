@@ -451,21 +451,25 @@ const serverDiscover = async (): Promise<DiscoveryResult> => ({
 });
 
 /**
- * Control lazy route discovery in conventional Framework Mode with
- * `future.unstable_customRouteDiscovery` enabled. Full-manifest
- * loading downloads metadata, not route modules. Applications must retain their
- * versioned assets and maintain compatible server contracts for running clients.
+ * Control lazy route discovery in Framework Mode with `future.unstable_customRouteDiscovery`
+ * enabled. This allows you to imperatively discover routes as well as add custom behavior
+ * when a manifest version mismatch is detected.  Calling `loadAllRoutes` will load the entire
+ * route manifest for the current (potentially stale) client version - this requires that prior
+ * client artifacts are still available on your CDN _and_ you have not made breaking changes to
+ * the API contracts of your loaders and actions.
  *
- * ```tsx
- * let { state, loadAllRoutes } = unstable_useRouteDiscovery({
+ * See the [Route Discovery guide](../../how-to/route-discovery) for more information and examples.
+ *
+ * @example
+ * let { state, discoverRoutes, loadAllRoutes } = unstable_useRouteDiscovery({
  *   onManifestMismatch: async (event) => {
+ *     // Eagerly load the complete route tree for this client without requiring a hard reload
  *     await event.loadAllRoutes();
  *   },
  * });
- * ```
  *
- * See the [Route Discovery guide](../../how-to/route-discovery) for selective
- * discovery, handler composition, and recovery behavior.
+ * // Eagerly discover specific routes
+ * discoverRoutes(["/a", "/b"]);
  *
  * @name unstable_useRouteDiscovery
  * @public
