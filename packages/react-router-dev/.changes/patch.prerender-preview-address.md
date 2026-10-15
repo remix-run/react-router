@@ -1,1 +1,4 @@
-Fix intermittent `Prerender: Request failed for ... connect ECONNREFUSED` errors during prerendering — requests now target the literal address the Vite preview server actually bound to, instead of re-resolving `localhost` on every request, which could pick a different address family (`127.0.0.1` vs `::1`) than the one the server is listening on
+Fix intermittent `Prerender: Request failed for ... connect ECONNREFUSED` errors during prerendering
+
+- Send requests to the address the Vite preview server bound to
+- Avoid re-resolving `localhost` for each request, which could select a different address family (`127.0.0.1` vs `::1`)
