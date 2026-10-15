@@ -122,7 +122,7 @@ export type LayoutComponent = ComponentType<{
  * @see https://reactrouter.com/start/framework/route-module#meta
  */
 export interface LinksFunction {
-  (): LinkDescriptor[];
+  (): LinkDescriptor[] | readonly LinkDescriptor[];
 }
 
 export interface MetaMatch<
@@ -229,7 +229,10 @@ export interface MetaFunction<
     LoaderFunction | ClientLoaderFunction | unknown
   > = Record<string, unknown>,
 > {
-  (args: MetaArgs<Loader, MatchLoaders>): MetaDescriptor[] | undefined;
+  (args: MetaArgs<Loader, MatchLoaders>):
+    | MetaDescriptor[]
+    | readonly MetaDescriptor[]
+    | undefined;
 }
 
 export type MetaDescriptor =
