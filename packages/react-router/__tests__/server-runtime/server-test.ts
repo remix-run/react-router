@@ -138,6 +138,38 @@ describe("server", () => {
       expect(await response.text()).toBe("");
     });
 
+    it("cancels the discarded body for HEAD requests", async () => {
+      let cancel = jest.fn();
+      let build = mockServerBuild({
+        root: {
+          path: "/",
+          loader: () =>
+            new Response(
+              new ReadableStream({
+                pull(controller) {
+                  controller.enqueue(new TextEncoder().encode("chunk"));
+                },
+                cancel,
+              }),
+              { headers: { "Content-Type": "application/octet-stream" } },
+            ),
+        },
+      });
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/", {
+          method: "HEAD",
+        }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe(
+        "application/octet-stream",
+      );
+      expect(response.body).toBeNull();
+      expect(cancel).toHaveBeenCalledTimes(1);
+    });
+
     it("reflects trailing slash in static handler locations", async () => {
       let build = mockServerBuild(
         {
