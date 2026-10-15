@@ -540,6 +540,15 @@ async function handleDocumentRequest(
       routeDiscovery: build.routeDiscovery,
       ssr: build.ssr,
       isSpaMode,
+      ...(isSpaMode
+        ? {
+            spaLocation: {
+              pathname: context.location.pathname,
+              search: context.location.search,
+              hash: context.location.hash,
+            },
+          }
+        : {}),
       unstable_apiOnly: build.unstable_apiOnly,
       unstable_apiServerOrigin: build.unstable_apiServerOrigin,
     };

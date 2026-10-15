@@ -44,6 +44,7 @@ import {
   resolveTo,
   stripBasename,
 } from "./router/utils";
+import { takeSpaHydrationLocation } from "./dom/spa-hydration";
 
 import type { Navigator, ViewTransitionContextObject } from "./context";
 import {
@@ -399,6 +400,13 @@ export function RouterProvider({
 
   let [_state, setStateImpl] = React.useState(router.state);
   let [state, setOptimisticState] = useOptimistic(_state);
+  // SPA deep links reuse shell HTML rendered for a different URL. Hold that
+  // location for the hydration render, then drop it so the DOM updates to the
+  // browser URL. React does not patch attribute mismatches while hydrating.
+  let [spaHydrationLocation, setSpaHydrationLocation] =
+    React.useState<Location | null>(
+      () => takeSpaHydrationLocation(router) ?? null,
+    );
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -550,6 +558,12 @@ export function RouterProvider({
   // subscriber was attached, `subscribe()` replays that notification so
   // `onError` still fires for initial data load errors.
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
+  React.useLayoutEffect(() => {
+    if (spaHydrationLocation) {
+      setSpaHydrationLocation(null);
+    }
+  }, [spaHydrationLocation]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
@@ -719,7 +733,7 @@ export function RouterProvider({
                 <ViewTransitionContext.Provider value={vtContext}>
                   <Router
                     basename={basename}
-                    location={state.location}
+                    location={spaHydrationLocation ?? state.location}
                     navigationType={state.historyAction}
                     navigator={navigator}
                     useTransitions={useTransitions}

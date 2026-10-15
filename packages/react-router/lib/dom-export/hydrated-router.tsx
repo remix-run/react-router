@@ -25,6 +25,10 @@ import {
   UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
 } from "react-router";
 import { CRITICAL_CSS_DATA_ATTRIBUTE } from "../dom/ssr/components";
+import {
+  getSpaHydrationLocation,
+  setSpaHydrationLocation,
+} from "../dom/spa-hydration";
 import { RouterProvider } from "./dom-router-provider";
 import type { ClientInstrumentation } from "../router/instrumentation";
 import type { RouterFetch } from "../dom/ssr/single-fetch";
@@ -383,6 +387,17 @@ export function HydratedRouter(props: HydratedRouterProps) {
       instrumentations: props.instrumentations,
       fetch: props.unstable_fetch ?? fetchImplementation,
     });
+    invariant(ssrInfo, "ssrInfo unavailable for HydratedRouter");
+    // The SPA shell is one HTML document. Deep links reuse it, and React will
+    // not correct attribute mismatches (such as NavLink's active class) during
+    // hydration, so match the prerendered URL first and update afterwards.
+    let spaHydrationLocation = getSpaHydrationLocation(
+      router.state.location,
+      ssrInfo.context.spaLocation,
+    );
+    if (spaHydrationLocation) {
+      setSpaHydrationLocation(router, spaHydrationLocation);
+    }
     if (props.unstable_fetch) {
       fetchImplementation = props.unstable_fetch;
     }
