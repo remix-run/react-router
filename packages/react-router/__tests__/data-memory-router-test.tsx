@@ -2289,6 +2289,42 @@ describe("createMemoryRouter", () => {
       `);
     });
 
+    it("does not render the outlet in an errorElement", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Outlet />} errorElement={<ErrorBoundary />}>
+            <Route path="child" element={<ChildComp />} />
+          </Route>,
+        ),
+        { initialEntries: ["/child"] },
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function ChildComp(): React.ReactElement {
+        throw new Error("Kaboom!");
+      }
+
+      function ErrorBoundary() {
+        let error = useRouteError() as Error;
+        return (
+          <div>
+            <p>{error.message}</p>
+            <Outlet />
+          </div>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <p>
+              Kaboom!
+            </p>
+          </div>
+        </div>"
+      `);
+    });
+
     it("handles render errors in child errorElement", async () => {
       let router = createMemoryRouter(
         createRoutesFromElements(
