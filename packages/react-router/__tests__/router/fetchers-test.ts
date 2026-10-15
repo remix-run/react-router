@@ -1946,7 +1946,7 @@ describe("fetchers", () => {
       });
     });
 
-    it("properly ignores aborted action revalidation fetchers when a navigation triggers revalidations", async () => {
+    it("does not restart in-flight action revalidation fetchers when a navigation triggers revalidations", async () => {
       let keyA = "a";
       let keyB = "b";
       let t = initializeTest();
@@ -1976,27 +1976,24 @@ describe("fetchers", () => {
         data: "FOO",
       });
 
-      // Interrupt revalidation with GEt navigation
-      // TODO: This shouldn't actually abort the revalidation but it does currently
-      // which then causes the invalid invariant error.  This test is to ensure
-      // the invariant doesn't throw, but we'll fix the unnecessary revalidation
-      // in https://github.com/remix-run/react-router/issues/14115
+      // Interrupt revalidation with GET navigation
       let C = await t.navigate("/baz", undefined, ["foo"]);
-      expect(B.loaders.foo.signal.aborted).toBe(true);
+      expect(B.loaders.foo.signal.aborted).toBe(false);
+      expect(C.loaders.foo.stub).not.toHaveBeenCalled();
       expect(t.fetchers[keyA]).toMatchObject({
         state: "loading",
         data: "FOO",
       });
 
-      // Complete the aborted fetcher revalidation calls
+      // Complete the fetcher action revalidation calls
       await B.loaders.root.resolve("NOPE");
       await B.loaders.index.resolve("NOPE");
-      await B.loaders.foo.resolve("NOPE");
+      await B.loaders.foo.resolve("FOO*");
 
       // Complete the navigation
       await C.loaders.root.resolve("ROOT*");
       await C.loaders.baz.resolve("BAZ");
-      await C.loaders.foo.resolve("FOO*");
+      expect(C.loaders.foo.stub).not.toHaveBeenCalled();
       expect(t.router.state).toMatchObject({
         navigation: IDLE_NAVIGATION,
         location: { pathname: "/baz" },
