@@ -74,6 +74,7 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
+import { FrameworkContext } from "./dom/ssr/components";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
@@ -825,6 +826,14 @@ export function DataRoutes({
     "You must render this element inside a <DataRouterContext.Provider> element",
   );
 
+  let discoveryRuntime =
+    React.useContext(FrameworkContext)?.routeDiscoveryRuntime;
+  React.useEffect(() => {
+    // This effect runs after the initialized route tree commits and its hooks
+    // register. Descendants still suspended behind their own boundaries do not
+    // delay eager discovery.
+    if (state.initialized) discoveryRuntime?.markReady();
+  }, [state.initialized, discoveryRuntime]);
   return useRoutesImpl(routes, undefined, {
     router: dataRouterContext.router,
     manifest,
@@ -1779,7 +1788,10 @@ class AwaitErrorBoundary extends React.Component<
       // Raw (untracked) promise - track it
       status = AwaitRenderStatus.pending;
       Object.defineProperty(resolve, "_tracked", { get: () => true });
-      promise = resolve.then(
+      // Wrap in `Promise.resolve()` because React Flight's `ReactPromise`
+      // chunks pass `instanceof Promise` but return `undefined` from `.then()`.
+      // Native promises are returned as-is by `Promise.resolve()`.
+      promise = Promise.resolve(resolve).then(
         (data: any) =>
           Object.defineProperty(resolve, "_data", { get: () => data }),
         (error: any) => {

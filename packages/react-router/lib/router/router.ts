@@ -55,6 +55,7 @@ import type {
   MapRoutePropertiesFunction,
 } from "./utils";
 import {
+  DiscoveryCancelledError,
   ErrorResponseImpl,
   ResultType,
   convertRouteMatchToUiMatch,
@@ -448,6 +449,8 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
+  /** @internal Enables application-controlled Framework route discovery. */
+  unstable_customRouteDiscovery?: boolean;
   /** Enables route-pattern matching after calling `unstable_preloadRoutePattern()`. */
   unstable_routePatternMatching?: boolean;
 }
@@ -1234,6 +1237,9 @@ export function createRouter(init: RouterInit): Router {
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: NavigationType = NavigationType.Pop;
+  // Distance from the committed UI while one or more POPs are pending.
+  let pendingPopstateDelta = 0;
+  let pendingDiscoveryCancellation: Promise<void> | undefined;
 
   // Deferred to use for tracking popstate navigations
   let pendingPopstateNavigationDfd: ReturnType<
@@ -1321,7 +1327,7 @@ export function createRouter(init: RouterInit): Router {
     unlistenHistory = init.history.listen(
       ({ action: historyAction, location, delta }) => {
         // Ignore this event if it was just us resetting the URL from a
-        // blocked POP navigation
+        // blocked or canceled POP navigation
         if (unblockBlockerHistoryUpdate) {
           unblockBlockerHistoryUpdate();
           unblockBlockerHistoryUpdate = undefined;
@@ -1381,6 +1387,9 @@ export function createRouter(init: RouterInit): Router {
           return;
         }
 
+        if (future.unstable_customRouteDiscovery) {
+          pendingPopstateDelta += delta || 0;
+        }
         return startNavigation(historyAction, location);
       },
     );
@@ -1669,16 +1678,20 @@ export function createRouter(init: RouterInit): Router {
       },
     );
 
-    // Reset stateful navigation vars
+    resetPendingNavigation();
+    pendingPopstateNavigationDfd?.resolve();
+    pendingPopstateNavigationDfd = null;
+    pendingRevalidationDfd?.resolve();
+    pendingRevalidationDfd = null;
+  }
+
+  function resetPendingNavigation() {
+    pendingPopstateDelta = 0;
     pendingAction = NavigationType.Pop;
     pendingPreventScrollReset = false;
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
-    pendingPopstateNavigationDfd?.resolve();
-    pendingPopstateNavigationDfd = null;
-    pendingRevalidationDfd?.resolve();
-    pendingRevalidationDfd = null;
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -1687,6 +1700,7 @@ export function createRouter(init: RouterInit): Router {
     to: number | To | null,
     opts?: RouterNavigateOptions,
   ) {
+    if (pendingDiscoveryCancellation) await pendingDiscoveryCancellation;
     // If another popstate is pending and we're about to interrupt it, resolve
     // the promise since we'll never reach completeNavigation for *that* popstate
     pendingPopstateNavigationDfd?.resolve();
@@ -1867,7 +1881,9 @@ export function createRouter(init: RouterInit): Router {
   // Revalidate all current loaders.  If a navigation is in progress or if this
   // is interrupted by a navigation, allow this to "succeed" by calling all
   // loaders during the next loader round
-  function revalidate() {
+  function revalidate(): Promise<void> {
+    if (pendingDiscoveryCancellation)
+      return pendingDiscoveryCancellation.then(revalidate);
     // We can't just return the promise from `startNavigation` because that
     // navigation may be interrupted and our revalidation wouldn't be finished
     // until the _next_ navigation completes.  Instead we just track via a
@@ -1946,6 +1962,7 @@ export function createRouter(init: RouterInit): Router {
       dataStrategyInitiator?: DataStrategyInitiator;
     },
   ): Promise<void> {
+    if (pendingDiscoveryCancellation) await pendingDiscoveryCancellation;
     // Abort any in-progress navigations and start a new one. Unset any ongoing
     // uninterrupted revalidations unless told otherwise, since we want this
     // new navigation to update history normally
@@ -2165,6 +2182,63 @@ export function createRouter(init: RouterInit): Router {
     });
   }
 
+  function cancelDiscoveryNavigation() {
+    // Install the gate before notifying subscribers, which may start new work.
+    let cancellation = createDeferred<void>();
+    pendingDiscoveryCancellation = cancellation.promise;
+    let delta = pendingPopstateDelta;
+    let popstateNavigationDfd = pendingPopstateNavigationDfd;
+    pendingPopstateNavigationDfd = null;
+
+    // Settle router state synchronously. An independent fetcher finishing during
+    // POP restoration must not mistake this for a navigation it can complete.
+    pendingNavigationController?.abort();
+    pendingNavigationController = null;
+    resetPendingNavigation();
+    pendingRevalidationDfd?.resolve();
+    pendingRevalidationDfd = null;
+    let blockers = new Map(state.blockers);
+    blockers.forEach((blocker, key) => {
+      if (blocker.state === "proceeding") blockers.set(key, IDLE_BLOCKER);
+    });
+    let fetchers = new Map(state.fetchers);
+    let didUpdateFetchers = markFetchRedirectsDone(fetchers);
+    // Cancel pending revalidation along with the navigation. Settle fetcher
+    // loads it interrupted or left waiting for a redirect, while preserving
+    // independently running requests and the currently displayed data.
+    fetchers.forEach((fetcher, key) => {
+      if (fetcher.state === "loading" && !fetchControllers.has(key)) {
+        fetchers.set(key, getDoneFetcher(fetcher.data));
+        didUpdateFetchers = true;
+      }
+    });
+    cancelledFetcherLoads.clear();
+    updateState({
+      navigation: IDLE_NAVIGATION,
+      revalidation: "idle",
+      blockers,
+      ...(didUpdateFetchers ? { fetchers } : {}),
+    });
+
+    // Only history restoration remains asynchronous. Keep the POP navigation's
+    // promise and any new work waiting until the browser is back in place.
+    function finishCancellation() {
+      pendingDiscoveryCancellation = undefined;
+      popstateNavigationDfd?.resolve();
+      cancellation.resolve();
+    }
+    if (delta) {
+      // Use the same compensating POP as navigation blockers. Additional native
+      // Back/Forward presses during restoration have the same known limitation:
+      // history does not identify which traversal caused the next POP event.
+      unblockBlockerHistoryUpdate = finishCancellation;
+      init.history.go(-delta);
+    } else {
+      finishCancellation();
+    }
+    return cancellation.promise;
+  }
+
   // Call the action matched by the leaf route for this navigation and handle
   // redirects/errors
   async function handleAction(
@@ -2179,7 +2253,7 @@ export function createRouter(init: RouterInit): Router {
     initialHydration: boolean,
     opts: { replace?: boolean; flushSync?: boolean } = {},
   ): Promise<HandleActionResult> {
-    interruptActiveLoads();
+    if (!future.unstable_customRouteDiscovery) interruptActiveLoads();
 
     // Put us in a submitting state
     let navigation = getSubmittingNavigation(
@@ -2196,7 +2270,13 @@ export function createRouter(init: RouterInit): Router {
         location.pathname,
         request.signal,
       );
-      if (discoverResult.type === "aborted") {
+      if (
+        (future.unstable_customRouteDiscovery && request.signal.aborted) ||
+        discoverResult.type === "aborted"
+      ) {
+        return { shortCircuited: true };
+      } else if (discoverResult.type === "cancelled") {
+        await cancelDiscoveryNavigation();
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
         if (discoverResult.partialMatches.length === 0) {
@@ -2246,6 +2326,7 @@ export function createRouter(init: RouterInit): Router {
       }
     }
 
+    if (future.unstable_customRouteDiscovery) interruptActiveLoads();
     // Call our action and get the result
     let result: DataResult;
     let actionMatch = getTargetMatch(matches, location);
@@ -2421,7 +2502,13 @@ export function createRouter(init: RouterInit): Router {
         request.signal,
       );
 
-      if (discoverResult.type === "aborted") {
+      if (
+        (future.unstable_customRouteDiscovery && request.signal.aborted) ||
+        discoverResult.type === "aborted"
+      ) {
+        return { shortCircuited: true };
+      } else if (discoverResult.type === "cancelled") {
+        await cancelDiscoveryNavigation();
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
         if (discoverResult.partialMatches.length === 0) {
@@ -2700,6 +2787,7 @@ export function createRouter(init: RouterInit): Router {
     href: string | null,
     opts?: RouterFetchOptions,
   ) {
+    if (pendingDiscoveryCancellation) await pendingDiscoveryCancellation;
     abortFetcher(key);
 
     let flushSync = (opts && opts.flushSync) === true;
@@ -2809,7 +2897,7 @@ export function createRouter(init: RouterInit): Router {
     submission: Submission,
     callSiteDefaultShouldRevalidate: boolean | undefined,
   ) {
-    interruptActiveLoads();
+    if (!future.unstable_customRouteDiscovery) interruptActiveLoads();
     fetchLoadMatches.delete(key);
 
     // Put this fetcher into it's submitting state
@@ -2819,6 +2907,9 @@ export function createRouter(init: RouterInit): Router {
     });
 
     let abortController = new AbortController();
+    if (future.unstable_customRouteDiscovery) {
+      fetchControllers.set(key, abortController);
+    }
     let fetchRequest = createClientSideRequest(
       init.history,
       path,
@@ -2834,7 +2925,17 @@ export function createRouter(init: RouterInit): Router {
         key,
       );
 
-      if (discoverResult.type === "aborted") {
+      if (
+        (future.unstable_customRouteDiscovery && fetchRequest.signal.aborted) ||
+        discoverResult.type === "aborted"
+      ) {
+        return;
+      } else if (discoverResult.type === "cancelled") {
+        fetchControllers.delete(key);
+        fetchLoadMatches.delete(key);
+        updateFetcherState(key, getDoneFetcher(existingFetcher?.data), {
+          flushSync,
+        });
         return;
       } else if (discoverResult.type === "error") {
         setFetcherError(key, routeId, discoverResult.error, { flushSync });
@@ -2864,6 +2965,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    if (future.unstable_customRouteDiscovery) interruptActiveLoads();
     // Call the action for the fetcher
     fetchControllers.set(key, abortController);
 
@@ -3178,6 +3280,9 @@ export function createRouter(init: RouterInit): Router {
     );
 
     let abortController = new AbortController();
+    if (future.unstable_customRouteDiscovery) {
+      fetchControllers.set(key, abortController);
+    }
     let fetchRequest = createClientSideRequest(
       init.history,
       path,
@@ -3192,7 +3297,17 @@ export function createRouter(init: RouterInit): Router {
         key,
       );
 
-      if (discoverResult.type === "aborted") {
+      if (
+        (future.unstable_customRouteDiscovery && fetchRequest.signal.aborted) ||
+        discoverResult.type === "aborted"
+      ) {
+        return;
+      } else if (discoverResult.type === "cancelled") {
+        fetchControllers.delete(key);
+        fetchLoadMatches.delete(key);
+        updateFetcherState(key, getDoneFetcher(existingFetcher?.data), {
+          flushSync,
+        });
         return;
       } else if (discoverResult.type === "error") {
         setFetcherError(key, routeId, discoverResult.error, { flushSync });
@@ -3610,7 +3725,11 @@ export function createRouter(init: RouterInit): Router {
     isRevalidationRequired = true;
 
     // Abort in-flight fetcher loads
-    fetchLoadMatches.forEach((_, key) => {
+    fetchLoadMatches.forEach((loadMatch, key) => {
+      // Revalidation cannot restart discovery against the partial route tree.
+      // Leave it running; explicit reuse/deletion of the fetcher still aborts it.
+      if (future.unstable_customRouteDiscovery && loadMatch.isDiscovering)
+        return;
       if (fetchControllers.has(key)) {
         cancelledFetcherLoads.add(key);
       }
@@ -3933,7 +4052,8 @@ export function createRouter(init: RouterInit): Router {
   type DiscoverRoutesResult =
     | DiscoverRoutesSuccessResult
     | DiscoverRoutesErrorResult
-    | DiscoverRoutesAbortedResult;
+    | DiscoverRoutesAbortedResult
+    | { type: "cancelled" };
 
   async function discoverRoutes(
     matches: DataRouteMatch[],
@@ -3967,6 +4087,11 @@ export function createRouter(init: RouterInit): Router {
           },
         });
       } catch (e) {
+        if (future.unstable_customRouteDiscovery) {
+          if (signal.aborted) return { type: "aborted" };
+          if (e instanceof DiscoveryCancelledError)
+            return { type: "cancelled" };
+        }
         return { type: "error", error: e, partialMatches };
       }
 
