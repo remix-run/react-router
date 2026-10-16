@@ -1239,6 +1239,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           typegenWatcherPromise = Typegen.watch(rootDirectory, {
             mode,
             rsc: false,
+            watchOptions: viteUserConfig.server?.watch ?? undefined,
             // ignore `info` logs from typegen since they are redundant when Vite plugin logs are active
             logger: vite.createLogger("warn", { prefix: "[react-router]" }),
           });
@@ -1254,6 +1255,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           rootDirectory,
           mode,
           watch: viteCommand === "serve",
+          watchOptions: viteUserConfig.server?.watch ?? undefined,
         });
 
         await updatePluginContext();
