@@ -32,6 +32,33 @@ test.use({
   },
 });
 
+test("custom fetch context narrowing", async ({ edit, $ }) => {
+  await edit({
+    "app/custom-fetch.ts": tsx`
+      import type { NavigationType } from "react-router";
+      import type { unstable_RouterFetch } from "react-router/dom";
+      import type { Expect, Equal } from "./expect-type";
+
+      export const customFetch: unstable_RouterFetch = (request, context) => {
+        if (context.type === "navigation") {
+          type Test = Expect<Equal<typeof context.navigationType, NavigationType>>;
+        } else if (context.type === "initialization") {
+          type FetcherKey = Expect<Equal<typeof context.fetcherKey, string | null>>;
+          type HistoryAction = Expect<Equal<typeof context.navigationType, null>>;
+        } else if (context.type !== "manifest") {
+          type Test = Expect<Equal<typeof context.navigationType, null>>;
+          type FetcherKey = Expect<Equal<typeof context.fetcherKey, string | null>>;
+        } else {
+          type Test = Expect<Equal<typeof context, { type: "manifest" }>>;
+        }
+
+        return fetch(request);
+      };
+    `,
+  });
+  await $("pnpm typecheck");
+});
+
 test.describe("typegen", () => {
   test("basic", async ({ edit, $ }) => {
     await edit({

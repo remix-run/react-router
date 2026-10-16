@@ -3,6 +3,7 @@ import {
   type RSCMatch,
   type RSCRouteConfigEntry,
 } from "../../lib/rsc/server.rsc";
+import { routeRSCServerRequest } from "../../lib/rsc/server.ssr";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
@@ -39,6 +40,54 @@ describe("RSC server", () => {
     expect(match?.payload.type).toBe("render");
   });
 
+  test("runs eager and lazy middleware before resource loaders", async () => {
+    let calls: string[] = [];
+    let lazyModule: Awaited<
+      ReturnType<NonNullable<RSCRouteConfigEntry["lazy"]>>
+    > = {
+      middleware: [
+        async (_, next) => {
+          calls.push("lazy middleware");
+          let response = await next();
+          response.headers.set("X-Lazy-Middleware", "true");
+          return response;
+        },
+      ],
+      loader() {
+        calls.push("loader");
+        return new Response("Resource body");
+      },
+    };
+
+    let response = await matchRSCServerRequest({
+      createTemporaryReferenceSet: () => ({}),
+      request: new Request("https://remix.run/resource"),
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          middleware: [
+            async (_, next) => {
+              calls.push("eager middleware");
+              return next();
+            },
+          ],
+          children: [
+            { id: "resource", path: "resource", lazy: async () => lazyModule },
+          ],
+        },
+      ],
+      generateResponse() {
+        throw new Error("Resource response should not be encoded as Flight");
+      },
+    });
+
+    expect(calls).toEqual(["eager middleware", "lazy middleware", "loader"]);
+    expect(response.headers.get("X-Lazy-Middleware")).toBe("true");
+    expect(response.headers.get("React-Router-Resource")).toBe("true");
+    expect(await response.text()).toBe("Resource body");
+  });
+
   describe("manifest requests", () => {
     test("rejects manifest requests over the URL limit", async () => {
       let path = `/${"a".repeat(URL_LIMIT)}.manifest`;
@@ -73,6 +122,278 @@ describe("RSC server", () => {
 
       expect(response.status).toBe(200);
       expect(match?.payload.type).toBe("manifest");
+    });
+  });
+
+  describe("middleware short-circuit responses", () => {
+    test("preserves cached Flight responses returned by middleware", async () => {
+      let cachedResponse: Response | undefined;
+      let renderCount = 0;
+      let routes: RSCRouteConfigEntry[] = [
+        {
+          id: "root",
+          path: "/",
+          Component: () => null,
+          middleware: [
+            async (_, next) => {
+              if (cachedResponse) {
+                return cachedResponse.clone();
+              }
+              let response = await next();
+              cachedResponse = response.clone();
+              return response;
+            },
+          ],
+        },
+      ];
+      let generateResponse = (match: RSCMatch) => {
+        renderCount++;
+        return new Response("Encoded Flight", {
+          status: match.statusCode,
+          headers: match.headers,
+        });
+      };
+
+      for (let i = 0; i < 2; i++) {
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/"),
+          routes,
+          generateResponse,
+        });
+
+        expect(response.headers.get("React-Router-Resource")).toBeNull();
+        expect(await response.text()).toBe("Encoded Flight");
+      }
+
+      expect(renderCount).toBe(1);
+      expect(cachedResponse?.headers.get("Content-Type")).toBe(
+        "text/x-component",
+      );
+    });
+
+    test.each(["return", "throw"])(
+      "passes through resource route middleware responses (%s)",
+      async (behavior) => {
+        let request = new Request("https://remix.run/resource");
+        let serverResponse = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request,
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              middleware: [
+                async () => {
+                  let response = new Response("Access denied", {
+                    status: 403,
+                    statusText: "Forbidden",
+                    headers: {
+                      "Content-Type": "text/plain; charset=utf-8",
+                      "Set-Cookie": "session=; Max-Age=0; Path=/",
+                    },
+                  });
+                  if (behavior === "throw") {
+                    throw response;
+                  }
+                  return response;
+                },
+              ],
+              children: [
+                {
+                  id: "resource",
+                  path: "resource",
+                  loader() {
+                    throw new Error("Resource loader should not be called");
+                  },
+                },
+              ],
+            },
+          ],
+          generateResponse() {
+            throw new Error(
+              "Resource response should not be encoded as Flight",
+            );
+          },
+        });
+
+        expect(serverResponse.headers.get("React-Router-Resource")).toBe(
+          "true",
+        );
+
+        let response = await routeRSCServerRequest({
+          request,
+          serverResponse,
+          createFromReadableStream() {
+            throw new Error(
+              "Resource response should not be decoded as Flight",
+            );
+          },
+          renderHTML() {
+            throw new Error("Resource response should not be rendered as HTML");
+          },
+        });
+
+        expect(response).toBe(serverResponse);
+        expect(response.status).toBe(403);
+        expect(response.statusText).toBe("Forbidden");
+        expect(response.headers.get("Content-Type")).toBe(
+          "text/plain; charset=utf-8",
+        );
+        expect(response.headers.get("Set-Cookie")).toBe(
+          "session=; Max-Age=0; Path=/",
+        );
+        expect(await response.text()).toBe("Access denied");
+      },
+    );
+
+    test("tags non-RSC middleware responses as React-Router-Resource", async () => {
+      let generateResponseCalled = false;
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/docs/intro.md"),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            middleware: [
+              async ({ request }, next) => {
+                let url = new URL(request.url);
+                if (url.pathname.endsWith(".md")) {
+                  return new Response("# MARKDOWN_BODY", {
+                    headers: { "Content-Type": "text/markdown; charset=utf-8" },
+                  });
+                }
+                return next();
+              },
+            ],
+            children: [
+              {
+                id: "intro",
+                path: "docs/intro.md",
+                Component: () => null,
+              },
+            ],
+          },
+        ],
+        generateResponse() {
+          generateResponseCalled = true;
+          return new Response(null);
+        },
+      });
+
+      expect(generateResponseCalled).toBe(false);
+      expect(response.headers.get("React-Router-Resource")).toBe("true");
+      expect(response.headers.get("Content-Type")).toBe(
+        "text/markdown; charset=utf-8",
+      );
+      expect(await response.text()).toBe("# MARKDOWN_BODY");
+    });
+
+    test("routeRSCServerRequest passes through tagged resource response without decoding as Flight", async () => {
+      let serverResponse = new Response("# MARKDOWN_BODY", {
+        headers: {
+          "Content-Type": "text/markdown; charset=utf-8",
+          "React-Router-Resource": "true",
+        },
+      });
+
+      let createFromReadableStreamCalled = false;
+      let result = await routeRSCServerRequest({
+        request: new Request("https://remix.run/docs/intro.md"),
+        serverResponse,
+        createFromReadableStream() {
+          createFromReadableStreamCalled = true;
+          throw new Error("Should not decode as Flight");
+        },
+        renderHTML() {
+          throw new Error("renderHTML should not be called");
+        },
+      });
+
+      expect(createFromReadableStreamCalled).toBe(false);
+      expect(result).toBe(serverResponse);
+      expect(await result.text()).toBe("# MARKDOWN_BODY");
+    });
+
+    test("normal middleware calling next() generates standard RSC render response", async () => {
+      let generateResponseCalled = false;
+      let match: RSCMatch | undefined;
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/docs/intro"),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            middleware: [
+              async ({ request }, next) => {
+                let res = await next();
+                return res;
+              },
+            ],
+            children: [
+              {
+                id: "intro",
+                path: "docs/intro",
+                Component: () => null,
+              },
+            ],
+          },
+        ],
+        generateResponse(nextMatch) {
+          generateResponseCalled = true;
+          match = nextMatch;
+          return new Response(null, { status: nextMatch.statusCode });
+        },
+      });
+
+      expect(generateResponseCalled).toBe(true);
+      expect(response.headers.get("React-Router-Resource")).toBeNull();
+      expect(match?.payload.type).toBe("render");
+    });
+
+    test("middleware short-circuit redirect returns redirect payload without resource header", async () => {
+      let generateResponseCalled = false;
+      let match: RSCMatch | undefined;
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/protected"),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            middleware: [
+              async () => {
+                return new Response(null, {
+                  status: 302,
+                  headers: { Location: "/login" },
+                });
+              },
+            ],
+            children: [
+              {
+                id: "protected",
+                path: "protected",
+                Component: () => null,
+              },
+            ],
+          },
+        ],
+        generateResponse(nextMatch) {
+          generateResponseCalled = true;
+          match = nextMatch;
+          return new Response(null, { status: nextMatch.statusCode });
+        },
+      });
+
+      expect(generateResponseCalled).toBe(true);
+      expect(response.headers.get("React-Router-Resource")).toBeNull();
+      expect(match?.payload).toMatchObject({
+        type: "redirect",
+        location: "/login",
+        status: 302,
+      });
     });
   });
 });

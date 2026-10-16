@@ -11,6 +11,111 @@ import {
 const tsx = dedent;
 
 test.describe("Vite preview", () => {
+  for (let prerender of [false, ["/"]] as const) {
+    test(`serves API-only apps with prerender: ${JSON.stringify(prerender)}`, async ({
+      vitePreview,
+      page,
+    }) => {
+      let manifestPath = prerender ? "/api-manifest" : "/__manifest";
+      const files: Files = async ({ port }) => ({
+        "react-router.config.ts": reactRouterConfig({
+          ssr: "unstable_api-only",
+          prerender: prerender ? [...prerender] : false,
+          routeDiscovery: { mode: "lazy", manifestPath },
+        }),
+        "vite.config.ts": await viteConfig.basic({
+          port,
+          templateName: "vite-8-template",
+        }),
+        "app/root.tsx": tsx`
+          import { Outlet, Scripts } from "react-router";
+          export function Layout({ children }) {
+            return <html><head /><body>{children}<Scripts /></body></html>;
+          }
+          export function HydrateFallback() { return <p>API_ONLY_SHELL</p>; }
+          export default function Root() { return <Outlet />; }
+        `,
+        "app/routes/_index.tsx": tsx`
+          export function loader() {
+            return process.env.IS_RR_BUILD_REQUEST === "yes" ? "BUILD_INDEX_DATA" : "LIVE_INDEX_DATA";
+          }
+          export default function Index({ loaderData }) {
+            return <p>INDEX_UI: {loaderData}</p>;
+          }
+        `,
+        "app/routes/runtime.tsx": tsx`
+          import { Form, Link } from "react-router";
+          export function loader({ request }) {
+            return new URL(request.url).searchParams.get("message");
+          }
+          export async function action({ request }) {
+            return (await request.formData()).get("message");
+          }
+          export default function Runtime({ loaderData, actionData }) {
+            return <>
+              <p data-loader>{loaderData}</p>
+              <p data-action>{actionData}</p>
+              <Form method="post">
+                <input type="hidden" name="message" value="ACTION_DATA" />
+                <button type="submit">Submit</button>
+              </Form>
+              <Link to="/discovered" discover="none">Discover</Link>
+            </>;
+          }
+        `,
+        "app/routes/discovered.tsx": tsx`
+          export function loader() { return "DISCOVERED_DATA"; }
+          export default function Discovered({ loaderData }) {
+            return <p data-discovered>{loaderData}</p>;
+          }
+        `,
+      });
+
+      const { port } = await vitePreview(files, "vite-8-template");
+      let origin = `http://localhost:${port}`;
+      let data = await page.request.get(
+        `${origin}/runtime.data?message=LOADER_DATA`,
+      );
+      expect(data.status()).toBe(200);
+      expect(await data.text()).toContain("LOADER_DATA");
+      let manifest = await page.request.get(`${origin}${manifestPath}`);
+      expect(manifest.status()).toBe(204);
+      expect(manifest.headers()["x-remix-reload-document"]).toBe("true");
+
+      let document = await page.request.get(`${origin}/runtime`);
+      expect(document.status()).toBe(200);
+      expect(document.headers()["content-type"]).toContain("text/html");
+      expect(await document.text()).toContain("API_ONLY_SHELL");
+      expect(await document.text()).not.toContain("INDEX_UI");
+      let head = await page.request.head(`${origin}/runtime`);
+      expect(head.status()).toBe(200);
+      expect(await head.body()).toHaveLength(0);
+      if (prerender) {
+        let index = await page.request.get(`${origin}/`);
+        expect(index.status()).toBe(200);
+        expect(await index.text()).toContain("INDEX_UI");
+        expect(await index.text()).toContain("BUILD_INDEX_DATA");
+        let indexData = await page.request.get(`${origin}/_.data`);
+        expect(indexData.status()).toBe(200);
+        expect(await indexData.text()).toContain("BUILD_INDEX_DATA");
+      }
+
+      await page.goto(`${origin}/runtime?message=LOADER_DATA`);
+      await expect(page.locator("[data-loader]")).toHaveText("LOADER_DATA");
+      await page.getByRole("button", { name: "Submit" }).click();
+      await expect(page.locator("[data-action]")).toHaveText("ACTION_DATA");
+      let discovery = page.waitForResponse((response) =>
+        new URL(response.url()).pathname.endsWith(manifestPath),
+      );
+      await page.getByRole("link", { name: "Discover" }).click();
+      expect((await discovery).status()).toBe(200);
+      await expect(page.locator("[data-discovered]")).toHaveText(
+        "DISCOVERED_DATA",
+      );
+      expect(page.errors).toEqual([]);
+    });
+  }
+
   test("serves built app with vite preview", async ({ vitePreview, page }) => {
     const files: Files = async ({ port }) => ({
       "react-router.config.ts": reactRouterConfig(),
