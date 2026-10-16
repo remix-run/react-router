@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import { readFileSync } from "node:fs";
 import { expect } from "@playwright/test";
 import stripAnsi from "strip-ansi";
 import dedent from "dedent";
@@ -10,6 +11,7 @@ import {
   grep,
   build,
   viteConfig,
+  viteMajorTemplates,
 } from "./helpers/vite.js";
 
 let serverOnlyModule = `
@@ -266,5 +268,97 @@ test.describe("Vite / server-only escape hatch", async () => {
     });
     await expect(page.locator("[data-title]")).toHaveText("This should work");
     expect(page.errors).toEqual([]);
+  });
+});
+
+test.describe("Vite / client module resolution", () => {
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(`${templateDisplayName} / preserves plugin resolution results without resolving twice`, async () => {
+      let cwd = await createProject(
+        {
+          "vite.config.ts": `
+            import { writeFileSync } from "node:fs";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            let resolutions = { "test:internal": 0, "test:external": 0 };
+            export default {
+              plugins: [
+                reactRouter(),
+                {
+                  name: "custom-resolution",
+                  enforce: "pre",
+                  resolveId(id, importer, options) {
+                    if (!(id in resolutions)) return;
+                    if (!options.ssr) resolutions[id]++;
+                    return {
+                      id: id === "test:internal"
+                        ? "\\0test:internal"
+                        : "https://example.com/external.js",
+                      external: id === "test:external",
+                      moduleSideEffects: true,
+                      meta: { customResolution: id },
+                    };
+                  },
+                  load(id) {
+                    if (id === "\\0test:internal") return 'export const message = "resolved";';
+                  },
+                  generateBundle(options, bundle) {
+                    if (this.environment.name !== "client") return;
+                    let internal = this.getModuleInfo("\\0test:internal");
+                    let external = this.getModuleInfo("https://example.com/external.js");
+                    writeFileSync("resolution-result.json", JSON.stringify({
+                      resolutions,
+                      internal: {
+                        meta: internal.meta,
+                        moduleSideEffects: internal.moduleSideEffects,
+                      },
+                      external: {
+                        meta: external.meta,
+                        imports: Object.values(bundle).flatMap((output) =>
+                          output.type === "chunk" ? output.imports : [],
+                        ).filter((id) => id === "https://example.com/external.js"),
+                      },
+                    }));
+                  },
+                },
+              ],
+            };
+          `,
+          "app/client.ts": `
+            import { suffix } from "test:external";
+            import { message } from "test:internal";
+            export const content = message + suffix;
+          `,
+          "app/routes/_index.tsx": `
+            import { content } from "../client";
+            export default () => <h1>{content}</h1>;
+          `,
+        },
+        templateName,
+      );
+      let { status, stderr } = build({ cwd });
+      expect(status, stderr.toString()).toBe(0);
+      expect(
+        JSON.parse(
+          readFileSync(path.join(cwd, "resolution-result.json"), "utf8"),
+        ),
+      ).toMatchObject({
+        resolutions: { "test:internal": 1, "test:external": 1 },
+        internal: {
+          meta: { customResolution: "test:internal" },
+          moduleSideEffects: true,
+        },
+        external: {
+          meta: { customResolution: "test:external" },
+          imports: ["https://example.com/external.js"],
+        },
+      });
+      expect(
+        grep(
+          path.join(cwd, "build/client"),
+          /https:\/\/example\.com\/external\.js/,
+        ),
+      ).toHaveLength(1);
+    });
   });
 });
