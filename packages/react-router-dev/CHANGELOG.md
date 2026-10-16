@@ -1,5 +1,33 @@
 # `@react-router/dev`
 
+## v8.5.0
+
+### Patch Changes
+
+- Fix critical CSS collection in dev registering server-only route imports as client dependencies, which triggered dependency re-optimization and full page reloads ([#15595](https://github.com/remix-run/react-router/pull/15595))
+- Fix intermittent `Prerender: Request failed for ... connect ECONNREFUSED` errors during prerendering ([#15325](https://github.com/remix-run/react-router/pull/15325))
+  - Send requests to the address the Vite preview server bound to
+  - Avoid re-resolving `localhost` for each request, which could select a different address family (`127.0.0.1` vs `::1`)
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add `ssr: "unstable_api-only"` to retain a runtime server for loaders, actions, and route discovery while disabling production document rendering ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Generate a root-only SPA shell when prerendering is disabled
+  - Support prerendered pages and data files alongside runtime loaders and actions, with a SPA fallback for non-prerendered paths
+  - Default API-only builds to lazy route discovery
+  - Reject API-only configuration in RSC Framework Mode
+  - Preserve server-only route exports in additional Vite server environments in both API-only and SSR modes
+  - Serve prerendered pages and the SPA fallback in Vite preview while retaining live data requests and route discovery
+- Add the `future.unstable_customRouteDiscovery` flag to opt into application-controlled route discovery in conventional Framework Mode ([#15602](https://github.com/remix-run/react-router/pull/15602))
+- Fix source maps for route modules in unstable RSC Framework Mode ([#15479](https://github.com/remix-run/react-router/pull/15479))
+- Add `unstable_apiServerOrigin` to configure the origin for API-only loader, action, and route discovery requests ([#15601](https://github.com/remix-run/react-router/pull/15601))
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+  - [`@react-router/serve@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.0)
+
 ## v8.4.0
 
 ### Patch Changes

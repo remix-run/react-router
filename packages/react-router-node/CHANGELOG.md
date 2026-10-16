@@ -1,5 +1,14 @@
 # `@react-router/node`
 
+## v8.5.0
+
+### Patch Changes
+
+- Write file session data to a temporary file and rename it into place so concurrent commits of the same session can no longer corrupt its file ([#15620](https://github.com/remix-run/react-router/pull/15620))
+  - Preserve existing session file permissions when replacing the file
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+
 ## v8.4.0
 
 ### Patch Changes
