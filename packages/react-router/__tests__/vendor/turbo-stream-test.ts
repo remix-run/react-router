@@ -621,3 +621,89 @@ function createDeeplyNestedObject(): Nested {
   }
   return current;
 }
+
+describe("aborted streams", () => {
+  function createAbortedStream(bytes: Uint8Array, splitAt?: number) {
+    return new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(splitAt == null ? bytes : bytes.slice(0, splitAt));
+        setTimeout(
+          () =>
+            controller.error(
+              new DOMException("BodyStreamBuffer was aborted", "AbortError"),
+            ),
+          10,
+        );
+      },
+    });
+  }
+
+  async function collectUnhandledRejections(fn: () => Promise<void>) {
+    let unhandled: unknown[] = [];
+    let onUnhandled = (reason: unknown) => unhandled.push(reason);
+    process.on("unhandledRejection", onUnhandled);
+    try {
+      await fn();
+      await new Promise((r) => setTimeout(r, 50));
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+    }
+    return unhandled;
+  }
+
+  test("does not leave unhandled rejections when the stream errors after the value is decoded", async () => {
+    let bytes = new Uint8Array(
+      await new Response(encode({ a: 1 })).arrayBuffer(),
+    );
+    let unhandled = await collectUnhandledRejections(async () => {
+      let decoded = await decode(createAbortedStream(bytes));
+      expect(decoded.value).toEqual({ a: 1 });
+    });
+    expect(unhandled).toEqual([]);
+  });
+
+  test("does not leave unhandled rejections for unconsumed deferred values", async () => {
+    let deferred = new Deferred<string>();
+    let encoded = encode({ a: 1, b: deferred.promise });
+    let reader = encoded.getReader();
+    // Only read the initial chunk so the deferred value never arrives
+    let { value } = await reader.read();
+    reader.cancel();
+
+    let unhandled = await collectUnhandledRejections(async () => {
+      let decoded = await decode(createAbortedStream(value!));
+      expect((decoded.value as any).a).toBe(1);
+    });
+    expect(unhandled).toEqual([]);
+  });
+
+  test("still rejects `done` and deferred values for consumers that await them", async () => {
+    let deferred = new Deferred<string>();
+    let encoded = encode({ b: deferred.promise });
+    let reader = encoded.getReader();
+    let { value } = await reader.read();
+    reader.cancel();
+
+    let decoded = await decode(createAbortedStream(value!));
+    await expect(decoded.done).rejects.toThrow("BodyStreamBuffer was aborted");
+    await expect((decoded.value as any).b).rejects.toThrow(
+      "BodyStreamBuffer was aborted",
+    );
+  });
+
+  test("rejects `done` for decode errors on a stream that stays open", async () => {
+    // A malformed deferred line on a healthy stream that never closes
+    let encoder = new TextEncoder();
+    let stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('[{"_1":2},"b",["P",2]]\n'));
+        controller.enqueue(encoder.encode("P999:[1]\n"));
+      },
+    });
+
+    let decoded = await decode(stream);
+    await expect(decoded.done).rejects.toThrow(
+      "Deferred ID 999 not found in stream",
+    );
+  });
+});
