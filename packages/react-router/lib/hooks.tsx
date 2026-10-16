@@ -1955,7 +1955,14 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   // unstable blocker function identities, and happens only after the prior
   // effect so we don't get an orphaned blockerFunction in the router with a
   // key of "".  Until then we just have the IDLE_BLOCKER.
-  React.useEffect(() => {
+  //
+  // This must be a layout effect, not a passive effect: layout effects for
+  // the whole tree flush before any passive effects do, so this guarantees
+  // the router always has the latest blockerFunction registered before a
+  // navigation triggered by another component's *mount* effect (e.g. a
+  // useEffect that calls setSearchParams as soon as the destination route
+  // renders) can run shouldBlockNavigation against a stale predicate.
+  React.useLayoutEffect(() => {
     if (blockerKey !== "") {
       router.getBlocker(blockerKey, blockerFunction);
     }
