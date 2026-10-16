@@ -33,7 +33,11 @@ type PrefetchEventHandlerProps = {
 };
 
 function itPrefetchesPageLinks<
-  Props extends { to: any; prefetch?: any } & PrefetchEventHandlerProps,
+  Props extends {
+    to: any;
+    prefetch?: any;
+    unstable_onPrefetch?: any;
+  } & PrefetchEventHandlerProps,
 >(Component: React.ComponentType<Props>) {
   describe('prefetch="intent"', () => {
     let context = mockFrameworkContext({
@@ -149,16 +153,220 @@ function itPrefetchesPageLinks<
         expect(ranHandler).toBe(true);
         unmount();
       });
+
+      it(`calls unstable_onPrefetch alongside page link prefetching on ${event}`, () => {
+        let router;
+        let onPrefetch = jest.fn();
+
+        act(() => {
+          router = createMemoryRouter([
+            {
+              id: "root",
+              path: "/",
+              element: (
+                <Component
+                  {...({
+                    to: "idk",
+                    prefetch: "intent",
+                    unstable_onPrefetch: onPrefetch,
+                  } as Props)}
+                />
+              ),
+            },
+            {
+              id: "idk",
+              path: "idk",
+              loader: () => null,
+              element: <h1>idk</h1>,
+            },
+          ]);
+        });
+
+        let { container, unmount } = render(
+          <FrameworkContext.Provider value={context}>
+            <RouterProvider router={router} />
+          </FrameworkContext.Provider>,
+        );
+
+        fireEvent[event](container.firstChild);
+        expect(onPrefetch).not.toHaveBeenCalled();
+        act(() => {
+          jest.runAllTimers();
+        });
+
+        expect(onPrefetch).toHaveBeenCalledTimes(1);
+        expect(
+          container.ownerDocument.querySelector(
+            'link[rel="prefetch"][as="fetch"]',
+          ),
+        ).toBeTruthy();
+        unmount();
+      });
+    });
+  });
+}
+
+function itCallsOnPrefetchWithoutFrameworkContext<
+  Props extends {
+    to: any;
+    prefetch?: any;
+    unstable_onPrefetch?: any;
+  } & PrefetchEventHandlerProps,
+>(Component: React.ComponentType<Props>) {
+  describe("unstable_onPrefetch without FrameworkContext", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    function renderLink(props: Props) {
+      let router = createMemoryRouter([
+        { path: "/", element: <Component {...props} /> },
+        { path: "idk", element: <h1>idk</h1> },
+      ]);
+      let { container, unmount } = render(<RouterProvider router={router} />);
+      let link = container.querySelector("a");
+      invariant(link, "Expected the link to render");
+      return { link, unmount };
+    }
+
+    setIntentEvents.forEach((event) => {
+      it(`calls unstable_onPrefetch on ${event} after the intent delay`, () => {
+        let onPrefetch = jest.fn();
+        let { link, unmount } = renderLink({
+          to: "idk",
+          prefetch: "intent",
+          unstable_onPrefetch: onPrefetch,
+        } as Props);
+
+        fireEvent[event](link);
+        expect(onPrefetch).not.toHaveBeenCalled();
+        act(() => {
+          jest.runAllTimers();
+        });
+
+        expect(onPrefetch).toHaveBeenCalledTimes(1);
+        expect(link).toBeInTheDocument();
+        unmount();
+      });
+    });
+
+    it("calls unstable_onPrefetch again each time intent re-triggers", () => {
+      let onPrefetch = jest.fn();
+      let { link, unmount } = renderLink({
+        to: "idk",
+        prefetch: "intent",
+        unstable_onPrefetch: onPrefetch,
+      } as Props);
+
+      fireEvent.mouseEnter(link);
+      act(() => {
+        jest.runAllTimers();
+      });
+      fireEvent.mouseLeave(link);
+      fireEvent.mouseEnter(link);
+      act(() => {
+        jest.runAllTimers();
+      });
+
+      expect(onPrefetch).toHaveBeenCalledTimes(2);
+      unmount();
+    });
+
+    it("does not call unstable_onPrefetch when intent ends before the delay", () => {
+      let onPrefetch = jest.fn();
+      let { link, unmount } = renderLink({
+        to: "idk",
+        prefetch: "intent",
+        unstable_onPrefetch: onPrefetch,
+      } as Props);
+
+      fireEvent.mouseEnter(link);
+      act(() => {
+        jest.advanceTimersByTime(50);
+      });
+      fireEvent.mouseLeave(link);
+      act(() => {
+        jest.runAllTimers();
+      });
+
+      expect(onPrefetch).not.toHaveBeenCalled();
+      unmount();
+    });
+
+    it('calls unstable_onPrefetch on mount when prefetch="render"', () => {
+      let onPrefetch = jest.fn();
+      let { unmount } = renderLink({
+        to: "idk",
+        prefetch: "render",
+        unstable_onPrefetch: onPrefetch,
+      } as Props);
+
+      expect(onPrefetch).toHaveBeenCalledTimes(1);
+      unmount();
+    });
+
+    it('calls unstable_onPrefetch when a prefetch="viewport" link becomes visible', () => {
+      let intersect: IntersectionObserverCallback | undefined;
+      window.IntersectionObserver = class {
+        constructor(callback: IntersectionObserverCallback) {
+          intersect = callback;
+        }
+        observe = jest.fn();
+        unobserve = jest.fn();
+        disconnect = jest.fn();
+        takeRecords = () => [];
+        root = null;
+        rootMargin = "";
+        scrollMargin = "";
+        thresholds = [];
+      };
+      let onPrefetch = jest.fn();
+      let { unmount } = renderLink({
+        to: "idk",
+        prefetch: "viewport",
+        unstable_onPrefetch: onPrefetch,
+      } as Props);
+      expect(onPrefetch).not.toHaveBeenCalled();
+
+      act(() => {
+        intersect?.(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          {} as IntersectionObserver,
+        );
+      });
+
+      expect(onPrefetch).toHaveBeenCalledTimes(1);
+      unmount();
+    });
+
+    it('does not call unstable_onPrefetch when prefetch="none"', () => {
+      let onPrefetch = jest.fn();
+      let { link, unmount } = renderLink({
+        to: "idk",
+        prefetch: "none",
+        unstable_onPrefetch: onPrefetch,
+      } as Props);
+
+      fireEvent.mouseEnter(link);
+      fireEvent.focus(link);
+      act(() => {
+        jest.runAllTimers();
+      });
+
+      expect(onPrefetch).not.toHaveBeenCalled();
+      unmount();
     });
   });
 }
 
 describe("<Link />", () => {
   itPrefetchesPageLinks(Link);
+  itCallsOnPrefetchWithoutFrameworkContext(Link);
 });
 
 describe("<NavLink />", () => {
   itPrefetchesPageLinks(NavLink);
+  itCallsOnPrefetchWithoutFrameworkContext(NavLink);
 });
 
 describe("<ServerRouter>", () => {
