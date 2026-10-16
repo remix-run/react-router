@@ -10,6 +10,8 @@ import * as semver from "semver";
 import { ReflectionKind, type JSONOutput } from "typedoc";
 import ts from "typescript";
 
+import { maskBlockCommentMarkersInStrings } from "./utils/mask-block-comment-markers.ts";
+
 type UnknownTag = {
   type: string;
   string: string;
@@ -542,6 +544,9 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
 
 async function parseDocComments(filepath: string, apiFilter: string[] | null) {
   let code = fs.readFileSync(filepath).toString();
+  // dox is not string-aware: `/*` inside template literals can swallow source
+  // into the wrong JSDoc (see #15558). Mask delimiters inside strings first.
+  code = maskBlockCommentMarkersInStrings(code);
   let comments = dox.parseComments(code, { raw: true }) as ParsedComment[];
   let filteredComments = comments.filter(
     (c) =>
