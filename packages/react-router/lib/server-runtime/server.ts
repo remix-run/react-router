@@ -116,8 +116,13 @@ function derive(build: ServerBuild, mode?: string) {
     // When runtime document SSR is disabled, make our dev server behave like
     // the deployed pre-rendered site would.
     if (!build.ssr || build.unstable_apiOnly) {
-      // Decode the URL path before checking against the prerender config
-      let decodedPath = decodeURI(normalizedPathname);
+      // Decode the URL path before checking against the prerender config.
+      // Fall back to the raw path on a malformed percent-encoding, the same
+      // way route matching does.
+      let decodedPath = normalizedPathname;
+      try {
+        decodedPath = decodeURI(normalizedPathname);
+      } catch {}
 
       if (build.basename && build.basename !== "/") {
         let strippedPath = stripBasename(decodedPath, build.basename);
