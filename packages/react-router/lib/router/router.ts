@@ -2121,6 +2121,7 @@ export function createRouter(init: RouterInit): Router {
 
       matches = actionResult.matches || matches;
       pendingActionResult = actionResult.pendingActionResult;
+      historyAction = pendingAction;
       loadingNavigation = getLoadingNavigation(
         location,
         matches,
