@@ -68,6 +68,32 @@ describe("API-only build-time document requests", () => {
       }
     },
   );
+
+  it.each([[[]], [["/"]]])(
+    "serves data requests with a malformed percent-encoding (prerender: %j)",
+    async (prerender: string[]) => {
+      let build = {
+        ...mockServerBuild({
+          root: { path: "", default: {} },
+          item: {
+            parentId: "root",
+            path: ":id",
+            default: {},
+            loader: ({ params }) => params.id,
+          },
+        }),
+        ssr: true,
+        unstable_apiOnly: true,
+        prerender,
+      };
+      let response = await createRequestHandler(
+        build,
+        ServerMode.Production,
+      )(new Request("http://localhost/%E0%A4%A.data"));
+      expect(response.status).toBe(200);
+      expect(await response.text()).toContain('"%E0%A4%A"');
+    },
+  );
 });
 
 describe("server", () => {
