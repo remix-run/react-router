@@ -212,6 +212,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   fetchImplementation: RouterFetch = (request) => fetch(request),
   isApiOnly: boolean = false,
   serverOrigin?: string,
+  isSpaMode: boolean = false,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -227,6 +228,7 @@ export function getTurboStreamSingleFetchDataStrategy(
     ssr,
     undefined,
     isApiOnly,
+    isSpaMode,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
 }
@@ -238,6 +240,7 @@ export function getSingleFetchDataStrategyImpl(
   ssr: boolean,
   shouldAllowOptOut: ShouldAllowOptOutFunction = () => true,
   isApiOnly: boolean = false,
+  isSpaMode: boolean = false,
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
@@ -302,6 +305,7 @@ export function getSingleFetchDataStrategyImpl(
       ssr,
       shouldAllowOptOut,
       isApiOnly,
+      isSpaMode,
     );
   };
 }
@@ -382,6 +386,7 @@ async function singleFetchLoaderNavigationStrategy(
   ssr: boolean,
   shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true,
   isApiOnly: boolean = false,
+  isSpaMode: boolean = false,
 ) {
   // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
@@ -467,13 +472,23 @@ async function singleFetchLoaderNavigationStrategy(
   //   but we want to call loaders for the new location
   // - If there are no routes to fetch from the server
   //
+  // The initial hydration skip assumes the document contains the loader data.
+  // That is not the case when hydrating from a SPA fallback document
+  // (`isSpaMode`), which is served for any non-prerendered path in an
+  // `ssr:false` app with a `prerender` config. In that case server-loader
+  // routes must still fetch their (potentially missing) `.data` file -
+  // otherwise they resolve to a `SingleFetchNoResultError` instead of the
+  // host's 404 response. The same applies to API-only servers (`isApiOnly`),
+  // which never embed loader data in a document.
+  //
   // One exception - if we are performing an HDR revalidation we have to call
   // the server in case a new loader has shown up that the manifest doesn't yet
   // know about
   let isInitialLoad =
     !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    ((isInitialLoad && !isApiOnly) || routesParams.size === 0) &&
+    ((isInitialLoad && !isApiOnly && !isSpaMode) ||
+      routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });

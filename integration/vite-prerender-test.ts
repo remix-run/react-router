@@ -2629,6 +2629,93 @@ test.describe(`Prerendering`, () => {
       expect(requests).toEqual(["/param/404.data"]);
     });
 
+    test("Returns a 404 on hard load of a non-prerendered param value served by the SPA fallback", async ({
+      page,
+    }) => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false, // turn off fog of war since we're serving with a static server
+            prerender: ["/", "/posts/test"],
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": js`
+            import * as React from "react";
+            import {
+              isRouteErrorResponse,
+              Link,
+              Outlet,
+              Scripts,
+              useRouteError,
+            } from "react-router";
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head />
+                  <body>
+                    <nav>
+                      <Link to="/">Home</Link><br/>
+                    </nav>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root() {
+              return <Outlet />
+            }
+
+            export function HydrateFallback() {
+              return <p>Loading...</p>;
+            }
+
+            export function ErrorBoundary() {
+              let error = useRouteError();
+              if (isRouteErrorResponse(error) && error.status === 404) {
+                return <h1 data-error="404">404 Not Found</h1>;
+              }
+              return <h1 data-error="other">Something went wrong</h1>;
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            export default function Index() {
+              return <h1 data-index>Index</h1>;
+            }
+          `,
+          "app/routes/posts.$slug.tsx": js`
+            import { data } from "react-router";
+
+            let posts = { test: { title: "Test Post" } };
+
+            export function loader({ params }) {
+              let post = posts[params.slug];
+              if (!post) {
+                throw data("Not Found", { status: 404 });
+              }
+              return post;
+            }
+
+            export default function Page({ loaderData }) {
+              return <h1 data-post>{loaderData.title}</h1>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let requests = captureRequests(page);
+      let app = new PlaywrightFixture(appFixture, page);
+      // Hard load a param value that was not prerendered, so the static server
+      // serves the SPA fallback document and the `.data` file 404s
+      await app.goto("/posts/does-not-exist", true);
+      await page.waitForSelector('[data-error="404"]');
+      expect(requests).toEqual(["/posts/does-not-exist.data"]);
+    });
+
     test("Navigates to prerendered parent with clientLoader calling loader", async ({
       page,
     }) => {
