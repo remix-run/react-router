@@ -2161,14 +2161,6 @@ export function data<D>(data: D, init?: number | ResponseInit) {
   );
 }
 
-// This is now only used by the Await component and will eventually probably
-// go away in favor of the format used by `React.use`
-export interface TrackedPromise extends Promise<any> {
-  _tracked?: boolean;
-  _data?: any;
-  _error?: any;
-}
-
 export type RedirectFunction = (
   url: string,
   init?: number | ResponseInit,

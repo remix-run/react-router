@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom";
 import {
+  act,
   fireEvent,
   queryByText,
   render,
@@ -3154,7 +3155,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(2);
+      expect(getAwaitRenderCount()).toBe(1);
 
       // Abort the deferred by navigating to /baz
       fireEvent.click(screen.getByText("Link to Baz"));
@@ -3174,7 +3175,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(4);
+      expect(getAwaitRenderCount()).toBe(1);
 
       // complete /baz navigation
       bazDefer.resolve(null);
@@ -3193,7 +3194,7 @@ describe("createMemoryRouter", () => {
       `);
 
       // Does nothing now
-      barValueDfd.resolve("LAZY");
+      await act(() => barValueDfd.resolve("LAZY"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
           id="content"
@@ -3206,7 +3207,7 @@ describe("createMemoryRouter", () => {
           </h1>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(4);
+      expect(getAwaitRenderCount()).toBe(1);
     });
 
     it("should permit direct access to resolved values", async () => {
@@ -3280,11 +3281,16 @@ describe("createMemoryRouter", () => {
     it("can render raw resolved to undefined promises with <Await>", async () => {
       let dfd = createDeferred();
 
-      let { container } = render(
-        <React.Suspense fallback={<p>Loading...</p>}>
-          <Await resolve={dfd.promise}>{(data) => <p>{String(data)}</p>}</Await>
-        </React.Suspense>,
-      );
+      let container!: HTMLElement;
+      await act(async () => {
+        ({ container } = render(
+          <React.Suspense fallback={<p>Loading...</p>}>
+            <Await resolve={dfd.promise}>
+              {(data) => <p>{String(data)}</p>}
+            </Await>
+          </React.Suspense>,
+        ));
+      });
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -3308,11 +3314,14 @@ describe("createMemoryRouter", () => {
     it("can render raw resolved promises with <Await>", async () => {
       let dfd = createDeferred();
 
-      let { container } = render(
-        <React.Suspense fallback={<p>Loading...</p>}>
-          <Await resolve={dfd.promise}>{(data) => <p>{data}</p>}</Await>
-        </React.Suspense>,
-      );
+      let container!: HTMLElement;
+      await act(async () => {
+        ({ container } = render(
+          <React.Suspense fallback={<p>Loading...</p>}>
+            <Await resolve={dfd.promise}>{(data) => <p>{data}</p>}</Await>
+          </React.Suspense>,
+        ));
+      });
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -3336,13 +3345,16 @@ describe("createMemoryRouter", () => {
     it("can render raw rejected promises with <Await>", async () => {
       let dfd = createDeferred();
 
-      let { container } = render(
-        <React.Suspense fallback={<p>Loading...</p>}>
-          <Await resolve={dfd.promise} errorElement={<ErrorElement />}>
-            {(data) => <p>{data}</p>}
-          </Await>
-        </React.Suspense>,
-      );
+      let container!: HTMLElement;
+      await act(async () => {
+        ({ container } = render(
+          <React.Suspense fallback={<p>Loading...</p>}>
+            <Await resolve={dfd.promise} errorElement={<ErrorElement />}>
+              {(data) => <p>{data}</p>}
+            </Await>
+          </React.Suspense>,
+        ));
+      });
 
       function ErrorElement() {
         let error = useAsyncError() as Error;
