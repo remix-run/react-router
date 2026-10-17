@@ -145,9 +145,9 @@ async function run() {
 
   let buildModule = await import(url.pathToFileURL(buildPath).href);
   let build: NormalizedBuild;
-  let isRSCBuild = false;
+  let isRSCBuild = isRSCServerBuild(buildModule);
 
-  if ((isRSCBuild = isRSCServerBuild(buildModule))) {
+  if (isRSCBuild) {
     const config = {
       publicPath: "/",
       assetsBuildDirectory: path.join("..", "client"),
@@ -164,6 +164,10 @@ async function run() {
   } else {
     build = buildModule as ServerBuild;
   }
+
+  let assetsBuildDirectory = path.isAbsolute(build.assetsBuildDirectory)
+    ? build.assetsBuildDirectory
+    : path.resolve(process.cwd(), build.assetsBuildDirectory);
 
   let onListen = (error: unknown) => {
     if (error) {
@@ -199,26 +203,59 @@ async function run() {
 
   app.use(
     path.posix.join(expressPublicPath, "assets"),
-    express.static(path.join(build.assetsBuildDirectory, "assets"), {
+    express.static(path.join(assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
     }),
   );
-  app.use(expressPublicPath, express.static(build.assetsBuildDirectory));
+  app.use(expressPublicPath, express.static(assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(
     "/.well-known",
-    express.static(path.join(build.assetsBuildDirectory, ".well-known")),
+    express.static(path.join(assetsBuildDirectory, ".well-known")),
   );
+
   app.use(morgan("tiny"));
 
   if (build.fetch) {
+    // RSC
     app.all("/{*splat}", createRequestListener(build.fetch));
+  } else if (buildModule.unstable_apiOnly === true) {
+    // API Only
+    let serverBuild = build as ServerBuild;
+    let manifestPath =
+      serverBuild.routeDiscovery.mode === "lazy"
+        ? path.posix.join(
+            serverBuild.basename ?? "/",
+            serverBuild.routeDiscovery.manifestPath,
+          )
+        : undefined;
+
+    let handler = createRequestHandler({
+      build: serverBuild,
+      mode: process.env.NODE_ENV,
+    }) as unknown as ExpressRequestHandler;
+
+    let fallbackFile = fs.existsSync(
+      path.join(assetsBuildDirectory, "__spa-fallback.html"),
+    )
+      ? "__spa-fallback.html"
+      : "index.html";
+
+    app.all("/{*splat}", (req, res, next) => {
+      if (req.path.endsWith(".data") || req.path === manifestPath) {
+        handler(req, res, next);
+      } else {
+        // Static middleware serves prerendered documents before this fallback.
+        res.sendFile(fallbackFile, { root: assetsBuildDirectory });
+      }
+    });
   } else {
+    // Normal SSR
     app.all(
       "/{*splat}",
       createRequestHandler({
-        build: buildModule,
+        build: build as ServerBuild,
         mode: process.env.NODE_ENV,
       }) as unknown as ExpressRequestHandler,
     );
