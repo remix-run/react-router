@@ -106,6 +106,8 @@ export default {
 
 No code changes are required. If you run into dependency optimization issues after enabling this flag, remove the flag and restart the dev server.
 
+See [Optimize Dependencies](../how-to/optimize-dependencies) for dependency discovery, explicit includes, and checking the effect in development.
+
 ### `future.unstable_routePatternMatching`
 
 [MODES: data]
