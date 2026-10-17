@@ -122,7 +122,7 @@ If the RFC changes or removes existing public API behavior, it **must** ship beh
    }
    ```
 
-3. Document the flag in `docs/upgrading/future-flags.md` if it exists.
+3. Document the flag in `docs/upgrading/future.md`.
 
 New additive APIs (no behavior change to existing code) do **not** need a future flag.
 
@@ -140,7 +140,7 @@ New additive APIs (no behavior change to existing code) do **not** need a future
 | RSC runtime           | `packages/react-router/lib/rsc/`             |
 | Unit tests            | `packages/react-router/__tests__/`           |
 | Integration tests     | `integration/`                               |
-| Future flags doc      | `docs/upgrading/future-flags.md`             |
+| Future flags doc      | `docs/upgrading/future.md`                   |
 
 Confirm existing patterns before writing new code - prefer using the LSP but `Grep`/`Glob` also work. Match naming conventions and code style exactly.
 
