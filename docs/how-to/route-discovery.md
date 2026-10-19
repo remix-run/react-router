@@ -21,6 +21,8 @@ export default {
 
 Without this flag, React Router keeps its existing discovery implementation and the hook is unavailable. The flag supports conventional Framework Mode only.
 
+Enabling the flag does not require a custom implementation or a call to `unstable_useRouteDiscovery`. React Router continues to discover routes automatically and uses its built-in manifest-mismatch recovery unless you provide a custom `onManifestMismatch` handler.
+
 Keep `routeDiscovery.mode: "lazy"` (the default for SSR) and use `unstable_useRouteDiscovery` to choose when to discover destinations or load the complete route manifest.
 
 ```tsx
