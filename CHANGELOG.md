@@ -220,14 +220,11 @@ The hook exposes `discoverRoutes(paths)`, `loadAllRoutes()`, and a shared `state
 
 ### Patch Changes
 
-- `react-router` - Fix `<Await>` failing to server render promises decoded from an RSC payload, which caused the Suspense boundary to switch to client rendering ([#15597](https://github.com/remix-run/react-router/pull/15597))
 - `react-router` - Declare `@types/react` and `@types/react-dom` as optional peer dependencies so the shipped type definitions resolve React types under strict (non-hoisted) node_modules layouts ([#15528](https://github.com/remix-run/react-router/pull/15528))
-- `react-router` - Fix the `unstable_useRouterState` documentation example to call the imported alias ([#15535](https://github.com/remix-run/react-router/pull/15535))
 - `react-router` - Render the `HydrateFallback` of a route discovered through `patchRoutesOnNavigation` during initial hydration ([#15537](https://github.com/remix-run/react-router/pull/15537))
   - Routes discovered during initial hydration are now exposed in `state.matches` while their loaders run, so `<RouterProvider>` renders down to the discovered route's `HydrateFallback` instead of rendering nothing
 - `react-router` - Fix router state recovery when updates occur before `RouterProvider` subscribes, including when other subscribers are already attached, and report current client errors once without replaying server errors during hydration ([#15637](https://github.com/remix-run/react-router/pull/15637))
 - `react-router` - Fix `matchPath` not treating a static segment as optional when it contains characters outside `[\w-]` ([#15425](https://github.com/remix-run/react-router/pull/15425))
-- `react-router` - Fix an RSC server crash when a client aborts a document request while the HTML stream waits for the RSC payload ([#15612](https://github.com/remix-run/react-router/pull/15612))
 - `react-router` - Stop revalidating a fetcher after `fetcher.reset()`, so its cleared data no longer comes back on the next revalidation ([#15633](https://github.com/remix-run/react-router/pull/15633))
 - `@react-router/dev` - Fix critical CSS collection in dev registering server-only route imports as client dependencies, which triggered dependency re-optimization and full page reloads ([#15595](https://github.com/remix-run/react-router/pull/15595))
 - `@react-router/dev` - Fix intermittent `Prerender: Request failed for ... connect ECONNREFUSED` errors during prerendering ([#15325](https://github.com/remix-run/react-router/pull/15325))
@@ -239,7 +236,7 @@ The hook exposes `discoverRoutes(paths)`, `loadAllRoutes()`, and a shared `state
 
 ### Unstable Changes
 
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - `react-router` - Add an `unstable_fetch` prop to `<HydratedRouter>` to customize JavaScript-issued manifest and server data requests in conventional Framework Mode ([#15586](https://github.com/remix-run/react-router/pull/15586))
   - The function receives the intended request as well as context identifying the type of request
@@ -254,6 +251,7 @@ The hook exposes `discoverRoutes(paths)`, `loadAllRoutes()`, and a shared `state
 - `react-router` - Support API-only Framework Mode with runtime server data loading, actions, revalidation, and lazy route discovery ([#15601](https://github.com/remix-run/react-router/pull/15601))
   - Hydrate prerendered pages from build-time data and fetch server loader data when hydrating a SPA fallback
   - Preserve normal loader revalidation and server-action support for eagerly loaded and lazily discovered routes, and honor loader opt-outs when making server data requests
+- `@react-router/dev` - Add `unstable_apiServerOrigin` to configure the origin for API-only loader, action, and route discovery requests ([#15601](https://github.com/remix-run/react-router/pull/15601))
 - `react-router` - Add `unstable_useRouteDiscovery` for application-controlled route discovery in conventional Framework Mode ([#15602](https://github.com/remix-run/react-router/pull/15602))
   - Discover selected destinations or load the running client's full route manifest without loading route modules
   - Compose manifest-mismatch handlers, with shared recovery and cancellation that preserves application state
@@ -262,21 +260,14 @@ The hook exposes `discoverRoutes(paths)`, `loadAllRoutes()`, and a shared `state
   - Enable `future.unstable_customRouteDiscovery` to opt in
     - Apps without the flag retain existing discovery behavior
   - Call `event.defaultBehavior()` from a custom mismatch handler to explicitly run built-in recovery
+- `@react-router/dev` - Add the `future.unstable_customRouteDiscovery` flag to opt into application-controlled route discovery in conventional Framework Mode ([#15602](https://github.com/remix-run/react-router/pull/15602))
 - `react-router` - Return middleware short-circuit responses as-is for document requests in RSC modes, including resource routes, instead of decoding non-RSC bodies as Flight ([#15628](https://github.com/remix-run/react-router/pull/15628))
   - Include server middleware in both eager and lazy RSC route configuration types
   - Preserve HTML rendering for cached Flight responses returned by middleware, and pass through raw responses that replace the result of `next()`
-- `@react-router/dev` - Add `ssr: "unstable_api-only"` to retain a runtime server for loaders, actions, and route discovery while disabling production document rendering ([#15601](https://github.com/remix-run/react-router/pull/15601))
-  - Generate a root-only SPA shell when prerendering is disabled
-  - Support prerendered pages and data files alongside runtime loaders and actions, with a SPA fallback for non-prerendered paths
-  - Default API-only builds to lazy route discovery
-  - Reject API-only configuration in RSC Framework Mode
-  - Preserve server-only route exports in additional Vite server environments in both API-only and SSR modes
-  - Serve prerendered pages and the SPA fallback in Vite preview while retaining live data requests and route discovery
-- `@react-router/dev` - Add the `future.unstable_customRouteDiscovery` flag to opt into application-controlled route discovery in conventional Framework Mode ([#15602](https://github.com/remix-run/react-router/pull/15602))
+- `react-router` - Fix `<Await>` failing to server render promises decoded from an RSC payload, which caused the Suspense boundary to switch to client rendering ([#15597](https://github.com/remix-run/react-router/pull/15597))
+- `react-router` - Fix an RSC server crash when a client aborts a document request while the HTML stream waits for the RSC payload ([#15612](https://github.com/remix-run/react-router/pull/15612))
+- `react-router` - Fix the `unstable_useRouterState` documentation example to call the imported alias ([#15535](https://github.com/remix-run/react-router/pull/15535))
 - `@react-router/dev` - Fix source maps for route modules in unstable RSC Framework Mode ([#15479](https://github.com/remix-run/react-router/pull/15479))
-- `@react-router/dev` - Add `unstable_apiServerOrigin` to configure the origin for API-only loader, action, and route discovery requests ([#15601](https://github.com/remix-run/react-router/pull/15601))
-- `@react-router/serve` - Support API-only builds in `react-router-serve` by serving client documents and forwarding data and route discovery requests to the React Router runtime ([#15601](https://github.com/remix-run/react-router/pull/15601))
-  - Serve prerendered documents when available and use the generated SPA fallback for non-prerendered paths
 
 **Full Changelog**: [`v8.4.0...v8.5.0`](https://github.com/remix-run/react-router/compare/react-router@8.4.0...react-router@8.5.0)
 
