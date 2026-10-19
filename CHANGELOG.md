@@ -122,7 +122,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 ## v8.5.0
 
-Date: 2026-10-16
+Date: 2026-10-19
 
 ### What's Changed
 
@@ -195,6 +195,8 @@ export default {
   future: { unstable_customRouteDiscovery: true },
 } satisfies Config;
 ```
+
+Custom discovery is optional: enabling the flag preserves automatic route discovery and built-in manifest-mismatch recovery unless you provide a custom `onManifestMismatch` handler. You do not need to call `unstable_useRouteDiscovery` to retain this behavior.
 
 ```tsx
 import { Outlet, unstable_useRouteDiscovery } from "react-router";
