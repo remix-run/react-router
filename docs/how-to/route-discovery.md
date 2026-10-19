@@ -1,9 +1,9 @@
 ---
-title: Application-Controlled Route Discovery
+title: Route Discovery
 unstable: true
 ---
 
-# Application-Controlled Route Discovery
+# Route Discovery
 
 [MODES: framework]
 
