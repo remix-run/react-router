@@ -6,9 +6,6 @@ title: Security
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 This is by no means a comprehensive guide, but React Router provides features to help address a few aspects under the _very large_ umbrella that is _Security_.
 
 ## `Content-Security-Policy`

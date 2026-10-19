@@ -7,9 +7,6 @@ order: 1
 
 [MODES: framework]
 
-<br />
-<br />
-
 This guide will familiarize you with the basic plumbing required to run a React Router app as quickly as possible. While there are many starter templates with different runtimes, deploy targets, and databases, we're going to create a bare-bones project from scratch.
 
 ## Installation

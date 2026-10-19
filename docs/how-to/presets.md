@@ -6,9 +6,6 @@ title: Presets
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 The [React Router config][react-router-config] supports a `presets` option to ease integration with other tools and hosting providers.
 
 [Presets][preset-type] can only do two things:
