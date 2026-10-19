@@ -23,7 +23,7 @@ import type {
   RouterSubscriber,
   RouterInit,
 } from "./router/router";
-import { createRouter } from "./router/router";
+import { createRouter, clientErrors } from "./router/router";
 import type {
   DataRouteObject,
   DataStrategyFunction,
@@ -400,6 +400,8 @@ export function RouterProvider({
 
   let [_state, setStateImpl] = React.useState(router.state);
   let [state, setOptimisticState] = useOptimistic(_state);
+  // Rendered state may lag behind notifications during a transition.
+  let lastState = React.useRef(state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -412,12 +414,27 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
+  let handledErrors = React.useRef(
+    new WeakSet<NonNullable<RouterState["errors"]>>(),
+  );
 
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
       { deletedFetchers, newErrors, flushSync, viewTransitionOpts },
     ) => {
+      lastState.current = newState;
+
+      if (newErrors && newState.errors && clientErrors.has(newState.errors)) {
+        if (handledErrors.current.has(newState.errors)) {
+          newErrors = null;
+        } else {
+          // Mark these before invoking user code, including when onError is
+          // absent, so effect replays/resubscriptions don't report them again.
+          handledErrors.current.add(newState.errors);
+        }
+      }
+
       // Send router errors through onError
       if (newErrors && onError) {
         Object.values(newErrors).forEach((error) =>
@@ -546,11 +563,26 @@ export function RouterProvider({
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>).
-  // If the router finished initializing (and emitted errors) before this
-  // subscriber was attached, `subscribe()` replays that notification so
-  // `onError` still fires for initial data load errors.
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
+  // State may change before our first render or between render and
+  // subscription. Recover missed state/errors without relying on other
+  // subscribers or reporting errors again during StrictMode effect replays.
+  React.useLayoutEffect(() => {
+    let errors = router.state.errors;
+    let newErrors = errors ? clientErrors.get(errors) : null;
+    if (
+      lastState.current !== router.state ||
+      (errors && newErrors && !handledErrors.current.has(errors))
+    ) {
+      setState(router.state, {
+        deletedFetchers: [],
+        flushSync: false,
+        newErrors: newErrors ?? null,
+      });
+    }
+  }, [router, setState]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render

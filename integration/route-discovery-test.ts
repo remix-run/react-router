@@ -251,12 +251,17 @@ test("a canceled Back navigation restores the URL and displayed route", async ({
   page,
 }) => {
   await page.addInitScript(() => {
-    window.history.replaceState({ idx: 0, key: "start" }, "", "/start");
-    window.history.pushState({ idx: 1, key: "target" }, "", "/target");
     (window as any).discoveryStrategy = "cancel";
   });
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/target", true);
+  // Seed history after hydration because Firefox resets entries created by
+  // init scripts during the initial document load. Let the router push the
+  // return entry so its history index stays in sync.
+  await page.evaluate(async () => {
+    window.history.replaceState(window.history.state, "", "/start");
+    await (window as any).__reactRouterDataRouter.navigate("/target");
+  });
   await expect(page.getByRole("heading")).toHaveText("Target route");
   await mismatchRequests(page);
   await page.goBack();
@@ -310,12 +315,15 @@ test("a navigation immediately after canceled Back preserves subsequent history 
   page,
 }) => {
   await page.addInitScript(() => {
-    window.history.replaceState({ idx: 0, key: "start" }, "", "/start");
-    window.history.pushState({ idx: 1, key: "target" }, "", "/target");
     (window as any).discoveryStrategy = "cancel";
   });
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/target", true);
+  // Seed history after hydration and keep the router's history index in sync.
+  await page.evaluate(async () => {
+    window.history.replaceState(window.history.state, "", "/start");
+    await (window as any).__reactRouterDataRouter.navigate("/target");
+  });
   // Discover a static destination so the navigation after cancellation can
   // finish immediately, before an asynchronous compensating POP would arrive.
   await page.evaluate(() =>
@@ -328,6 +336,9 @@ test("a navigation immediately after canceled Back preserves subsequent history 
     await router.navigate(-1);
     await router.navigate("/other");
   });
+  expect(await page.evaluate(() => (window as any).discoveryEvents)).toEqual([
+    "mismatch:navigation",
+  ]);
   await expect(page).toHaveURL(/\/other$/);
   await expect(page.getByRole("heading")).toHaveText("Other route");
   await page.goBack();
