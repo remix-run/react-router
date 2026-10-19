@@ -6,9 +6,6 @@ title: Styling
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 Framework mode uses the React Router Vite plugin, so the styling story is mostly just Vite's styling story.
 
 React Router does not have a separate CSS pipeline for Framework mode. In practice, there are three patterns that matter:

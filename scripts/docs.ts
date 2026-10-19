@@ -443,9 +443,6 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   }
 
   if (comment.unstable) {
-    if (comment.modes && comment.modes.length > 0) {
-      markdown += "<br />\n<br />\n\n";
-    }
     markdown +=
       "<docs-warning>This API is experimental and subject to breaking changes in \n" +
       "minor/patch releases. Please use with caution and pay **very** close attention \n" +

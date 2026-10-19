@@ -6,9 +6,6 @@ title: Middleware
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
 Middleware runs in a nested chain, executing from parent routes to child routes on the way "down" to your route handlers, then from child routes back to parent routes on the way "up" after a [`Response`][Response] is generated.

@@ -318,9 +318,6 @@ const navigateEffectWarning =
  *
  * [MODES: framework, data]
  *
- * <br/>
- * <br/>
- *
  * To prevent {@link ScrollRestoration | `<ScrollRestoration>`} from resetting
  * the scroll position, use the `preventScrollReset` option.
  *

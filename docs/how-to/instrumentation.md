@@ -6,9 +6,6 @@ title: Instrumentation
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 Instrumentation allows you to add logging, error reporting, and performance tracing to your React Router application without modifying your actual route handlers. This enables comprehensive observability solutions for production applications on both the server and client.
 
 ## Overview
