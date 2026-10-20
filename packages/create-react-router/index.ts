@@ -641,11 +641,10 @@ const WINDOWS_CMD_SHIMS = new Set([
 
 const WINDOWS_EXE_SHIMS = new Set(["bun", "bunx"]);
 
-function resolveCommand(command: string, args: string[]): [string, string[]] {
-  if (process.platform !== "win32") {
-    return [command, args];
-  }
-
+function resolveWindowsCommand(
+  command: string,
+  args: string[],
+): [string, string[]] {
   // Don't modify explicit paths or commands that already have an extension.
   if (
     command.includes("/") ||
@@ -674,7 +673,10 @@ function runCommand(
   options: { cwd: string; stdio: StdioOptions },
 ) {
   return new Promise<void>((resolve, reject) => {
-    const [resolvedCommand, resolvedArgs] = resolveCommand(command, args);
+    const [resolvedCommand, resolvedArgs] =
+      process.platform === "win32"
+        ? resolveWindowsCommand(command, args)
+        : [command, args];
 
     const child = spawn(resolvedCommand, resolvedArgs, options);
 
