@@ -113,9 +113,9 @@ function derive(build: ServerBuild, mode?: string) {
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
-    // When runtime SSR is disabled, make our dev server behave like the deployed
-    // pre-rendered site would
-    if (!build.ssr) {
+    // When runtime document SSR is disabled, make our dev server behave like
+    // the deployed pre-rendered site would.
+    if (!build.ssr || build.unstable_apiOnly) {
       // Decode the URL path before checking against the prerender config
       let decodedPath = decodeURI(normalizedPathname);
 
@@ -143,18 +143,19 @@ function derive(build: ServerBuild, mode?: string) {
         decodedPath = strippedPath;
       }
 
-      // When SSR is disabled this, file can only ever run during dev because we
-      // delete the server build at the end of the build
+      // Without API-only mode, this file only runs during dev or prerendering
+      // because we delete the server build at the end of the build.
       if (build.prerender.length === 0) {
-        // ssr:false and no prerender config indicates "SPA Mode"
+        // Without prerendered paths, render the SPA fallback.
         isSpaMode = true;
       } else if (
         !build.prerender.some(
           (p) => removeTrailingSlash(p) === removeTrailingSlash(decodedPath),
         )
       ) {
-        if (requestUrl.pathname.endsWith(".data")) {
-          // 404 on non-pre-rendered `.data` requests
+        if (requestUrl.pathname.endsWith(".data") && !build.unstable_apiOnly) {
+          // API-only builds can serve runtime data for non-prerendered routes.
+          // Otherwise, 404 on non-pre-rendered `.data` requests.
           errorHandler(
             new ErrorResponseImpl(
               404,
@@ -194,6 +195,19 @@ function derive(build: ServerBuild, mode?: string) {
         handleError(e);
         return new Response("Unknown Server Error", { status: 500 });
       }
+    }
+
+    if (
+      build.unstable_apiOnly &&
+      serverMode !== ServerMode.Development &&
+      !requestUrl.pathname.endsWith(".data") &&
+      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") !== "yes" &&
+      getBuildTimeHeader(request, "X-React-Router-Prerender") !== "yes"
+    ) {
+      return new Response(null, {
+        status: 404,
+        statusText: "Not Found",
+      });
     }
 
     let matches = matchServerRoutes(
@@ -526,6 +540,8 @@ async function handleDocumentRequest(
       routeDiscovery: build.routeDiscovery,
       ssr: build.ssr,
       isSpaMode,
+      unstable_apiOnly: build.unstable_apiOnly,
+      unstable_apiServerOrigin: build.unstable_apiServerOrigin,
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
@@ -548,6 +564,8 @@ async function handleDocumentRequest(
       ssr: build.ssr,
       routeDiscovery: build.routeDiscovery,
       isSpaMode,
+      unstable_apiOnly: build.unstable_apiOnly,
+      unstable_apiServerOrigin: build.unstable_apiServerOrigin,
       serializeError: (err) => serializeError(err, serverMode),
     };
 

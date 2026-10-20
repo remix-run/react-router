@@ -7,9 +7,6 @@ unstable: true
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 <docs-warning>React Server Components support is experimental and subject to breaking changes in
 minor/patch releases. Please use with caution and pay **very** close attention
 to release notes for relevant changes.</docs-warning>

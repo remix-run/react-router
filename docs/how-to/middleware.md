@@ -6,9 +6,6 @@ title: Middleware
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
 Middleware runs in a nested chain, executing from parent routes to child routes on the way "down" to your route handlers, then from child routes back to parent routes on the way "up" after a [`Response`][Response] is generated.
@@ -635,6 +632,7 @@ export async function loader({
 [server-client]: #server-vs-client-middleware
 [framework-action]: ../start/framework/route-module#action
 [framework-loader]: ../start/framework/route-module#loader
+[getloadcontext]: ../api/other-api/adapter#react-routerexpress
 [datastrategy]: ../api/data-routers/createBrowserRouter#optsdatastrategy
 [cms-redirect]: #cms-redirect-on-404
 [createContext]: ../api/utils/createContext

@@ -1,5 +1,14 @@
 # `@react-router/express`
 
+## v8.5.0
+
+### Patch Changes
+
+- Fix the request URL losing its port when the `Host` or `X-Forwarded-Host` header is an IPv6 address (e.g., `[::1]:3000`) ([#15559](https://github.com/remix-run/react-router/pull/15559))
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+
 ## v8.4.0
 
 ### Patch Changes

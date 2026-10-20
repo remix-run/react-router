@@ -17,9 +17,6 @@ We highly recommend you make a commit after each step and ship it instead of doi
 
 [MODES: framework, data, declarative]
 
-<br/>
-<br/>
-
 React Router v9 will require the following minimum versions (as of now). You can prepare for the upgrade by updating them while still on v8:
 
 - `node@24+`
@@ -49,9 +46,6 @@ We document some [unstable] flags here as a reference for folks contributing to 
 ### `future.unstable_enableNodeReadableStream`
 
 [MODES: framework]
-
-<br/>
-<br/>
 
 **Background**
 
@@ -83,9 +77,6 @@ No code changes are required. If your app has a custom `entry.server.tsx`, this 
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 **Background**
 
 This flag lets React Router provide Vite's dependency optimizer with the client entry file and route module files. This can improve dependency optimization in development, but the behavior is still experimental.
@@ -109,9 +100,6 @@ No code changes are required. If you run into dependency optimization issues aft
 ### `future.unstable_routePatternMatching`
 
 [MODES: data]
-
-<br/>
-<br/>
 
 **Background**
 

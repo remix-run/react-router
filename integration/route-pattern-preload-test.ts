@@ -3,6 +3,20 @@ import { test, expect } from "@playwright/test";
 
 import { createProject } from "./helpers/vite.js";
 
+let originalNodeEnv: string | undefined;
+test.beforeEach(() => {
+  originalNodeEnv = process.env.NODE_ENV;
+});
+test.afterEach(() => {
+  // Vite's in-process build/preview APIs set NODE_ENV to production. Restore it
+  // so later tests in the same worker can start development servers.
+  if (originalNodeEnv === undefined) {
+    delete process.env.NODE_ENV;
+  } else {
+    process.env.NODE_ENV = originalNodeEnv;
+  }
+});
+
 for (let enabled of [false, true]) {
   test(`Data Mode route-pattern preloading (flag: ${enabled})`, async ({
     page,

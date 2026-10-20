@@ -19,9 +19,6 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rs
 
 [MODES: data]
 
-<br />
-<br />
-
 <docs-warning>This API is experimental and subject to breaking changes in 
 minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
@@ -90,7 +87,7 @@ async function matchRSCServerRequest({
   onError,
   request,
   routes,
-  generateResponse,
+  generateResponse: encodeResponse,
 }: {
   allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
