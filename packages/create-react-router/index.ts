@@ -630,14 +630,58 @@ async function installDependencies({
   }
 }
 
+const WINDOWS_CMD_SHIMS = new Set([
+  "npm",
+  "npx",
+  "pnpm",
+  "pnpx",
+  "yarn",
+  "yarnpkg",
+]);
+
+const WINDOWS_EXE_SHIMS = new Set(["bun", "bunx"]);
+
+function resolveWindowsCommand(
+  command: string,
+  args: string[],
+): [string, string[]] {
+  // Don't modify explicit paths or commands that already have an extension.
+  if (
+    command.includes("/") ||
+    command.includes("\\") ||
+    command.includes(".")
+  ) {
+    return [command, args];
+  }
+
+  const normalizedCommand = command.toLowerCase();
+
+  if (WINDOWS_CMD_SHIMS.has(normalizedCommand)) {
+    return ["cmd.exe", ["/d", "/s", "/c", command, ...args]];
+  }
+
+  if (WINDOWS_EXE_SHIMS.has(normalizedCommand)) {
+    return [`${command}.exe`, args];
+  }
+
+  return [command, args];
+}
+
 function runCommand(
   command: string,
   args: string[],
   options: { cwd: string; stdio: StdioOptions },
 ) {
   return new Promise<void>((resolve, reject) => {
-    let child = spawn(command, args, options);
+    const [resolvedCommand, resolvedArgs] =
+      process.platform === "win32"
+        ? resolveWindowsCommand(command, args)
+        : [command, args];
+
+    const child = spawn(resolvedCommand, resolvedArgs, options);
+
     child.on("error", reject);
+
     child.on("exit", (code, signal) => {
       if (code === 0) {
         resolve();
