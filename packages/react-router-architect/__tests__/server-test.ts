@@ -321,6 +321,30 @@ describe("architect createReactRouterRequest", () => {
     expect(request.url).toBe("https://context.example.com:4444/foo");
   });
 
+  it("keeps the port of an IPv6 host", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: { host: "[::1]:3333" },
+        requestContext: { domainName: "" },
+        rawPath: "/foo",
+      }),
+    );
+
+    expect(request.url).toBe("https://[::1]:3333/foo");
+  });
+
+  it("handles an IPv6 host without a port", () => {
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: { host: "[::1]" },
+        requestContext: { domainName: "" },
+        rawPath: "/foo",
+      }),
+    );
+
+    expect(request.url).toBe("https://[::1]/foo");
+  });
+
   it("falls back for invalid host values", () => {
     let request = createReactRouterRequest(
       createMockEvent({
