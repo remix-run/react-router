@@ -658,7 +658,7 @@ function resolveCommand(command: string, args: string[]): [string, string[]] {
   const normalizedCommand = command.toLowerCase();
 
   if (WINDOWS_CMD_SHIMS.has(normalizedCommand)) {
-    return ["cmd.exe", ["/d", "/s", "/c", `${command}.cmd`, ...args]];
+    return ["cmd.exe", ["/d", "/s", "/c", command, ...args]];
   }
 
   if (WINDOWS_EXE_SHIMS.has(normalizedCommand)) {
