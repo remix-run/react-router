@@ -637,33 +637,31 @@ export default assetsManifest.clientVersion;
             : `export default "development";`;
         }
       },
-      generateBundle: {
-        order: "post",
-        async handler() {
-          if (this.environment.name !== "client") return;
+      // Wait until the client bundle is written so the Vite RSC plugin has
+      // finished building the assets manifest in its own `generateBundle`
+      async writeBundle() {
+        if (this.environment.name !== "client") return;
 
-          const viteRscPlugin = resolvedViteConfig.plugins.find(
-            (plugin) => plugin.name === "rsc:minimal",
-          ) as
-            | (Vite.Plugin & {
-                api?: {
-                  manager?: {
-                    buildAssetsManifest?: Record<string, unknown>;
-                  };
+        const viteRscPlugin = resolvedViteConfig.plugins.find(
+          (plugin) => plugin.name === "rsc:minimal",
+        ) as
+          | (Vite.Plugin & {
+              api?: {
+                manager?: {
+                  buildAssetsManifest?: Record<string, unknown>;
                 };
-              })
-            | undefined;
-          const assetsManifest =
-            viteRscPlugin?.api?.manager?.buildAssetsManifest;
-          invariant(assetsManifest, "Vite RSC assets manifest not found");
+              };
+            })
+          | undefined;
+        const assetsManifest = viteRscPlugin?.api?.manager?.buildAssetsManifest;
+        invariant(assetsManifest, "Vite RSC assets manifest not found");
 
-          // Add the version before the Vite RSC plugin serializes this manifest
-          // into the RSC and SSR builds. This lets the virtual module expose a
-          // build-time value without rewriting files after Vite writes them.
-          assetsManifest.clientVersion = await getClientVersion(
-            JSON.stringify(assetsManifest),
-          );
-        },
+        // Add the version before the Vite RSC plugin serializes this manifest
+        // into the RSC and SSR builds. This lets the virtual module expose a
+        // build-time value without rewriting files after Vite writes them.
+        assetsManifest.clientVersion = await getClientVersion(
+          JSON.stringify(assetsManifest),
+        );
       },
     },
     {
