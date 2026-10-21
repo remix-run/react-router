@@ -1745,7 +1745,7 @@ export function Await<Resolve>({
     : { status: "fulfilled", value: resolve as Awaited<Resolve> };
 
   if (resolved.status === "rejected") {
-    if (typeof errorElement === "undefined") {
+    if (errorElement == null) {
       throw resolved.reason;
     }
     return (
