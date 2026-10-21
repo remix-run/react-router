@@ -1758,8 +1758,14 @@ export function useRouteError(): unknown {
  * @returns The resolved value from the nearest {@link Await} component
  */
 export function useAsyncValue(): unknown {
-  let value = React.useContext(AwaitContext);
-  return value?._data;
+  let ctx = React.useContext(AwaitContext);
+  invariant(ctx, "useAsyncValue must be used inside an <Await> component");
+  let value = ctx.resolve;
+  return value &&
+    typeof value === "object" &&
+    typeof (value as Promise<unknown>)?.then === "function"
+    ? React.use(value as Promise<unknown>)
+    : value;
 }
 
 /**
@@ -1789,7 +1795,7 @@ export function useAsyncValue(): unknown {
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
-  return value?._error;
+  return value?.hasError ? value.error : null;
 }
 
 let blockerId = 0;
