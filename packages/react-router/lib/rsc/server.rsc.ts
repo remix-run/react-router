@@ -934,7 +934,9 @@ async function generateRenderResponse(
                 isDataRequest,
                 generateResponse,
                 temporaryReferences,
-                (ctx.redirect as unknown as Response)?.headers,
+                result === ctx.redirect
+                  ? undefined
+                  : (ctx.redirect as unknown as Response)?.headers,
               );
             }
 
@@ -1060,7 +1062,11 @@ function generateRedirectResponse(
 
   // Preserve non-internal headers on the user-created redirect and merge in
   // any side-effect redirect headers
-  let headers = new Headers(sideEffectRedirectHeaders);
+  let headers = new Headers(
+    sideEffectRedirectHeaders === response.headers
+      ? undefined
+      : sideEffectRedirectHeaders,
+  );
   for (const [key, value] of response.headers.entries()) {
     headers.append(key, value);
   }
