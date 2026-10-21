@@ -129,9 +129,7 @@ describe("prerender HTTP requests", () => {
       );
       let buildAppHook = plugin.buildApp!;
       await (
-        typeof buildAppHook === "function"
-          ? buildAppHook
-          : buildAppHook.handler
+        typeof buildAppHook === "function" ? buildAppHook : buildAppHook.handler
       ).call(
         {} as Vite.MinimalPluginContextWithoutEnvironment,
         {} as Vite.ViteBuilder,
