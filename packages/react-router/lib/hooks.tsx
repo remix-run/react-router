@@ -1028,6 +1028,7 @@ type RenderErrorBoundaryState = {
   location: Location;
   revalidation: RevalidationState;
   error: any;
+  propsError: any;
 };
 
 export class RenderErrorBoundary extends React.Component<
@@ -1040,6 +1041,7 @@ export class RenderErrorBoundary extends React.Component<
       location: props.location,
       revalidation: props.revalidation,
       error: props.error,
+      propsError: props.error,
     };
   }
 
@@ -1063,12 +1065,16 @@ export class RenderErrorBoundary extends React.Component<
     // comes in and the user recovers from the error.
     if (
       state.location !== props.location ||
-      (state.revalidation !== "idle" && props.revalidation === "idle")
+      (state.revalidation !== "idle" && props.revalidation === "idle") ||
+      // A router error was cleared (i.e., via a revalidation whose "loading"
+      // state was batched away by React before we could observe it)
+      (state.propsError !== undefined && props.error === undefined)
     ) {
       return {
         error: props.error,
         location: props.location,
         revalidation: props.revalidation,
+        propsError: props.error,
       };
     }
 
@@ -1080,6 +1086,7 @@ export class RenderErrorBoundary extends React.Component<
       error: props.error !== undefined ? props.error : state.error,
       location: state.location,
       revalidation: props.revalidation || state.revalidation,
+      propsError: props.error,
     };
   }
 
