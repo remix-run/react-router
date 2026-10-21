@@ -660,9 +660,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   // change or route file addition/removal.
   let ctx: ReactRouterPluginContext;
 
-  let closePluginResources = async () => {
+  let closeChildCompiler = async () => {
     await viteChildCompiler?.close();
     viteChildCompiler = null;
+  };
+
+  let closePluginResources = async () => {
+    await closeChildCompiler();
     await reactRouterConfigLoader.close();
 
     let typegenWatcher = await typegenWatcherPromise;
@@ -2819,6 +2823,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   await closePluginResources();
                   throw error;
                 }
+
+                // Close the child compiler now because other plugins' post
+                // buildApp hooks can fail before closePluginResources runs.
+                // buildEnd still needs the config loader.
+                await closeChildCompiler();
               },
             },
           };
