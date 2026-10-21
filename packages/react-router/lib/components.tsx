@@ -1630,6 +1630,41 @@ export interface AwaitProps<Resolve> {
   resolve: Resolve;
 }
 
+function isPromiseLike(v: unknown): v is PromiseLike<unknown> {
+  return typeof v === "object" && typeof (v as any).then === "function";
+}
+
+const settledPromises = new WeakMap<
+  PromiseLike<unknown>,
+  Promise<PromiseSettledResult<unknown>>
+>();
+function getSettledPromise<Resolve>(
+  resolve: PromiseLike<Resolve>,
+  onError: (error: unknown, errorInfo?: React.ErrorInfo) => void,
+): Promise<PromiseSettledResult<Awaited<Resolve>>> {
+  let promise = settledPromises.get(resolve) as
+    | Promise<PromiseSettledResult<Awaited<Resolve>>>
+    | undefined;
+  if (!promise) {
+    promise = Promise.allSettled([resolve])
+      .then(([r]) => {
+        if (r.status === "rejected") {
+          onError(r.reason);
+        }
+        return r;
+      })
+      .catch(
+        (reason) =>
+          ({
+            status: "rejected",
+            reason,
+          }) satisfies PromiseSettledResult<Awaited<Resolve>>,
+      );
+    settledPromises.set(resolve, promise);
+  }
+  return promise;
+}
+
 /**
  * Used to render promise values with automatic error handling.
  *
@@ -1703,96 +1738,39 @@ export function Await<Resolve>({
     [dataRouterContext, dataRouterStateContext],
   );
 
-  return (
-    <AwaitErrorBoundary
-      resolve={resolve}
-      errorElement={errorElement}
-      onError={onError}
-    >
-      <ResolveAwait>{children}</ResolveAwait>
-    </AwaitErrorBoundary>
-  );
-}
+  let resolved: PromiseSettledResult<Awaited<Resolve>> = isPromiseLike(resolve)
+    ? (React.use(getSettledPromise(resolve, onError)) as PromiseSettledResult<
+        Awaited<Resolve>
+      >)
+    : { status: "fulfilled", value: resolve as Awaited<Resolve> };
 
-type AwaitErrorBoundaryProps = React.PropsWithChildren<{
-  errorElement?: React.ReactNode;
-  resolve: unknown;
-  onError?: (error: unknown, errorInfo?: React.ErrorInfo) => void;
-}>;
-
-type AwaitErrorBoundaryState = {
-  error: unknown;
-  hasError: boolean;
-};
-
-class AwaitErrorBoundary extends React.Component<
-  AwaitErrorBoundaryProps,
-  AwaitErrorBoundaryState
-> {
-  constructor(props: AwaitErrorBoundaryProps) {
-    super(props);
-    this.state = { error: null, hasError: false };
-  }
-
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
-    if (this.props.onError) {
-      // Log render errors
-      this.props.onError(error, errorInfo);
-    } else {
-      console.error(
-        "<Await> caught the following error during render",
-        error,
-        errorInfo,
-      );
+  if (resolved.status === "rejected") {
+    if (typeof errorElement === "undefined") {
+      throw resolved.reason;
     }
-  }
-
-  render() {
-    let { children, errorElement } = this.props;
-
-    if (this.state.hasError) {
-      if (typeof errorElement !== "undefined") {
-        return (
-          <AwaitContext.Provider
-            value={{
-              hasError: true,
-              error: this.state.error,
-              resolve: this.props.resolve,
-            }}
-          >
-            {errorElement}
-          </AwaitContext.Provider>
-        );
-      }
-      throw this.state.error;
-    }
-
     return (
       <AwaitContext.Provider
         value={{
-          hasError: false,
-          resolve: this.props.resolve,
+          hasError: true,
+          resolve,
+          error: resolved.reason,
         }}
       >
-        {children}
+        {errorElement}
       </AwaitContext.Provider>
     );
   }
-}
 
-// Indirection to leverage useAsyncValue for a render-prop API on `<Await>`
-function ResolveAwait({
-  children,
-}: {
-  children: React.ReactNode | AwaitResolveRenderFunction;
-}) {
-  let data = useAsyncValue();
-  let toRender = typeof children === "function" ? children(data) : children;
-  return <>{toRender}</>;
+  return (
+    <AwaitContext.Provider
+      value={{
+        hasError: false,
+        resolve: resolved.value,
+      }}
+    >
+      {typeof children === "function" ? children(resolved.value) : children}
+    </AwaitContext.Provider>
+  );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
