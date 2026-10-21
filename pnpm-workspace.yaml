@@ -15,7 +15,7 @@ allowBuilds:
 catalog:
   "@types/react": ^19.2.17
   "@types/react-dom": ^19.2.3
-  "@vitejs/plugin-rsc": ~0.5.26
+  "@vitejs/plugin-rsc": ~0.5.38
   react: ^19.2.7
   react-dom: ^19.2.7
   react-server-dom-webpack: ^19.2.7
