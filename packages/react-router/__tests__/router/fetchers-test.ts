@@ -2374,6 +2374,73 @@ describe("fetchers", () => {
       expect(t.router.getFetcher(key)).toBe(IDLE_FETCHER);
     });
 
+    it("handles fetcher revalidation errors at contextual route boundaries", async () => {
+      let key = "key";
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            ErrorBoundary: () => null,
+            children: [
+              {
+                id: "parent",
+                path: "parent",
+                loader: true,
+                ErrorBoundary: () => null,
+                children: [
+                  {
+                    id: "child",
+                    path: "child",
+                    loader: true,
+                    action: true,
+                    ErrorBoundary: () => null,
+                  },
+                ],
+              },
+              {
+                id: "api",
+                path: "api",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/parent/child"],
+        hydrationData: {
+          loaderData: { parent: "PARENT", child: "CHILD" },
+        },
+      });
+
+      // The fetcher is owned by the parent route, not the child page
+      let A = await t.fetch("/api", key, "parent");
+      await A.loaders.api.resolve("API");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "API",
+      });
+
+      let B = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "navigation", "loader", "api");
+      await B.actions.child.resolve("ACTION");
+      await B.loaders.parent.resolve("PARENT*");
+      await B.loaders.child.resolve("CHILD*");
+      await B.loaders.api.reject(new Error("Fetcher error"));
+      expect(t.router.state).toMatchObject({
+        loaderData: {
+          parent: "PARENT*",
+          child: "CHILD*",
+        },
+        errors: {
+          parent: new Error("Fetcher error"),
+        },
+      });
+      expect(t.router.getFetcher(key)).toBe(IDLE_FETCHER);
+    });
+
     it("revalidates fetchers on fetcher action submissions", async () => {
       let key = "key";
       let actionKey = "actionKey";

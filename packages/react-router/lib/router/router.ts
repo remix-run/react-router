@@ -7322,7 +7322,7 @@ function processLoaderData(
     // process fetchers that needed to load
     .filter((f) => !f.matches || f.matches.some((m) => m.shouldLoad))
     .forEach((rf) => {
-      let { key, match, controller } = rf;
+      let { key, routeId, controller } = rf;
       if (controller && controller.signal.aborted) {
         // Nothing to do for aborted fetchers
         return;
@@ -7333,7 +7333,7 @@ function processLoaderData(
 
       // Process fetcher non-redirect errors
       if (isErrorResult(result)) {
-        let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
+        let boundaryMatch = findNearestBoundary(state.matches, routeId);
         if (!(errors && errors[boundaryMatch.route.id])) {
           errors = {
             ...errors,
