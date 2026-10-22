@@ -1,4 +1,5 @@
 import type * as Vite from "vite";
+import type { ReactRouterBuildContext } from "../build";
 import { createHash } from "node:crypto";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
@@ -219,6 +220,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
 
         return {
+          __reactRouterBuildContext: {
+            close: () => configLoader.close(),
+          } satisfies ReactRouterBuildContext,
           resolve: {
             dedupe: [
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react

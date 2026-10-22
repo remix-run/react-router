@@ -299,12 +299,12 @@ test.describe(`Prerendering`, () => {
       let cwd = await createProject({
         ...files,
         "react-router.config.ts": js`
-          import fs from "node:fs";
           import path from "node:path";
 
           export default {
             prerender: ["/about"],
             async buildEnd({ reactRouterConfig }) {
+              let { default: fs } = await import("node:fs");
               let clientBuildDirectory = path.join(
                 reactRouterConfig.buildDirectory,
                 "client"

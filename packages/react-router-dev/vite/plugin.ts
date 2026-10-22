@@ -48,6 +48,7 @@ import type {
 } from "../manifest";
 import invariant from "../invariant";
 import type { Cache } from "./cache";
+import type { ReactRouterBuildContext } from "./build";
 import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest } from "./node-adapter";
@@ -1274,6 +1275,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         return {
           __reactRouterPluginContext: ctx,
+          __reactRouterBuildContext: {
+            close: closePluginResources,
+          } satisfies ReactRouterBuildContext,
           appType:
             viteCommand === "serve" &&
             _viteConfigEnv.mode === "production" &&
