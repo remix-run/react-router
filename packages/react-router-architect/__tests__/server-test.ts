@@ -373,7 +373,11 @@ describe("architect createReactRouterRequest", () => {
       }),
     );
 
-    expect(await request.text()).toBe(text);
+    expect(await request.clone().text()).toBe(text);
+
+    let formData = await request.formData();
+    expect(formData.get("name")).toBe("caf\u00e9");
+    expect(formData.get("emoji")).toBe("\ud83d\udc4b");
   });
 });
 
