@@ -59,6 +59,70 @@ test("custom fetch context narrowing", async ({ edit, $ }) => {
   await $("pnpm typecheck");
 });
 
+test("Await promise prop types", async ({ edit, $ }) => {
+  await edit({
+    "app/await.tsx": tsx`
+      import type { ComponentProps } from "react";
+      import { Await, type AwaitProps } from "react-router";
+      import type { Expect, Equal } from "./expect-type";
+
+      export interface CustomAwaitProps extends AwaitProps<Promise<string>> {
+        label: string;
+      }
+
+      let promise = Promise.resolve({ id: 1 });
+      let thenable: PromiseLike<string> = Promise.resolve("value");
+
+      export let legacy = <Await resolve={promise}>{(value) => {
+        type Test = Expect<Equal<typeof value, { id: number }>>;
+        return value.id;
+      }}</Await>;
+
+      export let optIn = <Await promise={promise}>{(value) => {
+        type Test = Expect<Equal<typeof value, { id: number }>>;
+        return value.id;
+      }}</Await>;
+
+      export let promiseLike = <Await promise={thenable}>{(value) => {
+        type Test = Expect<Equal<typeof value, string>>;
+        return value;
+      }}</Await>;
+
+      export let raw = <Await promise={123}>{(value) => {
+        type Test = Expect<Equal<typeof value, number>>;
+        return value;
+      }}</Await>;
+
+      export let props: ComponentProps<typeof Await<Promise<string>>> = {
+        promise: Promise.resolve("value"),
+        children: (value) => {
+          type Test = Expect<Equal<typeof value, string>>;
+          return value;
+        },
+      };
+
+      export let legacyProps: AwaitProps<Promise<string>> = {
+        resolve: Promise.resolve("value"),
+        children: (value) => {
+          type Test = Expect<Equal<typeof value, string>>;
+          return value;
+        },
+      };
+
+      // @ts-expect-error - exactly one promise prop is required
+      export let missingProps: ComponentProps<typeof Await<Promise<string>>> = { children: "Missing" };
+      // @ts-expect-error - promise props are mutually exclusive
+      export let bothProps: ComponentProps<typeof Await<Promise<string>>> = { resolve: Promise.resolve("value"), promise: Promise.resolve("value"), children: "Both" };
+
+      // @ts-expect-error - exactly one promise prop is required
+      export let missing = <Await>Missing</Await>;
+      // @ts-expect-error - promise props are mutually exclusive
+      export let both = <Await resolve={promise} promise={promise}>Both</Await>;
+    `,
+  });
+  await $("pnpm typecheck");
+});
+
 test.describe("typegen", () => {
   test("basic", async ({ edit, $ }) => {
     await edit({

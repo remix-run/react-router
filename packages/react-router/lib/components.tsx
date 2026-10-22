@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getAwaitPromise, getPromiseResult } from "./await";
 
 import type {
   InitialEntry,
@@ -1526,6 +1527,8 @@ export interface AwaitResolveRenderFunction<Resolve = any> {
  * @category Types
  */
 export interface AwaitProps<Resolve> {
+  /** Use either `resolve` or `promise`, never both. */
+  promise?: never;
   /**
    * When using a function, the resolved value is provided as the parameter.
    *
@@ -1630,10 +1633,45 @@ export interface AwaitProps<Resolve> {
   resolve: Resolve;
 }
 
+interface AwaitPromiseProps<Resolve> extends Omit<
+  AwaitProps<Resolve>,
+  "resolve" | "promise"
+> {
+  resolve?: never;
+  /**
+   * A promise (or value) to read using React's `use()` API in client components.
+   * Unlike `resolve` in client components, this accepts promise-like values
+   * without modifying the source promise.
+   *
+   * `errorElement` handles promise rejections. Errors thrown while rendering
+   * children bubble to the nearest React error boundary.
+   *
+   * ```tsx
+   * <Await promise={reviewsPromise} errorElement={<ReviewsError />}>
+   *   {(reviews) => <Reviews items={reviews} />}
+   * </Await>
+   * ```
+   *
+   * Pass exactly one of `promise` or `resolve`.
+   */
+  promise: Resolve;
+}
+
 /**
  * Used to render promise values with automatic error handling.
  *
  * **Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
+ *
+ * Pass `promise` instead of `resolve` to opt into React's [`use()`](https://react.dev/reference/react/use)
+ * implementation. With `promise`, `errorElement` handles promise rejections, while
+ * errors thrown by children bubble to the nearest React error boundary.
+ *
+ * In React Server Components, `resolve` already has this error-handling behavior:
+ * `errorElement` handles only input rejections, while child render errors
+ * propagate to the surrounding error boundary. Both props accept promise-like
+ * values without modifying the source promise. With either implementation,
+ * `resolve` treats a falsy `errorElement` as absent, while `promise` only treats
+ * `undefined` as absent.
  *
  * @example
  * import { Await, useLoaderData } from "react-router";
@@ -1675,13 +1713,19 @@ export interface AwaitProps<Resolve> {
  * @param {AwaitProps.children} props.children n/a
  * @param {AwaitProps.errorElement} props.errorElement n/a
  * @param {AwaitProps.resolve} props.resolve n/a
+ * @param props.promise A promise (or value) to read using React's `use()` API in
+ * client components. Accepts promise-like values without modifying the source
+ * promise. Pass exactly one of `promise` or `resolve`.
  * @returns React element for the rendered awaited value
  */
-export function Await<Resolve>({
-  children,
-  errorElement,
-  resolve,
-}: AwaitProps<Resolve>) {
+export function Await<Resolve>(
+  props: AwaitProps<Resolve> | AwaitPromiseProps<Resolve>,
+) {
+  invariant(
+    "resolve" in props !== "promise" in props,
+    "<Await> requires exactly one of `resolve` or `promise`",
+  );
+  let { children, errorElement } = props;
   let dataRouterContext = React.useContext(DataRouterContext);
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
 
@@ -1703,14 +1747,59 @@ export function Await<Resolve>({
     [dataRouterContext, dataRouterStateContext],
   );
 
+  if ("promise" in props) {
+    return (
+      <AwaitPromise
+        value={props.promise}
+        errorElement={errorElement}
+        onError={onError}
+      >
+        {children}
+      </AwaitPromise>
+    );
+  }
+
   return (
     <AwaitErrorBoundary
-      resolve={resolve}
+      resolve={props.resolve}
       errorElement={errorElement}
       onError={onError}
     >
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
+  );
+}
+
+function AwaitPromise({
+  value,
+  children,
+  errorElement,
+  onError,
+}: {
+  value: unknown;
+  children: React.ReactNode | AwaitResolveRenderFunction;
+  errorElement?: React.ReactNode;
+  onError: (error: unknown) => void;
+}) {
+  let result: PromiseSettledResult<unknown> =
+    value != null &&
+    (typeof value === "object" || typeof value === "function") &&
+    "then" in value &&
+    typeof value.then === "function"
+      ? React.use(getAwaitPromise(value as PromiseLike<unknown>, onError))
+      : { status: "fulfilled", value };
+
+  if (result.status === "rejected" && errorElement === undefined) {
+    throw result.reason;
+  }
+  return (
+    <AwaitContext.Provider value={result}>
+      {result.status === "rejected" ? (
+        errorElement
+      ) : (
+        <ResolveAwait>{children}</ResolveAwait>
+      )}
+    </AwaitContext.Provider>
   );
 }
 
@@ -1788,18 +1877,40 @@ class AwaitErrorBoundary extends React.Component<
       // Raw (untracked) promise - track it
       status = AwaitRenderStatus.pending;
       Object.defineProperty(resolve, "_tracked", { get: () => true });
-      // Wrap in `Promise.resolve()` because React Flight's `ReactPromise`
-      // chunks pass `instanceof Promise` but return `undefined` from `.then()`.
-      // Native promises are returned as-is by `Promise.resolve()`.
-      promise = Promise.resolve(resolve).then(
-        (data: any) =>
-          Object.defineProperty(resolve, "_data", { get: () => data }),
-        (error: any) => {
-          // Log promise rejections
-          this.props.onError?.(error);
-          Object.defineProperty(resolve, "_error", { get: () => error });
-        },
-      );
+      let result = getPromiseResult(resolve);
+      if (result) {
+        // Read an already-settled result without another tick while preserving
+        // the existing tracked-promise contract.
+        promise = resolve;
+        if (result.status === "fulfilled") {
+          status = AwaitRenderStatus.success;
+          Object.defineProperty(resolve, "_data", {
+            get: () => result.value,
+          });
+        } else {
+          status = AwaitRenderStatus.error;
+          Object.defineProperty(resolve, "_error", {
+            get: () => result.reason,
+          });
+          // Report once when consumed, as with an ordinary untracked promise.
+          Promise.resolve(resolve).catch((error) =>
+            this.props.onError?.(error),
+          );
+        }
+      } else {
+        // Wrap in `Promise.resolve()` because React Flight's `ReactPromise`
+        // chunks pass `instanceof Promise` but return `undefined` from `.then()`.
+        // Native promises are returned as-is by `Promise.resolve()`.
+        promise = Promise.resolve(resolve).then(
+          (data: any) =>
+            Object.defineProperty(resolve, "_data", { get: () => data }),
+          (error: any) => {
+            // Log promise rejections
+            this.props.onError?.(error);
+            Object.defineProperty(resolve, "_error", { get: () => error });
+          },
+        );
+      }
     }
 
     if (status === AwaitRenderStatus.error && !errorElement) {

@@ -63,9 +63,32 @@ export default function MyComponent({
 }
 ```
 
-## With React 19
+## Opt into React's `use()` API
 
-If you're using React 19, you can use `React.use` instead of `Await`, but you'll need to create a new component and pass the promise down to trigger the suspense fallback.
+Pass `promise` instead of `resolve` to opt into an `<Await>` implementation based on React's `use()` API:
+
+```tsx
+<React.Suspense fallback={<div>Loading...</div>}>
+  <Await
+    promise={nonCriticalData}
+    errorElement={<LoadingError />}
+  >
+    {(value) => <h3>Non critical value: {value}</h3>}
+  </Await>
+</React.Suspense>
+```
+
+Pass exactly one of `promise` or `resolve`. Both support render-prop children, `useAsyncValue`, and `useAsyncError`. The `promise` prop also accepts promise-like values and does not modify application promises.
+
+With `promise`, `errorElement` handles promise rejections. Errors thrown while rendering children bubble to the nearest React error boundary, such as a route's `ErrorBoundary`. In client components, the `resolve` prop retains its existing behavior, including catching child render errors.
+
+In React Server Components, `resolve` already behaves like `promise` in client components for error handling: `errorElement` handles only input rejections, and errors thrown by children propagate to the surrounding error boundary. Both props accept promise-like values without modifying the source promise. Use render-prop children to access the resolved value in a Server Component; `useAsyncValue` and `useAsyncError` are available in client descendants.
+
+With either implementation, `promise` treats an explicit `errorElement={null}` or `errorElement={false}` as rendering nothing on rejection. The `resolve` prop treats these values as an absent error element and propagates the rejection.
+
+## Use React directly
+
+You can also read the promise directly with `React.use`. Pass it to a child component rendered inside `<React.Suspense>` so the boundary can display its fallback while the promise is pending.
 
 ```tsx
 <React.Suspense fallback={<div>Loading...</div>}>
@@ -91,7 +114,7 @@ export const streamTimeout = 10_000;
 
 ## Handling early rejections (Node)
 
-React Router waits for all loaders to settle (via `Promise.all`) before it begins streaming the response. Once streaming has started, React Router catches subsequent rejections of your streamed promises and surfaces them to your `<Await>` (or React 19 `React.use`) error UI.
+React Router waits for all loaders to settle (via `Promise.all`) before it begins streaming the response. Once streaming has started, React Router catches subsequent rejections of your streamed promises and surfaces them to your `<Await>` (or `React.use`) error UI.
 
 However, if a streamed promise rejects _before_ all of the route's loaders have settled, React Router has not yet been able to attach a handler to it. In Node, an unhandled promise rejection will crash the process unless you have a top-level handler registered.
 
