@@ -1,8 +1,6 @@
 import { expect } from "@playwright/test";
 import dedent from "dedent";
 import getPort from "get-port";
-import fs from "node:fs";
-import path from "node:path";
 
 import {
   build,
@@ -33,7 +31,6 @@ function defineFiles({
         cloudflare({
           inspectorPort: ${inspectorPort},
           viteEnvironment: { name: "ssr" },
-          experimental: { newConfig: { cfBuildOutput: true } },
         }),
         reactRouter(),
       ]${reversePlugins ? ".reverse()" : ""},
@@ -197,6 +194,5 @@ test.describe("vite-plugin-cloudflare", () => {
     const buildResult = build({ cwd });
 
     expect(buildResult.status).toBe(0);
-    expect(fs.existsSync(path.join(cwd, ".cloudflare/output"))).toBe(true);
   });
 });

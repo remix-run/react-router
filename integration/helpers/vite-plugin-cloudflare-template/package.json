@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router build",
-    "typegen": "react-router typegen",
+    "typegen": "wrangler types && react-router typegen",
     "typecheck": "pnpm typegen && tsc"
   },
   "dependencies": {
@@ -19,16 +19,18 @@
     "serialize-javascript": "^6.0.1"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.54.5",
+    "@cloudflare/vite-plugin": "^1.39.0",
+    "@cloudflare/vite-plugin-v2": "npm:@cloudflare/vite-plugin@2.0.0-beta.v.4",
     "@react-router/dev": "workspace:*",
     "@react-router/fs-routes": "workspace:*",
     "@types/node": "^22.19.19",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "cf": "^1.0.0-beta.19",
     "typescript": "catalog:",
     "vite": "^7.0.0",
     "vite-tsconfig-paths": "^4.2.2",
-    "wrangler": "^4.129.1"
+    "wrangler": "^4.95.0"
   },
   "engines": {
     "node": ">=22.22.0"

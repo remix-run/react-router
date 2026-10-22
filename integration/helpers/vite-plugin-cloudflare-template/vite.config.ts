@@ -28,7 +28,6 @@ export default defineConfig(async () => ({
     cloudflare({
       inspectorPort: await getAvailablePort(),
       viteEnvironment: { name: "ssr" },
-      experimental: { newConfig: { cfBuildOutput: true } },
     }),
     reactRouter(),
     tsconfigPaths(),
