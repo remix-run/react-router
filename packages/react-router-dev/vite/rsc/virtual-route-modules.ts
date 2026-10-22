@@ -363,7 +363,7 @@ ${result}`;
               ...mod.ReactRouterHMRMeta___,
             }]]));
 
-            if (${chunk === "shared" ? "!mod.default || " : ""}mod.clientLoader || (
+            if (${chunk === "shared" ? "!mod.default || " : ""}mod.clientLoader || mod.ReactRouterHMRMeta___.hasComponent || (
               mod.ReactRouterHMRMeta___.hasClientLoader || ReactRouterHMRMeta___.hasClientLoader || ReactRouterHMRMeta___.hasLoader
             )) {
               __reactRouterDataRouter.revalidate();
