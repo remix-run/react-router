@@ -1871,9 +1871,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           let clientBuildDirectory = getClientBuildDirectory(viteConfig);
 
-          let serverBuildDirectory = getServerBuildDirectory(
-            viteConfig,
-            this.environment.name,
+          let serverBuildDirectory = path.resolve(
+            this.environment.config.root,
+            this.environment.config.build.outDir,
           );
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);

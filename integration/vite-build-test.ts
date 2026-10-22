@@ -383,6 +383,66 @@ test.describe("Build", () => {
   });
 });
 
+test.describe("Custom build environments", () => {
+  for (let { templateName, templateDisplayName } of viteMajorTemplates) {
+    test(`uses the active server environment outDir (${templateDisplayName})`, async () => {
+      let cwd = await createProject(
+        {
+          "react-router.config.ts": reactRouterConfig({ prerender: false }),
+          "vite.config.ts": js`
+            import path from "node:path";
+            import { BuildEnvironment, defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              plugins: [reactRouter()],
+              build: {
+                assetsInlineLimit: 0,
+                createEnvironment(name, config) {
+                  return new BuildEnvironment(name, config, {
+                    options: name === "ssr" ? {
+                      build: {
+                        outDir: path.resolve(config.root, "custom/server"),
+                      },
+                    } : {},
+                  });
+                },
+              },
+            });
+          `,
+          "app/server-only.txt": "server-only asset",
+          "app/routes/_index.tsx": js`
+            import serverOnly from "../server-only.txt?url";
+
+            export function loader() {
+              return { serverOnly };
+            }
+
+            export default function Index() {
+              return <h1>Index</h1>;
+            }
+          `,
+        },
+        templateName,
+      );
+
+      let result = build({ cwd });
+      expect(result.stderr.toString(), result.stdout.toString()).toBeFalsy();
+      expect(result.status).toBe(0);
+      expect(globSync("custom/server/index.js", { cwd })).toHaveLength(1);
+      expect(
+        globSync("build/client/assets/server-only-*.txt", { cwd }),
+      ).toHaveLength(1);
+      expect(
+        globSync("custom/server/assets/server-only-*.txt", { cwd }),
+      ).toEqual([]);
+      expect(globSync("custom/server/.vite/manifest.json", { cwd })).toEqual(
+        [],
+      );
+    });
+  }
+});
+
 test.describe("Build resource cleanup", () => {
   for (let templateName of [
     "vite-7-template",
