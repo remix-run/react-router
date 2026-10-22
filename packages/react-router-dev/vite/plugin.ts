@@ -48,6 +48,7 @@ import type {
 } from "../manifest";
 import invariant from "../invariant";
 import type { Cache } from "./cache";
+import type { ReactRouterBuildContext } from "./build";
 import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest } from "./node-adapter";
@@ -673,9 +674,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   // change or route file addition/removal.
   let ctx: ReactRouterPluginContext;
 
-  let closePluginResources = async () => {
+  let closeChildCompiler = async () => {
     await viteChildCompiler?.close();
     viteChildCompiler = null;
+  };
+
+  let closePluginResources = async () => {
+    await closeChildCompiler();
     await reactRouterConfigLoader.close();
 
     let typegenWatcher = await typegenWatcherPromise;
@@ -1314,6 +1319,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
         return {
           __reactRouterPluginContext: ctx,
+          __reactRouterBuildContext: {
+            close: closePluginResources,
+          } satisfies ReactRouterBuildContext,
           appType:
             viteCommand === "serve" &&
             _viteConfigEnv.mode === "production" &&
@@ -1987,8 +1995,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
         },
       },
-      async buildEnd() {
-        if (viteConfig?.command !== "build") {
+      async buildEnd(error) {
+        if (viteConfig?.command !== "build" || error) {
           await closePluginResources();
         }
       },
@@ -2804,6 +2812,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           `Prerender (${metadata.type}): ${metadata.path} -> ${colors.bold(outputPath)}`,
         );
       },
+      cleanup() {
+        return closePluginResources();
+      },
       async finalize(buildDirectory) {
         invariant(viteConfig);
 
@@ -2841,6 +2852,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     }),
     {
       name: "react-router-build-end",
+      enforce: "post",
       sharedDuringBuild: true,
       config: {
         order: "post",
@@ -2850,23 +2862,37 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
               async buildApp(builder) {
                 try {
                   await buildApp?.(builder);
-
-                  invariant(viteConfig);
-                  let { buildManifest, reactRouterConfig } = ctx;
-                  invariant(buildManifest, "Expected build manifest");
-                  updateServerBundlePaths();
-
-                  await reactRouterConfig.buildEnd?.({
-                    buildManifest,
-                    reactRouterConfig,
-                    viteConfig,
-                  });
-                } finally {
+                } catch (error) {
                   await closePluginResources();
+                  throw error;
                 }
+
+                // Close the child compiler now because other plugins' post
+                // buildApp hooks can fail before closePluginResources runs.
+                // buildEnd still needs the config loader.
+                await closeChildCompiler();
               },
             },
           };
+        },
+      },
+      buildApp: {
+        order: "post",
+        async handler() {
+          try {
+            invariant(viteConfig);
+            let { buildManifest, reactRouterConfig } = ctx;
+            invariant(buildManifest, "Expected build manifest");
+            updateServerBundlePaths();
+
+            await reactRouterConfig.buildEnd?.({
+              buildManifest,
+              reactRouterConfig,
+              viteConfig,
+            });
+          } finally {
+            await closePluginResources();
+          }
         },
       },
     },
