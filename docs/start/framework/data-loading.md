@@ -80,6 +80,14 @@ export default function Product({
 
 Note that the `loader` function is removed from client bundles so you can use server only APIs without worrying about them being included in the browser.
 
+### Authentication and Authorization
+
+React Router runs matched route loaders in parallel and loaders can be requested independently, such as during fetcher calls or navigations that do not revalidate every matched route. Therefore it is not possible for a parent loader to "protect" child route loaders or actions via authentication checks.
+
+Unless guarded by appropriate [server middleware][auth-middleware], each protected loader and action must authenticate the request and authorize access to the data or operation before proceeding. For example, checking that a user is signed in does not establish that they have permission to access the requested project.
+
+Middleware on a protected route or a common ancestor can enforce shared checks before the protected loaders and actions run. Any permissions not enforced by that middleware must still be checked in the individual loader or action.
+
 ## Static Data Loading
 
 When pre-rendering, loaders are used to fetch data during the production build.
@@ -199,3 +207,4 @@ See also:
 [streaming]: ../../how-to/suspense
 [client-data]: ../../how-to/client-data
 [fetchers]: ../../how-to/fetchers#loading-data
+[auth-middleware]: ../../how-to/middleware#authentication
