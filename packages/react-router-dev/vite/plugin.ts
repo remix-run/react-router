@@ -743,6 +743,29 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     };
   };
 
+  let updateServerBundlePaths = () => {
+    if (!ctx.buildManifest?.serverBundles) return;
+    invariant(viteConfig);
+
+    // configResolved hooks run in parallel. Read output directories when the
+    // manifest is consumed so asynchronous plugin overrides have finished.
+    let { normalizePath } = getVite();
+    for (let bundle of Object.values(ctx.buildManifest.serverBundles)) {
+      bundle.file = normalizePath(
+        path.join(
+          path.relative(
+            ctx.rootDirectory,
+            getServerBuildDirectory(
+              viteConfig,
+              `${SSR_BUNDLE_PREFIX}${bundle.id}`,
+            ),
+          ),
+          ctx.reactRouterConfig.serverBuildFile,
+        ),
+      );
+    }
+  };
+
   let getServerEntry = async ({ routeIds }: { routeIds?: Array<string> }) => {
     invariant(viteConfig, "viteconfig required to generate the server entry");
 
@@ -1454,27 +1477,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         viteConfig = resolvedViteConfig;
         invariant(viteConfig);
 
-        // Server bundle paths are initially derived from the React Router build
-        // directory. Update them after Vite config resolution so plugin overrides
-        // to each server bundle environment's outDir are reflected in the manifest.
-        if (ctx.buildManifest?.serverBundles) {
-          let { normalizePath } = getVite();
-          for (let bundle of Object.values(ctx.buildManifest.serverBundles)) {
-            bundle.file = normalizePath(
-              path.join(
-                path.relative(
-                  ctx.rootDirectory,
-                  getServerBuildDirectory(
-                    viteConfig,
-                    `${SSR_BUNDLE_PREFIX}${bundle.id}`,
-                  ),
-                ),
-                ctx.reactRouterConfig.serverBuildFile,
-              ),
-            );
-          }
-        }
-
         // We load the same Vite config file again for the child compiler so
         // that both parent and child compiler's plugins have independent state.
         // If we re-used the `viteUserConfig.plugins` array for the child
@@ -1687,6 +1689,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             return cachedHandler;
           }
           invariant(viteConfig);
+          updateServerBundlePaths();
 
           let bundledHandlers: Array<{
             handler: RequestHandler;
@@ -2851,6 +2854,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                   invariant(viteConfig);
                   let { buildManifest, reactRouterConfig } = ctx;
                   invariant(buildManifest, "Expected build manifest");
+                  updateServerBundlePaths();
 
                   await reactRouterConfig.buildEnd?.({
                     buildManifest,

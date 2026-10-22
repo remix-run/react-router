@@ -11,6 +11,7 @@ import {
   reactRouterServe,
   vitePreview,
   viteConfig,
+  viteMajorTemplates,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -508,6 +509,96 @@ test.describe("API-only server bundles", () => {
 });
 
 test.describe("Server bundles with custom outDir", () => {
+  for (let { templateName, templateDisplayName } of viteMajorTemplates) {
+    for (let prerender of [false, true]) {
+      test(`uses async configResolved outDirs (${templateDisplayName}, prerender: ${prerender})`, async ({
+        page,
+      }) => {
+        let port = await getPort();
+        let cwd = await createProject(
+          {
+            "server-outdir.txt": "custom",
+            "react-router.config.ts": js`
+              import fs from "node:fs";
+
+              export default {
+                prerender: ${prerender ? '["/"]' : "false"},
+                serverBundles: () => "main",
+                buildEnd({ buildManifest }) {
+                  fs.writeFileSync("build-manifest.json", JSON.stringify(buildManifest));
+                },
+              };
+            `,
+            "vite.config.ts": js`
+              import fs from "node:fs/promises";
+              import { reactRouter } from "@react-router/dev/vite";
+
+              export default {
+                ${await viteConfig.server({ port })}
+                plugins: [
+                  reactRouter(),
+                  {
+                    name: "async-server-bundle-out-dir",
+                    async configResolved(config) {
+                      let outDir = await fs.readFile("server-outdir.txt", "utf8");
+                      for (let [name, environment] of Object.entries(config.environments)) {
+                        if (name.startsWith("ssrBundle_")) {
+                          environment.build.outDir = outDir + "/" + name;
+                        }
+                      }
+                    },
+                  },
+                ],
+              };
+            `,
+            "app/root.tsx": js`
+              import { Outlet } from "react-router";
+
+              export default function Root() {
+                return <Outlet />;
+              }
+            `,
+            "app/routes/_index.tsx": js`
+              export default function Index() {
+                return <h1>Preview</h1>;
+              }
+            `,
+            "app/routes/dynamic.tsx": js`
+              export default function Dynamic() {
+                return <h1>Dynamic</h1>;
+              }
+            `,
+          },
+          templateName,
+        );
+
+        let result = build({ cwd });
+        expect(result.stderr.toString(), result.stdout.toString()).toBeFalsy();
+        expect(result.status).toBe(0);
+
+        let buildManifest = JSON.parse(
+          fs.readFileSync(path.join(cwd, "build-manifest.json"), "utf8"),
+        );
+        expect(buildManifest.serverBundles.main.file).toBe(
+          "custom/ssrBundle_main/index.js",
+        );
+        if (prerender) {
+          expect(
+            fs.readFileSync(path.join(cwd, "build/client/index.html"), "utf8"),
+          ).toContain("<h1>Preview</h1>");
+        }
+
+        let stop = await vitePreview({ cwd, port });
+        try {
+          await page.goto(`http://localhost:${port}/dynamic`);
+          await expect(page.getByRole("heading")).toHaveText("Dynamic");
+        } finally {
+          stop();
+        }
+      });
+    }
+  }
+
   test("Vite preview uses resolved server bundle outDir", async ({ page }) => {
     let port = await getPort();
     let cwd = await createProject(
