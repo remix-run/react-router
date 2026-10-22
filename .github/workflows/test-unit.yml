@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 22.22
+          - 22
           - 24
 
     steps:

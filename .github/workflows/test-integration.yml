@@ -104,7 +104,7 @@ jobs:
     uses: ./.github/workflows/test-integration-run.yml
     with:
       os: "ubuntu-latest"
-      node_version: "22.22"
+      node_version: "22"
       browser: "chromium"
 
   # dev/full add Node 24/Firefox
@@ -149,7 +149,7 @@ jobs:
     uses: ./.github/workflows/test-integration-run.yml
     with:
       os: "ubuntu-latest"
-      node_version: "22.22"
+      node_version: "22"
       browser: "firefox"
 
   # full adds Node 22/WebKit
@@ -160,5 +160,5 @@ jobs:
     uses: ./.github/workflows/test-integration-run.yml
     with:
       os: "macos-latest"
-      node_version: "22.22"
+      node_version: "22"
       browser: "webkit"

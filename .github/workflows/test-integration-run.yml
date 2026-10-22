@@ -36,6 +36,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node_version }}
+          check-latest: true
           cache: "pnpm"
 
       - name: Setup wireit cache
