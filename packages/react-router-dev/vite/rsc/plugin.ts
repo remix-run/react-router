@@ -416,7 +416,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
       },
       configurePreviewServer(previewServer) {
-        const clientBuildDirectory = getClientBuildDirectory(config);
+        const clientBuildDirectory =
+          getClientBuildDirectory(resolvedViteConfig);
         if (
           (config.prerender || config.ssr === false) &&
           process.env.IS_RR_BUILD_REQUEST !== "yes"
@@ -727,7 +728,6 @@ export default assetsManifest.clientVersion;
     prerender({
       config() {
         return {
-          buildDirectory: getClientBuildDirectory(config),
           concurrency: getPrerenderConcurrencyConfig(config),
         };
       },
@@ -963,9 +963,8 @@ function createRSCOptimizeDepsRouteModulesPlugin({
   };
 }
 
-const getClientBuildDirectory = (
-  reactRouterConfig: ResolvedReactRouterConfig,
-) => path.join(reactRouterConfig.buildDirectory, "client");
+const getClientBuildDirectory = (viteConfig: Vite.ResolvedConfig) =>
+  path.resolve(viteConfig.root, viteConfig.environments.client.build.outDir);
 
 function getPrerenderConcurrencyConfig(
   reactRouterConfig: ResolvedReactRouterConfig,
