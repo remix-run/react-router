@@ -1810,6 +1810,7 @@ export function createRouter(init: RouterInit): Router {
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
 
     let historyAction = NavigationType.Push;
+    let currentPath = state.location.pathname + state.location.search;
 
     if (userReplace === true) {
       historyAction = NavigationType.Replace;
@@ -1818,12 +1819,17 @@ export function createRouter(init: RouterInit): Router {
     } else if (
       submission != null &&
       isMutationMethod(submission.formMethod) &&
-      submission.formAction === state.location.pathname + state.location.search
+      (submission.formAction === currentPath ||
+        nextLocation.pathname + nextLocation.search === currentPath)
     ) {
       // By default on submissions to the current location we REPLACE so that
       // users don't have to double-click the back button to get to the prior
-      // location.  If the user redirects to a different location from the
-      // action/loader this will be ignored and the redirect will be a PUSH
+      // location.  `formAction` is the target as written (e.g. `/café`) and
+      // matches a current location that was loaded as written, while
+      // `nextLocation` is the location this navigation records, already
+      // encoded by the history.  If the user redirects to a different location
+      // from the action/loader this will be ignored and the redirect will be a
+      // PUSH
       historyAction = NavigationType.Replace;
     }
 
