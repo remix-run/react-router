@@ -3013,22 +3013,29 @@ export function createRouter(init: RouterInit): Router {
     // We don't want errors bubbling up to the UI or redirects processed for
     // unmounted fetchers so we just revert them to idle
     if (fetchersQueuedForDeletion.has(key)) {
-      if (isRedirectResult(actionResult) || isErrorResult(actionResult)) {
+      if (isErrorResult(actionResult)) {
         updateFetcherState(key, getDoneFetcher(undefined));
         return;
+      }
+      if (isRedirectResult(actionResult)) {
+        // We don't follow the redirect, but the action still ran. A navigation
+        // may have cleared the revalidation flag while the action was pending.
+        isRevalidationRequired = true;
+        actionResult = { type: ResultType.data, data: undefined };
       }
       // Let SuccessResult's fall through for revalidation
     } else {
       if (isRedirectResult(actionResult)) {
-        fetchControllers.delete(key);
         if (pendingNavigationLoadId > originatingLoadId) {
           // A new navigation was kicked off after our action started, so that
-          // should take precedence over this redirect navigation.  We already
-          // set isRevalidationRequired so all loaders for the new route should
-          // fire unless opted out via shouldRevalidate
-          updateFetcherState(key, getDoneFetcher(undefined));
-          return;
+          // should take precedence over this redirect navigation.  That
+          // navigation's loaders may have already run before our action
+          // completed, so instead of following the redirect we fall through and
+          // revalidate. A completed navigation may have cleared this flag.
+          isRevalidationRequired = true;
+          actionResult = { type: ResultType.data, data: undefined };
         } else {
+          fetchControllers.delete(key);
           fetchRedirectIds.add(key);
           updateFetcherState(key, getLoadingFetcher(submission));
           return startRedirectNavigation(
@@ -3233,6 +3240,10 @@ export function createRouter(init: RouterInit): Router {
     ) {
       invariant(pendingAction, "Expected pending action");
       pendingNavigationController && pendingNavigationController.abort();
+
+      // If the navigation came from a fetcher redirect, that fetcher is done
+      // now that we're completing the navigation on its behalf
+      markFetchRedirectsDone(finalFetchers);
 
       completeNavigation(state.navigation.location, {
         matches,
