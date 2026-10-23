@@ -13,7 +13,7 @@ import { getRoutePattern } from "../../router/utils";
 import { useFrameworkContext } from "./components";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
-import type { WindowReactRouterContext } from "../global";
+import type { ServerHandoff } from "../../server-runtime/serverHandoff";
 import type { RouterFetch } from "./single-fetch";
 import {
   getManifestPath,
@@ -52,8 +52,10 @@ type RouteDiscoverySsrInfo = {
   manifest: AssetsManifest;
   routeModules: RouteModules;
   router: Router | undefined;
+  // Picked from `ServerHandoff` rather than `WindowReactRouterContext` so the
+  // emitted types don't import `../global` and its `declare global` block
   context: Pick<
-    WindowReactRouterContext,
+    ServerHandoff,
     | "ssr"
     | "routeDiscovery"
     | "isSpaMode"
