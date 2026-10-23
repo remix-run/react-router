@@ -1097,7 +1097,8 @@ export interface LinkProps extends Omit<
   prefetch?: PrefetchBehavior;
 
   /**
-   * Called each time the link's `prefetch` behavior triggers, so you can
+   * Called each time the link's `prefetch` behavior triggers or its resolved
+   * destination changes while prefetching is active, so you can
    * prefetch anything else the destination needs, such as data in your own
    * cache. Unlike built-in prefetching, this also works in Data Mode.
    *
@@ -1398,6 +1399,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       prefetch,
       rest,
       unstable_onPrefetch,
+      href,
     );
 
     let internalOnClick = useLinkClickHandler(to, {

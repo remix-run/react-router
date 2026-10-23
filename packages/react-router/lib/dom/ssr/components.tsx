@@ -88,6 +88,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers,
   onPrefetch?: () => void,
+  href?: string,
 ): [boolean, React.RefObject<T | null>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
@@ -96,12 +97,17 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     theirElementProps;
 
   let ref = React.useRef<T>(null);
-  let onPrefetchEvent = React.useEffectEvent(() => onPrefetch?.());
+  let onPrefetchRef = React.useRef(onPrefetch);
+  let isPrefetching = prefetch !== "none" && shouldPrefetch;
+
+  // Keep the latest callback without making its identity a prefetch trigger.
+  React.useEffect(() => {
+    onPrefetchRef.current = onPrefetch;
+  }, [onPrefetch]);
 
   React.useEffect(() => {
-    if (prefetch === "render") {
-      setShouldPrefetch(true);
-    }
+    setMaybePrefetch(false);
+    setShouldPrefetch(prefetch === "render");
 
     if (prefetch === "viewport") {
       let callback: IntersectionObserverCallback = (entries) => {
@@ -119,7 +125,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   }, [prefetch]);
 
   React.useEffect(() => {
-    if (maybePrefetch) {
+    if (prefetch === "intent" && maybePrefetch) {
       let id = setTimeout(() => {
         setShouldPrefetch(true);
       }, 100);
@@ -127,13 +133,13 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
         clearTimeout(id);
       };
     }
-  }, [maybePrefetch]);
+  }, [maybePrefetch, prefetch]);
 
   React.useEffect(() => {
-    if (shouldPrefetch) {
-      onPrefetchEvent();
+    if (isPrefetching) {
+      onPrefetchRef.current?.();
     }
-  }, [shouldPrefetch]);
+  }, [isPrefetching, href]);
 
   let setIntent = () => {
     setMaybePrefetch(true);
@@ -150,7 +156,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     return [false, ref, {}];
   }
 
-  let shouldPrefetchPageLinks = frameworkContext != null && shouldPrefetch;
+  let shouldPrefetchPageLinks = frameworkContext != null && isPrefetching;
 
   if (prefetch !== "intent") {
     return [shouldPrefetchPageLinks, ref, {}];
