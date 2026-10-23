@@ -1824,11 +1824,12 @@ export function createRouter(init: RouterInit): Router {
     ) {
       // By default on submissions to the current location we REPLACE so that
       // users don't have to double-click the back button to get to the prior
-      // location.  `formAction` is the target as written (e.g. `/café`),
-      // while `nextLocation` is the location this navigation records, encoded
-      // the same way as `state.location`.  If the user redirects to a
-      // different location from the action/loader this will be ignored and
-      // the redirect will be a PUSH
+      // location.  `formAction` is the target as written (e.g. `/café`) and
+      // matches a current location that was loaded as written, while
+      // `nextLocation` is the location this navigation records, already
+      // encoded by the history.  If the user redirects to a different location
+      // from the action/loader this will be ignored and the redirect will be a
+      // PUSH
       historyAction = NavigationType.Replace;
     }
 
