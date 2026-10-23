@@ -2000,6 +2000,58 @@ function testDomRouter(
     });
 
     describe("POP navigations", () => {
+      it("renders 404 errors without a root route and recovers on POP navigation", async () => {
+        let testWindow = getWindow("/one");
+        let router = createTestRouter(
+          [
+            { path: "/one", Component: () => <h1>One</h1> },
+            { path: "/two", Component: () => <h1>Two</h1> },
+          ],
+          { window: testWindow },
+        );
+        render(<RouterProvider router={router} />);
+
+        expect(
+          screen.getByRole("heading", { name: "One" }),
+        ).toBeInTheDocument();
+
+        await act(() => router.navigate("/junk"));
+
+        assertLocation(testWindow, "/junk");
+        expect(
+          screen.getByRole("heading", {
+            name: "Unexpected Application Error!",
+          }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { name: "404 Not Found" }),
+        ).toBeInTheDocument();
+
+        await act(() => router.navigate(-1));
+
+        assertLocation(testWindow, "/one");
+        expect(
+          screen.getByRole("heading", { name: "One" }),
+        ).toBeInTheDocument();
+        expect(router.state.errors).toBeNull();
+
+        await act(() => router.navigate(1));
+
+        assertLocation(testWindow, "/junk");
+        expect(router.state.historyAction).toBe("POP");
+        expect(
+          screen.getByRole("heading", { name: "404 Not Found" }),
+        ).toBeInTheDocument();
+
+        await act(() => router.navigate(-1));
+
+        expect(
+          screen.getByRole("heading", { name: "One" }),
+        ).toBeInTheDocument();
+        expect(router.state.errors).toBeNull();
+        router.dispose();
+      });
+
       it("exposes promise from useNavigate (popstate)", async () => {
         let sequence: string[] = [];
         let router = createTestRouter(
