@@ -1405,7 +1405,7 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/await-component/home.tsx": js`
               import { Suspense } from "react";
-              import { Await } from "react-router";
+              import { Await, unstable_getRequest } from "react-router";
 
               import { ClientValue } from "./client";
               import { events } from "./events";
@@ -1416,11 +1416,14 @@ implementations.forEach((implementation) => {
                     resolve("Async Data");
                   });
                 });
+                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "promise"
+                  ? { promise }
+                  : { resolve: promise };
 
                 return (
                   <>
                     <Suspense fallback={<p data-fallback>Loading...</p>}>
-                      <Await resolve={promise}>
+                      <Await {...props}>
                         <ClientValue />
                       </Await>
                     </Suspense>
@@ -1433,7 +1436,7 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/await-component/reject.tsx": js`
               import { Suspense } from "react";
-              import { Await } from "react-router";
+              import { Await, unstable_getRequest } from "react-router";
 
               import { ClientError } from "./client";
               import { events } from "./events";
@@ -1444,11 +1447,14 @@ implementations.forEach((implementation) => {
                     reject(new Error("Async Error"));
                   });
                 });
+                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "promise"
+                  ? { promise }
+                  : { resolve: promise };
 
                 return (
                   <>
                     <Suspense fallback={<p data-fallback>Loading...</p>}>
-                      <Await resolve={promise} errorElement={<ClientError />}>
+                      <Await {...props} errorElement={<ClientError />}>
                         {(data) => (<p data-resolved>{data}</p>)}
                       </Await>
                     </Suspense>
@@ -1866,34 +1872,48 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        test("Supports Await component resolve", async ({ page }) => {
-          await page.goto(`http://localhost:${port}/await-component`, {
-            waitUntil: "commit",
+        ["resolve", "promise"].forEach((prop) => {
+          test(`Supports Await component ${prop} fulfillment`, async ({
+            page,
+          }) => {
+            await page.goto(
+              `http://localhost:${port}/await-component?prop=${prop}`,
+              {
+                waitUntil: "commit",
+              },
+            );
+            await page.waitForSelector("[data-fallback]");
+            await fetch(`http://localhost:${port}/await-component/api`, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain" },
+              body: "resolve",
+            });
+            const resolved = await page.waitForSelector("[data-resolved]");
+            expect(await resolved.innerText()).toContain("Async Data");
+            validateRSCHtml(await page.content());
           });
-          await page.waitForSelector("[data-fallback]");
-          await fetch(`http://localhost:${port}/await-component/api`, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: "resolve",
-          });
-          const resolved = await page.waitForSelector("[data-resolved]");
-          expect(await resolved.innerText()).toContain("Async Data");
-        });
 
-        test("Supports Await component rejection", async ({ page }) => {
-          await page.goto(`http://localhost:${port}/await-component/reject`, {
-            waitUntil: "commit",
+          test(`Supports Await component ${prop} rejection`, async ({
+            page,
+          }) => {
+            await page.goto(
+              `http://localhost:${port}/await-component/reject?prop=${prop}`,
+              {
+                waitUntil: "commit",
+              },
+            );
+            await page.waitForSelector("[data-fallback]");
+            await fetch(`http://localhost:${port}/await-component/api`, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain" },
+              body: "reject",
+            });
+            const rejected = await page.waitForSelector("[data-rejected]");
+            expect(await rejected.innerText()).toContain(
+              "An error occurred in the Server Components render.",
+            );
+            validateRSCHtml(await page.content());
           });
-          await page.waitForSelector("[data-fallback]");
-          await fetch(`http://localhost:${port}/await-component/api`, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: "reject",
-          });
-          const rejected = await page.waitForSelector("[data-rejected]");
-          expect(await rejected.innerText()).toContain(
-            "An error occurred in the Server Components render.",
-          );
         });
 
         test("Suppport throwing redirect Response from render", async ({

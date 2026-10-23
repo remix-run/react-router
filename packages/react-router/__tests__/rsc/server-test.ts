@@ -1,4 +1,7 @@
+import { renderToString } from "react-dom/server.node";
+
 import {
+  Await,
   matchRSCServerRequest,
   type RSCMatch,
   type RSCRouteConfigEntry,
@@ -7,6 +10,118 @@ import { routeRSCServerRequest } from "../../lib/rsc/server.ssr";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
+  describe("Await", () => {
+    describe.each(["resolve", "promise"] as const)("%s", (prop) => {
+      test.each(["Value", undefined, null, false, 0, ""])(
+        "supplies the resolved value to children: %p",
+        async (value) => {
+          let received: unknown = "unset";
+          await Await({
+            ...(prop === "promise" ? { promise: value } : { resolve: value }),
+            children(data) {
+              received = data;
+              return null;
+            },
+          });
+          expect(received).toBe(value);
+        },
+      );
+
+      test("supplies fulfilled promises to children", async () => {
+        let promise = Promise.resolve("Value");
+        let received: unknown;
+        await Await({
+          ...(prop === "promise" ? { promise } : { resolve: promise }),
+          children(value) {
+            received = value;
+            return null;
+          },
+        });
+        expect(received).toBe("Value");
+      });
+
+      test("propagates rejections without an errorElement", async () => {
+        let error = new Error("Rejected");
+        let promise = Promise.reject(error);
+        promise.catch(() => {});
+        await expect(
+          Await({
+            ...(prop === "promise" ? { promise } : { resolve: promise }),
+            children: "Success",
+          }),
+        ).rejects.toBe(error);
+      });
+
+      test("propagates child render errors past errorElement", async () => {
+        let error = new Error("Render failed");
+        await expect(
+          Await({
+            ...(prop === "promise"
+              ? { promise: "Value" }
+              : { resolve: "Value" }),
+            children() {
+              throw error;
+            },
+            errorElement: "Await error",
+          }),
+        ).rejects.toBe(error);
+      });
+    });
+
+    test.each([null, false])(
+      "promise renders an empty errorElement=%p",
+      async (errorElement) => {
+        let result = await Await({
+          promise: Promise.reject(new Error("Rejected")),
+          children: "Success",
+          errorElement,
+        });
+        expect(renderToString(result)).toBe("");
+      },
+    );
+
+    test.each([null, false])(
+      "resolve propagates rejections with errorElement=%p",
+      async (errorElement) => {
+        let error = new Error("Rejected");
+        await expect(
+          Await({
+            resolve: Promise.reject(error),
+            children: "Success",
+            errorElement,
+          }),
+        ).rejects.toBe(error);
+      },
+    );
+
+    test("accepts promise-like values", async () => {
+      let received: unknown;
+      await Await({
+        promise: {
+          then(resolve: (value: string) => void) {
+            resolve("Thenable");
+          },
+        },
+        children(value) {
+          received = value;
+          return null;
+        },
+      });
+      expect(received).toBe("Thenable");
+    });
+
+    test.each([{}, { resolve: undefined, promise: undefined }])(
+      "requires exactly one promise prop: %p",
+      async (props) => {
+        await expect(
+          Await({ ...props, children: null } as any),
+        ).rejects.toThrow(
+          "<Await> requires exactly one of `resolve` or `promise`",
+        );
+      },
+    );
+  });
+
   test("reuses the static handler route matcher after exploding lazy routes", async () => {
     let childRoute: RSCRouteConfigEntry = {
       id: "child",
