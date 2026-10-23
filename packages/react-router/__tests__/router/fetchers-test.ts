@@ -561,21 +561,41 @@ describe("fetchers", () => {
       let C = await B.actions.bar.redirect("/baz", undefined, undefined, [
         "index",
       ]);
-      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
-      expect(t.router.state.location.pathname).toBe("/");
-
-      // The redirect is not followed, but the action still ran so we revalidate
-      // the current location
-      await C.loaders.root.resolve("ROOT*");
-      await C.loaders.index.resolve("INDEX*");
-      expect(C.loaders.baz.stub).not.toHaveBeenCalled();
+      await C.loaders.root.resolve("ROOT");
+      await C.loaders.index.resolve("INDEX");
       expect(t.router.state.fetchers.size).toBe(0);
       expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
       expect(t.router.state.location.pathname).toBe("/");
+    });
+
+    it("revalidates after an unmounted fetcher submission redirect", async () => {
+      let t = initializeTest();
+      t.router.getFetcher("key");
+      let A = await t.fetch("/bar", "key", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.router.deleteFetcher("key");
+
+      let B = await A.actions.bar.redirect("/baz", undefined, undefined, [
+        "index",
+      ]);
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(B.loaders.root.stub).toHaveBeenCalledTimes(1);
+      expect(B.loaders.index.stub).toHaveBeenCalledTimes(1);
+      expect(B.loaders.baz.stub).not.toHaveBeenCalled();
+
+      await B.loaders.root.resolve("ROOT*");
+      await B.loaders.index.resolve("INDEX*");
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT*",
         index: "INDEX*",
       });
+      expect(t.router.state.errors).toBe(null);
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(t.router.state.location.pathname).toBe("/");
     });
   });
 
@@ -1745,6 +1765,37 @@ describe("fetchers", () => {
       B) nav   GET  /bar   |---O
     `, () => {
       it("ignores submission redirect navigation if preceded by a normal GET navigation", async () => {
+        let key = "key";
+        let t = initializeTest();
+        let A = await t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        let B = await t.navigate("/bar");
+
+        // This redirect should be ignored
+        let C = await A.actions.foo.redirect("/baz", undefined, undefined, [
+          "bar",
+        ]);
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.bar.resolve("BAR");
+        expect(t.router.getFetcher(key)?.state).toBe("idle");
+
+        await B.loaders.root.resolve("ROOT*");
+        await B.loaders.bar.resolve("BAR");
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/bar" },
+          loaderData: {
+            root: "ROOT*",
+            bar: "BAR",
+          },
+        });
+        expect(t.router.getFetcher(key)?.state).toBe("idle");
+        expect(t.fetchers[key]?.data).toBeUndefined();
+      });
+
+      it("revalidates after an ignored submission redirect during a pending navigation", async () => {
         let key = "key";
         let t = initializeTest();
         let A = await t.fetch("/foo", key, {
