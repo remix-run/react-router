@@ -2274,6 +2274,34 @@ function testDomRouter(
         await waitFor(() => screen.getByText("Index Page"));
       });
 
+      it('defaults <Form method="post"> to be a REPLACE navigation when its action matches the current URL as loaded', async () => {
+        // Browsers encode the `'` in the query of a path URL but keep it as-is
+        // in a hash URL, so the loaded location differs between routers
+        let router = createTestRouter(
+          [
+            {
+              path: "search",
+              action: () => "action data",
+              Component() {
+                let data = useActionData() as string | undefined;
+                return (
+                  <Form method="post" action="/search?q=O'Reilly">
+                    <p>{data}</p>
+                    <button type="submit">Submit</button>
+                  </Form>
+                );
+              },
+            },
+          ],
+          { window: getWindow("/search?q=O'Reilly") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("action data"));
+        expect(router.state.historyAction).toBe("REPLACE");
+      });
+
       it('Uses a PUSH navigation on <Form method="post"> if it redirects', async () => {
         let router = createTestRouter(
           [
