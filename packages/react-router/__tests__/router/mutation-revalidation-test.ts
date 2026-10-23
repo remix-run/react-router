@@ -1,6 +1,12 @@
 import { IDLE_NAVIGATION } from "../../lib/router/router";
+import type { DataStrategyResult } from "../../lib/router/utils";
 
-import { cleanup, setup, TASK_ROUTES } from "./utils/data-router-setup";
+import {
+  cleanup,
+  createDeferred,
+  setup,
+  TASK_ROUTES,
+} from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 
 afterEach(() => cleanup());
@@ -193,3 +199,162 @@ it.each(["shouldRevalidate", "defaultShouldRevalidate"])(
     expect(C.loaders.root.stub).not.toHaveBeenCalled();
   },
 );
+
+describe.each(["default strategy", "strategy resolving every match"])(
+  "with a %s",
+  (strategy) => {
+    it.each([400, 500])(
+      "does not retain invalidation for a returned %i action",
+      async (status) => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          dataStrategy:
+            strategy === "strategy resolving every match"
+              ? async ({ matches }) => {
+                  // Framework Mode resolves every match before deciding whether
+                  // its loader should actually run.
+                  let results: Record<string, DataStrategyResult> = {};
+                  await Promise.all(
+                    matches.map((m) =>
+                      m.resolve(async (handler) => {
+                        if (m.shouldCallHandler()) {
+                          results[m.route.id] = {
+                            type: "data",
+                            result: await handler(),
+                          };
+                        }
+                      }),
+                    ),
+                  );
+                  return results;
+                }
+              : undefined,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+        let A = await t.fetch("/tasks", "mutation", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        t.shimHelper(A.loaders, "fetch", "loader", "tasks");
+        let B = await t.navigate("/tasks");
+        await A.actions.tasks.resolve(new Response("BAD", { status }));
+        expect(A.loaders.root.stub).not.toHaveBeenCalled();
+        await B.loaders.root.resolve("ROOT");
+        await B.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.navigation.state).toBe("idle");
+
+        let C = await t.navigate("/tasks/1");
+        await C.loaders.tasksId.resolve("TASK 1");
+        let stateAfterChild = t.router.state.navigation.state;
+        await C.loaders.root.resolve("UNEXPECTED ROOT RELOAD");
+        await A.loaders.tasks.resolve("TASKS UNUSED");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.fetchers.mutation).toMatchObject({
+          state: "idle",
+          data: "BAD",
+        });
+        expect(stateAfterChild).toBe("idle");
+        expect(C.loaders.root.stub).not.toHaveBeenCalled();
+      },
+    );
+  },
+);
+
+describe.each([
+  "call site",
+  "route",
+  "route with call-site opt-out",
+  "data strategy",
+  "data strategy without resolve",
+  "route with legacy strategy without resolve",
+])("with a %s revalidation opt-in", (optIn) => {
+  it.each([400, 500])(
+    "preserves revalidation after a returned %i action",
+    async (status) => {
+      let freshRoot = createDeferred();
+      let rootOptIns = 0;
+      let t = setup({
+        routes: [
+          {
+            ...TASK_ROUTES[0],
+            shouldRevalidate: optIn.startsWith("route")
+              ? ({ actionStatus, defaultShouldRevalidate }) =>
+                  actionStatus != null && actionStatus >= 400
+                    ? true
+                    : defaultShouldRevalidate
+              : undefined,
+          },
+        ],
+        dataStrategy: optIn.includes("strategy")
+          ? async ({ matches }) => {
+              let selected = matches.filter((m) =>
+                optIn === "route with legacy strategy without resolve"
+                  ? m.shouldLoad
+                  : m.shouldCallHandler(
+                      (m.shouldRevalidateArgs?.actionStatus ?? 0) >= 400
+                        ? true
+                        : undefined,
+                    ),
+              );
+              return Object.fromEntries(
+                await Promise.all(
+                  selected.map(async (m) => {
+                    if (
+                      optIn.includes("without resolve") &&
+                      m.route.id === "root" &&
+                      (m.shouldRevalidateArgs?.actionStatus ?? 0) >= 400
+                    ) {
+                      rootOptIns++;
+                      return [
+                        m.route.id,
+                        { type: "data", result: await freshRoot.promise },
+                      ];
+                    }
+                    return [m.route.id, await m.resolve()];
+                  }),
+                ),
+              );
+            }
+          : undefined,
+        initialEntries: ["/"],
+        hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+      });
+      let A = await t.fetch("/tasks", "mutation", {
+        formMethod: "post",
+        formData: createFormData({}),
+        defaultShouldRevalidate:
+          optIn === "call site"
+            ? true
+            : optIn === "route with call-site opt-out"
+              ? false
+              : undefined,
+      });
+      t.shimHelper(A.loaders, "fetch", "loader", "tasks");
+      let B = await t.navigate("/tasks");
+      await A.actions.tasks.resolve(new Response("BAD", { status }));
+      let returnsDataDirectly = optIn.includes("without resolve");
+      expect(rootOptIns).toBe(returnsDataDirectly ? 1 : 0);
+      expect(A.loaders.root.stub).toHaveBeenCalledTimes(
+        returnsDataDirectly ? 0 : 1,
+      );
+      await B.loaders.root.resolve("ROOT");
+      await B.loaders.tasks.resolve("TASKS");
+
+      let C = await t.navigate("/tasks/1");
+      await C.loaders.tasksId.resolve("TASK 1");
+      expect(C.loaders.root.stub).toHaveBeenCalledTimes(1);
+      expect(t.router.state.navigation.state).toBe("loading");
+      await C.loaders.root.resolve("ROOT*");
+      await freshRoot.resolve("ROOT FROM STRATEGY");
+      await A.loaders.root.resolve("ROOT FROM A");
+      await A.loaders.tasks.resolve("TASKS FROM A");
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        location: { pathname: "/tasks/1" },
+        loaderData: { root: "ROOT*", tasksId: "TASK 1" },
+      });
+      expect(t.fetchers.mutation).toMatchObject({ state: "idle", data: "BAD" });
+    },
+  );
+});

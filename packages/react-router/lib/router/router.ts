@@ -1290,8 +1290,12 @@ export function createRouter(init: RouterInit): Router {
   // navigation
   let pendingNavigationLoadId = -1;
 
-  // Fetchers that triggered data reloads as a result of their actions
-  let fetchReloadIds = new Map<string, number>();
+  // Fetchers that triggered data reloads as a result of their actions. A reload
+  // after a 4xx/5xx result does not require continued invalidation by default.
+  let fetchReloadIds = new Map<
+    string,
+    { loadId: number; revalidationRequired: boolean }
+  >();
 
   // Fetchers that triggered redirect navigations
   let fetchRedirectIds = new Set<string>();
@@ -1694,7 +1698,9 @@ export function createRouter(init: RouterInit): Router {
     // An older navigation may finish while a newer mutation revalidation is
     // still pending. Keep later navigations revalidating until it lands or is
     // superseded by a newer load.
-    isRevalidationRequired = fetchReloadIds.size > 0;
+    isRevalidationRequired = Array.from(fetchReloadIds.values()).some(
+      (reload) => reload.revalidationRequired,
+    );
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -3070,10 +3076,14 @@ export function createRouter(init: RouterInit): Router {
     invariant(matches, "Didn't find any matches after fetcher action");
 
     let loadId = ++incrementingLoadId;
-    fetchReloadIds.set(key, loadId);
+    let revalidationRequired =
+      callSiteDefaultShouldRevalidate ??
+      (actionResult.statusCode == null || actionResult.statusCode < 400);
+    let reload = { loadId, revalidationRequired };
+    fetchReloadIds.set(key, reload);
     // A navigation or fetcher may have cleared this while our action was
-    // pending. Its completion still requires fresh loader data.
-    isRevalidationRequired = true;
+    // pending. Reassert it unless this action's default revalidation was skipped.
+    isRevalidationRequired ||= revalidationRequired;
 
     let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
       revalidationRequest,
@@ -3095,6 +3105,17 @@ export function createRouter(init: RouterInit): Router {
       dataRouteMatcher,
       [match.route.id, actionResult],
       callSiteDefaultShouldRevalidate,
+      () => {
+        // Routes and data strategies can opt into revalidation even when the
+        // action status or call-site default skips it.
+        if (
+          !abortController.signal.aborted &&
+          fetchReloadIds.get(key) === reload
+        ) {
+          reload.revalidationRequired = true;
+          isRevalidationRequired = true;
+        }
+      },
     );
 
     // Build an updated fetchers map for the updateState call below without
@@ -3148,7 +3169,7 @@ export function createRouter(init: RouterInit): Router {
       // Drop this before the aborted bail-out below.  An aborted fetcher goes
       // idle and is pruned from state.fetchers, and abortStaleFetchLoads
       // invariants on a fetcher existing for every key still in fetchReloadIds
-      if (fetchReloadIds.get(key) === loadId) {
+      if (fetchReloadIds.get(key)?.loadId === loadId) {
         fetchReloadIds.delete(key);
       }
       return;
@@ -3262,7 +3283,9 @@ export function createRouter(init: RouterInit): Router {
       });
       // Preserve invalidation for any newer mutation revalidations that
       // this load did not supersede.
-      isRevalidationRequired = fetchReloadIds.size > 0;
+      isRevalidationRequired = Array.from(fetchReloadIds.values()).some(
+        (reload) => reload.revalidationRequired,
+      );
     }
   }
 
@@ -3866,8 +3889,8 @@ export function createRouter(init: RouterInit): Router {
     fetchers: Map<string, Fetcher>,
   ): boolean {
     let yeetedKeys = [];
-    for (let [key, id] of fetchReloadIds) {
-      if (id < landedId) {
+    for (let [key, { loadId }] of fetchReloadIds) {
+      if (loadId < landedId) {
         let fetcher = fetchers.get(key);
         invariant(fetcher, `Expected fetcher: ${key}`);
         if (fetcher.state === "loading") {
@@ -5563,6 +5586,7 @@ function getMatchesToLoad(
   dataRouteMatcher: DataRouteMatcher,
   pendingActionResult?: PendingActionResult,
   callSiteDefaultShouldRevalidate?: boolean,
+  onRevalidation?: () => void,
 ): {
   dsMatches: DataStrategyMatch[];
   revalidatingFetchers: RevalidatingFetcher[];
@@ -5686,6 +5710,9 @@ function getMatchesToLoad(
       defaultShouldRevalidate,
     };
     let shouldLoad = shouldRevalidateLoader(match, shouldRevalidateArgs);
+    if (shouldLoad) {
+      onRevalidation?.();
+    }
     return getDataStrategyMatch(
       mapRouteProperties,
       manifest,
@@ -5698,6 +5725,7 @@ function getMatchesToLoad(
       shouldLoad,
       shouldRevalidateArgs,
       callSiteDefaultShouldRevalidate,
+      onRevalidation,
     );
   });
 
@@ -5805,6 +5833,7 @@ function getMatchesToLoad(
         defaultShouldRevalidate,
       };
       if (shouldRevalidateLoader(fetcherMatch, shouldRevalidateArgs)) {
+        onRevalidation?.();
         fetcherDsMatches = getTargetedDataStrategyMatches(
           mapRouteProperties,
           manifest,
@@ -6618,6 +6647,7 @@ function getDataStrategyMatch(
   shouldLoad: boolean,
   shouldRevalidateArgs: DataStrategyMatch["shouldRevalidateArgs"] = null,
   callSiteDefaultShouldRevalidate?: boolean,
+  onRevalidation?: () => void,
 ): DataStrategyMatch {
   // The hope here is to avoid a breaking change to the resolve behavior.
   // Opt-ing into the `shouldCallHandler` API changes some nuanced behavior
@@ -6643,21 +6673,24 @@ function getDataStrategyMatch(
         return shouldLoad;
       }
 
+      let args = shouldRevalidateArgs;
       if (typeof callSiteDefaultShouldRevalidate === "boolean") {
-        return shouldRevalidateLoader(match, {
-          ...shouldRevalidateArgs,
+        args = {
+          ...args,
           defaultShouldRevalidate: callSiteDefaultShouldRevalidate,
-        });
-      }
-
-      if (typeof defaultShouldRevalidate === "boolean") {
-        return shouldRevalidateLoader(match, {
-          ...shouldRevalidateArgs,
+        };
+      } else if (typeof defaultShouldRevalidate === "boolean") {
+        args = {
+          ...args,
           defaultShouldRevalidate,
-        });
+        };
       }
 
-      return shouldRevalidateLoader(match, shouldRevalidateArgs);
+      let shouldCall = shouldRevalidateLoader(match, args);
+      if (shouldCall) {
+        onRevalidation?.();
+      }
+      return shouldCall;
     },
     resolve(handlerOverride) {
       let { lazy, loader, middleware } = match.route;
@@ -6688,6 +6721,7 @@ function getDataStrategyMatch(
           lazyRoutePromise: _lazyPromises?.route,
           handlerOverride,
           scopedContext,
+          onHandlerCall: onRevalidation,
         });
       }
       return Promise.resolve({ type: ResultType.data, result: undefined });
@@ -6833,6 +6867,7 @@ async function callLoaderOrAction({
   lazyRoutePromise,
   handlerOverride,
   scopedContext,
+  onHandlerCall,
 }: {
   request: Request;
   path: To;
@@ -6842,6 +6877,7 @@ async function callLoaderOrAction({
   lazyRoutePromise: Promise<void> | undefined;
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0];
   scopedContext: unknown;
+  onHandlerCall?: () => void;
 }): Promise<DataStrategyResult> {
   let result: DataStrategyResult;
   let onReject: (() => void) | undefined;
@@ -6867,6 +6903,7 @@ async function callLoaderOrAction({
           ),
         );
       }
+      onHandlerCall?.();
       return handler(
         {
           request,
