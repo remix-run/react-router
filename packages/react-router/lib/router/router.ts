@@ -1691,7 +1691,10 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = false;
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
-    isRevalidationRequired = false;
+    // An older navigation may finish while a newer mutation revalidation is
+    // still pending. Keep later navigations revalidating until it lands or is
+    // superseded by a newer load.
+    isRevalidationRequired = fetchReloadIds.size > 0;
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -3068,6 +3071,9 @@ export function createRouter(init: RouterInit): Router {
 
     let loadId = ++incrementingLoadId;
     fetchReloadIds.set(key, loadId);
+    // A navigation or fetcher may have cleared this while our action was
+    // pending. Its completion still requires fresh loader data.
+    isRevalidationRequired = true;
 
     let { dsMatches, revalidatingFetchers } = getMatchesToLoad(
       revalidationRequest,
@@ -3254,7 +3260,9 @@ export function createRouter(init: RouterInit): Router {
         ),
         fetchers: finalFetchers,
       });
-      isRevalidationRequired = false;
+      // Preserve invalidation for any newer mutation revalidations that
+      // this load did not supersede.
+      isRevalidationRequired = fetchReloadIds.size > 0;
     }
   }
 
