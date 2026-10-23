@@ -1691,7 +1691,8 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = false;
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
-    isRevalidationRequired = false;
+    // An older navigation must not clear a newer fetcher's revalidation.
+    isRevalidationRequired = fetchReloadIds.size > 0;
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -3051,6 +3052,10 @@ export function createRouter(init: RouterInit): Router {
       }
     }
 
+    // An older load may have cleared the action's initial invalidation while
+    // it was submitting. Restore it now that the mutation has completed.
+    isRevalidationRequired = true;
+
     // Start the data load for current matches, or the next location if we're
     // in the middle of a navigation
     let nextLocation = state.navigation.location || state.location;
@@ -3254,7 +3259,8 @@ export function createRouter(init: RouterInit): Router {
         ),
         fetchers: finalFetchers,
       });
-      isRevalidationRequired = false;
+      // A newer fetcher reload may still need to commit its mutation data.
+      isRevalidationRequired = fetchReloadIds.size > 0;
     }
   }
 
