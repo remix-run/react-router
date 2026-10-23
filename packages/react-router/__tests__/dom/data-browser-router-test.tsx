@@ -2207,6 +2207,73 @@ function testDomRouter(
         await waitFor(() => screen.getByText("Index Page"));
       });
 
+      it('defaults <Form method="post"> to be a REPLACE navigation when its action is the current URL with characters that get encoded', async () => {
+        let router = createTestRouter(
+          [
+            {
+              Component: Layout,
+              children: [
+                { index: true, Component: () => <h1>Index Page</h1> },
+                {
+                  path: "café",
+                  action: () => "action data",
+                  Component: FormPage,
+                },
+              ],
+            },
+          ],
+          {},
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Layout() {
+          let navigate = useNavigate();
+          return (
+            <>
+              <Link to="café?q=a b">Go to Form</Link>
+              <button onClick={() => navigate(-1)}>Go back</button>
+              <div className="output">
+                <Outlet />
+              </div>
+            </>
+          );
+        }
+
+        function FormPage() {
+          let data = useActionData() as string | undefined;
+          return (
+            <Form method="post" action="/café?q=a b">
+              <p>Form Page</p>
+              <p>{data}</p>
+              <input name="test" defaultValue="value" />
+              <button type="submit">Submit</button>
+            </Form>
+          );
+        }
+
+        let html = () => getHtml(container.querySelector(".output")!);
+
+        // Start on index page
+        expect(html()).toMatch("Index Page");
+
+        // Navigate to form page
+        fireEvent.click(screen.getByText("Go to Form"));
+        await waitFor(() => screen.getByText("Form Page"));
+        expect(router.state.location.pathname).toBe("/caf%C3%A9");
+        expect(router.state.location.search).toBe("?q=a%20b");
+
+        // Submit without redirect does a replace
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("action data"));
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.pathname).toBe("/caf%C3%A9");
+        expect(router.state.location.search).toBe("?q=a%20b");
+
+        // Back navigate to index page
+        fireEvent.click(screen.getByText("Go back"));
+        await waitFor(() => screen.getByText("Index Page"));
+      });
+
       it('Uses a PUSH navigation on <Form method="post"> if it redirects', async () => {
         let router = createTestRouter(
           [
