@@ -9053,13 +9053,16 @@ function testDomRouter(
         // callback, rejects `ready` with the skip reason, and fulfills
         // `updateCallbackDone` and `finished` once the callback is done.
         // The messages are Chromium's.
-        function skippedViewTransition(reason: DOMException) {
+        function skippedViewTransition(
+          reason: DOMException,
+          ready?: Promise<void>,
+        ) {
           return (update: () => unknown) => {
             let updateCallbackDone = Promise.resolve()
               .then(() => update())
               .then(() => undefined);
             return {
-              ready: Promise.reject(reason),
+              ready: ready ?? Promise.reject(reason),
               updateCallbackDone,
               finished: updateCallbackDone.then(() => undefined),
               skipTransition: () => {},
@@ -9081,10 +9084,12 @@ function testDomRouter(
           reason,
           visibilityState,
           flushSync,
+          ready,
         }: {
           reason: DOMException;
           visibilityState: DocumentVisibilityState;
           flushSync: boolean;
+          ready?: Promise<void>;
         }) {
           let testWindow = getWindow("/");
           Object.defineProperty(testWindow.document, "visibilityState", {
@@ -9093,6 +9098,7 @@ function testDomRouter(
           });
           testWindow.document.startViewTransition = skippedViewTransition(
             reason,
+            ready,
           ) as unknown as Document["startViewTransition"];
           let transitioningToPage: boolean[] = [];
           let router = createTestRouter(
@@ -9150,6 +9156,37 @@ function testDomRouter(
           });
           expect(transitioningToPage.at(-1)).toBe(false);
         });
+
+        it.each([false, true])(
+          "rethrows unexpected ready rejections in a visible document (flushSync: %s)",
+          async (flushSync) => {
+            let reason = new DOMException(
+              "Duplicate view-transition-name",
+              "InvalidStateError",
+            );
+            let ready = Promise.reject<void>(reason);
+            let catchReady = ready.catch.bind(ready);
+            let handledReady: Promise<unknown> | undefined;
+            jest.spyOn(ready, "catch").mockImplementation((onRejected) => {
+              let result = catchReady(onRejected);
+              handledReady = result;
+              // Observe the expected rejection immediately so Jest does not
+              // report it as an unhandled rejection before the assertion.
+              result.catch(() => {});
+              return result;
+            });
+
+            await navigateWithSkippedViewTransition({
+              reason,
+              visibilityState: "visible",
+              flushSync,
+              ready,
+            });
+
+            expect(handledReady).toBeDefined();
+            await expect(handledReady).rejects.toBe(reason);
+          },
+        );
       });
     });
 
