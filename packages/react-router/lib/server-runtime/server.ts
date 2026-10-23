@@ -308,6 +308,8 @@ function derive(build: ServerBuild, mode?: string) {
     }
 
     if (request.method === "HEAD") {
+      // Cancel the dropped body so its stream (e.g. an open file) is released
+      response.body?.cancel().catch(() => {});
       return new Response(null, {
         headers: response.headers,
         status: response.status,
