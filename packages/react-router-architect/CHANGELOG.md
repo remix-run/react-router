@@ -1,5 +1,14 @@
 # `@react-router/architect`
 
+## v8.5.1
+
+### Patch Changes
+
+- Preserve binary request bodies by no longer decoding base64 encoded request bodies to a UTF-8 string when the content type is not `multipart/form-data` ([#15652](https://github.com/remix-run/react-router/pull/15652))
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+
 ## v8.5.0
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # `react-router`
 
+## v8.5.1
+
+### Patch Changes
+
+- Fix `URIError: URI malformed` when an API-only (`ssr: "unstable_api-only"`) server or an `ssr: false` dev server receives a URL path with a malformed percent-encoding ([#15649](https://github.com/remix-run/react-router/pull/15649))
+- Fix an unhandled promise rejection when the browser skips a `viewTransition` navigation, for example in a hidden tab ([#15582](https://github.com/remix-run/react-router/pull/15582))
+- Stop the published types from adding a `document.startViewTransition()` overload to the global `Document`, so its return value can be assigned to the DOM `ViewTransition` type again ([#15680](https://github.com/remix-run/react-router/pull/15680))
+- Fix duplicate headers when throwing a redirect from an RSC server function ([#15667](https://github.com/remix-run/react-router/pull/15667))
+- Skip `deleteData` in `destroySession` when the session has no ID, so destroying a session without a cookie no longer fails on storage that rejects an empty key ([#15639](https://github.com/remix-run/react-router/pull/15639))
+
 ## v8.5.0
 
 ### Minor Changes

@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.5.1](#v851)
   - [v8.5.0](#v850)
     - [View Transition Deprecations](#view-transition-deprecations)
     - [API-only Mode (unstable)](#api-only-mode-unstable)
@@ -119,6 +120,38 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.5.1
+
+Date: 2026-10-23
+
+### Patch Changes
+
+- `react-router` - Fix `URIError: URI malformed` when an API-only (`ssr: "unstable_api-only"`) server or an `ssr: false` dev server receives a URL path with a malformed percent-encoding ([#15649](https://github.com/remix-run/react-router/pull/15649))
+
+- `react-router` - Fix an unhandled promise rejection when the browser skips a `viewTransition` navigation, for example in a hidden tab ([#15582](https://github.com/remix-run/react-router/pull/15582))
+
+- `react-router` - Stop the published types from adding a `document.startViewTransition()` overload to the global `Document`, so its return value can be assigned to the DOM `ViewTransition` type again ([#15680](https://github.com/remix-run/react-router/pull/15680))
+
+- `react-router` - Fix duplicate headers when throwing a redirect from an RSC server function ([#15667](https://github.com/remix-run/react-router/pull/15667))
+
+- `react-router` - Skip `deleteData` in `destroySession` when the session has no ID, so destroying a session without a cookie no longer fails on storage that rejects an empty key ([#15639](https://github.com/remix-run/react-router/pull/15639))
+
+- `@react-router/architect` - Preserve binary request bodies by no longer decoding base64 encoded request bodies to a UTF-8 string when the content type is not `multipart/form-data` ([#15652](https://github.com/remix-run/react-router/pull/15652))
+
+- `@react-router/dev` - Use resolved Vite environment output directories when reading and writing build artifacts ([#15480](https://github.com/remix-run/react-router/pull/15480))
+  - Finalize server-bundle manifest paths after asynchronous Vite configuration hooks complete
+  - Preserve output-directory overrides applied when creating a Vite build environment
+
+- `@react-router/dev` - Run prerendering after other Vite plugins finish their application build hooks ([#15481](https://github.com/remix-run/react-router/pull/15481))
+
+  Close React Router's build resources when another plugin's application build hook fails during `react-router build`.
+
+- `@react-router/serve` - Avoid writing a blank line to stderr when the server shuts down successfully ([#15641](https://github.com/remix-run/react-router/pull/15641))
+
+- `create-react-router` - Fix package manager command execution on Windows by handling `.cmd` shims properly. ([#15565](https://github.com/remix-run/react-router/pull/15565))
+
+**Full Changelog**: [`v8.5.0...v8.5.1`](https://github.com/remix-run/react-router/compare/react-router@8.5.0...react-router@8.5.1)
 
 ## v8.5.0
 
