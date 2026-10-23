@@ -2870,8 +2870,9 @@ export function createRouter(init: RouterInit): Router {
         return;
       }
       if (isRedirectResult(actionResult)) {
-        // We don't follow the redirect, but the action still ran so we
-        // revalidate just like we would for a SuccessResult
+        // We don't follow the redirect, but the action still ran. A navigation
+        // may have cleared the revalidation flag while the action was pending.
+        isRevalidationRequired = true;
         actionResult = { type: ResultType.data, data: undefined };
       }
       // Let SuccessResult's fall through for revalidation
@@ -2882,7 +2883,8 @@ export function createRouter(init: RouterInit): Router {
           // should take precedence over this redirect navigation.  That
           // navigation's loaders may have already run before our action
           // completed, so instead of following the redirect we fall through and
-          // revalidate just like we would for a SuccessResult
+          // revalidate. A completed navigation may have cleared this flag.
+          isRevalidationRequired = true;
           actionResult = { type: ResultType.data, data: undefined };
         } else {
           fetchControllers.delete(key);

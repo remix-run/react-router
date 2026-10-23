@@ -1832,6 +1832,60 @@ describe("fetchers", () => {
         expect(t.fetchers[key]?.data).toBeUndefined();
       });
 
+      it.each([false, true])(
+        "revalidates shared loaders after an ignored submission redirect during a subsequent navigation (unmounted: %s)",
+        async (unmounted) => {
+          let key = "key";
+          let t = initializeTest();
+          t.router.getFetcher(key);
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+
+          // Complete a navigation before the action's mutation, clearing its
+          // pending revalidation requirement.
+          let B = await t.navigate("/foo");
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.foo.resolve("FOO");
+          expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+
+          // A second navigation shares the root route and normally does not
+          // revalidate it when navigating between children.
+          let C = await t.navigate("/bar");
+          expect(C.loaders.root.stub).not.toHaveBeenCalled();
+
+          if (unmounted) {
+            t.router.deleteFetcher(key);
+          }
+
+          // The action's redirect is ignored, but its mutation must revalidate
+          // shared loaders as well as the pending navigation's new loaders.
+          let D = await A.actions.foo.redirect("/baz", undefined, undefined, [
+            "bar",
+          ]);
+          expect(t.router.state.navigation.location?.pathname).toBe("/bar");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+          expect(D.loaders.root.stub).toHaveBeenCalledTimes(1);
+          expect(D.loaders.bar.stub).toHaveBeenCalledTimes(1);
+
+          await D.loaders.root.resolve("ROOT**");
+          await D.loaders.bar.resolve("BAR*");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {
+              root: "ROOT**",
+              bar: "BAR*",
+            },
+          });
+          expect(C.loaders.bar.signal.aborted).toBe(true);
+          expect(D.loaders.baz.stub).not.toHaveBeenCalled();
+          expect(t.router.state.fetchers.size).toBe(0);
+          expect(t.fetchers[key]?.data).toBeUndefined();
+        },
+      );
+
       it("ignores submission redirect navigation if preceded by a normal GET navigation (w/o loaders)", async () => {
         let key = "key";
         let t = setup({
