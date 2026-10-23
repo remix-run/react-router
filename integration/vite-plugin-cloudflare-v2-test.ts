@@ -17,8 +17,6 @@ test.describe("vite-plugin-cloudflare v2", () => {
           import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
-            // This Cloudflare beta reads Vite manifests after React Router's build.
-            build: { manifest: true },
             plugins: [
               cloudflare({ viteEnvironment: { name: "ssr" } }),
               reactRouter(),
