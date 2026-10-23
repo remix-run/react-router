@@ -1,5 +1,21 @@
 # `@react-router/dev`
 
+## v8.5.1
+
+### Patch Changes
+
+- Use resolved Vite environment output directories when reading and writing build artifacts ([#15480](https://github.com/remix-run/react-router/pull/15480))
+  - Finalize server-bundle manifest paths after asynchronous Vite configuration hooks complete
+  - Preserve output-directory overrides applied when creating a Vite build environment
+
+- Run prerendering after other Vite plugins finish their application build hooks ([#15481](https://github.com/remix-run/react-router/pull/15481))
+
+  Close React Router's build resources when another plugin's application build hook fails during `react-router build`.
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+  - [`@react-router/serve@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.1)
+
 ## v8.5.0
 
 ### Patch Changes
