@@ -850,9 +850,14 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     let streamScript =
       "window.__reactRouterContext.stream = new ReadableStream({" +
       "start(controller){" +
-      "window.__reactRouterContext.streamController = controller;" +
+      "var enc = new TextEncoder();" +
+      "window.__reactRouterContext.streamController = {" +
+      "enqueue: function(s){ controller.enqueue(enc.encode(s)); }," +
+      "close: function(){ controller.close(); }," +
+      "error: function(e){ controller.error(e); }" +
+      "};" +
       "}" +
-      "}).pipeThrough(new TextEncoderStream());";
+      "});";
 
     let contextScript = staticContext
       ? `window.__reactRouterContext = ${serverHandoffString};${streamScript}`
