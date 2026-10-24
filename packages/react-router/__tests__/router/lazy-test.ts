@@ -2201,6 +2201,47 @@ describe("lazily loaded route modules", () => {
       expect(lazyLoader).toHaveBeenCalledTimes(1);
     });
 
+    it("bubbles a failed lazy Component import on a loader-less route to the error boundary", async () => {
+      let lazyComponentDeferred = createDeferred();
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            Component: () => null,
+            ErrorBoundary: () => null,
+            children: [
+              {
+                id: "lazy",
+                path: "lazy",
+                lazy: {
+                  Component: () => lazyComponentDeferred.promise,
+                },
+              },
+            ],
+          },
+        ],
+      }).initialize();
+
+      let navigation = router.navigate("/lazy");
+      await tick();
+      expect(router.state.navigation.state).toBe("loading");
+
+      lazyComponentDeferred.reject(
+        new Error("Failed to fetch dynamically imported module"),
+      );
+      await navigation.catch(() => {});
+      await tick();
+
+      expect(router.state.location.pathname).toBe("/lazy");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.loaderData).toEqual({});
+      expect(router.state.errors).toEqual({
+        root: new Error("Failed to fetch dynamically imported module"),
+      });
+    });
+
     it("handles errors when failing to resolve other lazy route properties on loading navigation", async () => {
       let [lazyLoader, lazyLoaderDeferred] = createAsyncStub();
       let [lazyAction, lazyActionDeferred] = createAsyncStub();
