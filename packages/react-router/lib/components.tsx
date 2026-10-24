@@ -1998,13 +1998,44 @@ function useRouteComponentProps() {
 export type RouteComponentProps = ReturnType<typeof useRouteComponentProps>;
 type RouteComponentType = React.ComponentType<RouteComponentProps>;
 
+type ReactServerDOMLazyChunk = {
+  $$typeof: symbol;
+  _payload: { status: unknown };
+  _init: (payload: unknown) => React.ReactElement;
+};
+
+function isReactServerDOMLazyChunk(
+  value: unknown,
+): value is ReactServerDOMLazyChunk {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "$$typeof" in value &&
+    value.$$typeof === Symbol.for("react.lazy") &&
+    "_payload" in value &&
+    typeof value._payload === "object" &&
+    value._payload !== null &&
+    "status" in value._payload &&
+    "_init" in value &&
+    typeof value._init === "function"
+  );
+}
+
+function unwrapReactServerDOMLazyChunk(
+  element: React.ReactElement,
+): React.ReactElement {
+  return isReactServerDOMLazyChunk(element)
+    ? element._init(element._payload)
+    : element;
+}
+
 export function WithComponentProps({
   children,
 }: {
   children: React.ReactElement;
 }) {
   const props = useRouteComponentProps();
-  return React.cloneElement(children, props);
+  return React.cloneElement(unwrapReactServerDOMLazyChunk(children), props);
 }
 
 export function withComponentProps(Component: RouteComponentType) {
@@ -2031,7 +2062,7 @@ export function WithHydrateFallbackProps({
   children: React.ReactElement;
 }) {
   const props = useHydrateFallbackProps();
-  return React.cloneElement(children, props);
+  return React.cloneElement(unwrapReactServerDOMLazyChunk(children), props);
 }
 
 export function withHydrateFallbackProps(HydrateFallback: HydrateFallbackType) {
@@ -2059,7 +2090,7 @@ export function WithErrorBoundaryProps({
   children: React.ReactElement;
 }) {
   const props = useErrorBoundaryProps();
-  return React.cloneElement(children, props);
+  return React.cloneElement(unwrapReactServerDOMLazyChunk(children), props);
 }
 
 export function withErrorBoundaryProps(ErrorBoundary: ErrorBoundaryType) {
