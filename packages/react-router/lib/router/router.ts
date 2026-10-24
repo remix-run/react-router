@@ -2048,6 +2048,9 @@ export function createRouter(init: RouterInit): Router {
           }
         : undefined;
 
+    // Retry lazy imports that rejected before this navigation
+    retryRejectedLazyImports(manifest);
+
     // Create a controller/Request for this navigation
     pendingNavigationController = new AbortController();
     let request = createClientSideRequest(
@@ -2841,6 +2844,9 @@ export function createRouter(init: RouterInit): Router {
       setFetcherError(key, routeId, error, { flushSync });
       return;
     }
+
+    // Retry lazy imports that rejected before this fetch
+    retryRejectedLazyImports(manifest);
 
     // Create a new context per fetch
     let scopedContext = init.getContext
@@ -6058,6 +6064,48 @@ const lazyRoutePropertyCache = new WeakMap<
   Partial<Record<keyof DataRouteObject, Promise<void>>>
 >();
 
+// Lazy imports that rejected (e.g. a transient network failure), per router
+// manifest. Their cached promises are dropped when the router's next navigation
+// or fetcher call starts, so the import is retried instead of replaying the
+// rejection, while the loaders of the navigation that hit the rejection still
+// share it. Keyed by manifest so routers don't evict each other's entries and
+// so a static handler, which never evicts, doesn't retain its routes.
+const rejectedLazyImports = new WeakMap<
+  RouteManifest,
+  Array<{ route: DataRouteObject; key?: keyof DataRouteObject }>
+>();
+
+function recordRejectedLazyImport(
+  manifest: RouteManifest,
+  route: DataRouteObject,
+  key?: keyof DataRouteObject,
+): void {
+  let rejected = rejectedLazyImports.get(manifest);
+  if (!rejected) {
+    rejected = [];
+    rejectedLazyImports.set(manifest, rejected);
+  }
+  rejected.push({ route, key });
+}
+
+function retryRejectedLazyImports(manifest: RouteManifest): void {
+  let rejected = rejectedLazyImports.get(manifest);
+  if (!rejected) {
+    return;
+  }
+  rejectedLazyImports.delete(manifest);
+  for (let { route, key } of rejected) {
+    if (key) {
+      let cache = lazyRoutePropertyCache.get(route);
+      if (cache) {
+        delete cache[key];
+      }
+    } else {
+      lazyRouteFunctionCache.delete(route);
+    }
+  }
+}
+
 const loadLazyRouteProperty = ({
   key,
   route,
@@ -6132,6 +6180,9 @@ const loadLazyRouteProperty = ({
   })();
 
   cache[key] = propertyPromise;
+  propertyPromise.catch(() => {
+    recordRejectedLazyImport(manifest, routeToUpdate, key);
+  });
   return propertyPromise;
 };
 
@@ -6243,7 +6294,9 @@ function loadLazyRoute(
     lazyRouteFunctionCache.set(routeToUpdate, lazyRoutePromise);
 
     // Prevent unhandled rejection errors - handled inside of `callLoadOrAction`
-    lazyRoutePromise.catch(() => {});
+    lazyRoutePromise.catch(() => {
+      recordRejectedLazyImport(manifest, routeToUpdate);
+    });
 
     return {
       lazyRoutePromise,
