@@ -165,6 +165,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           rootDirectory,
           mode,
           watch,
+          watchOptions: viteUserConfig.server?.watch ?? undefined,
           validateConfig: (userConfig) => {
             let errors: string[] = [];
             if (userConfig.buildEnd) errors.push("buildEnd");
@@ -510,6 +511,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                 {
                   mode,
                   rsc: true,
+                  watchOptions: viteUserConfig.server?.watch ?? undefined,
                   // ignore `info` logs from typegen since they are
                   // redundant when Vite plugin logs are active
                   logger: vite.createLogger("warn", {
