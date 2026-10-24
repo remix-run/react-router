@@ -3115,6 +3115,68 @@ describe("createMemoryRouter", () => {
       `);
     });
 
+    it("clears render errors when a new promise is passed to <Await>", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/:id"
+            loader={({ params }) => ({ lazy: Promise.resolve(params.id) })}
+            element={<Item />}
+          />,
+        ),
+        { initialEntries: ["/bad"] },
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Item() {
+        let data = useLoaderData() as { lazy: Promise<string> };
+        return (
+          <React.Suspense fallback={<p>Loading...</p>}>
+            <Await resolve={data.lazy} errorElement={<LazyError />}>
+              <LazyData />
+            </Await>
+          </React.Suspense>
+        );
+      }
+
+      function LazyData() {
+        let id = useAsyncValue() as string;
+        if (id.startsWith("bad")) {
+          throw new Error(`Cannot render ${id}`);
+        }
+        return <p>{id}</p>;
+      }
+
+      function LazyError() {
+        let error = useAsyncError() as Error;
+        return <p>Await Error:{error.message}</p>;
+      }
+
+      await waitFor(() => screen.getByText(/Cannot render bad/));
+
+      // The route element stays mounted, so <Await> gets the new promise
+      router.navigate("/good");
+      await waitFor(() => screen.getByText("good"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            good
+          </p>
+        </div>"
+      `);
+
+      router.navigate("/bad2");
+      await waitFor(() => screen.getByText(/Cannot render bad2/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Await Error:
+            Cannot render bad2
+          </p>
+        </div>"
+      `);
+    });
+
     it("freezes the UI for aborted deferreds", async () => {
       let { barDefer, bazDefer, container, getAwaitRenderCount } =
         setupDeferredTest();
