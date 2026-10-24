@@ -1,0 +1,3 @@
+Fix `useBlocker` blocking a second time when the destination route updates search params on mount
+
+Previously, if a blocked navigation was confirmed via `blocker.proceed()` and the destination route called `setSearchParams` in a mount effect, the blocker could fire again even though its blocking condition was no longer true. This happened because the blocker function registered with the router was updated in a passive effect, which can run after another component's mount effect in the same commit. The registration now happens in a layout effect, which always flushes before any passive effects, so the router never evaluates a stale blocker function against a navigation triggered immediately after mount.
