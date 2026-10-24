@@ -389,7 +389,8 @@ export type RouteDiscovery =
  * @param opts.clientVersion A version derived from the client build output used
  * to detect stale clients during lazy route discovery.
  * @param opts.onError An optional error handler that will be called with any
- * errors that occur during the request processing.
+ * errors that occur during the request processing. Defaults to logging errors
+ * with `console.error` unless the request was aborted.
  * @param opts.request The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
  * to match against.
  * @param opts.requestContext An instance of {@link RouterContextProvider}
@@ -449,6 +450,15 @@ export async function matchRSCServerRequest({
   };
 
   let url = new URL(request.url);
+
+  onError ??= (error: unknown) => {
+    if (!request.signal.aborted) {
+      console.error(
+        // @ts-expect-error This is "private" from users but intended for internal use
+        isRouteErrorResponse(error) && error.error ? error.error : error,
+      );
+    }
+  };
 
   basename = basename || "/";
   let normalizedPath = url.pathname;
@@ -974,6 +984,15 @@ async function generateRenderResponse(
             temporaryReferences,
             ctx.redirect?.headers,
           );
+        }
+
+        if (staticContext.errors) {
+          Object.values(staticContext.errors).forEach((error) => {
+            // @ts-expect-error This is "private" from users but intended for internal use
+            if (!isRouteErrorResponse(error) || error.error) {
+              onError?.(error);
+            }
+          });
         }
 
         if (potentialCSRFAttackError) {
