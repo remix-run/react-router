@@ -1,0 +1,1 @@
+Retry a rejected `lazy` route import on the next navigation, revalidation or fetcher call instead of reusing the rejection, so a chunk that failed to load once (e.g. a transient network failure) no longer leaves the route broken until a full reload

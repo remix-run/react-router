@@ -2449,6 +2449,141 @@ describe("lazily loaded route modules", () => {
       expect(lazyHasErrorBoundary).toHaveBeenCalledTimes(1);
     });
 
+    it("retries a rejected lazy route function on the next navigation", async () => {
+      let lazy = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("LAZY FUNCTION ERROR"))
+        .mockResolvedValue({ Component: () => null });
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            Component: () => null,
+            ErrorBoundary: () => null,
+            children: [{ id: "lazy", path: "lazy", lazy }],
+          },
+        ],
+      }).initialize();
+
+      await router.navigate("/lazy");
+      expect(lazy).toHaveBeenCalledTimes(1);
+      expect(router.state.errors).toEqual({
+        root: new Error("LAZY FUNCTION ERROR"),
+      });
+
+      // A later navigation retries the import instead of reusing the rejection
+      await router.navigate("/");
+      await router.navigate("/lazy");
+      expect(lazy).toHaveBeenCalledTimes(2);
+      expect(router.state.errors).toBeNull();
+      expect(findRouteById(router.routes, "lazy").Component).toBeDefined();
+    });
+
+    it("retries a rejected lazy Component import on a loader-less route on the next navigation", async () => {
+      let Component = () => null;
+      let lazyComponent = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("LAZY COMPONENT ERROR"))
+        .mockResolvedValue(Component);
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            Component: () => null,
+            ErrorBoundary: () => null,
+            children: [
+              { id: "lazy", path: "lazy", lazy: { Component: lazyComponent } },
+            ],
+          },
+        ],
+      }).initialize();
+
+      await router.navigate("/lazy");
+      expect(lazyComponent).toHaveBeenCalledTimes(1);
+      expect(findRouteById(router.routes, "lazy").Component).toBeUndefined();
+
+      await router.navigate("/");
+      await router.navigate("/lazy");
+      expect(lazyComponent).toHaveBeenCalledTimes(2);
+      expect(findRouteById(router.routes, "lazy").Component).toBe(Component);
+    });
+
+    it("retries a rejected lazy route property on the next navigation", async () => {
+      let lazyLoader = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("LAZY PROPERTY ERROR"))
+        .mockResolvedValue(() => "LAZY LOADER");
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            Component: () => null,
+            ErrorBoundary: () => null,
+            children: [
+              { id: "lazy", path: "lazy", lazy: { loader: lazyLoader } },
+            ],
+          },
+        ],
+      }).initialize();
+
+      await router.navigate("/lazy");
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(router.state.errors).toEqual({
+        root: new Error("LAZY PROPERTY ERROR"),
+      });
+
+      await router.navigate("/");
+      await router.navigate("/lazy");
+      expect(lazyLoader).toHaveBeenCalledTimes(2);
+      expect(router.state.errors).toBeNull();
+      expect(router.state.loaderData).toEqual({ lazy: "LAZY LOADER" });
+    });
+
+    it("retries a rejected lazy route property on the next fetcher call", async () => {
+      let lazyLoader = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("LAZY PROPERTY ERROR"))
+        .mockResolvedValue(() => "LAZY LOADER");
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            Component: () => null,
+            ErrorBoundary: () => null,
+            children: [
+              { id: "lazy", path: "lazy", lazy: { loader: lazyLoader } },
+            ],
+          },
+        ],
+      }).initialize();
+      let key = "key";
+      let fetcherData: unknown[] = [];
+      router.subscribe((state) => {
+        let fetcher = state.fetchers.get(key);
+        if (fetcher?.state === "idle" && fetcher.data !== undefined) {
+          fetcherData.push(fetcher.data);
+        }
+      });
+
+      await router.fetch(key, "root", "/lazy");
+      expect(lazyLoader).toHaveBeenCalledTimes(1);
+      expect(router.state.errors).toEqual({
+        root: new Error("LAZY PROPERTY ERROR"),
+      });
+
+      await router.fetch(key, "root", "/lazy");
+      expect(lazyLoader).toHaveBeenCalledTimes(2);
+      expect(fetcherData).toEqual(["LAZY LOADER"]);
+    });
+
     it("handles errors when failing to resolve lazy route functions on submission navigation", async () => {
       let { routes, lazy, lazyDeferred } = createBasicLazyFunctionRoutes();
       let t = setup({ routes });
