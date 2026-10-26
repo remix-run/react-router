@@ -68,7 +68,7 @@ test.describe("streamed promise hydration", () => {
                     <React.Suspense fallback={<Fallback name="fast" />}>
                       {mode === "react-use" ? <ReadPromise promise={fast} /> : (
                         <Await
-                          {...(mode === "promise" ? { promise: fast } : { resolve: fast })}
+                          {...(mode === "unstable_promise" ? { unstable_promise: fast } : { resolve: fast })}
                           errorElement={<FastError />}
                         >
                           {(value) => <Content id="fast">{value}</Content>}
@@ -76,7 +76,7 @@ test.describe("streamed promise hydration", () => {
                       )}
                     </React.Suspense>
                     <React.Suspense fallback={<Fallback name="slow" />}>
-                      <Await {...(mode === "promise" ? { promise: slow } : { resolve: slow })}>
+                      <Await {...(mode === "unstable_promise" ? { unstable_promise: slow } : { resolve: slow })}>
                         {(value) => <Content id="slow">{value}</Content>}
                       </Await>
                     </React.Suspense>
@@ -132,10 +132,10 @@ test.describe("streamed promise hydration", () => {
   [
     { mode: "resolve", status: "fulfilled" },
     { mode: "resolve", status: "rejected" },
-    { mode: "promise", status: "fulfilled" },
-    { mode: "promise", status: "rejected" },
+    { mode: "unstable_promise", status: "fulfilled" },
+    { mode: "unstable_promise", status: "rejected" },
     { mode: "react-use", status: "fulfilled" },
-    { mode: "promise", status: "rejected", reporterThrows: true },
+    { mode: "unstable_promise", status: "rejected", reporterThrows: true },
   ].forEach(({ mode, status, reporterThrows }) => {
     test(`${mode} keeps ${status} server content visible during a parent layout effect update${reporterThrows ? " when onError throws" : ""}`, async ({
       page,

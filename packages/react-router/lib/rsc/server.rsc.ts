@@ -148,13 +148,13 @@ export const Await: typeof AwaitType = (async (
   props: React.ComponentProps<typeof AwaitType>,
 ) => {
   routerInvariant(
-    "resolve" in props !== "promise" in props,
-    "<Await> requires exactly one of `resolve` or `promise`",
+    "resolve" in props !== "unstable_promise" in props,
+    "<Await> requires exactly one of `resolve` or `unstable_promise`",
   );
   let { children, errorElement } = props;
-  let usePromise = "promise" in props;
+  let usePromise = "unstable_promise" in props;
   let promise = cachedResolvePromise(
-    usePromise ? props.promise : props.resolve,
+    usePromise ? props.unstable_promise : props.resolve,
   );
   let resolved: Awaited<typeof promise> = await promise;
 

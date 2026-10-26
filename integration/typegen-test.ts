@@ -59,7 +59,7 @@ test("custom fetch context narrowing", async ({ edit, $ }) => {
   await $("pnpm typecheck");
 });
 
-test("Await promise prop types", async ({ edit, $ }) => {
+test("Await unstable_promise prop types", async ({ edit, $ }) => {
   await edit({
     "app/await.tsx": tsx`
       import type { ComponentProps } from "react";
@@ -78,23 +78,23 @@ test("Await promise prop types", async ({ edit, $ }) => {
         return value.id;
       }}</Await>;
 
-      export let optIn = <Await promise={promise}>{(value) => {
+      export let optIn = <Await unstable_promise={promise}>{(value) => {
         type Test = Expect<Equal<typeof value, { id: number }>>;
         return value.id;
       }}</Await>;
 
-      export let promiseLike = <Await promise={thenable}>{(value) => {
+      export let promiseLike = <Await unstable_promise={thenable}>{(value) => {
         type Test = Expect<Equal<typeof value, string>>;
         return value;
       }}</Await>;
 
-      export let raw = <Await promise={123}>{(value) => {
+      export let raw = <Await unstable_promise={123}>{(value) => {
         type Test = Expect<Equal<typeof value, number>>;
         return value;
       }}</Await>;
 
       export let props: ComponentProps<typeof Await<Promise<string>>> = {
-        promise: Promise.resolve("value"),
+        unstable_promise: Promise.resolve("value"),
         children: (value) => {
           type Test = Expect<Equal<typeof value, string>>;
           return value;
@@ -112,12 +112,15 @@ test("Await promise prop types", async ({ edit, $ }) => {
       // @ts-expect-error - exactly one promise prop is required
       export let missingProps: ComponentProps<typeof Await<Promise<string>>> = { children: "Missing" };
       // @ts-expect-error - promise props are mutually exclusive
-      export let bothProps: ComponentProps<typeof Await<Promise<string>>> = { resolve: Promise.resolve("value"), promise: Promise.resolve("value"), children: "Both" };
+      export let bothProps: ComponentProps<typeof Await<Promise<string>>> = { resolve: Promise.resolve("value"), unstable_promise: Promise.resolve("value"), children: "Both" };
+
+      // @ts-expect-error - the opt-in prop is unstable
+      export let stableName = <Await promise={promise}>Invalid</Await>;
 
       // @ts-expect-error - exactly one promise prop is required
       export let missing = <Await>Missing</Await>;
       // @ts-expect-error - promise props are mutually exclusive
-      export let both = <Await resolve={promise} promise={promise}>Both</Await>;
+      export let both = <Await resolve={promise} unstable_promise={promise}>Both</Await>;
     `,
   });
   await $("pnpm typecheck");

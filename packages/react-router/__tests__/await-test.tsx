@@ -17,11 +17,11 @@ import { decodeViaTurboStream } from "../lib/dom/ssr/single-fetch";
 import { encode } from "../vendor/turbo-stream-v2/turbo-stream";
 import { createDeferred } from "./router/utils/utils";
 
-function promiseProps<T>(prop: "resolve" | "promise", value: T) {
-  return prop === "resolve" ? { resolve: value } : { promise: value };
+function promiseProps<T>(prop: "resolve" | "unstable_promise", value: T) {
+  return prop === "resolve" ? { resolve: value } : { unstable_promise: value };
 }
 
-describe.each(["resolve", "promise"] as const)("Await %s", (prop) => {
+describe.each(["resolve", "unstable_promise"] as const)("Await %s", (prop) => {
   it.each(["fulfilled", "rejected"])(
     "reads a decoded %s promise on its first render without suspending",
     async (status) => {
@@ -142,7 +142,7 @@ describe.each(["resolve", "promise"] as const)("Await %s", (prop) => {
   );
 });
 
-describe("Await promise", () => {
+describe("Await unstable_promise", () => {
   it.each(["pending", "decoded"])(
     "preserves a %s promise rejection when onError throws",
     async (state) => {
@@ -200,7 +200,10 @@ describe("Await promise", () => {
         path: "/",
         element: (
           <React.Suspense fallback={<p>Loading</p>}>
-            <Await promise={deferred.promise} errorElement={<ErrorElement />}>
+            <Await
+              unstable_promise={deferred.promise}
+              errorElement={<ErrorElement />}
+            >
               Success
             </Await>
           </React.Suspense>
@@ -240,8 +243,8 @@ describe("Await promise", () => {
     await act(async () => {
       render(
         <React.Suspense fallback={<p>Loading</p>}>
-          <Await promise={frozen}>{(value) => <p>{value}</p>}</Await>
-          <Await promise={thenable}>{(value) => <p>{value}</p>}</Await>
+          <Await unstable_promise={frozen}>{(value) => <p>{value}</p>}</Await>
+          <Await unstable_promise={thenable}>{(value) => <p>{value}</p>}</Await>
         </React.Suspense>,
       );
     });
@@ -262,7 +265,7 @@ describe("Await promise", () => {
     }
     expect(
       renderToString(
-        <Await promise={promise} errorElement={<ErrorElement />}>
+        <Await unstable_promise={promise} errorElement={<ErrorElement />}>
           Success
         </Await>,
       ),
@@ -280,10 +283,12 @@ describe("Await promise", () => {
       return (
         <>
           <React.Suspense fallback={<p>First loading</p>}>
-            <Await promise={deferred.promise}>{(v) => <p>First:{v}</p>}</Await>
+            <Await unstable_promise={deferred.promise}>
+              {(v) => <p>First:{v}</p>}
+            </Await>
           </React.Suspense>
           <React.Suspense fallback={<p>Second loading</p>}>
-            <Await promise={value}>{(v) => <p>Second:{v}</p>}</Await>
+            <Await unstable_promise={value}>{(v) => <p>Second:{v}</p>}</Await>
           </React.Suspense>
         </>
       );
@@ -312,7 +317,7 @@ describe("Await promise", () => {
         <>
           <button onClick={() => setValue(deferred.promise)}>Load</button>
           <React.Suspense fallback={<p>Loading</p>}>
-            <Await promise={value} errorElement={<p>Error</p>}>
+            <Await unstable_promise={value} errorElement={<p>Error</p>}>
               Success
             </Await>
           </React.Suspense>
@@ -348,7 +353,7 @@ describe("Await promise", () => {
     );
   });
 
-  it.each(["resolve", "promise"] as const)(
+  it.each(["resolve", "unstable_promise"] as const)(
     "uses the nearest context when nested in %s",
     async (outer) => {
       function Value({ name }: { name: string }) {
@@ -362,7 +367,7 @@ describe("Await promise", () => {
       render(
         <Await {...promiseProps(outer, "Outer")}>
           <Value name="Outer" />
-          <Await promise="Inner">
+          <Await unstable_promise="Inner">
             <Value name="Inner" />
           </Await>
           <Await resolve="Legacy">
@@ -376,7 +381,7 @@ describe("Await promise", () => {
     },
   );
 
-  it.each(["resolve", "promise"] as const)(
+  it.each(["resolve", "unstable_promise"] as const)(
     "%s handles render errors with its documented boundary",
     async (prop) => {
       let consoleError = jest
@@ -404,7 +409,9 @@ describe("Await promise", () => {
           render(<RouterProvider router={router} />);
         });
         expect(
-          screen.getByText(prop === "promise" ? "Route error" : "Await error"),
+          screen.getByText(
+            prop === "unstable_promise" ? "Route error" : "Await error",
+          ),
         ).toBeVisible();
       } finally {
         consoleError.mockRestore();
@@ -412,12 +419,14 @@ describe("Await promise", () => {
     },
   );
 
-  it.each([{}, { resolve: undefined, promise: undefined }])(
+  it.each([{}, { resolve: undefined, unstable_promise: undefined }])(
     "requires exactly one promise prop: %p",
     (props) => {
       expect(() =>
         renderToString(<Await {...(props as any)}>Content</Await>),
-      ).toThrow("<Await> requires exactly one of `resolve` or `promise`");
+      ).toThrow(
+        "<Await> requires exactly one of `resolve` or `unstable_promise`",
+      );
     },
   );
 });
@@ -484,7 +493,7 @@ it("tracks promises introduced by later stream chunks in cyclic collections", as
   function Value() {
     let sharedValue = React.use(root.shared);
     return (
-      <Await promise={promise}>
+      <Await unstable_promise={promise}>
         {(value) => (
           <p>
             {sharedValue}:{String(value)}

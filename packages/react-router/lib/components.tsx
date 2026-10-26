@@ -1527,8 +1527,8 @@ export interface AwaitResolveRenderFunction<Resolve = any> {
  * @category Types
  */
 export interface AwaitProps<Resolve> {
-  /** Use either `resolve` or `promise`, never both. */
-  promise?: never;
+  /** Use either `resolve` or `unstable_promise`, never both. */
+  unstable_promise?: never;
   /**
    * When using a function, the resolved value is provided as the parameter.
    *
@@ -1635,7 +1635,7 @@ export interface AwaitProps<Resolve> {
 
 interface AwaitPromiseProps<Resolve> extends Omit<
   AwaitProps<Resolve>,
-  "resolve" | "promise"
+  "resolve" | "unstable_promise"
 > {
   resolve?: never;
   /**
@@ -1647,14 +1647,14 @@ interface AwaitPromiseProps<Resolve> extends Omit<
    * children bubble to the nearest React error boundary.
    *
    * ```tsx
-   * <Await promise={reviewsPromise} errorElement={<ReviewsError />}>
+   * <Await unstable_promise={reviewsPromise} errorElement={<ReviewsError />}>
    *   {(reviews) => <Reviews items={reviews} />}
    * </Await>
    * ```
    *
-   * Pass exactly one of `promise` or `resolve`.
+   * Pass exactly one of `unstable_promise` or `resolve`.
    */
-  promise: Resolve;
+  unstable_promise: Resolve;
 }
 
 /**
@@ -1662,16 +1662,20 @@ interface AwaitPromiseProps<Resolve> extends Omit<
  *
  * **Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
  *
- * Pass `promise` instead of `resolve` to opt into React's [`use()`](https://react.dev/reference/react/use)
- * implementation. With `promise`, `errorElement` handles promise rejections, while
- * errors thrown by children bubble to the nearest React error boundary.
+ * Pass `unstable_promise` instead of `resolve` to opt into React's
+ * [`use()`](https://react.dev/reference/react/use) implementation. With
+ * `unstable_promise`, `errorElement` handles promise rejections, while errors
+ * thrown by children bubble to the nearest React error boundary.
  *
  * In React Server Components, `resolve` already has this error-handling behavior:
  * `errorElement` handles only input rejections, while child render errors
  * propagate to the surrounding error boundary. Both props accept promise-like
  * values without modifying the source promise. With either implementation,
- * `resolve` treats a falsy `errorElement` as absent, while `promise` only treats
- * `undefined` as absent.
+ * `resolve` treats a falsy `errorElement` as absent, while `unstable_promise`
+ * only treats `undefined` as absent.
+ *
+ * <docs-warning>The `unstable_promise` prop is experimental and may change in
+ * minor or patch releases.</docs-warning>
  *
  * @example
  * import { Await, useLoaderData } from "react-router";
@@ -1713,17 +1717,17 @@ interface AwaitPromiseProps<Resolve> extends Omit<
  * @param {AwaitProps.children} props.children n/a
  * @param {AwaitProps.errorElement} props.errorElement n/a
  * @param {AwaitProps.resolve} props.resolve n/a
- * @param props.promise A promise (or value) to read using React's `use()` API in
- * client components. Accepts promise-like values without modifying the source
- * promise. Pass exactly one of `promise` or `resolve`.
+ * @param props.unstable_promise A promise (or value) to read using React's `use()`
+ * API in client components. Accepts promise-like values without modifying the
+ * source promise. Pass exactly one of `unstable_promise` or `resolve`.
  * @returns React element for the rendered awaited value
  */
 export function Await<Resolve>(
   props: AwaitProps<Resolve> | AwaitPromiseProps<Resolve>,
 ) {
   invariant(
-    "resolve" in props !== "promise" in props,
-    "<Await> requires exactly one of `resolve` or `promise`",
+    "resolve" in props !== "unstable_promise" in props,
+    "<Await> requires exactly one of `resolve` or `unstable_promise`",
   );
   let { children, errorElement } = props;
   let dataRouterContext = React.useContext(DataRouterContext);
@@ -1747,10 +1751,10 @@ export function Await<Resolve>(
     [dataRouterContext, dataRouterStateContext],
   );
 
-  if ("promise" in props) {
+  if ("unstable_promise" in props) {
     return (
       <AwaitPromise
-        value={props.promise}
+        value={props.unstable_promise}
         errorElement={errorElement}
         onError={onError}
       >

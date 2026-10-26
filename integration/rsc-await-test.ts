@@ -10,7 +10,7 @@ import type { AppFixture, Fixture } from "./helpers/create-fixture.js";
 import { validateRSCHtml } from "./rsc/utils.js";
 
 for (let component of ["client", "server"]) {
-  ["resolve", "promise"].forEach((prop) => {
+  ["resolve", "unstable_promise"].forEach((prop) => {
     test.describe(`RSC Framework: <Await ${prop}> in ${component} route components`, () => {
       let fixture: Fixture;
       let appFixture: AppFixture;

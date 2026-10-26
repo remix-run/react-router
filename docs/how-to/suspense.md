@@ -65,12 +65,14 @@ export default function MyComponent({
 
 ## Opt into React's `use()` API
 
-Pass `promise` instead of `resolve` to opt into an `<Await>` implementation based on React's `use()` API:
+<docs-warning>The `unstable_promise` prop is experimental and may change in minor or patch releases.</docs-warning>
+
+Pass `unstable_promise` instead of `resolve` to opt into an `<Await>` implementation based on React's `use()` API:
 
 ```tsx
 <React.Suspense fallback={<div>Loading...</div>}>
   <Await
-    promise={nonCriticalData}
+    unstable_promise={nonCriticalData}
     errorElement={<LoadingError />}
   >
     {(value) => <h3>Non critical value: {value}</h3>}
@@ -78,13 +80,13 @@ Pass `promise` instead of `resolve` to opt into an `<Await>` implementation base
 </React.Suspense>
 ```
 
-Pass exactly one of `promise` or `resolve`. Both support render-prop children, `useAsyncValue`, and `useAsyncError`. The `promise` prop also accepts promise-like values and does not modify application promises.
+Pass exactly one of `unstable_promise` or `resolve`. Both support render-prop children, `useAsyncValue`, and `useAsyncError`. The `unstable_promise` prop also accepts promise-like values and does not modify application promises.
 
-With `promise`, `errorElement` handles promise rejections. Errors thrown while rendering children bubble to the nearest React error boundary, such as a route's `ErrorBoundary`. In client components, the `resolve` prop retains its existing behavior, including catching child render errors.
+With `unstable_promise`, `errorElement` handles promise rejections. Errors thrown while rendering children bubble to the nearest React error boundary, such as a route's `ErrorBoundary`. In client components, the `resolve` prop retains its existing behavior, including catching child render errors.
 
-In React Server Components, `resolve` already behaves like `promise` in client components for error handling: `errorElement` handles only input rejections, and errors thrown by children propagate to the surrounding error boundary. Both props accept promise-like values without modifying the source promise. Use render-prop children to access the resolved value in a Server Component; `useAsyncValue` and `useAsyncError` are available in client descendants.
+In React Server Components, `resolve` already behaves like `unstable_promise` in client components for error handling: `errorElement` handles only input rejections, and errors thrown by children propagate to the surrounding error boundary. Both props accept promise-like values without modifying the source promise. Use render-prop children to access the resolved value in a Server Component; `useAsyncValue` and `useAsyncError` are available in client descendants.
 
-With either implementation, `promise` treats an explicit `errorElement={null}` or `errorElement={false}` as rendering nothing on rejection. The `resolve` prop treats these values as an absent error element and propagates the rejection.
+With either implementation, `unstable_promise` treats an explicit `errorElement={null}` or `errorElement={false}` as rendering nothing on rejection. The `resolve` prop treats these values as an absent error element and propagates the rejection.
 
 ## Use React directly
 

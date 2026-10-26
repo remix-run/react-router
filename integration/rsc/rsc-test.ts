@@ -1416,8 +1416,8 @@ implementations.forEach((implementation) => {
                     resolve("Async Data");
                   });
                 });
-                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "promise"
-                  ? { promise }
+                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "unstable_promise"
+                  ? { unstable_promise: promise }
                   : { resolve: promise };
 
                 return (
@@ -1447,8 +1447,8 @@ implementations.forEach((implementation) => {
                     reject(new Error("Async Error"));
                   });
                 });
-                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "promise"
-                  ? { promise }
+                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "unstable_promise"
+                  ? { unstable_promise: promise }
                   : { resolve: promise };
 
                 return (
@@ -1872,7 +1872,7 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        ["resolve", "promise"].forEach((prop) => {
+        ["resolve", "unstable_promise"].forEach((prop) => {
           test(`Supports Await component ${prop} fulfillment`, async ({
             page,
           }) => {

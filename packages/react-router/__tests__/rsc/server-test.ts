@@ -11,13 +11,15 @@ import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
   describe("Await", () => {
-    describe.each(["resolve", "promise"] as const)("%s", (prop) => {
+    describe.each(["resolve", "unstable_promise"] as const)("%s", (prop) => {
       test.each(["Value", undefined, null, false, 0, ""])(
         "supplies the resolved value to children: %p",
         async (value) => {
           let received: unknown = "unset";
           await Await({
-            ...(prop === "promise" ? { promise: value } : { resolve: value }),
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: value }
+              : { resolve: value }),
             children(data) {
               received = data;
               return null;
@@ -31,7 +33,9 @@ describe("RSC server", () => {
         let promise = Promise.resolve("Value");
         let received: unknown;
         await Await({
-          ...(prop === "promise" ? { promise } : { resolve: promise }),
+          ...(prop === "unstable_promise"
+            ? { unstable_promise: promise }
+            : { resolve: promise }),
           children(value) {
             received = value;
             return null;
@@ -46,7 +50,9 @@ describe("RSC server", () => {
         promise.catch(() => {});
         await expect(
           Await({
-            ...(prop === "promise" ? { promise } : { resolve: promise }),
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: promise }
+              : { resolve: promise }),
             children: "Success",
           }),
         ).rejects.toBe(error);
@@ -56,8 +62,8 @@ describe("RSC server", () => {
         let error = new Error("Render failed");
         await expect(
           Await({
-            ...(prop === "promise"
-              ? { promise: "Value" }
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: "Value" }
               : { resolve: "Value" }),
             children() {
               throw error;
@@ -69,10 +75,10 @@ describe("RSC server", () => {
     });
 
     test.each([null, false])(
-      "promise renders an empty errorElement=%p",
+      "unstable_promise renders an empty errorElement=%p",
       async (errorElement) => {
         let result = await Await({
-          promise: Promise.reject(new Error("Rejected")),
+          unstable_promise: Promise.reject(new Error("Rejected")),
           children: "Success",
           errorElement,
         });
@@ -97,7 +103,7 @@ describe("RSC server", () => {
     test("accepts promise-like values", async () => {
       let received: unknown;
       await Await({
-        promise: {
+        unstable_promise: {
           then(resolve: (value: string) => void) {
             resolve("Thenable");
           },
@@ -110,13 +116,13 @@ describe("RSC server", () => {
       expect(received).toBe("Thenable");
     });
 
-    test.each([{}, { resolve: undefined, promise: undefined }])(
+    test.each([{}, { resolve: undefined, unstable_promise: undefined }])(
       "requires exactly one promise prop: %p",
       async (props) => {
         await expect(
           Await({ ...props, children: null } as any),
         ).rejects.toThrow(
-          "<Await> requires exactly one of `resolve` or `promise`",
+          "<Await> requires exactly one of `resolve` or `unstable_promise`",
         );
       },
     );
