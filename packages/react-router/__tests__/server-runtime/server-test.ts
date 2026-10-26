@@ -2,6 +2,8 @@
  * @jest-environment node
  */
 
+import { setImmediate } from "node:timers/promises";
+
 import {
   createContext,
   RouterContextProvider,
@@ -12,6 +14,7 @@ import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 import { mockServerBuild } from "./utils";
+import { Deferred } from "../../vendor/turbo-stream-v2/utils";
 
 function spyConsole() {
   // https://github.com/facebook/react/issues/7047
@@ -168,6 +171,32 @@ describe("server", () => {
       );
       expect(response.body).toBeNull();
       expect(cancel).toHaveBeenCalledTimes(1);
+    });
+
+    it("handles nested deferred rejections after a HEAD data response", async () => {
+      let outer = new Deferred();
+      let inner = new Deferred();
+      let build = mockServerBuild({
+        root: {
+          path: "/",
+          default: () => null,
+          loader: () => ({ outer: outer.promise }),
+        },
+      });
+      let response = await createRequestHandler(build)(
+        new Request("http://localhost:3000/_.data", { method: "HEAD" }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe("text/x-script");
+      expect(response.body).toBeNull();
+
+      outer.resolve({ inner: inner.promise });
+      await setImmediate();
+      inner.reject(new Error("Nested deferred rejection"));
+      await setImmediate();
+
+      expect(spy.console).not.toHaveBeenCalled();
     });
 
     it("reflects trailing slash in static handler locations", async () => {

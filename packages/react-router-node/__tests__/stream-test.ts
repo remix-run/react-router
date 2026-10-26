@@ -230,8 +230,8 @@ describe("writeAsyncIterableToWritable", () => {
 });
 
 describe("createReadableStreamFromReadable", () => {
-  it("does not crash when a HEAD request cancels a file that fails to open", () => {
-    expect(runFixtureProcess("stream-cancelled-head-missing-file.ts")).toEqual(
+  it("does not crash when cancelling a file that fails to open", () => {
+    expect(runFixtureProcess("stream-cancelled-missing-file.ts")).toEqual(
       survivedProcess,
     );
   });
