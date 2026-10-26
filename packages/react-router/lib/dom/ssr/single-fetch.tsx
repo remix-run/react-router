@@ -478,8 +478,7 @@ async function singleFetchLoaderNavigationStrategy(
   let isInitialLoad =
     !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    ((isInitialLoad && !isApiOnly && !isSpaMode) ||
-      routesParams.size === 0) &&
+    ((isInitialLoad && !isApiOnly && !isSpaMode) || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });
