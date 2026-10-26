@@ -1,4 +1,7 @@
-import { getPathsWithAncestors } from "../../../lib/dom/ssr/fog-of-war";
+import {
+  getManifestPathsParam,
+  getPathsWithAncestors,
+} from "../../../lib/dom/ssr/fog-of-war";
 
 describe("fog of war", () => {
   describe("getPathsWithAncestors", () => {
@@ -20,6 +23,24 @@ describe("fog of war", () => {
 
     test("normalizes paths without leading slashes", () => {
       expect(getPathsWithAncestors(["a/b"])).toEqual(["/a", "/a/b"]);
+    });
+  });
+
+  describe("getManifestPathsParam", () => {
+    test("sorts and comma-joins paths", () => {
+      expect(getManifestPathsParam(["/b", "/a"])).toBe("/a,/b");
+    });
+
+    test("encodes commas within paths", () => {
+      expect(getManifestPathsParam(["/tags", "/tags/a,b"])).toBe(
+        "/tags,/tags/a%2Cb",
+      );
+    });
+
+    test("does not mutate the input", () => {
+      let paths = ["/b", "/a"];
+      getManifestPathsParam(paths);
+      expect(paths).toEqual(["/b", "/a"]);
     });
   });
 });

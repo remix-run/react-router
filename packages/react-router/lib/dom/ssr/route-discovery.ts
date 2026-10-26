@@ -17,6 +17,7 @@ import type { ServerHandoff } from "../../server-runtime/serverHandoff";
 import type { RouterFetch } from "./single-fetch";
 import {
   getManifestPath,
+  getManifestPathsParam,
   getPathsWithAncestors,
   handleClientVersionMismatch,
   isFogOfWarEnabled,
@@ -260,7 +261,7 @@ export class RouteDiscoveryRuntime {
   private requestUrl(paths: string[]) {
     let { manifest, context } = this.ssrInfo;
     let params = new URLSearchParams();
-    params.set("paths", paths.slice().sort().join(","));
+    params.set("paths", getManifestPathsParam(paths));
     params.set("version", manifest.version);
     let url = new URL(
       getManifestPath(context.routeDiscovery.manifestPath, context.basename),
