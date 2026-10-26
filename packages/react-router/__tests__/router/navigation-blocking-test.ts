@@ -1,6 +1,10 @@
-import { createMemoryHistory } from "../../lib/router/history";
+import {
+  createBrowserHistory,
+  createMemoryHistory,
+} from "../../lib/router/history";
 import type { Router } from "../../lib/router/router";
 import { createRouter } from "../../lib/router/router";
+import getWindow from "../utils/getWindow";
 
 const LOADER_LATENCY_MS = 100;
 const routes = [
@@ -498,6 +502,84 @@ describe("navigation blocking", () => {
         await sleep(LOADER_LATENCY_MS);
         expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
       });
+    });
+  });
+
+  // An entry created outside the router (a `#hash` link, `history.pushState`)
+  // carries no index, and a `popstate` the browser didn't cause doesn't change
+  // the entry. A blocked POP leaving such an entry used to be undone by a wrong
+  // step, and a step of 0 (`0 - null`, or the same index) made the undo
+  // `history.go(0)`: a page reload.
+  describe("on a history pop whose step the router can't know", () => {
+    let testWindow: Window;
+    let go: jest.SpyInstance;
+    let warn: jest.SpyInstance;
+
+    afterEach(() => warn.mockRestore());
+
+    beforeEach(async () => {
+      warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+      testWindow = getWindow("/");
+      router = createRouter({
+        history: createBrowserHistory({ window: testWindow }),
+        routes,
+      });
+      router.initialize();
+      await router.navigate("/contact");
+      testWindow.history.pushState(null, "", "/contact#section");
+      go = jest.spyOn(testWindow.history, "go");
+    });
+
+    async function waitFor(done: () => boolean, ms = 2000) {
+      let end = Date.now() + ms;
+      while (!done()) {
+        if (Date.now() > end) throw new Error("timed out");
+        await sleep(5);
+      }
+    }
+    const at = () => testWindow.location.pathname + testWindow.location.hash;
+
+    it("never reloads the page: no history.go, back or forward", async () => {
+      router.getBlocker("KEY", () => true);
+      testWindow.history.back();
+      await waitFor(() => at() === "/contact");
+      testWindow.history.forward();
+      await waitFor(() => at() === "/contact#section");
+      testWindow.history.back();
+      await waitFor(() => at() === "/contact");
+      await sleep(20);
+      // It was go(-0) on the first Back (a reload), and go(-1) on the last.
+      expect(go).not.toHaveBeenCalled();
+      // The blocker can't apply, and says so, as for any entry it didn't create.
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("not created by @remix-run/router"),
+      );
+    });
+
+    // single-spa fires a popstate of its own after each push (#11621).
+    it("never reloads the page on a popstate that doesn't change the entry", async () => {
+      testWindow.history.back();
+      await waitFor(() => at() === "/contact");
+      router.getBlocker("KEY", () => true);
+      let { PopStateEvent } = testWindow as Window & typeof globalThis;
+      testWindow.dispatchEvent(
+        new PopStateEvent("popstate", { state: testWindow.history.state }),
+      );
+      await sleep(20);
+      expect(go).not.toHaveBeenCalled(); // it was go(-0)
+      expect(at()).toBe("/contact");
+    });
+
+    it("still blocks, and undoes, a POP between entries it created", async () => {
+      let fn = () => true;
+      router.getBlocker("KEY", fn);
+      testWindow.history.back();
+      await waitFor(() => at() === "/contact");
+      go.mockClear();
+      testWindow.history.back(); // to "/", an entry the router created
+      await waitFor(() => go.mock.calls.length > 0);
+      expect(go).toHaveBeenCalledWith(1);
+      expect(router.getBlocker("KEY", fn).state).toBe("blocked");
     });
   });
 });

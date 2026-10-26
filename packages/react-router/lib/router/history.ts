@@ -677,7 +677,15 @@ function getUrlBasedHistory(
   function handlePop() {
     action = Action.Pop;
     let nextIndex = getIndex();
-    let delta = nextIndex == null ? null : nextIndex - index;
+    // The step is only known when both ends are entries we created. An entry
+    // created outside the router (a `#hash` link, `history.pushState`) has no
+    // index, and a POP that lands on the index we already stand at left such an
+    // entry unseen. A wrong delta would make a blocker undo the wrong step, and
+    // `0 - null === 0` would make it call `history.go(0)`: a reload.
+    let delta =
+      nextIndex == null || index == null || nextIndex === index
+        ? null
+        : nextIndex - index;
     index = nextIndex;
     if (listener) {
       listener({ action, location: history.location, delta });

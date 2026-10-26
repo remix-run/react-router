@@ -1,0 +1,1 @@
+Fix a blocked back/forward navigation reloading the page (`history.go(0)`) or being undone in the wrong direction when it leaves a history entry the router did not create, such as one made by a `#hash` link or by `history.pushState` outside the router, or when a `popstate` event fires without the history entry changing

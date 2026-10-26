@@ -151,4 +151,58 @@ describe("a browser history", () => {
       await GoForward(history);
     });
   });
+
+  // An entry created outside the router (a `#hash` link, `history.pushState`)
+  // carries no index, and a `popstate` the browser didn't cause (single-spa
+  // fires one after each push) doesn't change the entry. The step of such a
+  // POP can't be known.
+  describe("a POP whose step can't be known", () => {
+    function nextPop() {
+      return new Promise<number | null>((resolve) => {
+        let unlisten = history.listen(({ delta }) => {
+          unlisten();
+          resolve(delta);
+        });
+      });
+    }
+
+    it("reports no delta, rather than a wrong one, in either direction", async () => {
+      history.push("/a"); // idx 1
+      testWindow.history.pushState(null, "", "/a#section"); // no idx
+
+      // Back from the unseen entry lands on the index the history stands at.
+      let pop = nextPop();
+      testWindow.history.back();
+      expect(await pop).toBe(null); // was 0: a blocker would call go(0)
+
+      // Forward onto the entry with no index.
+      pop = nextPop();
+      testWindow.history.forward();
+      expect(await pop).toBe(null);
+
+      // Back again, leaving the entry with no index.
+      pop = nextPop();
+      testWindow.history.back();
+      expect(await pop).toBe(null); // was 1 (1 - null): the wrong direction
+      expect(history.location.pathname).toBe("/a");
+    });
+
+    it("reports no delta for a popstate that doesn't change the entry", async () => {
+      history.push("/a");
+      let { PopStateEvent } = testWindow as Window & typeof globalThis;
+      let pop = nextPop();
+      testWindow.dispatchEvent(
+        new PopStateEvent("popstate", { state: testWindow.history.state }),
+      );
+      expect(await pop).toBe(null); // was 0: a blocker would call go(0)
+    });
+
+    it("still reports the step between entries it created", async () => {
+      history.push("/a");
+      history.push("/b");
+      let pop = nextPop();
+      history.go(-2);
+      expect(await pop).toBe(-2);
+    });
+  });
 });
