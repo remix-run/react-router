@@ -470,16 +470,11 @@ async function singleFetchLoaderNavigationStrategy(
   //   `clientLoader.hydrate`. We check the navigation state below as well
   //   because if a clientLoader redirected we'll still be `initialized=false`
   //   but we want to call loaders for the new location
-  // - If there are no routes to fetch from the server
-  //
-  // The initial hydration skip assumes the document contains the loader data.
-  // That is not the case when hydrating from a SPA fallback document
-  // (`isSpaMode`), which is served for any non-prerendered path in an
-  // `ssr:false` app with a `prerender` config. In that case server-loader
-  // routes must still fetch their (potentially missing) `.data` file -
-  // otherwise they resolve to a `SingleFetchNoResultError` instead of the
-  // host's 404 response. The same applies to API-only servers (`isApiOnly`),
-  // which never embed loader data in a document.
+// - On initial SSR hydration - only clientLoaders can pass through via
+//   `clientLoader.hydrate`. We check the navigation state below as well
+//   because if a clientLoader redirected we'll still be `initialized=false`
+//   but we want to call loaders for the new location
+// - If there are no routes to fetch from the server
   //
   // One exception - if we are performing an HDR revalidation we have to call
   // the server in case a new loader has shown up that the manifest doesn't yet
