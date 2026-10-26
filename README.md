@@ -1,11 +1,12 @@
+<div align="center">
+
 <img
   src="https://reactrouter.com/_brand/react-router-brand-assets/lockup/Light.png"
   alt="React Router"
   width="400"
-  style="display:block; margin: auto auto 2rem"
 />
 
-<div style="text-align: center">
+[![npm package][npm-badge]][npm] [![build][build-badge]][build]
 
 [Get Started](https://reactrouter.com/start/modes) · [Documentation](https://reactrouter.com/) · [Changelog](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md) · [Discord](http://remix.run/discord)
 
@@ -20,7 +21,7 @@
 
 # Getting Started
 
-React Router is a multi-strategy router for React. You can use it maximally as a React framework or minimally as a library with your own architecture. Check out the [Getting Started](https://reactrouter.com/start/modes) docs and choose the mode that works best for your app.
+React Router is a multi-strategy router for React. You can use it maximally as a [Framework](https://reactrouter.com/start/framework/installation) or minimally as a [library](https://reactrouter.com/start/data/installation) with your own architecture. Check out the [Getting Started](https://reactrouter.com/start/modes) docs and choose the mode that works best for your app.
 
 # Packages
 
