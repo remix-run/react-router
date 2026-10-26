@@ -6175,6 +6175,11 @@ const loadLazyRouteProperty = ({
   })();
 
   cache[key] = propertyPromise;
+  propertyPromise.catch(() => {
+    if (cache[key] === propertyPromise) {
+      delete cache[key];
+    }
+  });
   return propertyPromise;
 };
 
@@ -6285,8 +6290,13 @@ function loadLazyRoute(
 
     lazyRouteFunctionCache.set(routeToUpdate, lazyRoutePromise);
 
-    // Prevent unhandled rejection errors - handled inside of `callLoadOrAction`
-    lazyRoutePromise.catch(() => {});
+    // Clear rejected imports so future calls can retry. The error is handled
+    // inside of `callLoaderOrAction`.
+    lazyRoutePromise.catch(() => {
+      if (lazyRouteFunctionCache.get(routeToUpdate) === lazyRoutePromise) {
+        lazyRouteFunctionCache.delete(routeToUpdate);
+      }
+    });
 
     return {
       lazyRoutePromise,
