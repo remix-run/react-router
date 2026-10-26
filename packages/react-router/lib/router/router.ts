@@ -186,6 +186,16 @@ export interface Router {
     getKey?: GetScrollRestorationKeyFunction,
   ): () => void;
 
+  /** @private Capture and restore element positions alongside navigations. */
+  enableElementScrollRestoration(callbacks: {
+    save(): void;
+    dispose?(): void;
+    restore(
+      location: Location,
+      matches: UIMatch[],
+    ): ElementScrollRestorationSnapshot;
+  }): () => void;
+
   /**
    * @private
    * PRIVATE - DO NOT USE
@@ -396,6 +406,9 @@ export interface RouterState {
    */
   restoreScrollPosition: number | false | null;
 
+  /** @private Element positions for this committed navigation, when enabled. */
+  restoreElementScrollPositions?: ElementScrollRestorationSnapshot | false;
+
   /**
    * Indicate whether this navigation should skip resetting the scroll position
    * if we are unable to restore the scroll position
@@ -587,6 +600,13 @@ export interface RouterSubscriber {
     },
   ): void;
 }
+
+export type ElementScrollPositions = Record<string, { x: number; y: number }>;
+export type ElementScrollRestorationSnapshot = {
+  storageKey: string;
+  key: string;
+  positions: ElementScrollPositions;
+};
 
 /**
  * Function signature for determining the key to be used in scroll restoration
@@ -1125,6 +1145,9 @@ export function createRouter(init: RouterInit): Router {
   // Set to true if we have `hydrationData` since we assume we were SSR'd and that
   // SSR did the initial scroll restoration.
   let initialScrollRestored = init.hydrationData != null;
+  let elementScrollRestoration:
+    | Parameters<Router["enableElementScrollRestoration"]>[0]
+    | undefined;
 
   let initialMatches = dataRouteMatcher.match(init.history.location);
   let initialMatchesIsFOW = false;
@@ -1428,6 +1451,8 @@ export function createRouter(init: RouterInit): Router {
       removePageHideEventListener();
     }
     subscribers.clear();
+    elementScrollRestoration?.dispose?.();
+    elementScrollRestoration = undefined;
     pendingNavigationController && pendingNavigationController.abort();
     state.fetchers.forEach((_, key) => deleteFetcher(state.fetchers, key));
     state.blockers.forEach((_, key) => deleteBlocker(key));
@@ -1669,6 +1694,19 @@ export function createRouter(init: RouterInit): Router {
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
         restoreScrollPosition,
+        ...(elementScrollRestoration
+          ? {
+              restoreElementScrollPositions: isUninterruptedRevalidation
+                ? (false as const)
+                : getSavedElementScrollPositions(
+                    location,
+                    newState.matches || state.matches,
+                    loaderData,
+                  ),
+            }
+          : "restoreElementScrollPositions" in state
+            ? { restoreElementScrollPositions: undefined }
+            : {}),
         preventScrollReset,
         blockers,
       },
@@ -3992,10 +4030,42 @@ export function createRouter(init: RouterInit): Router {
     return location.key;
   }
 
+  function getSavedElementScrollPositions(
+    location: Location,
+    matches: DataRouteMatch[],
+    loaderData: RouterState["loaderData"],
+  ): ElementScrollRestorationSnapshot {
+    let snapshot = elementScrollRestoration!.restore(
+      location,
+      matches.map((match) => convertRouteMatchToUiMatch(match, loaderData)),
+    );
+    return {
+      ...snapshot,
+      positions: Object.fromEntries(
+        Object.entries(snapshot.positions).map(([selector, position]) => [
+          selector,
+          { ...position },
+        ]),
+      ),
+    };
+  }
+
+  function enableElementScrollRestoration(
+    callbacks: Parameters<Router["enableElementScrollRestoration"]>[0],
+  ) {
+    elementScrollRestoration = callbacks;
+    return () => {
+      if (elementScrollRestoration === callbacks) {
+        elementScrollRestoration = undefined;
+      }
+    };
+  }
+
   function saveScrollPosition(
     location: Location,
     matches: DataRouteMatch[],
   ): void {
+    elementScrollRestoration?.save();
     if (savedScrollPositions && getScrollPosition) {
       let key = getScrollKey(location, matches);
       savedScrollPositions[key] = getScrollPosition();
@@ -4211,6 +4281,7 @@ export function createRouter(init: RouterInit): Router {
     initialize,
     subscribe,
     enableScrollRestoration,
+    enableElementScrollRestoration,
     navigate,
     fetch,
     revalidate,
