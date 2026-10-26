@@ -212,6 +212,7 @@ export function getTurboStreamSingleFetchDataStrategy(
   fetchImplementation: RouterFetch = (request) => fetch(request),
   isApiOnly: boolean = false,
   serverOrigin?: string,
+  isSpaMode: boolean = false,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -227,6 +228,7 @@ export function getTurboStreamSingleFetchDataStrategy(
     ssr,
     undefined,
     isApiOnly,
+    isSpaMode,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
 }
@@ -238,6 +240,7 @@ export function getSingleFetchDataStrategyImpl(
   ssr: boolean,
   shouldAllowOptOut: ShouldAllowOptOutFunction = () => true,
   isApiOnly: boolean = false,
+  isSpaMode: boolean = false,
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
@@ -302,6 +305,7 @@ export function getSingleFetchDataStrategyImpl(
       ssr,
       shouldAllowOptOut,
       isApiOnly,
+      isSpaMode,
     );
   };
 }
@@ -382,6 +386,7 @@ async function singleFetchLoaderNavigationStrategy(
   ssr: boolean,
   shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true,
   isApiOnly: boolean = false,
+  isSpaMode: boolean = false,
 ) {
   // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
@@ -461,7 +466,7 @@ async function singleFetchLoaderNavigationStrategy(
   await Promise.all(routeDfds.map((d) => d.promise));
 
   // We can skip the server call:
-  // - On initial hydration - only clientLoaders can pass through via
+  // - On initial SSR hydration - only clientLoaders can pass through via
   //   `clientLoader.hydrate`. We check the navigation state below as well
   //   because if a clientLoader redirected we'll still be `initialized=false`
   //   but we want to call loaders for the new location
@@ -473,7 +478,8 @@ async function singleFetchLoaderNavigationStrategy(
   let isInitialLoad =
     !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    ((isInitialLoad && !isApiOnly) || routesParams.size === 0) &&
+    ((isInitialLoad && !isApiOnly && !isSpaMode) ||
+      routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });
