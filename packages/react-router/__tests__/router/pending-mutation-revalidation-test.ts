@@ -89,4 +89,85 @@ describe("pending mutation revalidation", () => {
       expect(A.fetcher).toMatchObject({ state: "idle", data: "ACTION A" });
     },
   );
+
+  it.each(["action", "navigation"])(
+    "preserves newer fetcher data when an older %s reload cleans up",
+    async (cleanupType) => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+            action: true,
+            children: [
+              { id: "b", path: "b", loader: true },
+              { id: "c", path: "c", loader: true },
+              { id: "resource", path: "resource", loader: true },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+      });
+      let initial = await t.fetch("/resource", "resource");
+      await initial.loaders.resource.resolve("RESOURCE 0");
+
+      let A = await t.fetch("/", "mutation", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(A.loaders, "fetch", "loader", "b");
+      t.shimHelper(A.loaders, "fetch", "loader", "resource");
+      let B = await t.navigate("/b", { defaultShouldRevalidate: false });
+      await A.actions.root.resolve("ACTION");
+      expect(A.loaders.resource.stub).toHaveBeenCalledTimes(1);
+      await B.loaders.b.resolve("B");
+
+      // Retained mutation invalidation makes C revalidate the resource while
+      // A's older reload is still pending.
+      let C = await t.navigate("/c", undefined, ["resource"]);
+      expect(C.loaders.resource.stub).toHaveBeenCalledTimes(1);
+      await A.loaders.root.resolve("ROOT AFTER MUTATION");
+      await A.loaders.b.resolve("B AFTER MUTATION");
+      await A.loaders.resource.resolve("RESOURCE FROM A");
+      expect(t.fetchers.mutation).toMatchObject({
+        state: "idle",
+        data: "ACTION",
+      });
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      // A's cleanup must leave C's controller available so this explicit load
+      // can abort C's older resource request.
+      let D = await t.fetch("/resource", "resource");
+      let superseded = C.loaders.resource;
+      if (cleanupType === "action") {
+        await D.loaders.resource.resolve("RESOURCE 2");
+      }
+      await C.loaders.root.resolve("ROOT AFTER MUTATION");
+      await C.loaders.c.resolve("C");
+      await C.loaders.resource.resolve("RESOURCE 1");
+
+      if (cleanupType === "navigation") {
+        // If D is still pending when C completes, C's cleanup must preserve
+        // D's controller so a subsequent explicit load can abort it in turn.
+        let E = await t.fetch("/resource", "resource");
+        await E.loaders.resource.resolve("RESOURCE 3");
+        await D.loaders.resource.resolve("RESOURCE 2");
+        superseded = D.loaders.resource;
+      }
+
+      expect(t.fetchers.resource).toMatchObject({
+        state: "idle",
+        data: cleanupType === "action" ? "RESOURCE 2" : "RESOURCE 3",
+      });
+      expect(superseded.signal.aborted).toBe(true);
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: "/c" },
+        loaderData: { root: "ROOT AFTER MUTATION", c: "C" },
+        errors: null,
+      });
+      expect(t.router._internalFetchControllers.size).toBe(0);
+    },
+  );
 });

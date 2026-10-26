@@ -2674,7 +2674,12 @@ export function createRouter(init: RouterInit): Router {
       );
     }
 
-    revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
+    revalidatingFetchers.forEach((rf) => {
+      // A newer request may have replaced this controller while we were loading.
+      if (fetchControllers.get(rf.key) === rf.controller) {
+        fetchControllers.delete(rf.key);
+      }
+    });
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(loaderResults);
@@ -3160,7 +3165,12 @@ export function createRouter(init: RouterInit): Router {
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
-    revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
+    revalidatingFetchers.forEach((r) => {
+      // A newer request may have replaced this controller while we were loading.
+      if (fetchControllers.get(r.key) === r.controller) {
+        fetchControllers.delete(r.key);
+      }
+    });
 
     let fetcherIsMounted = state.fetchers.has(key);
 
