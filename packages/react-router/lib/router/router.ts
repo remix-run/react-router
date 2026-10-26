@@ -6928,8 +6928,12 @@ async function callLoaderOrAction({
             routeId: match.route.id,
           });
         } else {
-          // lazy route has no loader to run.  Short circuit here so we don't
-          // hit the invariant below that errors on returning undefined.
+          // lazy route has no loader to run.  Await the lazy route module so a
+          // rejected import (e.g. a failed dynamic chunk after a deploy) bubbles
+          // up to the nearest error boundary instead of being swallowed on a
+          // blank route.  Then short circuit so we don't hit the invariant below
+          // that errors on returning undefined.
+          await lazyRoutePromise;
           return { type: ResultType.data, result: undefined };
         }
       }
