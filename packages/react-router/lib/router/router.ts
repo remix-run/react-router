@@ -2641,7 +2641,12 @@ export function createRouter(init: RouterInit): Router {
 
     // Proxy navigation abort through to revalidation fetchers
     let abortPendingFetchRevalidations = () =>
-      revalidatingFetchers.forEach((f) => abortFetcher(f.key));
+      revalidatingFetchers.forEach((rf) => {
+        // A newer request may have replaced this controller while we were loading.
+        if (fetchControllers.get(rf.key) === rf.controller) {
+          abortFetcher(rf.key);
+        }
+      });
     if (pendingNavigationController) {
       pendingNavigationController.signal.addEventListener(
         "abort",
@@ -3131,7 +3136,12 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: workingFetchers });
 
     let abortPendingFetchRevalidations = () =>
-      revalidatingFetchers.forEach((rf) => abortFetcher(rf.key));
+      revalidatingFetchers.forEach((rf) => {
+        // A newer request may have replaced this controller while we were loading.
+        if (fetchControllers.get(rf.key) === rf.controller) {
+          abortFetcher(rf.key);
+        }
+      });
 
     abortController.signal.addEventListener(
       "abort",

@@ -91,6 +91,81 @@ describe("pending mutation revalidation", () => {
   );
 
   it.each(["action", "navigation"])(
+    "does not abort a newer fetcher load when an older %s reload is aborted",
+    async (reloadType) => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+            action: true,
+            children: [
+              { id: "b", path: "b", loader: true },
+              { id: "resource", path: "resource", loader: true },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+      });
+      let initial = await t.fetch("/resource", "resource");
+      await initial.loaders.resource.resolve("RESOURCE 0");
+
+      let submission = {
+        formMethod: "post" as const,
+        formData: createFormData({}),
+      };
+      let A =
+        reloadType === "action"
+          ? await t.fetch("/", "mutation-a", submission)
+          : await t.navigate("/", submission, ["resource"]);
+      if (reloadType === "action") {
+        t.shimHelper(A.loaders, "fetch", "loader", "resource");
+      }
+      await A.actions.root.resolve("ACTION A");
+
+      // B supersedes A's resource request, but A's route loader stays pending.
+      let B =
+        reloadType === "action"
+          ? await t.navigate("/b", undefined, ["resource"])
+          : await t.fetch("/", "mutation-b", submission);
+      if (reloadType === "navigation") {
+        t.shimHelper(B.loaders, "fetch", "loader", "resource");
+        await B.actions.root.resolve("ACTION B");
+      }
+      expect(A.loaders.resource.signal.aborted).toBe(true);
+      expect(A.loaders.root.signal.aborted).toBe(false);
+
+      // C replaces B's resource request and must survive B aborting A.
+      let C = await t.fetch("/resource", "resource");
+      expect(B.loaders.resource.signal.aborted).toBe(true);
+      await B.loaders.root.resolve("ROOT FROM B");
+      if (reloadType === "action") {
+        await B.loaders.b.resolve("B");
+      }
+      expect(A.loaders.root.signal.aborted).toBe(true);
+      expect(C.loaders.resource.signal.aborted).toBe(false);
+
+      await C.loaders.resource.resolve("RESOURCE FROM C");
+      // Late results from the aborted reloads must not overwrite C's data.
+      await A.loaders.root.resolve("ROOT FROM A");
+      await A.loaders.resource.resolve("RESOURCE FROM A");
+      await B.loaders.resource.resolve("RESOURCE FROM B");
+      expect(t.fetchers.resource).toMatchObject({
+        state: "idle",
+        data: "RESOURCE FROM C",
+      });
+      expect(t.router.state).toMatchObject({
+        navigation: { state: "idle" },
+        location: { pathname: reloadType === "action" ? "/b" : "/" },
+        loaderData: { root: "ROOT FROM B" },
+        errors: null,
+      });
+      expect(t.router._internalFetchControllers.size).toBe(0);
+    },
+  );
+
+  it.each(["action", "navigation"])(
     "preserves newer fetcher data when an older %s reload cleans up",
     async (cleanupType) => {
       let t = setup({
