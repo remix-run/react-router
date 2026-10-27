@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.18.5](#v7185)
   - [v7.18.4](#v7184)
   - [v7.18.3](#v7183)
   - [v7.18.2](#v7182)
@@ -182,6 +183,17 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.18.5
+
+Date: 2026-10-27
+
+### Patch Changes
+
+- `react-router` - Bound route manifest processing during server rendering and RSC document/data requests by falling back to initial route discovery for paths with expensive ancestor expansion, accounting for the number and depth of candidate branches when using regex matching ([#15704](https://github.com/remix-run/react-router/pull/15704))
+- `react-router` - Improve turbo-stream decoding validation and object property handling ([d7223c0](https://github.com/remix-run/react-router/commit/d7223c0))
+
+**Full Changelog**: [`v7.18.4...v7.18.5`](https://github.com/remix-run/react-router/compare/react-router@7.18.4...react-router@7.18.5)
 
 ## v7.18.4
 

@@ -1,5 +1,12 @@
 # `react-router`
 
+## v7.18.5
+
+### Patch Changes
+
+- Bound route manifest processing during server rendering and RSC document/data requests by falling back to initial route discovery for paths with expensive ancestor expansion, accounting for the number and depth of candidate branches when using regex matching ([#15704](https://github.com/remix-run/react-router/pull/15704))
+- Improve turbo-stream decoding validation and object property handling ([d7223c0](https://github.com/remix-run/react-router/commit/d7223c0))
+
 ## v7.18.4
 
 ### Patch Changes
