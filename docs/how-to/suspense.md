@@ -67,7 +67,7 @@ export default function MyComponent({
 
 <docs-warning>The `unstable_promise` prop is experimental and may change in minor or patch releases.</docs-warning>
 
-Pass `unstable_promise` instead of `resolve` to opt into an `<Await>` implementation based on React's `use()` API:
+Use `<Await unstable_promise>` instead of `<Await resolve>` to opt into `React.use` under the hood while keeping the Await API:
 
 ```tsx
 <React.Suspense fallback={<div>Loading...</div>}>
@@ -80,13 +80,7 @@ Pass `unstable_promise` instead of `resolve` to opt into an `<Await>` implementa
 </React.Suspense>
 ```
 
-Pass exactly one of `unstable_promise` or `resolve`. Both support render-prop children, `useAsyncValue`, and `useAsyncError`. The `unstable_promise` prop also accepts promise-like values and does not modify application promises.
-
-With `unstable_promise`, `errorElement` handles promise rejections. Errors thrown while rendering children bubble to the nearest React error boundary, such as a route's `ErrorBoundary`. In client components, the `resolve` prop retains its existing behavior, including catching child render errors.
-
-In React Server Components, `resolve` already behaves like `unstable_promise` in client components for error handling: `errorElement` handles only input rejections, and errors thrown by children propagate to the surrounding error boundary. Both props accept promise-like values without modifying the source promise. Use render-prop children to access the resolved value in a Server Component; `useAsyncValue` and `useAsyncError` are available in client descendants.
-
-Both props treat a falsy `errorElement`, such as `undefined`, `null`, `false`, `0`, or `""`, as absent and propagate the rejection. Pass `errorElement={<></>}` to handle a rejection without rendering any content.
+This should largely behave the same as `<Await resolve>` while avoiding the legacy React Router promise tracking. Both support render-prop children, `useAsyncValue`, and `useAsyncError`. One notable difference with `unstable_promise` is that `errorElement` only handles promise rejections. Errors thrown while rendering children bubble to the nearest React error boundary.
 
 ## Use React directly
 

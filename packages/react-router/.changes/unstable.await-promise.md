@@ -1,8 +1,6 @@
-Add an unstable opt-in `<Await unstable_promise={promise}>` implementation based on React's `use()` API
+Add an opt-in `<Await unstable_promise={promise}>` implementation based on React's `use()` API
 
-- Accept promise-like values without modifying application promises and retain `errorElement`, `useAsyncValue`, and `useAsyncError` support
-- Let child render errors bubble to the nearest React error boundary when using `unstable_promise`; retain existing behavior for `resolve`
-- Treat falsy `errorElement` values as absent with either prop; use an empty fragment to handle a rejection without rendering content
-- Preserve the original rejection when `onError` throws in `unstable_promise` or when `resolve` consumes an already-settled streamed promise, and log the reporting failure separately
-- Support the `unstable_promise` prop in React Server Components, including async hooks in client descendants
+- Skips React Router internal promise tracking in favor of `React.use`
+- Accept promise-like values and retains `errorElement`, `useAsyncValue`, and `useAsyncError` support
+- `errorElement` only handles promise rejections with `unstable_promise` - child render errors bubble to the nearest React error boundary
 - Track streamed promises during decoding so settled server content stays visible during hydration updates with either Await API or direct `React.use()`
