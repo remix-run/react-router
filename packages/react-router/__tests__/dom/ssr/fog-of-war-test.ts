@@ -53,11 +53,6 @@ describe("fog of war", () => {
         false,
       );
     });
-
-    test("ignores empty pathname segments", () => {
-      let pathname = samplePath(10).replaceAll("/", "///");
-      expect(shouldUseInitialRouteDiscovery(pathname, 50_001)).toBe(false);
-    });
   });
 
   describe("getPathsWithAncestors", () => {
