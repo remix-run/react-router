@@ -39,7 +39,11 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
-import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getPathsWithAncestors,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import invariant from "../server-runtime/invariant";
 
@@ -958,6 +962,7 @@ async function generateRenderResponse(
           skipRevalidation,
           ctx.redirect?.headers,
           routeDiscovery,
+          staticHandler._matchCost,
         );
       },
     }),
@@ -1056,6 +1061,7 @@ async function generateStaticContextResponse(
   skipRevalidation: boolean,
   sideEffectRedirectHeaders: Headers | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  matchCost: number | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -1122,6 +1128,7 @@ async function generateStaticContextResponse(
       isDataRequest,
       staticContext,
       routeDiscovery,
+      matchCost,
     );
 
   let payload: RSCRenderPayload | RSCActionPayload;
@@ -1164,6 +1171,7 @@ async function getRenderPayload(
   isDataRequest: boolean,
   staticContext: StaticHandlerContext,
   routeDiscovery: RouteDiscovery | undefined,
+  matchCost: number | undefined,
 ) {
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
@@ -1198,23 +1206,32 @@ async function getRenderPayload(
     }),
   );
 
-  let patches =
-    routeDiscovery?.mode === "initial" && !isDataRequest
-      ? getAllRoutePatches(routes, basename).then((patches) =>
-          patches.filter(
-            (patch) =>
-              !staticContext.matches.some((m) => m.route.id === patch.id),
-          ),
-        )
-      : getAdditionalRoutePatches(
-          getPathsWithAncestors([staticContext.location.pathname]),
-          routes,
-          basename,
-          staticContext.matches.map((m) => m.route.id),
-        );
+  let pathname = staticContext.location.pathname;
+  let useInitialRouteDiscovery =
+    (routeDiscovery?.mode === "initial" && !isDataRequest) ||
+    shouldUseInitialRouteDiscovery(pathname, matchCost);
+  let patches: Promise<RSCRouteManifest[]>;
+  if (useInitialRouteDiscovery) {
+    patches = getAllRoutePatches(routes, basename).then((patches) =>
+      patches.filter(
+        (patch) => !staticContext.matches.some((m) => m.route.id === patch.id),
+      ),
+    );
+  } else {
+    patches = getAdditionalRoutePatches(
+      // The full pathname is last and its matches are already in the payload.
+      getPathsWithAncestors([pathname]).slice(0, -1),
+      routes,
+      basename,
+      staticContext.matches.map((m) => m.route.id),
+    );
+  }
 
   return {
     ...baseRenderPayload,
+    routeDiscovery: useInitialRouteDiscovery
+      ? ({ mode: "initial" } satisfies RouteDiscovery)
+      : baseRenderPayload.routeDiscovery,
     matches: await matchesPromise,
     patches,
   };

@@ -40,7 +40,12 @@ import {
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
 import type { MiddlewareEnabled } from "../types/future";
-import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getManifestPath,
+  isFogOfWarEnabled,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import { instrumentHandler } from "../router/instrumentation";
 import { throwIfPotentialCSRFAttack } from "../actions";
@@ -534,10 +539,22 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: context.errors,
     };
+    let routeDiscovery = build.routeDiscovery;
+    if (
+      isFogOfWarEnabled(routeDiscovery, build.ssr) &&
+      shouldUseInitialRouteDiscovery(
+        context.location.pathname,
+        staticHandler._matchCost,
+      )
+    ) {
+      // Keep this response and its client router on the existing full-manifest
+      // path without changing discovery for other requests using this build.
+      routeDiscovery = { ...routeDiscovery, mode: "initial" };
+    }
     let baseServerHandoff: ServerHandoff = {
       basename: build.basename,
       future: build.future,
-      routeDiscovery: build.routeDiscovery,
+      routeDiscovery,
       ssr: build.ssr,
       isSpaMode,
     };
@@ -560,7 +577,7 @@ async function handleDocumentRequest(
       renderMeta: {},
       future: build.future,
       ssr: build.ssr,
-      routeDiscovery: build.routeDiscovery,
+      routeDiscovery,
       isSpaMode,
       serializeError: (err) => serializeError(err, serverMode),
     };
