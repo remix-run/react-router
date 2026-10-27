@@ -1670,9 +1670,9 @@ interface AwaitPromiseProps<Resolve> extends Omit<
  * In React Server Components, `resolve` already has this error-handling behavior:
  * `errorElement` handles only input rejections, while child render errors
  * propagate to the surrounding error boundary. Both props accept promise-like
- * values without modifying the source promise. With either implementation,
- * `resolve` treats a falsy `errorElement` as absent, while `unstable_promise`
- * only treats `undefined` as absent.
+ * values without modifying the source promise. Both props treat a falsy
+ * `errorElement` as absent and propagate the rejection. Pass an empty fragment
+ * to handle a rejection without rendering any content.
  *
  * <docs-warning>The `unstable_promise` prop is experimental and may change in
  * minor or patch releases.</docs-warning>
@@ -1793,7 +1793,7 @@ function AwaitPromise({
       ? React.use(getAwaitPromise(value as PromiseLike<unknown>, onError))
       : { status: "fulfilled", value };
 
-  if (result.status === "rejected" && errorElement === undefined) {
+  if (result.status === "rejected" && !errorElement) {
     throw result.reason;
   }
   return (

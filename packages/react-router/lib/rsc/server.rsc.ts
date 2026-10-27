@@ -158,10 +158,7 @@ export const Await: typeof AwaitType = (async (
   );
   let resolved: Awaited<typeof promise> = await promise;
 
-  if (
-    resolved.status === "rejected" &&
-    (usePromise ? errorElement === undefined : !errorElement)
-  ) {
+  if (resolved.status === "rejected" && !errorElement) {
     throw resolved.reason;
   }
   if (resolved.status === "rejected") {

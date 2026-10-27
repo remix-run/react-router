@@ -9,6 +9,7 @@ import {
   createMemoryRouter,
   useAsyncError,
   useAsyncValue,
+  useRouteError,
   UNSAFE_AwaitContextProvider as AwaitContextProvider,
 } from "../index";
 import type { TrackedPromise } from "../lib/router/utils";
@@ -95,6 +96,64 @@ describe.each(["resolve", "unstable_promise"] as const)("Await %s", (prop) => {
       expect(screen.getByText("Content")).toBeVisible();
     },
   );
+
+  it.each([undefined, null, false, 0, "", NaN, 0n])(
+    "propagates rejections with falsy errorElement=%p",
+    async (errorElement) => {
+      let deferred = createDeferred<string>();
+      let error = new Error("Rejected");
+      function ErrorBoundary() {
+        expect(useRouteError()).toBe(error);
+        return <p>Route error</p>;
+      }
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          element: (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Await
+                {...promiseProps(prop, deferred.promise)}
+                errorElement={errorElement}
+              >
+                Success
+              </Await>
+            </React.Suspense>
+          ),
+          ErrorBoundary,
+        },
+      ]);
+      let consoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      try {
+        await act(async () => {
+          render(<RouterProvider router={router} />);
+        });
+        expect(screen.getByText("Loading")).toBeVisible();
+        await act(() => deferred.reject(error));
+        expect(screen.getByText("Route error")).toBeVisible();
+      } finally {
+        consoleError.mockRestore();
+      }
+    },
+  );
+
+  it("renders an empty fragment errorElement on rejection", async () => {
+    let deferred = createDeferred<string>();
+    let container!: HTMLElement;
+    await act(async () => {
+      ({ container } = render(
+        <React.Suspense fallback={<p>Loading</p>}>
+          <Await {...promiseProps(prop, deferred.promise)} errorElement={<></>}>
+            Success
+          </Await>
+        </React.Suspense>,
+      ));
+    });
+    expect(screen.getByText("Loading")).toBeVisible();
+    await act(() => deferred.reject(new Error("Rejected")));
+    expect(container).toBeEmptyDOMElement();
+  });
 
   it.each([undefined, null, false, 0, new Error("Rejected")])(
     "reports a rejection once across consumers: %p",

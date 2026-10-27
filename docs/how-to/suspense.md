@@ -86,7 +86,7 @@ With `unstable_promise`, `errorElement` handles promise rejections. Errors throw
 
 In React Server Components, `resolve` already behaves like `unstable_promise` in client components for error handling: `errorElement` handles only input rejections, and errors thrown by children propagate to the surrounding error boundary. Both props accept promise-like values without modifying the source promise. Use render-prop children to access the resolved value in a Server Component; `useAsyncValue` and `useAsyncError` are available in client descendants.
 
-With either implementation, `unstable_promise` treats an explicit `errorElement={null}` or `errorElement={false}` as rendering nothing on rejection. The `resolve` prop treats these values as an absent error element and propagates the rejection.
+Both props treat a falsy `errorElement`, such as `undefined`, `null`, `false`, `0`, or `""`, as absent and propagate the rejection. Pass `errorElement={<></>}` to handle a rejection without rendering any content.
 
 ## Use React directly
 

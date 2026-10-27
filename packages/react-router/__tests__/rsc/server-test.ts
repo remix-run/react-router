@@ -1,3 +1,4 @@
+import * as React from "react";
 import { renderToString } from "react-dom/server.node";
 
 import {
@@ -72,33 +73,36 @@ describe("RSC server", () => {
           }),
         ).rejects.toBe(error);
       });
-    });
 
-    test.each([null, false])(
-      "unstable_promise renders an empty errorElement=%p",
-      async (errorElement) => {
+      test.each([undefined, null, false, 0, "", NaN, 0n])(
+        "propagates rejections with falsy errorElement=%p",
+        async (errorElement) => {
+          let error = new Error("Rejected");
+          let promise = Promise.reject(error);
+          await expect(
+            Await({
+              ...(prop === "unstable_promise"
+                ? { unstable_promise: promise }
+                : { resolve: promise }),
+              children: "Success",
+              errorElement,
+            }),
+          ).rejects.toBe(error);
+        },
+      );
+
+      test("renders an empty fragment errorElement on rejection", async () => {
+        let promise = Promise.reject(new Error("Rejected"));
         let result = await Await({
-          unstable_promise: Promise.reject(new Error("Rejected")),
+          ...(prop === "unstable_promise"
+            ? { unstable_promise: promise }
+            : { resolve: promise }),
           children: "Success",
-          errorElement,
+          errorElement: React.createElement(React.Fragment),
         });
         expect(renderToString(result)).toBe("");
-      },
-    );
-
-    test.each([null, false])(
-      "resolve propagates rejections with errorElement=%p",
-      async (errorElement) => {
-        let error = new Error("Rejected");
-        await expect(
-          Await({
-            resolve: Promise.reject(error),
-            children: "Success",
-            errorElement,
-          }),
-        ).rejects.toBe(error);
-      },
-    );
+      });
+    });
 
     test("accepts promise-like values", async () => {
       let received: unknown;
