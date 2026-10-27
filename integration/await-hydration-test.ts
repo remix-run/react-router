@@ -135,6 +135,7 @@ test.describe("streamed promise hydration", () => {
     { mode: "unstable_promise", status: "fulfilled" },
     { mode: "unstable_promise", status: "rejected" },
     { mode: "react-use", status: "fulfilled" },
+    { mode: "resolve", status: "rejected", reporterThrows: true },
     { mode: "unstable_promise", status: "rejected", reporterThrows: true },
   ].forEach(({ mode, status, reporterThrows }) => {
     test(`${mode} keeps ${status} server content visible during a parent layout effect update${reporterThrows ? " when onError throws" : ""}`, async ({

@@ -1897,9 +1897,17 @@ class AwaitErrorBoundary extends React.Component<
             get: () => result.reason,
           });
           // Report once when consumed, as with an ordinary untracked promise.
-          Promise.resolve(resolve).catch((error) =>
-            this.props.onError?.(error),
-          );
+          Promise.resolve(resolve).catch((reason) => {
+            try {
+              this.props.onError?.(reason);
+            } catch (error) {
+              // Reporting failures must not create an unhandled rejection.
+              console.error(
+                "<Await> caught the following error in onError",
+                error,
+              );
+            }
+          });
         }
       } else {
         // Wrap in `Promise.resolve()` because React Flight's `ReactPromise`
