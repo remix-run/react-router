@@ -26,6 +26,21 @@ Used to render promise values with automatic error handling.
 
 **Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
 
+Pass `unstable_promise` instead of `resolve` to opt into React's
+[`use()`](https://react.dev/reference/react/use) implementation. With
+`unstable_promise`, `errorElement` handles promise rejections, while errors
+thrown by children bubble to the nearest React error boundary.
+
+In React Server Components, `resolve` already has this error-handling behavior:
+`errorElement` handles only input rejections, while child render errors
+propagate to the surrounding error boundary. Both props accept promise-like
+values without modifying the source promise. Both props treat a falsy
+`errorElement` as absent and propagate the rejection. Pass an empty fragment
+to handle a rejection without rendering any content.
+
+<docs-warning>The `unstable_promise` prop is experimental and may change in
+minor or patch releases.</docs-warning>
+
 ```tsx
 import { Await, useLoaderData } from "react-router";
 
@@ -62,11 +77,9 @@ function Book() {
 ## Signature
 
 ```tsx
-function Await<Resolve>({
-  children,
-  errorElement,
-  resolve,
-}: AwaitProps<Resolve>)
+function Await<Resolve>(
+  props: AwaitProps<Resolve> | AwaitPromiseProps<Resolve>,
+)
 ```
 
 ## Props
@@ -170,4 +183,9 @@ export default function Book() {
   );
 }
 ```
+
+### unstable_promise
+
+A promise (or value) to read using React's `use()` API in client components. Accepts promise-like values without modifying the
+source promise. Pass exactly one of `unstable_promise` or `resolve`.
 
