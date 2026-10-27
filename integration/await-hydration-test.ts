@@ -140,6 +140,7 @@ test.describe("streamed promise hydration", () => {
   ].forEach(({ mode, status, reporterThrows }) => {
     test(`${mode} keeps ${status} server content visible during a parent layout effect update${reporterThrows ? " when onError throws" : ""}`, async ({
       page,
+      browserName,
     }) => {
       let pageErrors: Error[] = [];
       let consoleErrors: string[] = [];
@@ -147,6 +148,10 @@ test.describe("streamed promise hydration", () => {
       page.on("console", (msg) => {
         if (msg.type() === "error") consoleErrors.push(msg.text());
       });
+      if (browserName === "webkit") {
+        // Run React's streamed-boundary animation frames while the response is open.
+        await page.clock.install();
+      }
       let allowHydration!: () => void;
       let hydrationGate = new Promise<void>((resolve) => {
         allowHydration = resolve;
@@ -175,6 +180,21 @@ test.describe("streamed promise hydration", () => {
           "false",
         );
         await expect(page.locator("#slow-fallback")).toBeVisible();
+        if (browserName === "webkit") {
+          // WebKit defers the parser-inserted module while the response is open.
+          // Load the same bootstrap dynamically so hydration can start while the
+          // slow loader promise is still pending.
+          let bootstrap = await page
+            .locator('script[type="module"]')
+            .innerHTML();
+          let script = await page.addScriptTag({
+            type: "module",
+            content: bootstrap,
+          });
+          await script.evaluate((node) => {
+            node.parentNode?.removeChild(node);
+          });
+        }
         allowHydration();
         await expect(page.locator("#fast")).toHaveAttribute(
           "data-hydrated",
