@@ -19,6 +19,8 @@ on:
 
 env:
   CI: true
+  # Disable build caching for now: we've seen cache hits with missing build outputs.
+  WIREIT_CACHE: none
 
 jobs:
   integration:
@@ -37,9 +39,6 @@ jobs:
         with:
           node-version: ${{ inputs.node_version }}
           cache: "pnpm"
-
-      - name: Setup wireit cache
-        uses: google/wireit@setup-github-actions-caching/v2.0.4
 
       - name: Disable GitHub Actions Annotations
         run: |
