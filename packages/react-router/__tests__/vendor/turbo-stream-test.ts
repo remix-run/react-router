@@ -391,6 +391,7 @@ test("should encode and decode promise", async () => {
   expect(decoded.value).toBeInstanceOf(Promise);
   expect(await decoded.value).toEqual(await input);
   await decoded.done;
+  expect(decoded.value).toMatchObject({ status: "fulfilled", value: "foo" });
 });
 
 test("should encode and decode subsequent null from promise in object value", async () => {
@@ -417,6 +418,10 @@ test("should encode and decode rejected promise", async () => {
     await input.catch((reason) => reason),
   );
   await decoded.done;
+  expect(decoded.value).toMatchObject({
+    status: "rejected",
+    reason: new Error("foo"),
+  });
 });
 
 test("should encode and decode object with promises as values", async () => {
