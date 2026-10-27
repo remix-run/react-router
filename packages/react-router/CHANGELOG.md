@@ -34,7 +34,7 @@
 
 ### Unstable Changes
 
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - Add an opt-in `<Await unstable_promise={promise}>` implementation based on React's `use()` API ([#15678](https://github.com/remix-run/react-router/pull/15678))
   - Use `React.use` instead of React Router's internal promise tracking
