@@ -931,6 +931,69 @@ function testFogOfWar(unstable_customRouteDiscovery: boolean) {
     ).toEqual(["root", "routes/_index", "routes/$", "routes/static"]);
   });
 
+  test("discovers routes for paths containing commas", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Outlet, Scripts } from "react-router";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head></head>
+                <body>
+                  <nav>
+                    <Link to="/tags/a,b">/tags/a,b</Link>
+                  </nav>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>
+          }
+        `,
+        "app/routes/tags.a,b.tsx": js`
+          export default function Component() {
+            return <h2 id="tags">Tags</h2>;
+          }
+        `,
+        "app/routes/$.tsx": js`
+          export default function Component() {
+            return <h2 id="splat">Splat</h2>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(await app.getHtml("#index")).toMatch("Index");
+    await page.waitForFunction(
+      () => (window as any).__reactRouterManifest.routes["routes/tags.a,b"],
+    );
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(
+        /\/__manifest\?paths=%2Ftags%2C%2Ftags%2Fa%252Cb&version=/,
+      ),
+    ]);
+
+    await app.clickLink("/tags/a,b");
+    await page.waitForSelector("#tags");
+    expect(await app.getHtml("#tags")).toMatch("Tags");
+  });
+
   test("does not re-request for previously discovered slug routes", async ({
     page,
   }) => {
