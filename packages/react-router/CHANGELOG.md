@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Fix `URIError: URI malformed` when an API-only (`ssr: "unstable_api-only"`) server or an `ssr: false` dev server receives a URL path with a malformed percent-encoding ([#15649](https://github.com/remix-run/react-router/pull/15649))
+- Fix `URIError: URI malformed` when an `ssr: false` dev server receives a URL path with a malformed percent-encoding ([#15649](https://github.com/remix-run/react-router/pull/15649))
 - Bound server route manifest processing for paths with expensive route expansion ([#15703](https://github.com/remix-run/react-router/pull/15703))
   - Fall back to initial route discovery during server rendering and RSC document/data requests
   - Account for the number and depth of candidate branches when using regex matching
@@ -25,7 +25,6 @@
   - Return fetchers to `idle` when a revalidation completes a pending navigation started by another fetcher's redirect
 - Avoid adding an incompatible `document.startViewTransition()` overload to the global `Document` type ([#15680](https://github.com/remix-run/react-router/pull/15680))
   - Allow transition results to be assigned to the DOM `ViewTransition` type
-- Fix duplicate headers when throwing a redirect from an RSC server function ([#15667](https://github.com/remix-run/react-router/pull/15667))
 - Skip `deleteData` in `destroySession` when the session has no ID ([#15639](https://github.com/remix-run/react-router/pull/15639))
   - Avoid failures when destroying a session without a cookie on storage that rejects an empty key
 - Surface the host's 404 response when a SPA fallback route has no prerendered data ([#15646](https://github.com/remix-run/react-router/pull/15646))
@@ -42,6 +41,8 @@
   - Accept promise-like values and retain `errorElement`, `useAsyncValue`, and `useAsyncError` support
   - Handle only promise rejections with `errorElement` when using `unstable_promise`, allowing child render errors to bubble to the nearest React error boundary
   - Track streamed promises during decoding so settled server content stays visible during hydration updates with either Await API or direct `React.use()`
+- Fix `URIError: URI malformed` when an API-only (`ssr: "unstable_api-only"`) server receives a URL path with a malformed percent-encoding ([#15649](https://github.com/remix-run/react-router/pull/15649))
+- Fix duplicate headers when throwing a redirect from an RSC server function ([#15667](https://github.com/remix-run/react-router/pull/15667))
 
 ## v8.5.0
 
