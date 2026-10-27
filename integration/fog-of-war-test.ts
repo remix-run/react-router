@@ -85,6 +85,47 @@ function getFiles() {
   };
 }
 
+test("switches to initial discovery above the pathname work limit", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      ...getFiles(),
+      "app/routes/$.tsx": js`
+        export default function Splat() {
+          return <h1>Sample page</h1>;
+        }
+      `,
+    },
+  });
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  try {
+    let response = await app.goto(
+      `/${Array.from({ length: 60 }, (_, i) => i % 10).join("/")}`,
+    );
+    expect(response.status()).toBe(200);
+    expect(
+      await page.evaluate(
+        () => (window as any).__reactRouterContext.routeDiscovery.mode,
+      ),
+    ).toBe("lazy");
+
+    response = await app.goto(
+      `/${Array.from({ length: 70 }, (_, i) => i % 10).join("/")}`,
+    );
+    expect(response.status()).toBe(200);
+    expect(
+      await page.evaluate(
+        () => (window as any).__reactRouterContext.routeDiscovery.mode,
+      ),
+    ).toBe("initial");
+  } finally {
+    await appFixture.close();
+  }
+});
+
 test.describe("Fog of War", () => {
   let oldConsoleError: typeof console.error;
 

@@ -1,0 +1,1 @@
+Bound route manifest processing during server rendering by falling back to initial route discovery for paths with expensive ancestor expansion, accounting for the number and depth of candidate branches when using regex matching

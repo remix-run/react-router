@@ -485,6 +485,8 @@ export interface StaticHandler {
    * The set of data routes managed by this handler
    */
   dataRoutes: DataRouteObject[];
+  /** @private Estimated route metadata visits per regex match. */
+  readonly _matchCost?: number;
   /**
    * @private
    * PRIVATE - DO NOT USE
@@ -4112,6 +4114,12 @@ export function createStaticHandler(
   // Pre-compute flattened/ranked route branches when the flag is enabled.
   // Skipped in development mode because routes can be added dynamically (HMR).
   let routeBranches = flattenAndRankRoutes(dataRoutes);
+  // Upper bound on metadata visited per match, including optional segment
+  // expansion and pathless layouts within each candidate branch.
+  let matchCost = routeBranches.reduce(
+    (total, branch) => total + branch.routesMeta.length,
+    0,
+  );
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -5029,6 +5037,7 @@ export function createStaticHandler(
 
   return {
     dataRoutes,
+    _matchCost: matchCost,
     _internalRouteBranches: routeBranches,
     query,
     queryRoute,
