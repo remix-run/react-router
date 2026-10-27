@@ -84,6 +84,8 @@ function hydrate(this: ThisDecode, index: number): any {
         continue;
     }
 
+    validateIndex(index, values.length);
+
     if (hydrated[index]) {
       set(hydrated[index]);
       continue;
@@ -174,6 +176,7 @@ function hydrate(this: ThisDecode, index: number): any {
             set(obj);
             continue;
           case TYPE_PROMISE:
+            validateIndex(b, values.length);
             if (hydrated[b]) {
               set((hydrated[index] = hydrated[b]));
             } else {
@@ -216,6 +219,7 @@ function hydrate(this: ThisDecode, index: number): any {
             set(error);
             continue;
           case TYPE_PREVIOUS_RESOLVED:
+            validateIndex(b, values.length);
             set((hydrated[index] = hydrated[b]));
             continue;
           default:
@@ -284,7 +288,12 @@ function hydrate(this: ThisDecode, index: number): any {
           },
         ]);
         postRun.push(() => {
-          object[r[0]] = r[1];
+          Object.defineProperty(object, r[0], {
+            value: r[1],
+            enumerable: true,
+            configurable: true,
+            writable: true,
+          });
         });
       }
       set(object);
@@ -297,4 +306,10 @@ function hydrate(this: ThisDecode, index: number): any {
   }
 
   return result;
+}
+
+function validateIndex(index: number, length: number) {
+  if (!Number.isSafeInteger(index) || index < 0 || index >= length) {
+    throw new SyntaxError();
+  }
 }

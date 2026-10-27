@@ -26,6 +26,124 @@ async function readStreamToString(stream: ReadableStream<Uint8Array>) {
   return text;
 }
 
+describe("decoding", () => {
+  function stream(input: unknown) {
+    return new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          new TextEncoder().encode(`${JSON.stringify(input)}\n`),
+        );
+        controller.close();
+      },
+    });
+  }
+
+  const invalidIndices = [
+    "1",
+    "value",
+    null,
+    true,
+    {},
+    [],
+    ["1"],
+    "length",
+    "constructor",
+    "__proto__",
+    ["__proto__"],
+    -8,
+    0.5,
+    2,
+    100,
+    Number.MAX_SAFE_INTEGER + 1,
+  ];
+
+  describe.each(["P", "Z"])("%s references", (type) => {
+    test.each([...invalidIndices, -1, -2, -7, 1].map((index) => [index]))(
+      "rejects invalid index %j",
+      async (index) => {
+        await expect(decode(stream([[type, index]]))).rejects.toThrow(
+          SyntaxError,
+        );
+      },
+    );
+  });
+
+  describe.each<{
+    name: string;
+    payload: (index: unknown) => unknown;
+  }>([
+    { name: "array element", payload: (index) => [[1, index], "value"] },
+    { name: "object value", payload: (index) => [{ _1: index }, "key"] },
+    {
+      name: "null-prototype object value",
+      payload: (index) => [["N", { _1: index }], "key"],
+    },
+    { name: "set element", payload: (index) => [["S", index]] },
+    { name: "map key", payload: (index) => [["M", index, 1], "value"] },
+    { name: "map value", payload: (index) => [["M", 1, index], "key"] },
+    { name: "plugin argument", payload: (index) => [["Custom", index]] },
+  ])("$name references", ({ payload }) => {
+    test.each(invalidIndices.map((index) => [index]))(
+      "rejects invalid index %j",
+      async (index) => {
+        await expect(
+          decode(stream(payload(index)), {
+            plugins: [(_type, value) => ({ value })],
+          }),
+        ).rejects.toThrow(SyntaxError);
+      },
+    );
+  });
+
+  test.each(["_NaN", "_0.5", "_100"])(
+    "rejects invalid object key reference %s",
+    async (key) => {
+      await expect(decode(stream([{ [key]: 1 }, "value"]))).rejects.toThrow(
+        SyntaxError,
+      );
+    },
+  );
+
+  test.each(["name", "constructor", "__proto__"])(
+    "decodes object keys using property-key coercion (%s)",
+    async (key) => {
+      const output = await quickDecode<Record<string, unknown>>(
+        stream([{ _1: 3 }, [2], key, { _4: 5 }, "nested", "value"]),
+      );
+      expect(Object.getPrototypeOf(output)).toBe(Object.prototype);
+      expect(Object.getOwnPropertyDescriptor(output, key)).toEqual({
+        value: { nested: "value" },
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+      expect(output.nested).toBeUndefined();
+    },
+  );
+});
+
+describe.each(["name", "toString", "constructor", "__proto__", ""])(
+  "object property %j",
+  (key) => {
+    test.each([null, undefined, 1, "data", { nested: "value" }])(
+      "round trips an own property with value %j",
+      async (value) => {
+        const input = { [key]: value, other: "value" };
+        const output = await quickDecode(encode(input));
+        expect(Object.getPrototypeOf(output)).toBe(Object.prototype);
+        expect(Object.getOwnPropertyDescriptor(output, key)).toEqual({
+          value,
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
+        expect(output).toEqual(input);
+        expect(JSON.stringify(output)).toBe(JSON.stringify(input));
+      },
+    );
+  },
+);
+
 test("should encode and decode undefined", async () => {
   const input = undefined;
   const output = await quickDecode(encode(input));
