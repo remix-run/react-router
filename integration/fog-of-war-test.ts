@@ -1262,6 +1262,11 @@ function testFogOfWar(unstable_customRouteDiscovery: boolean) {
     let fixture = await createFixture({
       files: {
         ...getFiles(),
+        // Keep discovery of /a/b from racing the manifest assertion after visiting /a.
+        "app/routes/a.tsx": getFiles()["app/routes/a.tsx"].replace(
+          'to="/a/b"',
+          'to="/a/b" discover="none"',
+        ),
         "app/routes/_index.tsx": js`
           import { Link } from "react-router";
           export default function Index() {
