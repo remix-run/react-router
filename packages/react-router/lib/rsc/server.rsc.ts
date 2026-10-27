@@ -41,7 +41,11 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
-import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getPathsWithAncestors,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import invariant from "../server-runtime/invariant";
 
@@ -1256,8 +1260,12 @@ async function getRenderPayload(
     }),
   );
 
+  let pathname = staticContext.location.pathname;
+  let useInitialRouteDiscovery =
+    (routeDiscovery?.mode === "initial" && !isDataRequest) ||
+    shouldUseInitialRouteDiscovery(pathname, staticHandler._matchCost);
   let patches: Promise<RSCRouteManifest[]>;
-  if (routeDiscovery?.mode === "initial" && !isDataRequest) {
+  if (useInitialRouteDiscovery) {
     patches = getAllRoutePatches(routes, basename).then((patches) =>
       patches.filter(
         (patch) => !staticContext.matches.some((m) => m.route.id === patch.id),
@@ -1265,7 +1273,8 @@ async function getRenderPayload(
     );
   } else {
     patches = getAdditionalRoutePatches(
-      getPathsWithAncestors([staticContext.location.pathname]),
+      // The full pathname is last and its matches are already in the payload.
+      getPathsWithAncestors([pathname]).slice(0, -1),
       staticHandler,
       staticContext.matches.map((m) => m.route.id),
     );
@@ -1273,6 +1282,9 @@ async function getRenderPayload(
 
   return {
     ...baseRenderPayload,
+    routeDiscovery: useInitialRouteDiscovery
+      ? ({ mode: "initial" } satisfies RouteDiscovery)
+      : baseRenderPayload.routeDiscovery,
     matches: await matchesPromise,
     patches,
   };

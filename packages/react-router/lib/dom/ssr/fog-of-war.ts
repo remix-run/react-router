@@ -64,7 +64,7 @@ export function shouldUseInitialRouteDiscovery(
   pathname: string,
   matchCost = 0,
 ): boolean {
-  let segmentCount = pathname.split("/").filter(Boolean).length;
+  let segmentCount = pathname.split("/").length - 1;
   let ancestorCount = Math.max(segmentCount - 1, 0);
 
   // Each ancestor is shorter than the incoming pathname. Use an upper bound on
