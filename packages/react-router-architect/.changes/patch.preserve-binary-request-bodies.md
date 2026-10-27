@@ -1,1 +1,3 @@
-Preserve binary request bodies by no longer decoding base64 encoded request bodies to a UTF-8 string when the content type is not `multipart/form-data`
+Preserve binary request bodies in the Architect adapter
+
+- Avoid decoding base64-encoded bodies to UTF-8 strings for content types other than `multipart/form-data`

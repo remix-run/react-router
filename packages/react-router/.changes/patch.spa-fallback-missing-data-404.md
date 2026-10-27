@@ -1,3 +1,4 @@
-Fix SSR-unsafe error being rendered for non-prerendered parameterized routes served via the SPA fallback
+Surface the host's 404 response when a SPA fallback route has no prerendered data
 
-- When an `ssr:false` app with a `prerender` config served the SPA fallback document for a non-prerendered path, hydrating routes with a server `loader` no longer skipped the single-fetch `.data` request, so a missing `.data` file now surfaces the host's 404 response instead of an internal "No result found for routeId" error
+- Request single-fetch `.data` files for hydrating routes with a server `loader` in an `ssr: false` app with a `prerender` config
+- Avoid the internal "No result found for routeId" error for non-prerendered parameterized paths served via the SPA fallback
