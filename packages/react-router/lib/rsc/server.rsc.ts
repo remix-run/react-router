@@ -10,7 +10,7 @@ import type {
   LinksFunction,
   MetaFunction,
 } from "../dom/ssr/routeModules";
-import { type Location } from "../router/history";
+import { invariant as routerInvariant, type Location } from "../router/history";
 import {
   createStaticHandler,
   isDataWithResponseInit,
@@ -144,12 +144,18 @@ const cachedResolvePromise: <T>(
   },
 );
 
-export const Await: typeof AwaitType = (async ({
-  children,
-  resolve,
-  errorElement,
-}: React.ComponentProps<typeof AwaitType>) => {
-  let promise = cachedResolvePromise(resolve);
+export const Await: typeof AwaitType = (async (
+  props: React.ComponentProps<typeof AwaitType>,
+) => {
+  routerInvariant(
+    "resolve" in props !== "unstable_promise" in props,
+    "<Await> requires exactly one of `resolve` or `unstable_promise`",
+  );
+  let { children, errorElement } = props;
+  let usePromise = "unstable_promise" in props;
+  let promise = cachedResolvePromise(
+    usePromise ? props.unstable_promise : props.resolve,
+  );
   let resolved: Awaited<typeof promise> = await promise;
 
   if (resolved.status === "rejected" && !errorElement) {
@@ -158,7 +164,9 @@ export const Await: typeof AwaitType = (async ({
   if (resolved.status === "rejected") {
     return React.createElement(UNSAFE_AwaitContextProvider, {
       children: React.createElement(React.Fragment, null, errorElement),
-      value: { _tracked: true, _error: resolved.reason } as TrackedPromise,
+      value: usePromise
+        ? resolved
+        : ({ _tracked: true, _error: resolved.reason } as TrackedPromise),
     });
   }
 
@@ -167,7 +175,9 @@ export const Await: typeof AwaitType = (async ({
 
   return React.createElement(UNSAFE_AwaitContextProvider, {
     children: toRender,
-    value: { _tracked: true, _data: resolved.value } as TrackedPromise,
+    value: usePromise
+      ? resolved
+      : ({ _tracked: true, _data: resolved.value } as TrackedPromise),
   });
 }) as any;
 
