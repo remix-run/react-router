@@ -1550,7 +1550,25 @@ export interface AwaitResolveRenderFunction<Resolve = any> {
  * @category Types
  */
 export interface AwaitProps<Resolve> {
-  /** Use either `resolve` or `unstable_promise`, never both. */
+  /**
+   * <docs-warning>This prop is currently unstable and may change in minor or patch
+   * releases.</docs-warning>
+   *
+   * A promise (or value) to read using React's `use()` API in client components.
+   * Unlike `resolve` in client components, this accepts promise-like values
+   * without modifying the source promise.
+   *
+   * `errorElement` handles promise rejections. Errors thrown while rendering
+   * children bubble to the nearest React error boundary.
+   *
+   * ```tsx
+   * <Await unstable_promise={reviewsPromise} errorElement={<ReviewsError />}>
+   *   {(reviews) => <Reviews items={reviews} />}
+   * </Await>
+   * ```
+   *
+   * Pass exactly one of `unstable_promise` or `resolve`.
+   */
   unstable_promise?: never;
   /**
    * When using a function, the resolved value is provided as the parameter.
@@ -1578,14 +1596,17 @@ export interface AwaitProps<Resolve> {
   children: React.ReactNode | AwaitResolveRenderFunction<Resolve>;
 
   /**
-   * The error element renders instead of the `children` when the [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+   * The error element renders instead of the `children` when the
+   * [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
    * rejects.
    *
+   * When using `resolve`, errors thrown while rendering `children` are
+   * also caught and rendered here. With `unstable_promise`, only promise
+   * rejections are handled; errors thrown while rendering `children` bubble to
+   * the nearest React error boundary.
+   *
    * ```tsx
-   * <Await
-   *   errorElement={<div>Oops</div>}
-   *   resolve={reviewsPromise}
-   * >
+   * <Await resolve={reviewsPromise} errorElement={<div>Oops</div>}>
    *   <Reviews />
    * </Await>
    * ```
@@ -1594,10 +1615,7 @@ export interface AwaitProps<Resolve> {
    * child component
    *
    * ```tsx
-   * <Await
-   *   errorElement={<ReviewsError />}
-   *   resolve={reviewsPromise}
-   * >
+   * <Await resolve={reviewsPromise} errorElement={<ReviewsError />}>
    *   <Reviews />
    * </Await>
    *
@@ -1683,22 +1701,16 @@ interface AwaitPromiseProps<Resolve> extends Omit<
 /**
  * Used to render promise values with automatic error handling.
  *
+ * Passing the promise through `resolve` uses React Router-specific promise tracking, while passing
+ * it through `unstable_promise` uses React's built-in [`use()`](https://react.dev/reference/react/use)
+ * API.
+ *
  * **Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
  *
- * Pass `unstable_promise` instead of `resolve` to opt into React's
- * [`use()`](https://react.dev/reference/react/use) implementation. With
- * `unstable_promise`, `errorElement` handles promise rejections, while errors
- * thrown by children bubble to the nearest React error boundary.
- *
- * In React Server Components, `resolve` already has this error-handling behavior:
- * `errorElement` handles only input rejections, while child render errors
- * propagate to the surrounding error boundary. Both props accept promise-like
- * values without modifying the source promise. Both props treat a falsy
- * `errorElement` as absent and propagate the rejection. Pass an empty fragment
- * to handle a rejection without rendering any content.
- *
- * <docs-warning>The `unstable_promise` prop is experimental and may change in
- * minor or patch releases.</docs-warning>
+ * <docs-warning>The `unstable_promise` prop is currently unstable and may change in minor or patch
+ * releases. We plan to stabilize `<Await promise>` and deprecate `<Await resolve>` during v8, and then
+ * drop `<Await resolve>` in v9. Please see below for minor `errorElement` behavioral differences
+ * between the two approaches.</docs-warning>
  *
  * @example
  * import { Await, useLoaderData } from "react-router";
@@ -1718,15 +1730,9 @@ interface AwaitPromiseProps<Resolve> extends Omit<
  *       <h1>{book.title}</h1>
  *       <p>{book.description}</p>
  *       <React.Suspense fallback={<ReviewsSkeleton />}>
- *         <Await
- *           resolve={reviews}
- *           errorElement={
- *             <div>Could not load reviews 😬</div>
- *           }
- *           children={(resolvedReviews) => (
- *             <Reviews items={resolvedReviews} />
- *           )}
- *         />
+ *         <Await resolve={reviews} errorElement={<BookError />}>
+ *           {(resolvedReviews) => <Reviews items={resolvedReviews} />}
+ *         </Await>
  *       </React.Suspense>
  *     </div>
  *   );
@@ -1740,9 +1746,7 @@ interface AwaitPromiseProps<Resolve> extends Omit<
  * @param {AwaitProps.children} props.children n/a
  * @param {AwaitProps.errorElement} props.errorElement n/a
  * @param {AwaitProps.resolve} props.resolve n/a
- * @param props.unstable_promise A promise (or value) to read using React's `use()`
- * API in client components. Accepts promise-like values without modifying the
- * source promise. Pass exactly one of `unstable_promise` or `resolve`.
+ * @param {AwaitProps.unstable_promise} props.unstable_promise n/a
  * @returns React element for the rendered awaited value
  */
 export function Await<Resolve>(
