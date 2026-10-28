@@ -155,6 +155,7 @@ export function getPatchRoutesOnNavigationFunction(
       fetchImplementation,
       serverOrigin,
       isApiOnly,
+      fetcherKey ? () => window.location.href : undefined,
     );
   };
 }
@@ -435,7 +436,12 @@ export async function handleClientVersionMismatch(
         MANIFEST_RECOVERY_STORAGE_KEY,
         JSON.stringify({ ...recovery, attempts: recovery.attempts + 1 }),
       );
-      window.location.href = path;
+      if (new URL(path, window.location.href).href === window.location.href) {
+        // Assigning the current URL with a hash can stay in the same document.
+        window.location.reload();
+      } else {
+        window.location.href = path;
+      }
       console.warn("Detected manifest version mismatch, reloading...");
     } catch {
       failReload();
@@ -464,6 +470,7 @@ export async function fetchAndApplyManifestPatches(
   fetchImplementation: RouterFetch = (request) => fetch(request),
   serverOrigin?: string,
   isApiOnly: boolean = false,
+  getReloadPath?: () => string | null,
 ): Promise<void> {
   paths = getPathsWithAncestors(paths);
 
@@ -503,6 +510,7 @@ export async function fetchAndApplyManifestPatches(
         manifest.version,
         errorReloadPath,
         signal,
+        getReloadPath,
       )
     ) {
       return;

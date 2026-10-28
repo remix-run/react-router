@@ -31,6 +31,7 @@ function getFiles(rsc: boolean) {
               <button onClick={() => fetcher.load("/fetch")}>Fetch</button>
               <Link to="/other" discover="none">Navigate</Link>
               <Link to="/recovered" discover="none">Recover</Link>
+              <Link to="/other?query=1#hash" discover="none">Known route</Link>
               {children}
               ${rsc ? "" : "<Scripts />"}
             </body>
@@ -140,6 +141,76 @@ async function expectSettledAndRecover(page: Page, timeout = 10_000) {
 
 for (let rsc of [false, true]) {
   test.describe(rsc ? "RSC Framework" : "Framework", () => {
+    for (let customDiscovery of rsc ? [false] : [false, true]) {
+      test(`fetcher recovery reloads the current page after navigation (custom discovery: ${customDiscovery})`, async ({
+        page,
+        reactRouterServe,
+        vitePreview,
+      }) => {
+        let files: Files = async () => ({
+          ...getFiles(rsc),
+          ...(customDiscovery
+            ? {
+                "react-router.config.ts": js`export default { future: { unstable_customRouteDiscovery: true } };`,
+              }
+            : {}),
+        });
+        let { port } = rsc
+          ? await vitePreview(files, "rsc-vite-framework")
+          : await reactRouterServe(files);
+        let baseUrl = `http://localhost:${port}`;
+        // RSC payload requests also wait behind recovery. A hash navigation can
+        // complete independently, without needing another server response.
+        let initialUrl = `${baseUrl}/other${rsc ? "?query=1" : ""}`;
+        let documents: string[] = [];
+        page.on("request", (request) => {
+          if (request.resourceType() === "document")
+            documents.push(request.url());
+        });
+        await page.route(manifestRequest, (route) =>
+          route.fulfill({
+            status: 204,
+            headers: { "X-Remix-Reload-Document": "true" },
+          }),
+        );
+        await page.goto(initialUrl);
+        await expect(
+          page.getByRole("heading", { name: "Other" }),
+        ).toBeVisible();
+        let time = new Date();
+        await page.clock.install({ time });
+        await page.clock.pauseAt(time);
+        await page.evaluate(() => {
+          sessionStorage.setItem(
+            "react-router-manifest-recovery",
+            JSON.stringify({ attempts: 1, expiresAt: Date.now() + 30_000 }),
+          );
+        });
+        let mismatch = page.waitForResponse(manifestRequest);
+        await page.getByRole("button", { name: "Fetch", exact: true }).click();
+        await mismatch;
+        await expect(page.locator("[data-fetcher-state]")).toHaveText(
+          "loading",
+        );
+
+        await page.getByRole("link", { name: "Known route" }).click();
+        await expect(page).toHaveURL(`${baseUrl}/other?query=1#hash`);
+        await expect(page.locator("[data-navigation-state]")).toHaveText(
+          "idle",
+        );
+        await expect(page.locator("[data-fetcher-state]")).toHaveText(
+          "loading",
+        );
+        expect(documents).toEqual([initialUrl]);
+
+        let loaded = page.waitForEvent("load");
+        await page.clock.runFor(1000);
+        await loaded;
+        await expect(page).toHaveURL(`${baseUrl}/other?query=1#hash`);
+        expect(documents).toEqual([initialUrl, `${baseUrl}/other?query=1`]);
+      });
+    }
+
     test("settles concurrent discovery when the user cancels the document reload", async ({
       page,
       reactRouterServe,

@@ -368,6 +368,7 @@ function createRouterFromPayload({
           ? window.location.href
           : createPath(state.navigation.location || state.location),
         signal,
+        fetcherKey ? () => window.location.href : undefined,
       );
     },
     // FIXME: Pass `build.ssr` into this function
@@ -1076,6 +1077,7 @@ async function fetchAndApplyManifestPatches(
   clientVersion: string | undefined,
   errorReloadPath: string | null,
   signal?: AbortSignal,
+  getReloadPath?: () => string | null,
 ) {
   paths = getPathsWithAncestors(paths);
 
@@ -1103,6 +1105,7 @@ async function fetchAndApplyManifestPatches(
       clientVersion,
       errorReloadPath,
       signal,
+      getReloadPath,
     );
     return;
   }
@@ -1116,6 +1119,7 @@ async function fetchAndApplyManifestPatches(
       clientVersion,
       errorReloadPath,
       signal,
+      getReloadPath,
     );
   }
 

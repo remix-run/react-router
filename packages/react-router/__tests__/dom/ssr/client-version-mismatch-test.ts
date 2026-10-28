@@ -99,6 +99,25 @@ describe("client version mismatch", () => {
     expect(console.error).not.toHaveBeenCalled();
   });
 
+  it("reloads the document when recovery targets the current URL with a hash", async () => {
+    let reloadDocument = jest.fn();
+    Object.assign(window.location, { reload: reloadDocument });
+    Object.defineProperty(window.location, "href", {
+      get: () => "http://localhost/?query=1#hash",
+      set: reload,
+    });
+    let settled = jest.fn();
+    fogOfWar
+      .handleClientVersionMismatch(true, "v1", window.location.href)
+      .then(settled, settled);
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(reloadDocument).toHaveBeenCalledTimes(1);
+    expect(reload).not.toHaveBeenCalled();
+    expect(stored.get(storageKey)).toBe(budget(1, expiresAt));
+    expect(settled).not.toHaveBeenCalled();
+  });
+
   it("rejects discovery when the document reload budget is exhausted", async () => {
     stored.set(storageKey, budget(3));
     await expect(
