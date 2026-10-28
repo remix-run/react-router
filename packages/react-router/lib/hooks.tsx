@@ -1949,20 +1949,31 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     [basename, shouldBlock],
   );
 
+  // The key owned by the currently mounted effect below.  `blockerKey` state
+  // survives the effect being torn down and set up again (i.e., `<Activity>`
+  // hiding and showing the component, or a new `router`), so it can briefly
+  // point at a key that has already been deleted.
+  let activeBlockerKey = React.useRef("");
+
   // This effect is in charge of blocker key assignment and deletion (which is
   // tightly coupled to the key)
   React.useEffect(() => {
     let key = String(++blockerId);
+    activeBlockerKey.current = key;
     setBlockerKey(key);
-    return () => router.deleteBlocker(key);
+    return () => {
+      activeBlockerKey.current = "";
+      router.deleteBlocker(key);
+    };
   }, [router]);
 
   // This effect handles assigning the blockerFunction.  This is to handle
   // unstable blocker function identities, and happens only after the prior
   // effect so we don't get an orphaned blockerFunction in the router with a
-  // key of "".  Until then we just have the IDLE_BLOCKER.
+  // key of "".  Until then we just have the IDLE_BLOCKER.  It also skips a
+  // stale `blockerKey` so a deleted key is never registered again.
   React.useEffect(() => {
-    if (blockerKey !== "") {
+    if (blockerKey !== "" && blockerKey === activeBlockerKey.current) {
       router.getBlocker(blockerKey, blockerFunction);
     }
   }, [router, blockerKey, blockerFunction]);

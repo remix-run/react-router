@@ -228,6 +228,71 @@ describe("navigation blocking with useBlocker", () => {
     act(() => root.unmount());
   });
 
+  it("removes the blocker when hidden and shown again with <Activity>", async () => {
+    let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let setMode: (mode: "visible" | "hidden") => void = () => {};
+
+    function Guarded() {
+      let blocker = useBlocker(true);
+      return <p>{blocker.state}</p>;
+    }
+
+    router = createMemoryRouter([
+      {
+        Component() {
+          let [mode, _setMode] = React.useState<"visible" | "hidden">(
+            "visible",
+          );
+          setMode = _setMode;
+          return (
+            <div>
+              <Link to="/about">/about</Link>
+              <React.Activity mode={mode}>
+                <Guarded />
+              </React.Activity>
+              <Outlet />
+            </div>
+          );
+        },
+        children: [
+          {
+            path: "/",
+            element: <h1>Home</h1>,
+          },
+          {
+            path: "/about",
+            element: <h1>About</h1>,
+          },
+        ],
+      },
+    ]);
+
+    act(() => {
+      root = ReactDOM.createRoot(node);
+      root.render(<RouterProvider router={router} />);
+    });
+
+    // Hide and show the blocking component again
+    act(() => setMode("hidden"));
+    act(() => setMode("visible"));
+
+    // It still blocks while visible
+    act(() => click(node.querySelector("a[href='/about']")));
+    expect(node.querySelector("h1")?.textContent).toBe("Home");
+    expect(node.querySelector("p")?.textContent).toBe("blocked");
+
+    // Once hidden, nothing should be left behind to block navigation
+    act(() => setMode("hidden"));
+    act(() => click(node.querySelector("a[href='/about']")));
+    expect(node.querySelector("h1")?.textContent).toBe("About");
+    expect(warnSpy).not.toHaveBeenCalledWith(
+      "A router only supports one blocker at a time",
+    );
+
+    warnSpy.mockRestore();
+    act(() => root.unmount());
+  });
+
   describe("on <Link> navigation", () => {
     describe("blocker returns false", () => {
       beforeEach(() => {
