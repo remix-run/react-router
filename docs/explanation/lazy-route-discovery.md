@@ -74,6 +74,16 @@ When using lazy route discovery, ensure your deployment setup handles manifest r
 - **CDN Caching** - If using CDN/edge caching, include `version` and `paths` query parameters in your cache key for the manifest endpoint
 - **Multiple Applications** - Use a custom `manifestPath` if running multiple React Router applications on the same domain
 
+## Version Mismatch Recovery
+
+During a deployment, route discovery can reach a server running a different build from the browser. React Router attempts a document navigation to load a compatible build rather than continuing against an incomplete route tree. Navigations reload their destination; fetchers reload the current page. Background discovery waits until a navigation or fetcher needs the missing routes.
+
+Recovery allows up to three document-navigation attempts within 30 seconds, shared across client versions and persisted across document reloads. The first attempt is immediate; subsequent attempts wait 1 and 2 seconds. Concurrent discoveries share one attempt. A compatible discovery response clears the budget. Expiration permits a later operation to attempt recovery again; it does not automatically reload the page.
+
+If the budget is exhausted, persistent storage is unavailable, or the attempted document navigation fails to replace the page within five seconds, discovery fails with a manifest version-mismatch error that renders the applicable route error boundary. Pending recovery also fails when its document is restored from the back-forward cache. React Router does not continue against the incomplete route tree or replay interrupted submissions. Aborted operations remain aborted, and application-controlled mismatch handlers can still explicitly cancel discovery.
+
+This recovery applies to Framework Mode and RSC Framework Mode.
+
 ## Application-Controlled Discovery
 
 Use the experimental `unstable_useRouteDiscovery` hook to discover selected destinations, complete the route tree after startup, or control manifest-mismatch recovery. See [Application-Controlled Route Discovery](../how-to/route-discovery).

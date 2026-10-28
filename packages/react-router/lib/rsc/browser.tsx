@@ -23,7 +23,12 @@ import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
 } from "../router/utils";
-import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
+import {
+  DiscoveryCancelledError,
+  ErrorResponseImpl,
+  createContext,
+  resolvePath,
+} from "../router/utils";
 import { PROTOCOL_RELATIVE_URL_REGEX } from "../router/url";
 import { validateNavigationTarget } from "../router/navigation";
 import type {
@@ -619,6 +624,7 @@ function getFetchAndDecodeViaRSC(
           createPath(
             getRouter().state.navigation.location || getRouter().state.location,
           ),
+          request.signal,
         ))
       ) {
         // The page is about to be reloaded so we can keep this promise pending.
@@ -643,6 +649,7 @@ function getFetchAndDecodeViaRSC(
       }
       return { status: res.status, data: results };
     } catch (cause) {
+      if (cause instanceof DiscoveryCancelledError) throw cause;
       // Can't clone after consuming the body via decode so we can't include the
       // body here.  In an ideal world we'd look for an RSC  content type here,
       // or even X-Remix-Response but then folks can't statically deploy their
@@ -842,7 +849,9 @@ export function RSCHydratedRouter({
           null,
         );
       } catch (e) {
-        console.error("Failed to fetch manifest patches", e);
+        if (!(e instanceof DiscoveryCancelledError)) {
+          console.error("Failed to fetch manifest patches", e);
+        }
       }
     }
 
@@ -1089,12 +1098,25 @@ async function fetchAndApplyManifestPatches(
     response.status === 204 &&
     response.headers.has("X-Remix-Reload-Document")
   ) {
-    await handleClientVersionMismatch(true, clientVersion, errorReloadPath);
+    await handleClientVersionMismatch(
+      true,
+      clientVersion,
+      errorReloadPath,
+      signal,
+    );
     return;
   }
 
   if (!response.body || response.status < 200 || response.status >= 300) {
     throw new Error("Unable to fetch new route matches from the server");
+  }
+  if (clientVersion !== undefined) {
+    await handleClientVersionMismatch(
+      false,
+      clientVersion,
+      errorReloadPath,
+      signal,
+    );
   }
 
   let payload = (await createFromReadableStream(response.body, {

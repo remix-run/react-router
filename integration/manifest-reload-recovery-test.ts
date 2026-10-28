@@ -160,6 +160,64 @@ for (let rsc of [false, true]) {
       );
     });
 
+    test("bounds recovery across completed document reloads before rendering an error boundary", async ({
+      page,
+      reactRouterServe,
+      vitePreview,
+    }) => {
+      let files: Files = async () => getFiles(rsc);
+      let { port } = rsc
+        ? await vitePreview(files, "rsc-vite-framework")
+        : await reactRouterServe(files);
+      let documents: string[] = [];
+      let dataRequests: string[] = [];
+      let mismatches = 0;
+      page.on("request", (request) => {
+        if (request.resourceType() === "document")
+          documents.push(request.url());
+        if (/\.(?:data|rsc)$/.test(new URL(request.url()).pathname)) {
+          dataRequests.push(request.url());
+        }
+      });
+      await page.route(manifestRequest, (route) => {
+        mismatches++;
+        return route.fulfill({
+          status: 204,
+          headers: { "X-Remix-Reload-Document": "true" },
+        });
+      });
+      await page.goto(`http://localhost:${port}/unknown`);
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        let loaded = page.waitForEvent("load");
+        await page.getByRole("button", { name: "Fetch", exact: true }).click();
+        await loaded;
+        await expect(
+          page.getByRole("heading", { name: "Splat" }),
+        ).toBeVisible();
+        expect(documents).toHaveLength(attempt + 1);
+        await expect(page.locator("[data-fetcher-state]")).toHaveText("idle");
+      }
+      let before = mismatches;
+      await page.getByRole("button", { name: "Fetch", exact: true }).click();
+      await expect.poll(() => mismatches).toBe(before + 1);
+      await expect(page.locator("[data-fetcher-state]")).toHaveText("idle");
+      await expect(page.locator("[data-error]")).toHaveText(
+        "Unable to discover routes due to manifest version mismatch.",
+      );
+      expect(documents).toHaveLength(4);
+      expect(dataRequests).toEqual([]);
+      await page.unroute(manifestRequest);
+      await page.getByRole("link", { name: "Recover", exact: true }).click();
+      await expect(
+        page.getByRole("heading", { name: "Recovered" }),
+      ).toBeVisible();
+      expect(
+        await page.evaluate(() =>
+          sessionStorage.getItem("react-router-manifest-recovery"),
+        ),
+      ).toBeNull();
+    });
+
     test.describe("BFCache", () => {
       // Playwright disables BFCache by default. Use full Chromium with the cache
       // enabled for a real history restoration, including its frozen JS state.

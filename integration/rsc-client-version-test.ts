@@ -245,7 +245,7 @@ test.describe("RSC client versions", () => {
     expect(documentRequests[1]).toBe(`${baseUrl}/other`);
   });
 
-  test("renders an error when manifest discovery already reloaded for the same client version", async ({
+  test("renders an error when the manifest discovery reload budget is exhausted", async ({
     page,
     vitePreview,
   }) => {
@@ -263,12 +263,12 @@ test.describe("RSC client versions", () => {
     await eagerMismatch;
     await expect.poll(() => manifestRequests.length).toBeGreaterThan(0);
 
-    let clientVersion = new URL(manifestRequests[0]).searchParams.get(
-      "version",
-    );
-    await page.evaluate((version) => {
-      sessionStorage.setItem("react-router-manifest-version", version!);
-    }, clientVersion);
+    await page.evaluate(() => {
+      sessionStorage.setItem(
+        "react-router-manifest-recovery",
+        JSON.stringify({ attempts: 3, expiresAt: Date.now() + 30_000 }),
+      );
+    });
 
     await page.getByRole("link", { name: "Go to Other" }).click();
     await expect.poll(() => manifestRequests.length).toBeGreaterThan(1);
@@ -280,7 +280,7 @@ test.describe("RSC client versions", () => {
     expect(documentRequests).toHaveLength(1);
   });
 
-  test("renders an error when an RSC payload mismatch already reloaded for the same client version", async ({
+  test("renders an error when the RSC payload mismatch reload budget is exhausted", async ({
     page,
     vitePreview,
   }) => {
@@ -313,11 +313,18 @@ test.describe("RSC client versions", () => {
     });
 
     await page.goto(`${baseUrl}/`);
-    await page.evaluate((version) => {
-      sessionStorage.setItem("react-router-manifest-version", version);
-    }, clientVersion);
+    await page.evaluate(() => {
+      sessionStorage.setItem(
+        "react-router-manifest-recovery",
+        JSON.stringify({ attempts: 3, expiresAt: Date.now() + 30_000 }),
+      );
+    });
 
+    let response = page.waitForResponse((response) =>
+      response.url().includes("/other.rsc"),
+    );
     await page.getByRole("link", { name: "Go to Other" }).click();
+    await response;
 
     await expect(page.locator("[data-error]")).toHaveText(
       "Unable to decode RSC response",
