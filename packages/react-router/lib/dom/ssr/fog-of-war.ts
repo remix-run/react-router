@@ -380,10 +380,6 @@ export async function handleClientVersionMismatch(
     if (recovery.attempts >= MANIFEST_RELOAD_DELAYS.length) {
       throw mismatchError;
     }
-    sessionStorage.setItem(
-      MANIFEST_RECOVERY_STORAGE_KEY,
-      JSON.stringify({ ...recovery, attempts: recovery.attempts + 1 }),
-    );
   } catch {
     // Without persistent storage we cannot bound reloads across documents.
     // Fail rather than continue on the stale tree or risk a reload loop.
@@ -432,6 +428,13 @@ export async function handleClientVersionMismatch(
     // A beforeunload prompt can cancel navigation without notifying us.
     timeout = setTimeout(failReload, MANIFEST_RELOAD_TIMEOUT);
     try {
+      // Charge only an actual document-navigation attempt, after cancellation
+      // and full-manifest loading have had a chance to supersede recovery.
+      // Persist before navigating so an unavailable store cannot cause a loop.
+      sessionStorage.setItem(
+        MANIFEST_RECOVERY_STORAGE_KEY,
+        JSON.stringify({ ...recovery, attempts: recovery.attempts + 1 }),
+      );
       window.location.href = path;
       console.warn("Detected manifest version mismatch, reloading...");
     } catch {

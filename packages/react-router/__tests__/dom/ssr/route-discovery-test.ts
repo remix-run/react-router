@@ -627,6 +627,106 @@ test("completing the route tree during backoff supersedes document recovery", as
 });
 
 test.each([false, true])(
+  "an aborted compatible sibling cannot reload during backoff (custom handler: %s)",
+  async (customHandler) => {
+    jest.useFakeTimers();
+    let { runtime } = setup();
+    let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let error = jest.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(mismatch());
+    if (customHandler) {
+      runtime.register({
+        current: { onManifestMismatch: (event) => event.defaultBehavior() },
+      });
+    }
+    sessionStorage.setItem(
+      "react-router-manifest-recovery",
+      JSON.stringify({ attempts: 1, expiresAt: Date.now() + 30_000 }),
+    );
+    let first = new AbortController();
+    let sibling = new AbortController();
+    let firstSettled = jest.fn();
+    let siblingSettled = jest.fn();
+    try {
+      runtime
+        .discover(["/a"], "navigation", "/a", first.signal)
+        .then(firstSettled, firstSettled);
+      await jest.advanceTimersByTimeAsync(0);
+      first.abort();
+      runtime
+        .discover(["/b"], "navigation", "/b", sibling.signal)
+        .then(siblingSettled, siblingSettled);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      sibling.abort();
+      await jest.advanceTimersByTimeAsync(1000);
+
+      expect(warn).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+      expect(firstSettled.mock.calls).toEqual([[{ type: "aborted" }]]);
+      expect(siblingSettled.mock.calls).toEqual([[{ type: "aborted" }]]);
+      expect(runtime.discoveredPaths.size).toBe(0);
+    } finally {
+      window.dispatchEvent(
+        Object.assign(new Event("pageshow"), { persisted: true }),
+      );
+      await jest.advanceTimersByTimeAsync(0);
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      sessionStorage.removeItem("react-router-manifest-recovery");
+    }
+  },
+);
+
+test.each([false, true])(
+  "completing the route tree supersedes recovery with a compatible sibling (custom handler: %s)",
+  async (customHandler) => {
+    jest.useFakeTimers();
+    let { runtime } = setup();
+    let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let error = jest.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(mismatch());
+    if (customHandler) {
+      runtime.register({
+        current: { onManifestMismatch: (event) => event.defaultBehavior() },
+      });
+    }
+    sessionStorage.setItem(
+      "react-router-manifest-recovery",
+      JSON.stringify({ attempts: 1, expiresAt: Date.now() + 30_000 }),
+    );
+    let firstSettled = jest.fn();
+    let siblingSettled = jest.fn();
+    try {
+      runtime
+        .discover(["/a"], "navigation", "/a")
+        .then(firstSettled, firstSettled);
+      await jest.advanceTimersByTimeAsync(0);
+      runtime
+        .discover(["/b"], "navigation", "/b")
+        .then(siblingSettled, siblingSettled);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      await runtime.loadAllRoutes();
+      await jest.advanceTimersByTimeAsync(1000);
+
+      expect(warn).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+      expect(firstSettled.mock.calls).toEqual([[{ type: "success" }]]);
+      expect(siblingSettled.mock.calls).toEqual([[{ type: "success" }]]);
+    } finally {
+      window.dispatchEvent(
+        Object.assign(new Event("pageshow"), { persisted: true }),
+      );
+      await jest.advanceTimersByTimeAsync(0);
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      sessionStorage.removeItem("react-router-manifest-recovery");
+    }
+  },
+);
+
+test.each([false, true])(
   "default recovery rejects after exhausting its budget (custom handler: %s)",
   async (customHandler) => {
     let { runtime } = setup();

@@ -413,4 +413,34 @@ describe("client version mismatch", () => {
     await jest.advanceTimersByTimeAsync(1000);
     expect(reload.mock.calls).toEqual([["/survivor"]]);
   });
+
+  it("preserves the reload budget when every destination aborts during backoff", async () => {
+    stored.set(storageKey, budget(1, expiresAt));
+    for (let path of ["/obsolete-a", "/obsolete-b"]) {
+      let controller = new AbortController();
+      let recovery = fogOfWar.handleClientVersionMismatch(
+        true,
+        "v1",
+        path,
+        controller.signal,
+      );
+      recovery.catch(() => {});
+      controller.abort();
+      await jest.advanceTimersByTimeAsync(2000);
+      await expect(recovery).rejects.toThrow();
+    }
+    expect(reload).not.toHaveBeenCalled();
+
+    let recovery = fogOfWar.handleClientVersionMismatch(
+      true,
+      "v1",
+      "/survivor",
+    );
+    recovery.catch(() => {});
+    await jest.advanceTimersByTimeAsync(999);
+    expect(reload).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1);
+    expect(reload.mock.calls).toEqual([["/survivor"]]);
+    expect(stored.get(storageKey)).toBe(budget(2, expiresAt));
+  });
 });

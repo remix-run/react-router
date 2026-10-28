@@ -403,7 +403,18 @@ export class RouteDiscoveryRuntime {
           if (signal?.aborted) return { type: "aborted" };
           return { type: this.isComplete() ? "success" : "version-mismatch" };
         }
-        await handleClientVersionMismatch(false, manifest.version, reloadUrl);
+        await waitForDiscovery(
+          handleClientVersionMismatch(
+            false,
+            manifest.version,
+            reloadUrl,
+            signal,
+            () => (this.isComplete() ? null : reloadUrl),
+          ),
+          signal,
+        );
+        if (signal?.aborted) return { type: "aborted" };
+        if (this.isComplete()) return { type: "success" };
         let patches: AssetsManifest["routes"];
         try {
           patches = await response.json();
