@@ -88,6 +88,47 @@ function getFiles() {
   };
 }
 
+test("switches to initial discovery above the pathname work limit", async ({
+  page,
+}) => {
+  let fixture = await createFixtureBase({
+    files: {
+      ...getFiles(),
+      "app/routes/$.tsx": js`
+        export default function Splat() {
+          return <h1>Sample page</h1>;
+        }
+      `,
+    },
+  });
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  try {
+    let response = await app.goto(
+      `/${Array.from({ length: 60 }, (_, i) => i % 10).join("/")}`,
+    );
+    expect(response.status()).toBe(200);
+    expect(
+      await page.evaluate(
+        () => (window as any).__reactRouterContext.routeDiscovery.mode,
+      ),
+    ).toBe("lazy");
+
+    response = await app.goto(
+      `/${Array.from({ length: 70 }, (_, i) => i % 10).join("/")}`,
+    );
+    expect(response.status()).toBe(200);
+    expect(
+      await page.evaluate(
+        () => (window as any).__reactRouterContext.routeDiscovery.mode,
+      ),
+    ).toBe("initial");
+  } finally {
+    await appFixture.close();
+  }
+});
+
 for (let customDiscovery of [false, true]) {
   test.describe(`Fog of War (custom discovery: ${customDiscovery})`, () => {
     testFogOfWar(customDiscovery);
@@ -1262,6 +1303,11 @@ function testFogOfWar(unstable_customRouteDiscovery: boolean) {
     let fixture = await createFixture({
       files: {
         ...getFiles(),
+        // Keep discovery of /a/b from racing the manifest assertion after visiting /a.
+        "app/routes/a.tsx": getFiles()["app/routes/a.tsx"].replace(
+          'to="/a/b"',
+          'to="/a/b" discover="none"',
+        ),
         "app/routes/_index.tsx": js`
           import { Link } from "react-router";
           export default function Index() {

@@ -1126,19 +1126,19 @@ test.describe("single-fetch", () => {
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/"); // root increments to 1
-    expect(await page.locator("#data").innerText()).toBe(
+    await expect(page.locator("#data")).toHaveText(
       '[["root",{"count":1}],["routes/_index",null]]',
     );
 
     await app.clickLink("/page"); // root increments to 2
-    expect(await page.locator("#data").innerText()).toBe(
+    await expect(page.locator("#data")).toHaveText(
       '[["root",{"count":2}],["routes/page",{"count":1}]]',
     );
     expect(urls).toEqual(["/page.data"]);
     urls.splice(0, urls.length);
 
     await app.clickLink("/"); // root increments to 3
-    expect(await page.locator("#data").innerText()).toBe(
+    await expect(page.locator("#data")).toHaveText(
       '[["root",{"count":3}],["routes/_index",null]]',
     );
     expect(urls).toEqual(["/_.data"]);
@@ -1146,7 +1146,7 @@ test.describe("single-fetch", () => {
 
     await app.clickLink("/page?optout");
     // root stays at 3, page is a fresh load so increments to 2
-    expect(await page.locator("#data").innerText()).toBe(
+    await expect(page.locator("#data")).toHaveText(
       '[["root",{"count":3}],["routes/page",{"count":2}]]',
     );
     expect(urls).toEqual(["/page.data?optout=&_routes=routes%2Fpage"]);
