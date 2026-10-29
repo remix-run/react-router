@@ -705,6 +705,50 @@ test("should allow many nested promises without a memory leak", async () => {
   await decoded.done;
 });
 
+test.each(["immediately", "after the first chunk"])(
+  "should handle nested deferred rejections when cancelled %s",
+  async (when) => {
+    const outer = new Deferred();
+    const inner = new Deferred();
+    const onComplete = jest.fn();
+    const stream = encode({ outer: outer.promise }, { onComplete });
+
+    if (when === "after the first chunk") {
+      const reader = stream.getReader();
+      await reader.read();
+      reader.releaseLock();
+    }
+    await stream.cancel();
+
+    outer.resolve({ inner: inner.promise });
+    // Let the encoder discover the nested promise before it rejects.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    inner.reject(new Error("Nested deferred rejection"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  },
+);
+
+test("should finish cancelled deferred encoding when aborted", async () => {
+  const abortController = new AbortController();
+  const onComplete = jest.fn();
+  const stream = encode(new Deferred().promise, {
+    signal: abortController.signal,
+    onComplete,
+  });
+  const reader = stream.getReader();
+  await reader.read();
+  await reader.cancel();
+  reader.releaseLock();
+
+  expect(onComplete).not.toHaveBeenCalled();
+  abortController.abort(new Error("Server Timeout"));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  expect(onComplete).toHaveBeenCalledTimes(1);
+});
+
 test("should encode large payload", async () => {
   const input = createDeeplyNestedObject();
   await readStreamToString(encode(input));
