@@ -1,1 +1,1 @@
-Serialize typegen writes with a cross-process file lock (`.react-router/.typegen.lock`) so that concurrent `react-router dev` and `react-router typegen` invocations cannot overlap destructive writes. Retries `fs.rm` on retryable errors (`ENOTEMPTY`, `EBUSY`, `EPERM`) as defense-in-depth.
+Serialize concurrent type generation to prevent filesystem races between `react-router dev` and `react-router typegen`. Report a timeout with cleanup instructions if the typegen lock cannot be acquired within 30 seconds.

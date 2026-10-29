@@ -15,33 +15,17 @@ import { acquire } from "./lock";
 
 const { green, red } = pc;
 
-const RETRY_ON = ["ENOTEMPTY", "EBUSY", "EPERM"];
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function rmWithRetry(
-  path: string,
-  options: { recursive: boolean; force: boolean },
-): Promise<void> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      await fs.rm(path, options);
-      return;
-    } catch (err: any) {
-      if (attempt === 2 || !RETRY_ON.includes(err.code)) {
-        throw err;
-      }
-      await sleep(100);
-    }
-  }
-}
+const rmOptions = {
+  recursive: true,
+  force: true,
+  maxRetries: 2,
+  retryDelay: 100,
+};
 
 async function clearRouteModuleAnnotations(ctx: Context) {
-  await rmWithRetry(
+  await fs.rm(
     Path.join(typesDirectory(ctx), Path.basename(ctx.config.appDirectory)),
-    { recursive: true, force: true },
+    rmOptions,
   );
 }
 
@@ -62,10 +46,7 @@ export async function run(
   const lockPath = Path.join(rootDirectory, ".react-router", ".typegen.lock");
   const release = await acquire(lockPath);
   try {
-    await rmWithRetry(typesDirectory(ctx), {
-      recursive: true,
-      force: true,
-    });
+    await fs.rm(typesDirectory(ctx), rmOptions);
     await write(generateServerBuild(ctx), ...generateRoutes(ctx));
   } finally {
     release();
@@ -85,10 +66,7 @@ export async function watch(
 
   const release = await acquire(lockPath);
   try {
-    await rmWithRetry(typesDirectory(ctx), {
-      recursive: true,
-      force: true,
-    });
+    await fs.rm(typesDirectory(ctx), rmOptions);
     await write(generateServerBuild(ctx), ...generateRoutes(ctx));
   } finally {
     release();
