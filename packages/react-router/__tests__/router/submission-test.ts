@@ -98,6 +98,37 @@ describe("submissions", () => {
       });
     });
 
+    it("keeps the current route's action data while another route's action reloads", async () => {
+      let t = initializeTest();
+
+      let A = await t.navigate("/foo", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await A.actions.foo.resolve("FOO ACTION");
+      await A.loaders.root.resolve("ROOT LOADER");
+      await A.loaders.foo.resolve("FOO LOADER");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual({ foo: "FOO ACTION" });
+
+      let B = await t.navigate("/bar", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await B.actions.bar.resolve("BAR ACTION");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.location.pathname).toBe("/foo");
+      expect(t.router.state.actionData).toEqual({
+        foo: "FOO ACTION", // /foo is still rendered
+        bar: "BAR ACTION",
+      });
+
+      await B.loaders.root.resolve("ROOT LOADER 2");
+      await B.loaders.bar.resolve("BAR LOADER");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual({ bar: "BAR ACTION" });
+    });
+
     it("reloads all routes after the action", async () => {
       let t = initializeTest();
       let A = await t.navigate("/foo", {
