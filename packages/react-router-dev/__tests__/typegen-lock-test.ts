@@ -23,32 +23,59 @@ describe("typegen lock", () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("waits for another process and cleans up on exit", async () => {
-    let worker = fork(
-      new URL("./utils/typegen-lock-worker.mjs", import.meta.url),
-      [lockPath],
-      { execArgv: ["--experimental-strip-types"], silent: true },
-    );
-    let exited = once(worker, "exit");
-    try {
-      await once(worker, "message");
-      await expect(
-        createLock(lockPath, { timeoutMs: 30 }).act(() => undefined),
-      ).rejects.toThrow("Timed out waiting for the typegen lock");
-      expect(fs.readFileSync(lockPath, "utf8")).toBe(String(worker.pid));
+  it.each(["exit", "signal"])(
+    "waits for another process and cleans up on %s",
+    async (shutdown) => {
+      let worker = fork(
+        new URL("./utils/typegen-lock-worker.mjs", import.meta.url),
+        [lockPath],
+        { execArgv: ["--experimental-strip-types"], silent: true },
+      );
+      let exited = once(worker, "exit");
+      try {
+        await once(worker, "message");
+        await expect(
+          createLock(lockPath, { timeoutMs: 30 }).act(() => undefined),
+        ).rejects.toThrow("Timed out waiting for the typegen lock");
+        expect(fs.readFileSync(lockPath, "utf8")).toBe(String(worker.pid));
 
-      let waiting = lock.act(() => "acquired");
-      worker.send("exit");
-      await exited;
-      await expect(waiting).resolves.toBe("acquired");
-      expect(fs.existsSync(lockPath)).toBe(false);
-    } finally {
-      if (worker.exitCode === null && worker.signalCode === null) {
-        worker.kill("SIGKILL");
+        let waiting = lock.act(() => "acquired");
+        worker.send(shutdown);
         await exited;
+        await expect(waiting).resolves.toBe("acquired");
+        expect(fs.existsSync(lockPath)).toBe(false);
+      } finally {
+        if (worker.exitCode === null && worker.signalCode === null) {
+          worker.kill("SIGKILL");
+          await exited;
+        }
       }
-    }
-  });
+    },
+  );
+
+  it.each(["vite", "vite-held"])(
+    "preserves Vite's asynchronous shutdown (%s)",
+    async (mode) => {
+      let worker = fork(
+        new URL("./utils/typegen-lock-worker.mjs", import.meta.url),
+        [lockPath, mode],
+        { execArgv: ["--experimental-strip-types"], silent: true },
+      );
+      let exited = once(worker, "exit");
+      try {
+        await once(worker, "message");
+        expect(fs.existsSync(lockPath)).toBe(mode === "vite-held");
+        worker.send("signal");
+        await exited;
+        expect(fs.readFileSync(`${lockPath}.result`, "utf8")).toBe("finished");
+      } finally {
+        if (worker.exitCode === null && worker.signalCode === null) {
+          worker.kill("SIGKILL");
+          await exited;
+        }
+      }
+    },
+  );
 
   it("holds the lock while signal handlers await shutdown", async () => {
     let worker = fork(

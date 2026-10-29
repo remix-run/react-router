@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import exitHook from "exit-hook";
+import { onExit, signals } from "signal-exit";
 
 export function createLock(
   lockPath: string,
@@ -38,16 +38,24 @@ export function createLock(
         }
 
         let released = false;
-        // Keep exit-hook's signal handling, but defer cleanup until actual exit:
-        // async work can continue while signal hooks wait for graceful shutdown.
-        let unsubscribe = exitHook(() => {});
-        process.once("exit", release);
+        let listeners = signals.map(
+          (signal) => [signal, process.listeners(signal)] as const,
+        );
+        let unsubscribe = onExit(release);
+        // Inspect host listeners before Node removes any once listeners, so
+        // signal-exit defers to the host's asynchronous shutdown handling.
+        for (let [signal, previous] of listeners) {
+          for (let listener of process.listeners(signal)) {
+            if (!previous.includes(listener)) {
+              process.off(signal, listener);
+              process.prependListener(signal, listener);
+            }
+          }
+        }
         function release() {
           if (released) return;
           fs.rmSync(lockPath, { force: true });
           released = true;
-          process.off("exit", release);
-          unsubscribe();
         }
 
         try {
@@ -59,6 +67,7 @@ export function createLock(
           return await callback();
         } finally {
           release();
+          unsubscribe();
         }
       }
     },
