@@ -46,11 +46,11 @@ export async function run(
   rootDirectory: string,
   { mode, rsc }: { mode: string; rsc: boolean },
 ) {
-  const ctx = await createContext({ rootDirectory, mode, rsc, watch: false });
   const lock = createLock(
     Path.join(rootDirectory, ".react-router", ".typegen.lock"),
   );
   await lock.act(async () => {
+    const ctx = await createContext({ rootDirectory, mode, rsc, watch: false });
     await fs.rm(typesDirectory(ctx), rmOptions);
     await write(generateServerBuild(ctx), ...generateRoutes(ctx));
   });
@@ -64,14 +64,15 @@ export async function watch(
   rootDirectory: string,
   { mode, logger, rsc }: { mode: string; logger?: Logger; rsc: boolean },
 ): Promise<Watcher> {
-  const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
   const lock = createLock(
     Path.join(rootDirectory, ".react-router", ".typegen.lock"),
   );
 
-  await lock.act(async () => {
+  const ctx = await lock.act(async () => {
+    const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
     await fs.rm(typesDirectory(ctx), rmOptions);
     await write(generateServerBuild(ctx), ...generateRoutes(ctx));
+    return ctx;
   });
   logger?.info(green("generated types"), { timestamp: true, clear: true });
 
