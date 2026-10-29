@@ -201,7 +201,42 @@ describe("create-react-router CLI", () => {
     expect(status).toBe(0);
     expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(
+      JSON.parse(readFileSync(path.join(projectDir, "package.json"), "utf8"))
+        .name,
+    ).toBe("prompts");
   });
+
+  it.each(["relative", "trailing-separator", "absolute", "current"])(
+    "uses the directory basename for a %s project path",
+    async (kind) => {
+      let projectDir = getProjectDir(`project-name-${kind}`);
+      let cwd = TEMP_DIR;
+      let argument = projectDir;
+      if (kind === "relative") {
+        argument = path.relative(cwd, projectDir);
+      } else if (kind === "trailing-separator") {
+        argument = `.${path.sep}${path.relative(cwd, projectDir)}${path.sep}`;
+      } else if (kind === "current") {
+        mkdirSync(projectDir);
+        cwd = projectDir;
+        argument = ".";
+      }
+
+      let { status, stderr } = await execCreateReactRouter({
+        args: [argument, "--no-install", "--no-git-init", "--no-agent-skills"],
+        interactive: false,
+        cwd,
+      });
+
+      expect(stderr.trim()).toBeFalsy();
+      expect(status).toBe(0);
+      expect(
+        JSON.parse(readFileSync(path.join(projectDir, "package.json"), "utf8"))
+          .name,
+      ).toBe(path.basename(projectDir));
+    },
+  );
 
   it("supports the --yes flag", async () => {
     let projectDir = getProjectDir("yes");
