@@ -44,7 +44,12 @@ it.each([false, true])(
       });
       startup = watch(root, { mode: "development", rsc });
       // Observe contention directly instead of assuming a config-loading delay.
-      await Promise.race([blocked, startup]);
+      await Promise.race([
+        blocked,
+        startup.then(() => {
+          throw new Error("Typegen startup completed while the lock was held");
+        }),
+      ]);
       await fs.writeFile(routesPath, routes("b"));
       await fs.rm(lockPath);
       await startup;

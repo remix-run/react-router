@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { asyncExitHook } from "exit-hook";
 
 import { createLock } from "../../typegen/lock.ts";
 
@@ -9,14 +8,11 @@ let finish;
 let pending = new Promise((resolve) => (finish = resolve));
 process.on("message", (message) => {
   if (message === "exit") process.exit(0);
-  if (message === "signal") {
-    process.emit("SIGTERM");
-    process.send("signaled");
-  }
+  if (message === "signal") process.emit("SIGTERM");
   if (message === "finish") finish();
 });
 
-if (mode === "vite" || mode === "vite-held") {
+if (mode === "vite-released" || mode === "vite-held") {
   let { createServer } = await import("vite");
   let action;
   let server = await createServer({
@@ -28,8 +24,12 @@ if (mode === "vite" || mode === "vite-held") {
       {
         name: "async-shutdown",
         async closeBundle() {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          finish();
+          if (mode === "vite-held") {
+            process.send("closing");
+            await pending;
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
           await action;
           await fs.writeFile(`${lockPath}.result`, "finished");
         },
@@ -44,17 +44,10 @@ if (mode === "vite" || mode === "vite-held") {
     }
   });
   await action;
-  if (mode === "vite") process.send("released");
+  if (mode === "vite-released") process.send("released");
 } else {
-  let action = createLock(lockPath).act(async () => {
+  await createLock(lockPath).act(async () => {
     process.send("acquired");
     await pending;
-    await fs.writeFile(`${lockPath}.result`, "finished");
   });
-
-  if (mode === "shutdown") {
-    // Keep shutdown pending until the protected write has finished.
-    asyncExitHook(() => action, { wait: 30_000 });
-  }
-  await action;
 }

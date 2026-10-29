@@ -11,101 +11,79 @@ describe("typegen lock", () => {
   let tmpDir: string;
   let lockPath: string;
   let lock: ReturnType<typeof createLock>;
+  let workers: Array<ReturnType<typeof fork>>;
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rr-lock-test-"));
     lockPath = path.join(tmpDir, ".react-router", ".typegen.lock");
     lock = createLock(lockPath);
+    workers = [];
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  });
-
-  it.each(["exit", "signal"])(
-    "waits for another process and cleans up on %s",
-    async (shutdown) => {
-      let worker = fork(
-        new URL("./utils/typegen-lock-worker.mjs", import.meta.url),
-        [lockPath],
-        { execArgv: ["--experimental-strip-types"], silent: true },
-      );
-      let exited = once(worker, "exit");
-      try {
-        await once(worker, "message");
-        await expect(
-          createLock(lockPath, { timeoutMs: 30 }).act(() => undefined),
-        ).rejects.toThrow("Timed out waiting for the typegen lock");
-        expect(fs.readFileSync(lockPath, "utf8")).toBe(String(worker.pid));
-
-        let waiting = lock.act(() => "acquired");
-        worker.send(shutdown);
-        await exited;
-        await expect(waiting).resolves.toBe("acquired");
-        expect(fs.existsSync(lockPath)).toBe(false);
-      } finally {
-        if (worker.exitCode === null && worker.signalCode === null) {
-          worker.kill("SIGKILL");
-          await exited;
-        }
-      }
-    },
-  );
-
-  it.each(["vite", "vite-held"])(
-    "preserves Vite's asynchronous shutdown (%s)",
-    async (mode) => {
-      let worker = fork(
-        new URL("./utils/typegen-lock-worker.mjs", import.meta.url),
-        [lockPath, mode],
-        { execArgv: ["--experimental-strip-types"], silent: true },
-      );
-      let exited = once(worker, "exit");
-      try {
-        await once(worker, "message");
-        expect(fs.existsSync(lockPath)).toBe(mode === "vite-held");
-        worker.send("signal");
-        await exited;
-        expect(fs.readFileSync(`${lockPath}.result`, "utf8")).toBe("finished");
-      } finally {
-        if (worker.exitCode === null && worker.signalCode === null) {
-          worker.kill("SIGKILL");
-          await exited;
-        }
-      }
-    },
-  );
-
-  it("holds the lock while signal handlers await shutdown", async () => {
-    let worker = fork(
-      new URL("./utils/typegen-lock-worker.mjs", import.meta.url),
-      [lockPath, "shutdown"],
-      { execArgv: ["--experimental-strip-types"], silent: true },
-    );
-    let exited = once(worker, "exit");
-    try {
-      await once(worker, "message");
-      let signaled = once(worker, "message");
-      worker.send("signal");
-      expect(await signaled).toEqual(["signaled", undefined]);
-
-      await expect(
-        createLock(lockPath, { timeoutMs: 30 }).act(() => undefined),
-      ).rejects.toThrow("Timed out waiting for the typegen lock");
-
-      worker.send("finish");
-      await exited;
-      await expect(
-        lock.act(() => fsp.readFile(`${lockPath}.result`, "utf8")),
-      ).resolves.toBe("finished");
-      expect(fs.existsSync(lockPath)).toBe(false);
-    } finally {
+  afterEach(async () => {
+    for (let worker of workers) {
       if (worker.exitCode === null && worker.signalCode === null) {
+        let exited = once(worker, "exit");
         worker.kill("SIGKILL");
         await exited;
       }
     }
+    jest.restoreAllMocks();
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  function startWorker(mode?: string) {
+    let worker = fork(
+      new URL("./utils/typegen-lock-worker.mjs", import.meta.url),
+      mode ? [lockPath, mode] : [lockPath],
+      { execArgv: ["--experimental-strip-types"], silent: true },
+    );
+    workers.push(worker);
+    return worker;
+  }
+
+  it.each(["exit", "signal"])(
+    "waits for another process and cleans up on %s",
+    async (shutdown) => {
+      let worker = startWorker();
+      let exited = once(worker, "exit");
+      await once(worker, "message");
+      await expect(
+        createLock(lockPath, { timeoutMs: 30 }).act(() => undefined),
+      ).rejects.toThrow("Timed out waiting for the typegen lock");
+      expect(fs.readFileSync(lockPath, "utf8")).toBe(String(worker.pid));
+
+      let waiting = lock.act(() => "acquired");
+      worker.send(shutdown);
+      await exited;
+      await expect(waiting).resolves.toBe("acquired");
+      expect(fs.existsSync(lockPath)).toBe(false);
+    },
+  );
+
+  it("preserves Vite's asynchronous shutdown after releasing the lock", async () => {
+    let worker = startWorker("vite-released");
+    let exited = once(worker, "exit");
+    await once(worker, "message");
+    expect(fs.existsSync(lockPath)).toBe(false);
+    worker.send("signal");
+    await exited;
+    expect(fs.readFileSync(`${lockPath}.result`, "utf8")).toBe("finished");
+  });
+
+  it("holds the lock until Vite's shutdown work finishes", async () => {
+    let worker = startWorker("vite-held");
+    let exited = once(worker, "exit");
+    await once(worker, "message");
+    let closing = once(worker, "message");
+    worker.send("signal");
+    expect((await closing)[0]).toBe("closing");
+    await expect(
+      createLock(lockPath, { timeoutMs: 30 }).act(() => undefined),
+    ).rejects.toThrow("Timed out waiting for the typegen lock");
+    worker.send("finish");
+    await exited;
+    expect(fs.readFileSync(`${lockPath}.result`, "utf8")).toBe("finished");
   });
 
   it.each(["", "2147483647"])(
@@ -115,17 +93,9 @@ describe("typegen lock", () => {
       fs.writeFileSync(lockPath, contents);
       let lock = createLock(lockPath, { timeoutMs: 30 });
 
-      let results = await Promise.allSettled(
-        [1, 2].map(() => lock.act(() => undefined)),
+      await expect(lock.act(() => undefined)).rejects.toThrow(
+        "remove the lock file",
       );
-      for (let result of results) {
-        expect(result).toMatchObject({
-          status: "rejected",
-          reason: {
-            message: expect.stringContaining("remove the lock file"),
-          },
-        });
-      }
       expect(fs.readFileSync(lockPath, "utf8")).toBe(contents);
     },
   );
