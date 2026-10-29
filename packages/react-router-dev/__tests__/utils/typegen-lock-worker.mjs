@@ -1,7 +1,8 @@
-import { withLock } from "../../typegen/lock.ts";
+import { createLock } from "../../typegen/lock.ts";
 
 process.on("message", () => process.exit(0));
-await withLock(process.argv[2], async () => {
+let lock = createLock(process.argv[2]);
+await lock.act(async () => {
   process.send("acquired");
   await new Promise(() => {});
 });

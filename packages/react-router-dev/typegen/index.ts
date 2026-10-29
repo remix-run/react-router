@@ -11,7 +11,7 @@ import {
   generateRoutes,
   generateServerBuild,
 } from "./generate";
-import { withLock } from "./lock";
+import { createLock } from "./lock";
 
 const { green, red } = pc;
 
@@ -43,8 +43,10 @@ export async function run(
   { mode, rsc }: { mode: string; rsc: boolean },
 ) {
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: false });
-  const lockPath = Path.join(rootDirectory, ".react-router", ".typegen.lock");
-  await withLock(lockPath, async () => {
+  const lock = createLock(
+    Path.join(rootDirectory, ".react-router", ".typegen.lock"),
+  );
+  await lock.act(async () => {
     await fs.rm(typesDirectory(ctx), rmOptions);
     await write(generateServerBuild(ctx), ...generateRoutes(ctx));
   });
@@ -59,9 +61,11 @@ export async function watch(
   { mode, logger, rsc }: { mode: string; logger?: Logger; rsc: boolean },
 ): Promise<Watcher> {
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
-  const lockPath = Path.join(rootDirectory, ".react-router", ".typegen.lock");
+  const lock = createLock(
+    Path.join(rootDirectory, ".react-router", ".typegen.lock"),
+  );
 
-  await withLock(lockPath, async () => {
+  await lock.act(async () => {
     await fs.rm(typesDirectory(ctx), rmOptions);
     await write(generateServerBuild(ctx), ...generateRoutes(ctx));
   });
@@ -75,7 +79,7 @@ export async function watch(
     ctx.config = result.value;
 
     if (routeConfigChanged) {
-      await withLock(lockPath, async () => {
+      await lock.act(async () => {
         await clearRouteModuleAnnotations(ctx);
         await write(...generateRoutes(ctx));
       });
