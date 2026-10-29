@@ -30,12 +30,16 @@ async function clearRouteModuleAnnotations(ctx: Context) {
 }
 
 async function write(...files: Array<VirtualFile>) {
-  return Promise.all(
+  let results = await Promise.allSettled(
     files.map(async ({ filename, content }) => {
       await fs.mkdir(Path.dirname(filename), { recursive: true });
       await fs.writeFile(filename, content);
     }),
   );
+  // Keep the lock until every started write finishes, even if one fails.
+  for (let result of results) {
+    if (result.status === "rejected") throw result.reason;
+  }
 }
 
 export async function run(

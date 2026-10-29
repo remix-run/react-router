@@ -50,6 +50,37 @@ describe("typegen lock", () => {
     }
   });
 
+  it("holds the lock while signal handlers await shutdown", async () => {
+    let worker = fork(
+      new URL("./utils/typegen-lock-worker.mjs", import.meta.url),
+      [lockPath, "shutdown"],
+      { execArgv: ["--experimental-strip-types"], silent: true },
+    );
+    let exited = once(worker, "exit");
+    try {
+      await once(worker, "message");
+      let signaled = once(worker, "message");
+      worker.send("signal");
+      expect(await signaled).toEqual(["signaled", undefined]);
+
+      await expect(
+        createLock(lockPath, { timeoutMs: 30 }).act(() => undefined),
+      ).rejects.toThrow("Timed out waiting for the typegen lock");
+
+      worker.send("finish");
+      await exited;
+      await expect(
+        lock.act(() => fsp.readFile(`${lockPath}.result`, "utf8")),
+      ).resolves.toBe("finished");
+      expect(fs.existsSync(lockPath)).toBe(false);
+    } finally {
+      if (worker.exitCode === null && worker.signalCode === null) {
+        worker.kill("SIGKILL");
+        await exited;
+      }
+    }
+  });
+
   it.each(["", "2147483647"])(
     "fails with cleanup instructions for an abandoned lock containing %p",
     async (contents) => {

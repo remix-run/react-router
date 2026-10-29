@@ -38,11 +38,15 @@ export function createLock(
         }
 
         let released = false;
-        let unsubscribe = exitHook(release);
+        // Keep exit-hook's signal handling, but defer cleanup until actual exit:
+        // async work can continue while signal hooks wait for graceful shutdown.
+        let unsubscribe = exitHook(() => {});
+        process.once("exit", release);
         function release() {
           if (released) return;
           fs.rmSync(lockPath, { force: true });
           released = true;
+          process.off("exit", release);
           unsubscribe();
         }
 
