@@ -57,6 +57,27 @@ export function isFogOfWarEnabled(
   return routeDiscovery.mode === "lazy" && ssr;
 }
 
+const MANIFEST_MATCH_COST_LIMIT = 50_000;
+const MANIFEST_MATCH_COST_SEGMENT_THRESHOLD = 10;
+
+export function shouldUseInitialRouteDiscovery(
+  pathname: string,
+  matchCost = 0,
+): boolean {
+  let segmentCount = pathname.split("/").length - 1;
+  let ancestorCount = Math.max(segmentCount - 1, 0);
+
+  // Each ancestor is shorter than the incoming pathname. Use an upper bound on
+  // their cumulative length, plus the root path, to avoid expanding every prefix.
+  // Regex matching scans candidate branches. Bound its estimated metadata
+  // visits for deep paths while keeping typical shallow paths lazy.
+  return (
+    ancestorCount * pathname.length + 1 > URL_LIMIT ||
+    (segmentCount > MANIFEST_MATCH_COST_SEGMENT_THRESHOLD &&
+      segmentCount * matchCost > MANIFEST_MATCH_COST_LIMIT)
+  );
+}
+
 export function getPartialManifest(
   { sri, ...manifest }: AssetsManifest,
   router: DataRouter,
@@ -248,6 +269,16 @@ export function useFogOFWarDiscovery(
   ]);
 }
 
+// Paths are comma-delimited in the `paths` search param, so any literal commas
+// within a path must be encoded. The server decodes each path when matching.
+export function getManifestPathsParam(paths: string[]) {
+  return paths
+    .slice()
+    .sort()
+    .map((path) => path.replace(/,/g, "%2C"))
+    .join(",");
+}
+
 export function getManifestPath(
   _manifestPath: string | undefined,
   basename: string | undefined,
@@ -376,7 +407,7 @@ export async function fetchAndApplyManifestPatches(
   // https://issues.chromium.org/issues/331406951
   // https://github.com/nodejs/node/issues/51518
   const searchParams = new URLSearchParams();
-  searchParams.set("paths", paths.sort().join(","));
+  searchParams.set("paths", getManifestPathsParam(paths));
   searchParams.set("version", manifest.version);
   let url = new URL(
     getManifestPath(manifestPath, basename),

@@ -299,12 +299,12 @@ test.describe(`Prerendering`, () => {
       let cwd = await createProject({
         ...files,
         "react-router.config.ts": js`
-          import fs from "node:fs";
           import path from "node:path";
 
           export default {
             prerender: ["/about"],
             async buildEnd({ reactRouterConfig }) {
+              let { default: fs } = await import("node:fs");
               let clientBuildDirectory = path.join(
                 reactRouterConfig.buildDirectory,
                 "client"
@@ -338,6 +338,148 @@ test.describe(`Prerendering`, () => {
           dataExists: true,
         }),
       );
+    });
+
+    test("resolves relative environment outDirs from the Vite root", async () => {
+      let cwd = await createProject(
+        {
+          ...Object.fromEntries(
+            Object.entries(files).map(([file, contents]) => [
+              `app-root/${file}`,
+              contents,
+            ]),
+          ),
+          "app-root/app/routes.ts": js`
+            import { type RouteConfig } from "@react-router/dev/routes";
+            import { flatRoutes } from "@react-router/fs-routes";
+
+            export default flatRoutes() satisfies RouteConfig;
+          `,
+          "app-root/vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              root: "app-root",
+              build: { manifest: true },
+              plugins: [
+                reactRouter(),
+                {
+                  name: "relative-environment-outdirs",
+                  configEnvironment(name) {
+                    if (name === "client") {
+                      return { build: { outDir: "build/client" } };
+                    }
+                    if (name === "ssr") {
+                      return { build: { outDir: "build/server" } };
+                    }
+                  },
+                },
+              ],
+            });
+          `,
+        },
+        "vite-7-template",
+      );
+
+      let result = build({
+        cwd,
+        env: { REACT_ROUTER_ROOT: path.join(cwd, "app-root") },
+      });
+      expect(result.stderr.toString()).toBeFalsy();
+      expect(result.status).toBe(0);
+      expect(
+        fs.existsSync(path.join(cwd, "app-root/build/client/index.html")),
+      ).toBe(true);
+      expect(fs.existsSync(path.join(cwd, "build/client/index.html"))).toBe(
+        false,
+      );
+    });
+
+    test("closes the child compiler when prerendering fails", async () => {
+      let cwd = await createProject({
+        ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/missing"],
+        }),
+        "vite.config.ts": js`
+          import fs from "node:fs";
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          let isChildCompiler = false;
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter(),
+              {
+                name: "child-compiler-cleanup-tracker",
+                configResolved(config) {
+                  // Exclude the prerender preview server so only closing the
+                  // React Router child compiler can satisfy this test.
+                  isChildCompiler =
+                    config.command === "serve" && !config.isPreview;
+                },
+                closeBundle() {
+                  if (isChildCompiler) {
+                    fs.writeFileSync("CHILD_COMPILER_CLOSED", "");
+                  }
+                },
+              },
+            ],
+          });
+        `,
+      });
+
+      let result = build({ cwd });
+      expect(result.status).not.toBe(0);
+      expect(fs.existsSync(path.join(cwd, "CHILD_COMPILER_CLOSED"))).toBe(true);
+    });
+
+    test("closes the child compiler when output generation fails", async () => {
+      let cwd = await createProject({
+        ...files,
+        "react-router.config.ts": reactRouterConfig({
+          prerender: ["/about"],
+        }),
+        "vite.config.ts": js`
+          import fs from "node:fs";
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          let isChildCompiler = false;
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter(),
+              {
+                name: "child-compiler-cleanup-tracker",
+                configResolved(config) {
+                  isChildCompiler =
+                    config.command === "serve" && !config.isPreview;
+                },
+                closeBundle() {
+                  if (isChildCompiler) {
+                    fs.writeFileSync("CHILD_COMPILER_CLOSED", "");
+                  }
+                },
+              },
+              {
+                name: "output-generation-error",
+                generateBundle() {
+                  throw new Error("output generation failed");
+                },
+              },
+            ],
+          });
+        `,
+      });
+
+      let result = build({ cwd });
+      expect(result.status).not.toBe(0);
+      expect(fs.existsSync(path.join(cwd, "CHILD_COMPILER_CLOSED"))).toBe(true);
     });
 
     test("Prerenders a static array of routes with server bundles", async () => {
@@ -2627,6 +2769,93 @@ test.describe(`Prerendering`, () => {
       await app.clickLink("/param/404");
       await page.waitForSelector('[data-error="404"]');
       expect(requests).toEqual(["/param/404.data"]);
+    });
+
+    test("Returns a 404 on hard load of a non-prerendered param value served by the SPA fallback", async ({
+      page,
+    }) => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false, // turn off fog of war since we're serving with a static server
+            prerender: ["/", "/posts/test"],
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": js`
+            import * as React from "react";
+            import {
+              isRouteErrorResponse,
+              Link,
+              Outlet,
+              Scripts,
+              useRouteError,
+            } from "react-router";
+
+            export function Layout({ children }) {
+              return (
+                <html lang="en">
+                  <head />
+                  <body>
+                    <nav>
+                      <Link to="/">Home</Link><br/>
+                    </nav>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root() {
+              return <Outlet />
+            }
+
+            export function HydrateFallback() {
+              return <p>Loading...</p>;
+            }
+
+            export function ErrorBoundary() {
+              let error = useRouteError();
+              if (isRouteErrorResponse(error) && error.status === 404) {
+                return <h1 data-error="404">404 Not Found</h1>;
+              }
+              return <h1 data-error="other">Something went wrong</h1>;
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            export default function Index() {
+              return <h1 data-index>Index</h1>;
+            }
+          `,
+          "app/routes/posts.$slug.tsx": js`
+            import { data } from "react-router";
+
+            let posts = { test: { title: "Test Post" } };
+
+            export function loader({ params }) {
+              let post = posts[params.slug];
+              if (!post) {
+                throw data("Not Found", { status: 404 });
+              }
+              return post;
+            }
+
+            export default function Page({ loaderData }) {
+              return <h1 data-post>{loaderData.title}</h1>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let requests = captureRequests(page);
+      let app = new PlaywrightFixture(appFixture, page);
+      // Hard load a param value that was not prerendered, so the static server
+      // serves the SPA fallback document and the `.data` file 404s
+      await app.goto("/posts/does-not-exist", true);
+      await page.waitForSelector('[data-error="404"]');
+      expect(requests).toEqual(["/posts/does-not-exist.data"]);
     });
 
     test("Navigates to prerendered parent with clientLoader calling loader", async ({

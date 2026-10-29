@@ -24,7 +24,16 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/co
 
 Used to render promise values with automatic error handling.
 
+Passing the promise through `resolve` uses React Router-specific promise tracking, while passing
+it through `unstable_promise` uses React's built-in [`use()`](https://react.dev/reference/react/use)
+API.
+
 **Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
+
+<docs-warning>The `unstable_promise` prop is currently unstable and may change in minor or patch
+releases. We plan to stabilize `<Await promise>` and deprecate `<Await resolve>` during v8, and then
+drop `<Await resolve>` in v9. Please see below for minor `errorElement` behavioral differences
+between the two approaches.</docs-warning>
 
 ```tsx
 import { Await, useLoaderData } from "react-router";
@@ -44,15 +53,9 @@ function Book() {
       <h1>{book.title}</h1>
       <p>{book.description}</p>
       <React.Suspense fallback={<ReviewsSkeleton />}>
-        <Await
-          resolve={reviews}
-          errorElement={
-            <div>Could not load reviews 😬</div>
-          }
-          children={(resolvedReviews) => (
-            <Reviews items={resolvedReviews} />
-          )}
-        />
+        <Await resolve={reviews} errorElement={<BookError />}>
+          {(resolvedReviews) => <Reviews items={resolvedReviews} />}
+        </Await>
       </React.Suspense>
     </div>
   );
@@ -62,11 +65,9 @@ function Book() {
 ## Signature
 
 ```tsx
-function Await<Resolve>({
-  children,
-  errorElement,
-  resolve,
-}: AwaitProps<Resolve>)
+function Await<Resolve>(
+  props: AwaitProps<Resolve> | AwaitPromiseProps<Resolve>,
+)
 ```
 
 ## Props
@@ -97,14 +98,17 @@ function Reviews() {
 
 ### errorElement
 
-The error element renders instead of the `children` when the [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+The error element renders instead of the `children` when the
+[`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
 rejects.
 
+When using `resolve`, errors thrown while rendering `children` are
+also caught and rendered here. With `unstable_promise`, only promise
+rejections are handled; errors thrown while rendering `children` bubble to
+the nearest React error boundary.
+
 ```tsx
-<Await
-  errorElement={<div>Oops</div>}
-  resolve={reviewsPromise}
->
+<Await resolve={reviewsPromise} errorElement={<div>Oops</div>}>
   <Reviews />
 </Await>
 ```
@@ -113,10 +117,7 @@ To provide a more contextual error, you can use the [`useAsyncError`](../hooks/u
 child component
 
 ```tsx
-<Await
-  errorElement={<ReviewsError />}
-  resolve={reviewsPromise}
->
+<Await resolve={reviewsPromise} errorElement={<ReviewsError />}>
   <Reviews />
 </Await>
 
@@ -170,4 +171,24 @@ export default function Book() {
   );
 }
 ```
+
+### unstable_promise
+
+<docs-warning>This prop is currently unstable and may change in minor or patch
+releases.</docs-warning>
+
+A promise (or value) to read using React's `use()` API in client components.
+Unlike `resolve` in client components, this accepts promise-like values
+without modifying the source promise.
+
+`errorElement` handles promise rejections. Errors thrown while rendering
+children bubble to the nearest React error boundary.
+
+```tsx
+<Await unstable_promise={reviewsPromise} errorElement={<ReviewsError />}>
+  {(reviews) => <Reviews items={reviews} />}
+</Await>
+```
+
+Pass exactly one of `unstable_promise` or `resolve`.
 
