@@ -499,6 +499,8 @@ export interface StaticHandler {
    * The set of data routes managed by this handler
    */
   dataRoutes: DataRouteObject[];
+  /** @private Estimated route metadata visits per regex match. */
+  readonly _matchCost?: number;
   /**
    * @private
    * PRIVATE - DO NOT USE
@@ -5295,6 +5297,11 @@ export function createStaticHandler(
 
   return {
     dataRoutes,
+    get _matchCost() {
+      return dataRouteMatcher instanceof V6RegExMatcher
+        ? dataRouteMatcher.matchCost
+        : undefined;
+    },
     match,
     query,
     queryRoute,
