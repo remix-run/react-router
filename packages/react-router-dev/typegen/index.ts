@@ -11,7 +11,7 @@ import {
   generateRoutes,
   generateServerBuild,
 } from "./generate";
-import { acquire } from "./lock";
+import { withLock } from "./lock";
 
 const { green, red } = pc;
 
@@ -44,13 +44,10 @@ export async function run(
 ) {
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: false });
   const lockPath = Path.join(rootDirectory, ".react-router", ".typegen.lock");
-  const release = await acquire(lockPath);
-  try {
+  await withLock(lockPath, async () => {
     await fs.rm(typesDirectory(ctx), rmOptions);
     await write(generateServerBuild(ctx), ...generateRoutes(ctx));
-  } finally {
-    release();
-  }
+  });
 }
 
 export type Watcher = {
@@ -64,13 +61,10 @@ export async function watch(
   const ctx = await createContext({ rootDirectory, mode, rsc, watch: true });
   const lockPath = Path.join(rootDirectory, ".react-router", ".typegen.lock");
 
-  const release = await acquire(lockPath);
-  try {
+  await withLock(lockPath, async () => {
     await fs.rm(typesDirectory(ctx), rmOptions);
     await write(generateServerBuild(ctx), ...generateRoutes(ctx));
-  } finally {
-    release();
-  }
+  });
   logger?.info(green("generated types"), { timestamp: true, clear: true });
 
   ctx.configLoader.onChange(async ({ result, routeConfigChanged }) => {
@@ -81,13 +75,10 @@ export async function watch(
     ctx.config = result.value;
 
     if (routeConfigChanged) {
-      const release = await acquire(lockPath);
-      try {
+      await withLock(lockPath, async () => {
         await clearRouteModuleAnnotations(ctx);
         await write(...generateRoutes(ctx));
-      } finally {
-        release();
-      }
+      });
       logger?.info(green("regenerated types"), {
         timestamp: true,
         clear: true,

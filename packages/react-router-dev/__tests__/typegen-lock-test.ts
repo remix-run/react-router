@@ -5,7 +5,7 @@ import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { acquire } from "../typegen/lock";
+import { withLock } from "../typegen/lock";
 
 describe("typegen lock", () => {
   let tmpDir: string;
@@ -30,20 +30,15 @@ describe("typegen lock", () => {
     let exited = once(worker, "exit");
     try {
       await once(worker, "message");
-      await expect(acquire(lockPath, { timeoutMs: 30 })).rejects.toThrow(
-        "Timed out waiting for the typegen lock",
-      );
+      await expect(
+        withLock(lockPath, () => undefined, { timeoutMs: 30 }),
+      ).rejects.toThrow("Timed out waiting for the typegen lock");
       expect(fs.readFileSync(lockPath, "utf8")).toBe(String(worker.pid));
 
-      let waiting = acquire(lockPath);
+      let waiting = withLock(lockPath, () => "acquired");
       worker.send("exit");
       await exited;
-      let release = await waiting;
-      release();
-      let releaseNext = await acquire(lockPath);
-      release();
-      expect(fs.existsSync(lockPath)).toBe(true);
-      releaseNext();
+      await expect(waiting).resolves.toBe("acquired");
       expect(fs.existsSync(lockPath)).toBe(false);
     } finally {
       if (worker.exitCode === null && worker.signalCode === null) {
@@ -60,10 +55,9 @@ describe("typegen lock", () => {
       fs.writeFileSync(lockPath, contents);
 
       let results = await Promise.allSettled(
-        [1, 2].map(async () => {
-          let release = await acquire(lockPath, { timeoutMs: 30 });
-          release();
-        }),
+        [1, 2].map(() =>
+          withLock(lockPath, () => undefined, { timeoutMs: 30 }),
+        ),
       );
       for (let result of results) {
         expect(result).toMatchObject({
@@ -84,7 +78,22 @@ describe("typegen lock", () => {
     jest.spyOn(fsp, "open").mockResolvedValueOnce(fd);
     jest.spyOn(fd, "write").mockRejectedValueOnce(error);
 
-    await expect(acquire(lockPath)).rejects.toBe(error);
+    await expect(withLock(lockPath, () => undefined)).rejects.toBe(error);
+    expect(fs.existsSync(lockPath)).toBe(false);
+  });
+
+  it("holds the lock until the callback settles and releases after failure", async () => {
+    let error = new Error("write failed");
+    await expect(
+      withLock(lockPath, async () => {
+        await new Promise<void>((resolve) => setImmediate(resolve));
+        expect(fs.existsSync(lockPath)).toBe(true);
+        throw error;
+      }),
+    ).rejects.toBe(error);
+    expect(fs.existsSync(lockPath)).toBe(false);
+
+    await expect(withLock(lockPath, () => 42)).resolves.toBe(42);
     expect(fs.existsSync(lockPath)).toBe(false);
   });
 });

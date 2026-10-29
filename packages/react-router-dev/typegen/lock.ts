@@ -3,10 +3,11 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import exitHook from "exit-hook";
 
-export async function acquire(
+export async function withLock<T>(
   lockPath: string,
+  callback: () => T | Promise<T>,
   { timeoutMs = 30_000 }: { timeoutMs?: number } = {},
-): Promise<() => void> {
+): Promise<T> {
   await fsp.mkdir(path.dirname(lockPath), { recursive: true });
   let deadline = performance.now() + timeoutMs;
 
@@ -50,11 +51,9 @@ export async function acquire(
       } finally {
         await fd.close();
       }
-    } catch (error) {
+      return await callback();
+    } finally {
       release();
-      throw error;
     }
-
-    return release;
   }
 }
