@@ -152,7 +152,7 @@ test.describe("Client Data", () => {
                       splitRouteModules,
                     }),
                     "app/root.tsx": js`
-                      import { Form, Outlet, Scripts } from "react-router"
+                      import { Form, Outlet, ${templateName === "rsc-vite-framework" ? "" : "Scripts"} } from "react-router"
 
                       export const middleware = [
                         async ({ request }, next) => {
@@ -181,7 +181,7 @@ test.describe("Client Data", () => {
                               <main>
                                 <Outlet />
                               </main>
-                              <Scripts />
+                              ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                             </body>
                           </html>
                         );
@@ -596,9 +596,10 @@ test.describe("Client Data", () => {
                       }
                       export async function clientLoader({ serverLoader }) {
                         console.log('running parent client loader')
-                        // Need a small delay to ensure we capture the server-rendered
-                        // fallbacks for assertions
-                        await new Promise(r => setTimeout(r, 100));
+                        // Let the test inspect the server-rendered error before hydration finishes.
+                        await new Promise(resolve => {
+                          window.__resolveParentClientLoader = resolve;
+                        });
                         let data = await serverLoader();
                         return { message: data.message + " (mutated by client)" };
                       }
@@ -951,6 +952,9 @@ test.describe("Client Data", () => {
                         return redirect('/client-loader-critical/hydrating-clientloader-redirects-trigger-new-data-requests-to-the-server/parent/b');
                       }
                       clientLoader.hydrate = true;
+                      export function HydrateFallback() {
+                        return null;
+                      }
                       export default function Component({ loaderData }) {
                         return <p>Should not see me</p>;
                       }
@@ -1296,7 +1300,6 @@ test.describe("Client Data", () => {
             test("bubbled server loader errors are persisted for hydrating routes", async ({
               page,
             }) => {
-              // test.skip(browserName === "firefox", "this test fails there due to extra debug logs.")
               let _consoleError = console.error;
               console.error = () => {};
               let app = new PlaywrightFixture(appFixture, page);
@@ -1319,6 +1322,14 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Error");
               expect(html).not.toMatch("Should not see me");
               // Ensure we hydrate and remain on the boundary
+              await page.waitForFunction(
+                () =>
+                  typeof (window as any).__resolveParentClientLoader ===
+                  "function",
+              );
+              await page.evaluate(() =>
+                (window as any).__resolveParentClientLoader(),
+              );
               await page.waitForSelector(
                 ":has-text('Parent Server Loader (mutated by client)')",
               );

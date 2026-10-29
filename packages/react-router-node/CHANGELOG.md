@@ -1,5 +1,47 @@
 # `@react-router/node`
 
+## v8.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+
+## v8.5.0
+
+### Patch Changes
+
+- Write file session data to a temporary file and rename it into place so concurrent commits of the same session can no longer corrupt its file ([#15620](https://github.com/remix-run/react-router/pull/15620))
+  - Preserve existing session file permissions when replacing the file
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+
+## v8.4.0
+
+### Patch Changes
+
+- Fix a memory leak in `writeReadableStreamToWritable` and `writeAsyncIterableToWritable` that retained memory for the lifetime of a long-running stream ([#15500](https://github.com/remix-run/react-router/pull/15500))
+  - Preserve error handling when a producer closes the destination while reading the next chunk
+- Updated dependencies:
+  - [`react-router@8.4.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.4.0)
+
+## v8.3.1
+
+### Patch Changes
+
+- Bump `@remix-run/node-fetch-server` dependency ([#15447](https://github.com/remix-run/react-router/pull/15447))
+- fix: Prevent client disconnects during streaming from crashing the Node process ([#15324](https://github.com/remix-run/react-router/pull/15324))
+- Updated dependencies:
+  - [`react-router@8.3.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.1)
+
+## v8.3.0
+
+### Patch Changes
+
+- Allow `typescript@7` to be used ([#15317](https://github.com/remix-run/react-router/pull/15317))
+- Updated dependencies:
+  - [`react-router@8.3.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.0)
+
 ## v8.2.0
 
 ### Patch Changes

@@ -336,6 +336,49 @@ describe("architect createReactRouterRequest", () => {
 
     expect(request.url).toBe("https://localhost/foo");
   });
+
+  it("preserves binary base64 encoded request bodies", async () => {
+    let image = await fsp.readFile(path.join(__dirname, "554828.jpeg"));
+
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: { "content-type": "image/jpeg" },
+        body: image.toString("base64"),
+        isBase64Encoded: true,
+        requestContext: {
+          http: {
+            method: "POST",
+          } as APIGatewayProxyEventV2["requestContext"]["http"],
+        },
+      }),
+    );
+
+    let body = Buffer.from(await request.arrayBuffer());
+    expect(body.equals(image)).toBe(true);
+  });
+
+  it("decodes text base64 encoded request bodies", async () => {
+    let text = "name=caf\u00e9&emoji=\ud83d\udc4b";
+
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: Buffer.from(text).toString("base64"),
+        isBase64Encoded: true,
+        requestContext: {
+          http: {
+            method: "POST",
+          } as APIGatewayProxyEventV2["requestContext"]["http"],
+        },
+      }),
+    );
+
+    expect(await request.clone().text()).toBe(text);
+
+    let formData = await request.formData();
+    expect(formData.get("name")).toBe("caf\u00e9");
+    expect(formData.get("emoji")).toBe("\ud83d\udc4b");
+  });
 });
 
 describe("sendReactRouterResponse", () => {

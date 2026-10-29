@@ -64,7 +64,7 @@ function useFetcher<T = any>({
   key,
 }: {
   key?: string;
-} = ): FetcherWithComponents<SerializeFrom<T>> {}
+} = {}): FetcherWithComponents<SerializeFrom<T>>
 ```
 
 ## Params

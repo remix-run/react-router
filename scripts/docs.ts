@@ -443,9 +443,6 @@ function generateMarkdownForComment(comment: SimplifiedComment): string {
   }
 
   if (comment.unstable) {
-    if (comment.modes && comment.modes.length > 0) {
-      markdown += "<br />\n<br />\n\n";
-    }
     markdown +=
       "<docs-warning>This API is experimental and subject to breaking changes in \n" +
       "minor/patch releases. Please use with caution and pay **very** close attention \n" +
@@ -566,6 +563,11 @@ function getApiName(comment: ParsedComment): string {
   }
 
   matches = comment.code.match(/^export function ([^<(]+)/);
+  if (matches) {
+    return matches[1].trim();
+  }
+
+  matches = comment.code.match(/^export type ([^<=]+)/);
   if (matches) {
     return matches[1].trim();
   }
@@ -713,7 +715,7 @@ async function getSignature(code: string) {
 
     let formatted = await prettier.format(newCode, { parser: "typescript" });
 
-    return formatted.replace("{}", "").trim();
+    return formatted.replace(/\s*\{\}\s*$/, "").trim();
   }
 
   // TODO: Handle variable statements for forwardRef components
@@ -729,6 +731,22 @@ async function getSignature(code: string) {
     let api = code.match(/export class (\w+)/);
     warn(`Skipping signature section for \`class\` : ${api?.[1]}`);
     return;
+  }
+
+  if (ts.isTypeAliasDeclaration(ast.statements[0])) {
+    let typeAliasDeclaration = ast.statements[0];
+    let modifiedTypeAlias = {
+      ...typeAliasDeclaration,
+      modifiers: typeAliasDeclaration.modifiers?.filter(
+        (m) => m.kind !== ts.SyntaxKind.ExportKeyword,
+      ),
+    } as ts.TypeAliasDeclaration;
+
+    let newCode = ts
+      .createPrinter({ newLine: ts.NewLineKind.LineFeed })
+      .printNode(ts.EmitHint.Unspecified, modifiedTypeAlias, ast);
+
+    return (await prettier.format(newCode, { parser: "typescript" })).trim();
   }
 
   throw new Error("Unable to parse signature from code: " + code);

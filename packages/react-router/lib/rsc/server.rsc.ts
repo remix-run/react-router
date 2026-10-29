@@ -10,26 +10,28 @@ import type {
   LinksFunction,
   MetaFunction,
 } from "../dom/ssr/routeModules";
-import { type Location } from "../router/history";
+import { invariant as routerInvariant, type Location } from "../router/history";
 import {
   createStaticHandler,
   isDataWithResponseInit,
   isMutationMethod,
   isResponse,
   isRedirectResponse,
+  type StaticHandler,
   type StaticHandlerContext,
 } from "../router/router";
 import {
   type ActionFunction,
   type LoaderFunction,
+  type MiddlewareFunction,
   type Params,
   type ShouldRevalidateFunction,
   type RouteMatch,
+  type RouteObject,
   type RouterContextProvider,
   type TrackedPromise,
   isAbsoluteUrl,
   isRouteErrorResponse,
-  matchRoutes,
   prependBasename,
   convertRouteMatchToUiMatch,
   redirect as baseRedirect,
@@ -39,7 +41,11 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
-import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getPathsWithAncestors,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import invariant from "../server-runtime/invariant";
 
@@ -142,12 +148,18 @@ const cachedResolvePromise: <T>(
   },
 );
 
-export const Await: typeof AwaitType = (async ({
-  children,
-  resolve,
-  errorElement,
-}: React.ComponentProps<typeof AwaitType>) => {
-  let promise = cachedResolvePromise(resolve);
+export const Await: typeof AwaitType = (async (
+  props: React.ComponentProps<typeof AwaitType>,
+) => {
+  routerInvariant(
+    "resolve" in props !== "unstable_promise" in props,
+    "<Await> requires exactly one of `resolve` or `unstable_promise`",
+  );
+  let { children, errorElement } = props;
+  let usePromise = "unstable_promise" in props;
+  let promise = cachedResolvePromise(
+    usePromise ? props.unstable_promise : props.resolve,
+  );
   let resolved: Awaited<typeof promise> = await promise;
 
   if (resolved.status === "rejected" && !errorElement) {
@@ -156,7 +168,9 @@ export const Await: typeof AwaitType = (async ({
   if (resolved.status === "rejected") {
     return React.createElement(UNSAFE_AwaitContextProvider, {
       children: React.createElement(React.Fragment, null, errorElement),
-      value: { _tracked: true, _error: resolved.reason } as TrackedPromise,
+      value: usePromise
+        ? resolved
+        : ({ _tracked: true, _error: resolved.reason } as TrackedPromise),
     });
   }
 
@@ -165,7 +179,9 @@ export const Await: typeof AwaitType = (async ({
 
   return React.createElement(UNSAFE_AwaitContextProvider, {
     children: toRender,
-    value: { _tracked: true, _data: resolved.value } as TrackedPromise,
+    value: usePromise
+      ? resolved
+      : ({ _tracked: true, _data: resolved.value } as TrackedPromise),
   });
 }) as any;
 
@@ -181,6 +197,7 @@ type RSCRouteConfigEntryBase = {
   links?: LinksFunction;
   loader?: LoaderFunction;
   meta?: MetaFunction;
+  middleware?: MiddlewareFunction<any>[];
   shouldRevalidate?: ShouldRevalidateFunction;
 };
 
@@ -212,7 +229,9 @@ export type RSCRouteConfigEntry = RSCRouteConfigEntryBase & {
 
 export type RSCRouteConfig = Array<RSCRouteConfigEntry>;
 
-type RSCRouteDataMatch = RouteMatch<string, RSCRouteConfigEntry>;
+type RSCRouteDataMatch = Omit<RouteMatch, "route"> & {
+  route: RSCRouteConfigEntry;
+};
 
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
@@ -243,6 +262,7 @@ export type RSCRenderPayload = {
   type: "render";
   actionData: Record<string, any> | null;
   basename: string | undefined;
+  clientVersion?: string;
   errors: Record<string, any> | null;
   loaderData: Record<string, any>;
   location: Location;
@@ -253,7 +273,6 @@ export type RSCRenderPayload = {
   // matching on upward navigations.  Only needed on the initial document request,
   // for SPA navigations the manifest call will handle these patches.
   patches?: Promise<RSCRouteManifest[]>;
-  nonce?: string;
   formState?: ReactFormState;
 };
 
@@ -322,6 +341,13 @@ export type RouteDiscovery =
  * encoding an {@link unstable_RSCPayload} for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
  * enabled client router.
  *
+ * Treat every React Server Function as a public endpoint. Server Functions are
+ * not inherently associated with a route. Any route middleware that runs is
+ * selected from the URL used to call a Server Function, but the client controls
+ * both the Server Function identifier and the URL. Perform all access control
+ * checks within each Server Function, or use a route action for
+ * middleware-driven access control.
+ *
  * @example
  * import {
  *   createTemporaryReferenceSet,
@@ -374,6 +400,8 @@ export type RouteDiscovery =
  * encoding the {@link unstable_RSCPayload}.
  * @param opts.loadServerAction Your `react-server-dom-xyz/server`'s
  * `loadServerAction` function, used to load a server action by ID.
+ * @param opts.clientVersion A version derived from the client build output used
+ * to detect stale clients during lazy route discovery.
  * @param opts.onError An optional error handler that will be called with any
  * errors that occur during the request processing.
  * @param opts.request The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
@@ -397,10 +425,11 @@ export async function matchRSCServerRequest({
   loadServerAction,
   decodeAction,
   decodeFormState,
+  clientVersion,
   onError,
   request,
   routes,
-  generateResponse,
+  generateResponse: encodeResponse,
 }: {
   allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
@@ -410,6 +439,7 @@ export async function matchRSCServerRequest({
   decodeFormState?: DecodeFormStateFunction;
   requestContext?: RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
+  clientVersion?: string;
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
@@ -425,6 +455,13 @@ export async function matchRSCServerRequest({
     },
   ) => Response;
 }): Promise<Response> {
+  let generateResponse: typeof encodeResponse = (match, options) => {
+    let response = encodeResponse(match, options);
+    // Preserve the payload type when middleware caches or clones this response.
+    response.headers.set("Content-Type", "text/x-component");
+    return response;
+  };
+
   let url = new URL(request.url);
 
   basename = basename || "/";
@@ -464,6 +501,7 @@ export async function matchRSCServerRequest({
       generateResponse,
       temporaryReferences,
       routeDiscovery,
+      clientVersion,
     );
     return response;
   }
@@ -474,7 +512,12 @@ export async function matchRSCServerRequest({
   // TODO: This isn't ideal but we can't do it through `lazy()` in the router,
   // and if we move to `lazy: {}` then we lose all the other things from the
   // `RSCRouteConfigEntry` like `Layout` etc.
-  let matches = matchRoutes(routes, url.pathname, basename);
+  // RSC lazy modules can export middleware, unlike core router lazy functions.
+  // We resolve them below before querying the static handler.
+  let staticHandler = createStaticHandler(routes as RouteObject[], {
+    basename,
+  });
+  let matches = staticHandler.match(url.pathname) as RSCRouteDataMatch[] | null;
   if (matches) {
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
   }
@@ -488,8 +531,7 @@ export async function matchRSCServerRequest({
   ) {
     return generateResourceResponse(
       routerRequest,
-      routes,
-      basename,
+      staticHandler,
       leafMatch.route.id,
       requestContext,
       onError,
@@ -498,7 +540,7 @@ export async function matchRSCServerRequest({
 
   let response = await generateRenderResponse(
     routerRequest,
-    routes,
+    staticHandler,
     basename,
     isDataRequest,
     decodeReply,
@@ -511,6 +553,7 @@ export async function matchRSCServerRequest({
     temporaryReferences,
     allowedActionOrigins,
     routeDiscovery,
+    clientVersion,
   );
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
@@ -531,12 +574,25 @@ async function generateManifestResponse(
   ) => Response,
   temporaryReferences: unknown,
   routeDiscovery: RouteDiscovery | undefined,
+  clientVersion: string | undefined,
 ) {
   let url = new URL(request.url);
   if (url.toString().length > URL_LIMIT) {
     return new Response(null, {
       statusText: "Bad Request",
       status: 400,
+    });
+  }
+
+  if (
+    clientVersion !== undefined &&
+    clientVersion !== url.searchParams.get("version")
+  ) {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "X-Remix-Reload-Document": "true",
+      },
     });
   }
 
@@ -562,34 +618,44 @@ async function generateManifestResponse(
   let pathnames = pathParam
     ? pathParam.split(",").filter(Boolean)
     : [url.pathname.replace(/\.manifest$/, "")];
+  // Only use the core router for matching; getManifestRoute loads RSC lazy modules.
+  let staticHandler =
+    routes.length > 0
+      ? createStaticHandler(routes as RouteObject[], { basename })
+      : undefined;
   let routeIds = new Set<string>();
-  let matchedRoutes = pathnames
-    .flatMap((pathname) => {
-      let pathnameMatches = matchRoutes(routes, pathname, basename);
-      return (
-        pathnameMatches?.map((m, i) => ({
-          ...m.route,
-          parentId: pathnameMatches[i - 1]?.route.id,
-        })) ?? []
-      );
-    })
-    .filter((route) => {
-      if (!routeIds.has(route.id)) {
-        routeIds.add(route.id);
-        return true;
-      }
-      return false;
-    });
+  let matchedRoutes = staticHandler
+    ? pathnames
+        .flatMap((pathname) => {
+          let pathnameMatches = staticHandler.match(pathname) as
+            | RSCRouteDataMatch[]
+            | null;
+          return (
+            pathnameMatches?.map((m, i) => ({
+              ...m.route,
+              parentId: pathnameMatches[i - 1]?.route.id,
+            })) ?? []
+          );
+        })
+        .filter((route) => {
+          if (!routeIds.has(route.id)) {
+            routeIds.add(route.id);
+            return true;
+          }
+          return false;
+        })
+    : [];
   let payload: RSCManifestPayload = {
     type: "manifest",
     patches: Promise.all([
       ...matchedRoutes.map((route) => getManifestRoute(route)),
-      getAdditionalRoutePatches(
-        pathnames,
-        routes,
-        basename,
-        Array.from(routeIds),
-      ),
+      staticHandler
+        ? getAdditionalRoutePatches(
+            pathnames,
+            staticHandler,
+            Array.from(routeIds),
+          )
+        : Promise.resolve([]),
     ]).then((r) => r.flat(1)),
   };
 
@@ -733,31 +799,27 @@ async function processServerAction(
 
 async function generateResourceResponse(
   request: Request,
-  routes: RSCRouteConfigEntry[],
-  basename: string | undefined,
+  staticHandler: StaticHandler,
   routeId: string,
   requestContext: RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined,
 ) {
   try {
-    const staticHandler = createStaticHandler(routes, {
-      basename,
-    });
-
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext,
       async generateMiddlewareResponse(queryRoute) {
         try {
           let response = await queryRoute(request);
-          return generateResourceResponse(response);
+          return tagResourceResponse(response);
         } catch (error) {
           return generateErrorResponse(error);
         }
       },
       normalizePath: (r) => getNormalizedPath(r),
     });
-    return response;
+    // Middleware can short-circuit before the response-generation callback runs.
+    return tagResourceResponse(response);
   } catch (error) {
     return generateErrorResponse(error);
   }
@@ -779,23 +841,23 @@ async function generateResourceResponse(
       response = new Response("Internal Server Error", { status: 500 });
     }
 
-    return generateResourceResponse(response);
+    return tagResourceResponse(response);
   }
+}
 
-  function generateResourceResponse(response: Response) {
-    const headers = new Headers(response.headers);
-    headers.set("React-Router-Resource", "true");
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    });
-  }
+function tagResourceResponse(response: Response) {
+  const headers = new Headers(response.headers);
+  headers.set("React-Router-Resource", "true");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 async function generateRenderResponse(
   request: Request,
-  routes: RSCRouteConfigEntry[],
+  staticHandler: StaticHandler,
   basename: string | undefined,
   isDataRequest: boolean,
   decodeReply: DecodeReplyFunction | undefined,
@@ -814,6 +876,7 @@ async function generateRenderResponse(
   temporaryReferences: unknown,
   allowedActionOrigins: string[] | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  clientVersion: string | undefined,
 ): Promise<Response> {
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
@@ -825,11 +888,6 @@ async function generateRenderResponse(
     !isSubmission && url.searchParams.has("_routes")
       ? url.searchParams.get("_routes")!.split(",")
       : null;
-
-  // Create the handler here with exploded routes
-  const staticHandler = createStaticHandler(routes, {
-    basename,
-  });
 
   let actionResult: Promise<unknown> | undefined;
   const ctx: ServerContext = {
@@ -857,7 +915,17 @@ async function generateRenderResponse(
         if (isMutationMethod(request.method)) {
           try {
             throwIfPotentialCSRFAttack(request, allowedActionOrigins);
+          } catch (error) {
+            onError?.(error);
+            potentialCSRFAttackError = error;
+            request = new Request(request.url, {
+              method: "GET",
+              headers: request.headers,
+              signal: request.signal,
+            });
+          }
 
+          if (!potentialCSRFAttackError) {
             ctx.runningAction = true;
             let result = await processServerAction(
               request,
@@ -880,7 +948,9 @@ async function generateRenderResponse(
                 isDataRequest,
                 generateResponse,
                 temporaryReferences,
-                (ctx.redirect as unknown as Response)?.headers,
+                result === ctx.redirect
+                  ? undefined
+                  : (ctx.redirect as unknown as Response)?.headers,
               );
             }
 
@@ -900,18 +970,12 @@ async function generateRenderResponse(
                 undefined,
               );
             }
-          } catch (error) {
-            potentialCSRFAttackError = error;
           }
         }
 
         let staticContext = await query(
           request,
-          skipRevalidation || !!potentialCSRFAttackError
-            ? {
-                filterMatchesToLoad: () => false,
-              }
-            : undefined,
+          skipRevalidation ? { filterMatchesToLoad: () => false } : undefined,
         );
 
         if (isResponse(staticContext)) {
@@ -934,7 +998,7 @@ async function generateRenderResponse(
         }
 
         return generateStaticContextResponse(
-          routes,
+          staticHandler,
           basename,
           generateResponse,
           statusCode,
@@ -948,6 +1012,7 @@ async function generateRenderResponse(
           skipRevalidation,
           ctx.redirect?.headers,
           routeDiscovery,
+          clientVersion,
         );
       },
     }),
@@ -966,6 +1031,16 @@ async function generateRenderResponse(
   }
 
   invariant(isResponse(result), "Expected a response from query");
+
+  let contentType = result.headers
+    .get("Content-Type")
+    ?.split(";")[0]
+    .trim()
+    .toLowerCase();
+  if (contentType !== "text/x-component") {
+    return tagResourceResponse(result);
+  }
+
   return result;
 }
 
@@ -1001,7 +1076,11 @@ function generateRedirectResponse(
 
   // Preserve non-internal headers on the user-created redirect and merge in
   // any side-effect redirect headers
-  let headers = new Headers(sideEffectRedirectHeaders);
+  let headers = new Headers(
+    sideEffectRedirectHeaders === response.headers
+      ? undefined
+      : sideEffectRedirectHeaders,
+  );
   for (const [key, value] of response.headers.entries()) {
     headers.append(key, value);
   }
@@ -1026,7 +1105,7 @@ function generateRedirectResponse(
 }
 
 async function generateStaticContextResponse(
-  routes: RSCRouteConfigEntry[],
+  staticHandler: StaticHandler,
   basename: string | undefined,
   generateResponse: (
     match: RSCMatch,
@@ -1046,6 +1125,7 @@ async function generateStaticContextResponse(
   skipRevalidation: boolean,
   sideEffectRedirectHeaders: Headers | undefined,
   routeDiscovery: RouteDiscovery | undefined,
+  clientVersion: string | undefined,
 ): Promise<Response> {
   statusCode = staticContext.statusCode ?? statusCode;
 
@@ -1082,7 +1162,7 @@ async function generateStaticContextResponse(
 
   let headers = getDocumentHeadersImpl(
     staticContext,
-    (match) => (match as RouteMatch<string, RSCRouteConfigEntry>).route.headers,
+    (match) => (match as RSCRouteDataMatch).route.headers,
     sideEffectRedirectHeaders,
   );
 
@@ -1095,6 +1175,7 @@ async function generateStaticContextResponse(
   const baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches"> = {
     type: "render",
     basename: staticContext.basename,
+    clientVersion,
     routeDiscovery: routeDiscovery ?? { mode: "lazy" },
     actionData: staticContext.actionData,
     errors: staticContext.errors,
@@ -1106,7 +1187,7 @@ async function generateStaticContextResponse(
   const renderPayloadPromise = () =>
     getRenderPayload(
       baseRenderPayload,
-      routes,
+      staticHandler,
       basename,
       routeIdsToLoad,
       isDataRequest,
@@ -1148,13 +1229,14 @@ async function generateStaticContextResponse(
 
 async function getRenderPayload(
   baseRenderPayload: Omit<RSCRenderPayload, "matches" | "patches">,
-  routes: RSCRouteConfigEntry[],
+  staticHandler: StaticHandler,
   basename: string | undefined,
   routeIdsToLoad: string[] | null,
   isDataRequest: boolean,
   staticContext: StaticHandlerContext,
   routeDiscovery: RouteDiscovery | undefined,
 ) {
+  let routes = staticHandler.dataRoutes as unknown as RSCRouteConfigEntry[];
   // Figure out how deep we want to render server components based on any
   // triggered error boundaries and/or `routeIdsToLoad`
   let deepestRenderedRouteIdx = staticContext.matches.length - 1;
@@ -1188,23 +1270,31 @@ async function getRenderPayload(
     }),
   );
 
-  let patches =
-    routeDiscovery?.mode === "initial" && !isDataRequest
-      ? getAllRoutePatches(routes, basename).then((patches) =>
-          patches.filter(
-            (patch) =>
-              !staticContext.matches.some((m) => m.route.id === patch.id),
-          ),
-        )
-      : getAdditionalRoutePatches(
-          getPathsWithAncestors([staticContext.location.pathname]),
-          routes,
-          basename,
-          staticContext.matches.map((m) => m.route.id),
-        );
+  let pathname = staticContext.location.pathname;
+  let useInitialRouteDiscovery =
+    (routeDiscovery?.mode === "initial" && !isDataRequest) ||
+    shouldUseInitialRouteDiscovery(pathname, staticHandler._matchCost);
+  let patches: Promise<RSCRouteManifest[]>;
+  if (useInitialRouteDiscovery) {
+    patches = getAllRoutePatches(routes, basename).then((patches) =>
+      patches.filter(
+        (patch) => !staticContext.matches.some((m) => m.route.id === patch.id),
+      ),
+    );
+  } else {
+    patches = getAdditionalRoutePatches(
+      // The full pathname is last and its matches are already in the payload.
+      getPathsWithAncestors([pathname]).slice(0, -1),
+      staticHandler,
+      staticContext.matches.map((m) => m.route.id),
+    );
+  }
 
   return {
     ...baseRenderPayload,
+    routeDiscovery: useInitialRouteDiscovery
+      ? ({ mode: "initial" } satisfies RouteDiscovery)
+      : baseRenderPayload.routeDiscovery,
     matches: await matchesPromise,
     patches,
   };
@@ -1419,8 +1509,7 @@ async function getAllRoutePatches(
 
 async function getAdditionalRoutePatches(
   pathnames: string[],
-  routes: RSCRouteConfigEntry[],
-  basename: string | undefined,
+  staticHandler: StaticHandler,
   matchedRouteIds: string[],
 ): Promise<RSCRouteManifest[]> {
   let patchRouteMatches = new Map<
@@ -1434,7 +1523,8 @@ async function getAdditionalRoutePatches(
       continue;
     }
     matchedPaths.add(pathname);
-    let matches = matchRoutes(routes, pathname, basename) || [];
+    let matches =
+      (staticHandler.match(pathname) as RSCRouteDataMatch[] | null) || [];
     matches.forEach((m, i) => {
       if (patchRouteMatches.get(m.route.id)) {
         return;

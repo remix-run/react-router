@@ -15,6 +15,7 @@ import {
 import routes from "virtual:react-router/unstable_rsc/routes";
 import routeDiscovery from "virtual:react-router/unstable_rsc/route-discovery";
 import basename from "virtual:react-router/unstable_rsc/basename";
+import clientVersion from "virtual:react-router/unstable_rsc/client-version";
 import unstable_reactRouterServeConfig from "virtual:react-router/unstable_rsc/react-router-serve-config";
 
 export { unstable_reactRouterServeConfig };
@@ -33,6 +34,8 @@ export function fetchServer(
     decodeFormState,
     decodeReply,
     loadServerAction,
+    // Detect stale clients after a new deployment.
+    clientVersion,
     // The incoming request.
     request,
     requestContext,

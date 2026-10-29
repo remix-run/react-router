@@ -1,5 +1,116 @@
 # `@react-router/dev`
 
+## v8.5.1
+
+### Patch Changes
+
+- Use resolved Vite environment output directories when reading and writing build artifacts ([#15480](https://github.com/remix-run/react-router/pull/15480))
+  - Finalize server-bundle manifest paths after asynchronous Vite configuration hooks complete
+  - Preserve output-directory overrides applied when creating a Vite build environment
+- Run prerendering after other Vite plugins finish their application build hooks ([#15481](https://github.com/remix-run/react-router/pull/15481))
+  - Close React Router's build resources when another plugin's application build hook fails during `react-router build`
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+  - [`@react-router/serve@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.1)
+
+## v8.5.0
+
+### Patch Changes
+
+- Fix critical CSS collection in dev registering server-only route imports as client dependencies, which triggered dependency re-optimization and full page reloads ([#15595](https://github.com/remix-run/react-router/pull/15595))
+- Fix intermittent `Prerender: Request failed for ... connect ECONNREFUSED` errors during prerendering ([#15325](https://github.com/remix-run/react-router/pull/15325))
+  - Send requests to the address the Vite preview server bound to
+  - Avoid re-resolving `localhost` for each request, which could select a different address family (`127.0.0.1` vs `::1`)
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add `ssr: "unstable_api-only"` to retain a runtime server for loaders, actions, and route discovery while disabling production document rendering ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Generate a root-only SPA shell when prerendering is disabled
+  - Support prerendered pages and data files alongside runtime loaders and actions, with a SPA fallback for non-prerendered paths
+  - Default API-only builds to lazy route discovery
+  - Reject API-only configuration in RSC Framework Mode
+  - Preserve server-only route exports in additional Vite server environments in both API-only and SSR modes
+  - Serve prerendered pages and the SPA fallback in Vite preview while retaining live data requests and route discovery
+- Add the `future.unstable_customRouteDiscovery` flag to opt into application-controlled route discovery in conventional Framework Mode ([#15602](https://github.com/remix-run/react-router/pull/15602))
+- Fix source maps for route modules in unstable RSC Framework Mode ([#15479](https://github.com/remix-run/react-router/pull/15479))
+- Add `unstable_apiServerOrigin` to configure the origin for API-only loader, action, and route discovery requests ([#15601](https://github.com/remix-run/react-router/pull/15601))
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+  - [`@react-router/serve@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.0)
+
+## v8.4.0
+
+### Patch Changes
+
+- Fix action submissions behind an HTTPS reverse proxy in `react-router dev` and `vite preview` by using `X-Forwarded-Proto` when constructing `request.url` ([#15466](https://github.com/remix-run/react-router/pull/15466))
+  - No React Router configuration is required
+  - The URL host continues to come from `Host`, not `X-Forwarded-Host`
+  - Configure reverse proxies to overwrite client-supplied `X-Forwarded-Proto` headers
+  - Do not expose dev or preview servers publicly
+- Pass development conditions as CLI flags when relaunching the dev process ([#15435](https://github.com/remix-run/react-router/pull/15435))
+- Fix stack trace locations for split route modules when source maps are enabled in the `reactRouter` Vite plugin ([#15440](https://github.com/remix-run/react-router/pull/15440))
+- Updated dependencies:
+  - [`react-router@8.4.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.4.0)
+  - [`@react-router/node@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.4.0)
+  - [`@react-router/serve@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.4.0)
+
+## v8.3.1
+
+### Patch Changes
+
+- Bump `@remix-run/node-fetch-server` dependency ([#15447](https://github.com/remix-run/react-router/pull/15447))
+- Generate JavaScript entry files at package build time so `react-router reveal --no-typescript` does not require Prettier at runtime ([#15373](https://github.com/remix-run/react-router/pull/15373))
+  - Deprecate the `--no-typescript` flag ahead of its removal in React Router v9
+- Updated dependencies:
+  - [`react-router@8.3.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.1)
+  - [`@react-router/node@8.3.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.1)
+  - [`@react-router/serve@8.3.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.3.1)
+
+## v8.3.0
+
+### Minor Changes
+
+- Restart `react-router dev` with `--conditions=development` when not already configured ([#15291](https://github.com/remix-run/react-router/pull/15291))
+
+### Patch Changes
+
+- Allow `typescript@7` to be used ([#15317](https://github.com/remix-run/react-router/pull/15317))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add `unstable_rsc/client-version` client build version virtual module ([#15318](https://github.com/remix-run/react-router/pull/15318))
+
+- Support the `subResourceIntegrity` config option in RSC Framework Mode ([#15321](https://github.com/remix-run/react-router/pull/15321))
+
+  #### Migration guide
+
+  No changes are required when using the default RSC SSR entry. If you maintain a custom `app/entry.ssr.tsx`, import the new virtual module and pass its hashes to React's `importMap` render option:
+
+  ```diff
+  +import subResourceIntegrity from "virtual:react-router/unstable_rsc/subresource-integrity";
+
+  return renderToReadableStream(<RSCStaticRouter getPayload={getPayload} />, {
+    ...options,
+    bootstrapScriptContent,
+    formState,
+  + importMap: subResourceIntegrity
+  +   ? { integrity: subResourceIntegrity }
+  +   : undefined,
+    signal: request.signal,
+  });
+  ```
+
+- Updated dependencies:
+  - [`react-router@8.3.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.0)
+  - [`@react-router/node@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.0)
+  - [`@react-router/serve@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.3.0)
+
 ## v8.2.0
 
 ### Minor Changes

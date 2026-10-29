@@ -4,6 +4,7 @@ import type { Cache } from "./cache";
 import {
   hasChunkableExport,
   getChunkedExport,
+  getRouteChunkCode,
   omitChunkedExports,
 } from "./route-chunks";
 
@@ -1630,6 +1631,56 @@ describe("route chunks", () => {
       expect(
         omitChunkedExports(code, ["chunk"], {}, ...cache)?.code,
       ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+  });
+  describe("source maps", () => {
+    const code = dedent`
+      import { thing } from "./thing";
+      export function meta() { return []; }
+      export function clientLoader() { return thing; }
+      export default function Route() { return null; }
+    `;
+
+    const generateOptions = { sourceMaps: true, sourceFileName: "home.tsx" };
+
+    test("chunked export maps back to its line in the route module", () => {
+      const chunk = getRouteChunkCode(
+        code,
+        "clientLoader",
+        ...cache,
+        generateOptions,
+      );
+
+      expect(chunk?.code).toMatchInlineSnapshot(`
+        "import { thing } from "./thing";
+        export function clientLoader() {
+          return thing;
+        }"
+      `);
+      expect(chunk?.map?.sources).toEqual(["home.tsx"]);
+      expect(chunk?.map?.mappings).not.toBe("");
+
+      // `clientLoader` is line 3 of the route module but line 2 of the chunk,
+      // so a stack frame in the chunk only resolves correctly if the mapping
+      // survived generation.
+      expect(
+        chunk?.rawMappings?.find((mapping) => mapping.name === "clientLoader")
+          ?.original,
+      ).toEqual({ line: 3, column: 16 });
+    });
+
+    test("main chunk maps back to the route module", () => {
+      const main = getRouteChunkCode(code, "main", ...cache, generateOptions);
+
+      expect(main?.map?.sources).toEqual(["home.tsx"]);
+      expect(
+        main?.rawMappings?.find((mapping) => mapping.name === "Route")
+          ?.original,
+      ).toEqual({ line: 4, column: 24 });
+    });
+
+    test("no map is generated unless it is asked for", () => {
+      expect(getRouteChunkCode(code, "clientLoader", ...cache)?.map).toBeNull();
     });
   });
 });

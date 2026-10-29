@@ -32,6 +32,116 @@ test.use({
   },
 });
 
+test("custom fetch context narrowing", async ({ edit, $ }) => {
+  await edit({
+    "app/custom-fetch.ts": tsx`
+      import type { NavigationType } from "react-router";
+      import type { unstable_RouterFetch } from "react-router/dom";
+      import type { Expect, Equal } from "./expect-type";
+
+      export const customFetch: unstable_RouterFetch = (request, context) => {
+        if (context.type === "navigation") {
+          type Test = Expect<Equal<typeof context.navigationType, NavigationType>>;
+        } else if (context.type === "initialization") {
+          type FetcherKey = Expect<Equal<typeof context.fetcherKey, string | null>>;
+          type HistoryAction = Expect<Equal<typeof context.navigationType, null>>;
+        } else if (context.type !== "manifest") {
+          type Test = Expect<Equal<typeof context.navigationType, null>>;
+          type FetcherKey = Expect<Equal<typeof context.fetcherKey, string | null>>;
+        } else {
+          type Test = Expect<Equal<typeof context, { type: "manifest" }>>;
+        }
+
+        return fetch(request);
+      };
+    `,
+  });
+  await $("pnpm typecheck");
+});
+
+test("Await unstable_promise prop types", async ({ edit, $ }) => {
+  await edit({
+    "app/await.tsx": tsx`
+      import type { ComponentProps } from "react";
+      import { Await, type AwaitProps } from "react-router";
+      import type { Expect, Equal } from "./expect-type";
+
+      export interface CustomAwaitProps extends AwaitProps<Promise<string>> {
+        label: string;
+      }
+
+      let promise = Promise.resolve({ id: 1 });
+      let thenable: PromiseLike<string> = Promise.resolve("value");
+
+      export let legacy = <Await resolve={promise}>{(value) => {
+        type Test = Expect<Equal<typeof value, { id: number }>>;
+        return value.id;
+      }}</Await>;
+
+      export let optIn = <Await unstable_promise={promise}>{(value) => {
+        type Test = Expect<Equal<typeof value, { id: number }>>;
+        return value.id;
+      }}</Await>;
+
+      export let promiseLike = <Await unstable_promise={thenable}>{(value) => {
+        type Test = Expect<Equal<typeof value, string>>;
+        return value;
+      }}</Await>;
+
+      export let raw = <Await unstable_promise={123}>{(value) => {
+        type Test = Expect<Equal<typeof value, number>>;
+        return value;
+      }}</Await>;
+
+      export let props: ComponentProps<typeof Await<Promise<string>>> = {
+        unstable_promise: Promise.resolve("value"),
+        children: (value) => {
+          type Test = Expect<Equal<typeof value, string>>;
+          return value;
+        },
+      };
+
+      export let legacyProps: AwaitProps<Promise<string>> = {
+        resolve: Promise.resolve("value"),
+        children: (value) => {
+          type Test = Expect<Equal<typeof value, string>>;
+          return value;
+        },
+      };
+
+      // @ts-expect-error - exactly one promise prop is required
+      export let missingProps: ComponentProps<typeof Await<Promise<string>>> = { children: "Missing" };
+      // @ts-expect-error - promise props are mutually exclusive
+      export let bothProps: ComponentProps<typeof Await<Promise<string>>> = { resolve: Promise.resolve("value"), unstable_promise: Promise.resolve("value"), children: "Both" };
+
+      // @ts-expect-error - the opt-in prop is unstable
+      export let stableName = <Await promise={promise}>Invalid</Await>;
+
+      // @ts-expect-error - exactly one promise prop is required
+      export let missing = <Await>Missing</Await>;
+      // @ts-expect-error - promise props are mutually exclusive
+      export let both = <Await resolve={promise} unstable_promise={promise}>Both</Await>;
+    `,
+  });
+  await $("pnpm typecheck");
+});
+
+test("importing react-router keeps the DOM ViewTransition type", async ({
+  edit,
+  $,
+}) => {
+  await edit({
+    "app/view-transition.ts": tsx`
+      import "react-router";
+
+      export const transition: ViewTransition = document.startViewTransition(
+        () => {},
+      );
+    `,
+  });
+  await $("pnpm typecheck");
+});
+
 test.describe("typegen", () => {
   test("basic", async ({ edit, $ }) => {
     await edit({

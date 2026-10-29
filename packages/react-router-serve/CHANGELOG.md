@@ -1,5 +1,60 @@
 # `@react-router/serve`
 
+## v8.5.1
+
+### Patch Changes
+
+- Avoid writing a blank line to stderr when the server shuts down successfully ([#15641](https://github.com/remix-run/react-router/pull/15641))
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/express@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+
+## v8.5.0
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Support API-only builds in `react-router-serve` by serving client documents and forwarding data and route discovery requests to the React Router runtime ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Serve prerendered documents when available and use the generated SPA fallback for non-prerendered paths
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/express@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+
+## v8.4.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.4.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.4.0)
+  - [`@react-router/express@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.4.0)
+  - [`@react-router/node@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.4.0)
+
+## v8.3.1
+
+### Patch Changes
+
+- Bump `@remix-run/node-fetch-server` dependency ([#15447](https://github.com/remix-run/react-router/pull/15447))
+- Serve `/.well-known/*` files from the client build directory. Express 5's static middleware ignores every dot-segment path by default, so RFC 8615 well-known URIs — ACME challenges, Android's `assetlinks.json`, Apple's `apple-app-site-association` — fell through to the request handler and came back as app-rendered HTML instead of the static file. Other dotfiles remain hidden. ([#15340](https://github.com/remix-run/react-router/pull/15340))
+- Updated dependencies:
+  - [`react-router@8.3.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.1)
+  - [`@react-router/express@8.3.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.3.1)
+  - [`@react-router/node@8.3.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.1)
+
+## v8.3.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.3.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.0)
+  - [`@react-router/express@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.3.0)
+  - [`@react-router/node@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.0)
+
 ## v8.2.0
 
 ### Patch Changes

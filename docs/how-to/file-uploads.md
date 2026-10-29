@@ -6,9 +6,6 @@ title: File Uploads
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 _Thank you to David Adams for [writing an original guide](https://programmingarehard.com/2024/09/06/remix-file-uploads-updated.html/) on which this doc is based. You can refer to it for even more examples._
 
 ## Basic File Upload

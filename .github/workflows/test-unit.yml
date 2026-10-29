@@ -21,6 +21,10 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Disable build caching for now: we've seen cache hits with missing build outputs.
+  WIREIT_CACHE: none
+
 jobs:
   test:
     name: "Node ${{ matrix.node }}"
@@ -37,7 +41,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.1.0
 
       - name: Setup node
         uses: actions/setup-node@v6
@@ -45,9 +49,6 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
           check-latest: true
-
-      - name: Setup wireit cache
-        uses: google/wireit@setup-github-actions-caching/v2.0.4
 
       - name: Disable GitHub Actions Annotations
         run: |

@@ -1,13 +1,13 @@
 ---
 name: finish-line
-description: Bring a blocked React Router community pull request across the finish line. Use when the user invokes `/finish-line` or `$finish-line`, provides a PR number or URL, and asks Codex to resolve merge blockers such as an unsigned CLA, missing change file, missing documentation, or stale contributor follow-up. Handles deciding whether to push small maintainer fixes onto the contributor PR branch or recreate the PR from main under a maintainer branch when the contributor's CLA is not signed.
+description: Bring a blocked React Router community pull request across the finish line. Use when the user invokes `/finish-line` or `$finish-line`, provides a PR number or URL, and asks Codex to resolve merge blockers such as a missing change file, missing documentation, missing tests, or stale contributor follow-up. Handles evaluating the blocker and pushing small maintainer fixes onto a contributor PR branch when authorized.
 ---
 
 # Finish Line
 
 ## Overview
 
-Finish blocked community PRs in `remix-run/react-router` while respecting contributor ownership, CLA constraints, and the repo's PR packaging conventions.
+Finish blocked community PRs in `remix-run/react-router` while respecting contributor ownership and the repo's PR packaging conventions.
 
 Treat the PR number or URL in `$ARGUMENTS` as the target PR. If no target is provided, ask for it before doing anything.
 
@@ -31,8 +31,8 @@ gh pr view <pr> --repo remix-run/react-router --comments
 
 4. Identify merge blockers. In particular:
 
-- If a CLA check or comment shows the author has not signed the CLA, use the unsigned-CLA replacement workflow.
-- If the PR only needs repo-maintainer additions such as a change file or docs, use the contributor-branch workflow.
+- If the PR only needs repo-maintainer additions such as tests, a change file, or docs, use the contributor-branch workflow.
+- If the contributor branch cannot be modified, summarize the evidence and ask the user whether to wait for the contributor or recreate the work on a maintainer branch.
 - If the blocker is unclear, summarize the evidence and ask the user which path to take.
 
 5. Evaluate test coverage before deciding the finish-line changes:
@@ -42,44 +42,9 @@ gh pr view <pr> --repo remix-run/react-router --comments
    - If tests are not needed because the change is documentation-only, packaging-only, a change file, or otherwise not executable behavior, note that rationale in the final report.
    - If a useful test is required but too large or risky for the finish-line scope, stop and ask the user before broadening the PR.
 
-## Unsigned CLA Replacement
-
-Use this path when the PR author's CLA is not signed. Do not merge, cherry-pick, rebase, or push the contributor's commits. Use the PR diff as the behavior/content reference and recreate the final file changes in maintainer-authored commits from current `origin/main`.
-
-1. Save the original PR title, body, labels, changed-file list, and diff for reference.
-2. Create a fresh branch from current main:
-
-```sh
-git checkout -B brophdawg11/finish-line-pr-<pr-number> origin/main
-```
-
-3. Recreate the same resulting changes on the fresh branch. Keep the implementation as close as possible to the original PR unless main has moved and a tiny adaptation is required.
-4. Add any missing finish-line work, such as tests, a change file, or docs, if those are also required.
-5. Run focused validation that matches the touched area. Prefer the narrowest meaningful test/build command.
-6. Commit the recreated changes with a concise imperative subject.
-7. Before pushing/opening the replacement PR, read `.agents/skills/create-pr/SKILL.md` and follow its current branch, PR body, and label guidance unless this skill gives a more specific instruction for replacement PRs.
-8. Push the maintainer branch and open a replacement PR against `main`.
-   - Reuse the original title unless it is misleading.
-   - Use a similar description, but make it clear this is a agent/maintainer-authored replacement.
-   - Include the old PR number in the description (`#<pr-number>`).
-   - Default to a ready PR when validation passed and the original PR was otherwise mergeable; use a draft PR if validation is incomplete or the original PR was draft.
-   - Apply the relevant labels from the original PR plus any package/feature labels required by `.agents/skills/create-pr/SKILL.md`.
-9. Comment on the original PR and close it after the replacement PR exists:
-
-```markdown
-Thanks for the PR! We can't merge this without the CLA being signed, so we're going to re-implement this work in #<new-pr-number> to keep this moving.
-```
-
-Then run:
-
-```sh
-gh pr comment <old-pr-number> --repo remix-run/react-router --body-file <comment-file>
-gh pr close <old-pr-number> --repo remix-run/react-router
-```
-
 ## Contributor-Branch Workflow
 
-Use this path when the contributor's CLA is signed and the missing work is small maintainer follow-up, such as a change file or docs.
+Use this path when the missing work is a small maintainer follow-up, such as tests, a change file, or docs, and the contributor branch can be modified.
 
 1. Check out the PR branch:
 

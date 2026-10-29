@@ -6,9 +6,6 @@ title: Middleware
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
 Middleware runs in a nested chain, executing from parent routes to child routes on the way "down" to your route handlers, then from child routes back to parent routes on the way "up" after a [`Response`][Response] is generated.
@@ -358,7 +355,9 @@ In theory, we could have leveraged [`AsyncLocalStorage`][asynclocalstorage] dire
 
 That said, this API still works great with React Router middleware and can be used in place of, or alongside of the `context` API:
 
-<docs-info>[`AsyncLocalStorage`][asynclocalstorage] is _especially_ powerful when using [React Server Components](../how-to/react-server-components) because it allows you to provide information from `middleware` to your Server Components and Server Actions because they run in the same server execution context 🤯</docs-info>
+<docs-info>[`AsyncLocalStorage`][asynclocalstorage] is _especially_ powerful when using [React Server Components](../how-to/react-server-components) because it allows you to provide information from `middleware` to your Server Components and route actions because they run in the same server execution context 🤯</docs-info>
+
+<docs-warning>Do not rely on route middleware to provide access control for React Server Functions. Server Functions are not inherently associated with a route, and a client can call the same Server Function through a URL with different middleware. Server Functions must perform all of their own access control checks. Use a route `action` instead when you want middleware-driven access control.</docs-warning>
 
 ```tsx filename=app/user-context.ts
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -471,6 +470,12 @@ Which `ErrorBoundary` is rendered will differ based on whether your middleware t
 ## Common Patterns
 
 ### Authentication
+
+Middleware on a protected route or a common ancestor can authenticate and authorize a request before the matched loaders and actions run.
+
+Loaders run in parallel and can be requested independently, so parent loaders are not capable of "protecting" child route loaders or actions. Each protected loader and action must perform its own checks unless appropriate server middleware enforces them before the handler runs.
+
+<docs-warning>Attach authorization middleware to the protected route or layout instead of gating its checks with literal pathname-prefix comparisons such as `url.pathname.startsWith("/admin")`. Literal checks may miss potential URL encodings that React Router route matching would cover.</docs-warning>
 
 ```tsx filename=app/middleware/auth.ts
 import { redirect } from "react-router";
@@ -633,6 +638,7 @@ export async function loader({
 [server-client]: #server-vs-client-middleware
 [framework-action]: ../start/framework/route-module#action
 [framework-loader]: ../start/framework/route-module#loader
+[getloadcontext]: ../api/other-api/adapter#react-routerexpress
 [datastrategy]: ../api/data-routers/createBrowserRouter#optsdatastrategy
 [cms-redirect]: #cms-redirect-on-404
 [createContext]: ../api/utils/createContext

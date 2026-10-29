@@ -1,4 +1,5 @@
 import * as assert from "node:assert";
+import { SourceMap } from "node:module";
 import ts from "typescript";
 
 import {
@@ -15,11 +16,14 @@ const plugin = virtualRouteModulesPlugin({
     return false;
   },
   async transformToJs(code: string, filename: string) {
-    return await ts.transpile(code, {
-      target: ts.ScriptTarget.ESNext,
-      module: ts.ModuleKind.ESNext,
-      jsx: ts.JsxEmit.ReactJSX,
-    });
+    return {
+      code: await ts.transpile(code, {
+        target: ts.ScriptTarget.ESNext,
+        module: ts.ModuleKind.ESNext,
+        jsx: ts.JsxEmit.ReactJSX,
+      }),
+      map: null,
+    };
   },
 });
 
@@ -364,6 +368,42 @@ describe("server-route-module", () => {
 });
 
 describe("client-route-module=shared", () => {
+  it("leaves generated prefixes and HMR code unmapped", async () => {
+    const devTransform = plugin.transform.bind({
+      environment: { name: "client", mode: "dev" },
+    } as any);
+    const transformed = await devTransform(
+      fullClientModule,
+      "/test.js?client-route-module=shared",
+    );
+    assert.ok(transformed?.map && "version" in transformed.map);
+
+    let sourceMap = new SourceMap({
+      file: "",
+      sourceRoot: "",
+      sourcesContent: [],
+      ...transformed.map,
+    });
+    let generatedPrefix = sourceMap.findEntry(0, 0);
+    expect(
+      "originalSource" in generatedPrefix
+        ? generatedPrefix.originalSource
+        : undefined,
+    ).toBeUndefined();
+
+    let hmrOffset = transformed.code.indexOf("ReactRouterHMRMeta___");
+    let hmrLines = transformed.code.slice(0, hmrOffset).split("\n");
+    let generatedHmr = sourceMap.findEntry(
+      hmrLines.length - 1,
+      hmrLines.at(-1)!.length,
+    );
+    expect(
+      "originalSource" in generatedHmr
+        ? generatedHmr.originalSource
+        : undefined,
+    ).toBeUndefined();
+  });
+
   it("transforms full client modules", async () => {
     const transformed = await transform(
       fullClientModule,

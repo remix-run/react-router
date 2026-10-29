@@ -103,7 +103,9 @@ test.describe("`useSubmit()` returned function", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickElement("text=Prepare Third Task");
-    await page.waitForLoadState("load");
+    await expect(page.locator("pre")).toHaveText(
+      "tasks=first&tasks=second&tasks=third",
+    );
     expect(await app.getHtml("pre")).toBe(
       `<pre>tasks=first&amp;tasks=second&amp;tasks=third</pre>`,
     );

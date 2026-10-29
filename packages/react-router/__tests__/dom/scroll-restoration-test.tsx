@@ -192,6 +192,55 @@ describe(`ScrollRestoration`, () => {
     consoleWarnMock.mockRestore();
   });
 
+  it("re-enables manual scroll restoration when the page is restored from the bfcache", () => {
+    jest.restoreAllMocks();
+
+    let testWindow = getWindow("/base");
+    window.scrollTo = jest.fn();
+
+    let router = createBrowserRouter(
+      [
+        {
+          path: "/",
+          Component() {
+            return (
+              <>
+                <Outlet />
+                <ScrollRestoration />
+              </>
+            );
+          },
+          children: testPages,
+        },
+      ],
+      { basename: "/base", window: testWindow },
+    );
+    let { unmount } = render(<RouterProvider router={router} />);
+
+    // While <ScrollRestoration> is mounted we own scroll restoration
+    expect(window.history.scrollRestoration).toBe("manual");
+
+    // Hand it back to the browser when the page is hidden, so that a
+    // re-created document restores its own scroll position
+    window.dispatchEvent(new Event("pagehide"));
+    expect(window.history.scrollRestoration).toBe("auto");
+
+    // A discarded document goes through mount again, so we leave that case
+    // to the browser
+    window.dispatchEvent(pageShowEvent(false));
+    expect(window.history.scrollRestoration).toBe("auto");
+
+    // A bfcache restore keeps this document (and this component) alive, so we
+    // own scroll restoration again
+    window.dispatchEvent(pageShowEvent(true));
+    expect(window.history.scrollRestoration).toBe("manual");
+
+    // …until we're unmounted, after which the browser keeps control
+    unmount();
+    window.dispatchEvent(pageShowEvent(true));
+    expect(window.history.scrollRestoration).toBe("auto");
+  });
+
   describe("SSR", () => {
     let scrollTo = window.scrollTo;
     beforeAll(() => {
@@ -376,6 +425,12 @@ describe(`ScrollRestoration`, () => {
     });
   });
 });
+
+function pageShowEvent(persisted: boolean) {
+  let event = new Event("pageshow");
+  Object.defineProperty(event, "persisted", { value: persisted });
+  return event;
+}
 
 const testPages = [
   {

@@ -1,9 +1,14 @@
 // https://github.com/devongovett/rsc-html-stream/blob/main/server.js
 
+import { escapeAttribute } from "../../dom/ssr/markup";
+
 const encoder = new TextEncoder();
 const trailer = "</body></html>";
 
-export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
+export function injectRSCPayload(
+  rscStream: ReadableStream<Uint8Array>,
+  { nonce }: { nonce?: string } = {},
+) {
   let decoder = new TextDecoder();
   let resolveFlightDataPromise: (value: void) => void;
   let flightDataPromise = new Promise(
@@ -18,6 +23,43 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
   // invalid HTML by injecting RSC in between two partial chunks of HTML.
   let buffered: Uint8Array[] = [];
   let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Stops all pending work after the readable side closes. You can call it more than once.
+  async function stop(reason: unknown) {
+    cancelled = true;
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+    buffered.length = 0;
+    // Resolve before the cancel. If `rscStream` is a tee branch, its cancel waits for
+    // the other branch, and `flush()` must not wait.
+    resolveFlightDataPromise();
+    // `writeRSCStream` releases the reader lock when it stops. A released reader cannot
+    // cancel the stream.
+    if (rscReader && rscStream.locked) {
+      await rscReader.cancel(reason).catch(() => {});
+    } else {
+      await rscStream.cancel(reason).catch(() => {});
+    }
+  }
+
+  // Returns `false` if the readable side is closed. If the readable side is cancelled
+  // while `flush()` runs, the transformer's `cancel()` does not run. A failed enqueue is
+  // then the only signal, so the RSC stream stays open until the next enqueue.
+  function tryEnqueue(
+    controller: TransformStreamDefaultController<Uint8Array>,
+    chunk: Uint8Array,
+  ) {
+    try {
+      controller.enqueue(chunk);
+      return true;
+    } catch (error) {
+      void stop(error);
+      return false;
+    }
+  }
+
   function flushBufferedChunks(
     controller: TransformStreamDefaultController<Uint8Array>,
   ) {
@@ -26,7 +68,9 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
       if (buf.endsWith(trailer)) {
         buf = buf.slice(0, -trailer.length);
       }
-      controller.enqueue(encoder.encode(buf));
+      if (!tryEnqueue(controller, encoder.encode(buf))) {
+        return;
+      }
     }
 
     buffered.length = 0;
@@ -52,7 +96,7 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
         if (!startedRSC) {
           startedRSC = true;
           rscReader = rscStream.getReader();
-          writeRSCStream(rscReader, controller, () => cancelled)
+          writeRSCStream(rscReader, controller, () => cancelled, nonce)
             .catch((err) => controller.error(err))
             .then(resolveFlightDataPromise);
         }
@@ -64,21 +108,10 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
         clearTimeout(timeout);
         flushBufferedChunks(controller);
       }
-      controller.enqueue(encoder.encode("</body></html>"));
+      tryEnqueue(controller, encoder.encode("</body></html>"));
     },
     async cancel(reason) {
-      cancelled = true;
-      if (timeout) {
-        clearTimeout(timeout);
-        timeout = null;
-      }
-      buffered.length = 0;
-      if (rscReader) {
-        await rscReader.cancel(reason).catch(() => {});
-      } else {
-        await rscStream.cancel(reason).catch(() => {});
-      }
-      resolveFlightDataPromise();
+      await stop(reason);
     },
   };
   return new TransformStream(transformer);
@@ -88,6 +121,7 @@ async function writeRSCStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   controller: TransformStreamDefaultController<Uint8Array>,
   isCancelled: () => boolean,
+  nonce: string | undefined,
 ) {
   let decoder = new TextDecoder("utf-8", { fatal: true });
   try {
@@ -103,15 +137,14 @@ async function writeRSCStream(
         writeChunk(
           JSON.stringify(decoder.decode(chunk, { stream: true })),
           controller,
+          nonce,
         );
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {
+      } catch {
         let base64 = JSON.stringify(btoa(String.fromCodePoint(...chunk)));
         writeChunk(
           `Uint8Array.from(atob(${base64}), m => m.codePointAt(0))`,
           controller,
+          nonce,
         );
       }
     }
@@ -121,17 +154,19 @@ async function writeRSCStream(
 
   let remaining = decoder.decode();
   if (remaining.length && !isCancelled()) {
-    writeChunk(JSON.stringify(remaining), controller);
+    writeChunk(JSON.stringify(remaining), controller, nonce);
   }
 }
 
 function writeChunk(
   chunk: string,
   controller: TransformStreamDefaultController<Uint8Array>,
+  nonce: string | undefined,
 ) {
+  let nonceAttr = nonce == null ? "" : ` nonce="${escapeAttribute(nonce)}"`;
   controller.enqueue(
     encoder.encode(
-      `<script>${escapeScript(
+      `<script${nonceAttr}>${escapeScript(
         `(self.__FLIGHT_DATA||=[]).push(${chunk})`,
       )}</script>`,
     ),

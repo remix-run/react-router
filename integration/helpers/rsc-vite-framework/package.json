@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@react-router/serve": "workspace:*",
-    "@remix-run/node-fetch-server": "^0.13.3",
+    "@remix-run/node-fetch-server": "^0.14.1",
     "compression": "^1.8.1",
     "express": "^4.22.2",
     "react": "catalog:",

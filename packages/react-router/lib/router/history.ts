@@ -538,10 +538,7 @@ export function warning(cond: any, message: string) {
       // find the source for a warning that appears in the console by
       // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {}
+    } catch {}
   }
 }
 
@@ -596,7 +593,10 @@ export function createLocation(
 /**
  * Creates a string URL path from the given pathname, search, and hash components.
  *
+ * @public
  * @category Utils
+ * @param path The pathname, search, and hash components to combine.
+ * @returns The combined URL path.
  */
 export function createPath({
   pathname = "/",
@@ -613,7 +613,10 @@ export function createPath({
 /**
  * Parses a string URL path into its separate pathname, search, and hash components.
  *
+ * @public
  * @category Utils
+ * @param path The URL path to parse.
+ * @returns The parsed pathname, search, and hash components.
  */
 export function parsePath(path: string): Partial<Path> {
   let parsedPath: Partial<Path> = {};

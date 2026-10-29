@@ -1,5 +1,35 @@
 # `create-react-router`
 
+## v8.5.1
+
+### Patch Changes
+
+- Fix package manager command execution on Windows by handling `.cmd` shims properly ([#15565](https://github.com/remix-run/react-router/pull/15565))
+
+## v8.5.0
+
+### Patch Changes
+
+- _No changes_
+
+## v8.4.0
+
+### Patch Changes
+
+- _No changes_
+
+## v8.3.1
+
+### Patch Changes
+
+- _No changes_
+
+## v8.3.0
+
+### Patch Changes
+
+- _No changes_
+
 ## v8.2.0
 
 ### Minor Changes

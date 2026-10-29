@@ -61,10 +61,7 @@ export async function prompt<
       answer = await prompts[type](Object.assign({ stdin, stdout }, question));
       answers[name] = answer as any;
       quit = await onSubmit(question, answer, answers);
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {
+    } catch {
       quit = !(await onCancel(question, answers));
     }
     if (quit) {

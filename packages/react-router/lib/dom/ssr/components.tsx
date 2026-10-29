@@ -7,7 +7,6 @@ import * as React from "react";
 
 import type { RouterState } from "../../router/router";
 import type { DataRouteMatch } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
 import invariant from "./invariant";
@@ -27,33 +26,16 @@ import type {
   MetaMatches,
 } from "./routeModules";
 import { singleFetchUrl } from "./single-fetch";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-  useIsRSCRouterContext,
-} from "../../context";
+import { useIsRSCRouterContext } from "../../context";
 import { warnOnce } from "../../server-runtime/warnings";
-import { useLocation } from "../../hooks";
+import {
+  useDataRouterContext,
+  useDataRouterData,
+  useDataRouterState,
+  useLocation,
+} from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
-
-function useDataRouterContext() {
-  let context = React.useContext(DataRouterContext);
-  invariant(
-    context,
-    "You must render this element inside a <DataRouterContext.Provider> element",
-  );
-  return context;
-}
-
-function useDataRouterStateContext() {
-  let context = React.useContext(DataRouterStateContext);
-  invariant(
-    context,
-    "You must render this element inside a <DataRouterStateContext.Provider> element",
-  );
-  return context;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // FrameworkContext
@@ -273,7 +255,8 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
     criticalCss,
     nonce: contextNonce,
   } = useFrameworkContext();
-  let { errors, matches: routerMatches } = useDataRouterStateContext();
+  let { matches: routerMatches } = useDataRouterState("Links");
+  let { errors } = useDataRouterData("Links");
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
 
@@ -355,10 +338,12 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
 export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let rsc = useIsRSCRouterContext();
   let { nonce: contextNonce } = useFrameworkContext();
-  let { router } = useDataRouterContext();
+  let { router } = useDataRouterContext("PrefetchPageLinks");
   let matches = React.useMemo(
-    () => matchRoutes(router.routes, page, router.basename),
-    [router.routes, page, router.basename],
+    () => router.match(page),
+    // Include router.routes to re-match if new routes arrive
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [router, router.routes, page],
   );
 
   if (!matches) {
@@ -412,6 +397,7 @@ function RSCPrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
+  let { unstable_apiServerOrigin } = useFrameworkContext();
 
   let dataHrefs = React.useMemo(() => {
     if (page === location.pathname + location.search + location.hash) {
@@ -419,7 +405,7 @@ function RSCPrefetchPageLinksImpl({
       // since it would always trigger a prefetch of the existing loaders
       return [];
     }
-    let url = singleFetchUrl(page, "rsc");
+    let url = singleFetchUrl(page, "rsc", unstable_apiServerOrigin);
 
     let hasSomeRoutesWithShouldRevalidate = false;
     let targetRoutes: string[] = [];
@@ -435,8 +421,10 @@ function RSCPrefetchPageLinksImpl({
       url.searchParams.set("_routes", targetRoutes.join(","));
     }
 
-    return [url.pathname + url.search];
-  }, [page, location, nextMatches]);
+    return [
+      unstable_apiServerOrigin ? url.toString() : url.pathname + url.search,
+    ];
+  }, [page, location, nextMatches, unstable_apiServerOrigin]);
 
   return (
     <>
@@ -455,8 +443,10 @@ function PrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { manifest, routeModules } = useFrameworkContext();
-  let { loaderData, matches } = useDataRouterStateContext();
+  let { manifest, routeModules, unstable_apiServerOrigin } =
+    useFrameworkContext();
+  let { matches } = useDataRouterState("PrefetchPageLinks");
+  let { loaderData } = useDataRouterData("PrefetchPageLinks");
 
   let newMatchesForData = React.useMemo(
     () =>
@@ -518,7 +508,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page, "data");
+    let url = singleFetchUrl(page, "data", unstable_apiServerOrigin);
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -532,7 +522,9 @@ function PrefetchPageLinksImpl({
       );
     }
 
-    return [url.pathname + url.search];
+    return [
+      unstable_apiServerOrigin ? url.toString() : url.pathname + url.search,
+    ];
   }, [
     loaderData,
     location,
@@ -541,6 +533,7 @@ function PrefetchPageLinksImpl({
     nextMatches,
     page,
     routeModules,
+    unstable_apiServerOrigin,
   ]);
 
   let moduleHrefs = React.useMemo(
@@ -601,11 +594,8 @@ function PrefetchPageLinksImpl({
  */
 export function Meta(): React.JSX.Element {
   let { isSpaMode, routeModules } = useFrameworkContext();
-  let {
-    errors,
-    matches: routerMatches,
-    loaderData,
-  } = useDataRouterStateContext();
+  let { matches: routerMatches } = useDataRouterState("Meta");
+  let { errors, loaderData } = useDataRouterData("Meta");
   let location = useLocation();
 
   let _matches = getActiveMatches(routerMatches, errors, isSpaMode);
@@ -718,10 +708,7 @@ export function Meta(): React.JSX.Element {
                 dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
-          } catch (
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            e
-          ) {
+          } catch {
             return null;
           }
         }
@@ -826,8 +813,12 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     ssr,
     nonce: contextNonce,
   } = useFrameworkContext();
-  let { router, static: isStatic, staticContext } = useDataRouterContext();
-  let { matches: routerMatches } = useDataRouterStateContext();
+  let {
+    router,
+    static: isStatic,
+    staticContext,
+  } = useDataRouterContext("Scripts");
+  let { matches: routerMatches } = useDataRouterState("Scripts");
   let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
 

@@ -3,11 +3,11 @@ import { PassThrough } from "node:stream";
 
 import {
   createAppFixture,
-  createFixture,
+  createFixture as createFixtureBase,
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { reactRouterConfig } from "./helpers/vite.js";
+import { reactRouterConfig as reactRouterConfigBase } from "./helpers/vite.js";
 
 function getFiles() {
   return {
@@ -15,10 +15,13 @@ function getFiles() {
       import * as React from "react";
       import { Link, Links, Meta, Outlet, Scripts } from "react-router";
       export default function Root() {
+        let id = React.useId();
+        React.useEffect(() => { window.hydratedId = id; }, [id]);
         let [showLink, setShowLink] = React.useState(false);
         return (
           <html lang="en">
             <head>
+              <meta name="use-id" content={id} />
               <Meta />
               <Links />
             </head>
@@ -85,7 +88,69 @@ function getFiles() {
   };
 }
 
-test.describe("Fog of War", () => {
+test("switches to initial discovery above the pathname work limit", async ({
+  page,
+}) => {
+  let fixture = await createFixtureBase({
+    files: {
+      ...getFiles(),
+      "app/routes/$.tsx": js`
+        export default function Splat() {
+          return <h1>Sample page</h1>;
+        }
+      `,
+    },
+  });
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  try {
+    let response = await app.goto(
+      `/${Array.from({ length: 60 }, (_, i) => i % 10).join("/")}`,
+    );
+    expect(response.status()).toBe(200);
+    expect(
+      await page.evaluate(
+        () => (window as any).__reactRouterContext.routeDiscovery.mode,
+      ),
+    ).toBe("lazy");
+
+    response = await app.goto(
+      `/${Array.from({ length: 70 }, (_, i) => i % 10).join("/")}`,
+    );
+    expect(response.status()).toBe(200);
+    expect(
+      await page.evaluate(
+        () => (window as any).__reactRouterContext.routeDiscovery.mode,
+      ),
+    ).toBe("initial");
+  } finally {
+    await appFixture.close();
+  }
+});
+
+for (let customDiscovery of [false, true]) {
+  test.describe(`Fog of War (custom discovery: ${customDiscovery})`, () => {
+    testFogOfWar(customDiscovery);
+  });
+}
+
+function testFogOfWar(unstable_customRouteDiscovery: boolean) {
+  let reactRouterConfig = (
+    config: Parameters<typeof reactRouterConfigBase>[0] = {},
+  ) =>
+    reactRouterConfigBase({
+      ...config,
+      future: { ...config.future, unstable_customRouteDiscovery },
+    });
+  let createFixture = (init: Parameters<typeof createFixtureBase>[0]) =>
+    createFixtureBase({
+      ...init,
+      files: {
+        "react-router.config.ts": reactRouterConfig(),
+        ...init.files,
+      },
+    });
   let oldConsoleError: typeof console.error;
 
   test.beforeEach(() => {
@@ -128,8 +193,20 @@ test.describe("Fog of War", () => {
     expect(html).toContain('"routes/_index": {');
     expect(html).not.toContain('"routes/a"');
 
+    let serverId = html.match(/<meta name="use-id" content="([^"]+)"/)?.[1];
+    expect(serverId).toBeTruthy();
+    let errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
     // Linking to A loads A and succeeds
     await app.goto("/", true);
+    await expect(page.locator('meta[name="use-id"]')).toHaveAttribute(
+      "content",
+      serverId!,
+    );
+    await expect
+      .poll(() => page.evaluate(() => (window as any).hydratedId))
+      .toBe(serverId);
+    expect(errors).toEqual([]);
     await app.clickLink("/a");
     await page.waitForSelector("#a");
     expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
@@ -895,6 +972,69 @@ test.describe("Fog of War", () => {
     ).toEqual(["root", "routes/_index", "routes/$", "routes/static"]);
   });
 
+  test("discovers routes for paths containing commas", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Outlet, Scripts } from "react-router";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head></head>
+                <body>
+                  <nav>
+                    <Link to="/tags/a,b">/tags/a,b</Link>
+                  </nav>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>
+          }
+        `,
+        "app/routes/tags.a,b.tsx": js`
+          export default function Component() {
+            return <h2 id="tags">Tags</h2>;
+          }
+        `,
+        "app/routes/$.tsx": js`
+          export default function Component() {
+            return <h2 id="splat">Splat</h2>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(await app.getHtml("#index")).toMatch("Index");
+    await page.waitForFunction(
+      () => (window as any).__reactRouterManifest.routes["routes/tags.a,b"],
+    );
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(
+        /\/__manifest\?paths=%2Ftags%2C%2Ftags%2Fa%252Cb&version=/,
+      ),
+    ]);
+
+    await app.clickLink("/tags/a,b");
+    await page.waitForSelector("#tags");
+    expect(await app.getHtml("#tags")).toMatch("Tags");
+  });
+
   test("does not re-request for previously discovered slug routes", async ({
     page,
   }) => {
@@ -1163,6 +1303,11 @@ test.describe("Fog of War", () => {
     let fixture = await createFixture({
       files: {
         ...getFiles(),
+        // Keep discovery of /a/b from racing the manifest assertion after visiting /a.
+        "app/routes/a.tsx": getFiles()["app/routes/a.tsx"].replace(
+          'to="/a/b"',
+          'to="/a/b" discover="none"',
+        ),
         "app/routes/_index.tsx": js`
           import { Link } from "react-router";
           export default function Index() {
@@ -1460,6 +1605,105 @@ test.describe("Fog of War", () => {
 
     expect(wrongManifestRequests).toEqual([]);
   });
+
+  for (let operation of ["navigation", "fetcher"] as const) {
+    test(`manifest version mismatch fails ${operation} instead of loading a stale splat after a previous reload`, async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          "app/root.tsx": js`
+            import { Link, Outlet, Scripts, useFetcher, useNavigation, useRouteError } from "react-router";
+
+            export function Layout({ children }) {
+              let navigation = useNavigation();
+              return (
+                <html lang="en">
+                  <body>
+                    <p data-navigation-state>{navigation.state}</p>
+                    {children}
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <Link to="/other" discover="none">Navigate</Link>
+                  <button onClick={() => fetcher.load("/other")}>Fetch</button>
+                  <Outlet />
+                </>
+              );
+            }
+
+            export function ErrorBoundary() {
+              let error = useRouteError();
+              return <p data-error>{error.message}</p>;
+            }
+          `,
+          "app/routes/$.tsx": js`
+            export function loader() { return "SPLAT"; }
+            export default function Splat() { return <h1>Splat</h1>; }
+          `,
+          "app/routes/other.tsx": js`
+            export function loader() { return "OTHER"; }
+            export default function Other() { return <h1>Other</h1>; }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      try {
+        let documents: string[] = [];
+        let dataRequests: string[] = [];
+        page.on("request", (request) => {
+          if (request.resourceType() === "document") {
+            documents.push(request.url());
+          }
+          if (new URL(request.url()).pathname.endsWith(".data")) {
+            dataRequests.push(request.url());
+          }
+        });
+        await page.route(/\/__manifest\?/, (route) =>
+          route.fulfill({
+            status: 204,
+            headers: { "X-Remix-Reload-Document": "true" },
+          }),
+        );
+
+        // Start on the splat so it is present in the partial client manifest.
+        await app.goto("/unknown");
+        await expect(
+          page.getByRole("heading", { name: "Splat" }),
+        ).toBeVisible();
+        await page.evaluate(() => {
+          sessionStorage.setItem(
+            "react-router-manifest-version",
+            (window as any).__reactRouterManifest.version,
+          );
+        });
+        if (operation === "navigation") {
+          await page.getByRole("link", { name: "Navigate" }).click();
+        } else {
+          await page.getByRole("button", { name: "Fetch" }).click();
+        }
+
+        await expect(page.locator("[data-error]")).toHaveText(
+          "Unable to discover routes due to manifest version mismatch.",
+        );
+        await expect(page.locator("[data-navigation-state]")).toHaveText(
+          "idle",
+        );
+        expect(documents).toHaveLength(1);
+        expect(dataRequests).toEqual([]);
+      } finally {
+        await appFixture.close();
+      }
+    });
+  }
 
   test("manifest version mismatch reload should preserve query parameters and hash", async ({
     page,
@@ -1795,4 +2039,4 @@ test.describe("Fog of War", () => {
       console.error = ogConsole;
     });
   });
-});
+}

@@ -2,7 +2,11 @@
  * @jest-environment node
  */
 
-import { createSession, isSession } from "../../lib/server-runtime/sessions";
+import {
+  createSession,
+  createSessionStorage,
+  isSession,
+} from "../../lib/server-runtime/sessions";
 import { createCookieSessionStorage } from "../../lib/server-runtime/sessions/cookieStorage";
 import { createMemorySessionStorage } from "../../lib/server-runtime/sessions/memoryStorage";
 
@@ -53,6 +57,40 @@ describe("isSession", () => {
   });
 });
 
+describe("createSessionStorage", () => {
+  it("does not delete data when destroying a session that was never stored", async () => {
+    let deleteData = jest.fn(async (_id: string) => {});
+    let { getSession, destroySession } = createSessionStorage({
+      cookie: { secrets: ["secret1"] },
+      createData: async () => "session-id",
+      readData: async () => null,
+      updateData: async () => {},
+      deleteData,
+    });
+    let session = await getSession();
+    let setCookie = await destroySession(session);
+
+    expect(setCookie).toContain("Expires=Thu, 01 Jan 1970 00:00:00 GMT");
+    expect(deleteData).not.toHaveBeenCalled();
+  });
+
+  it("deletes the data of a stored session when destroying it", async () => {
+    let deleteData = jest.fn(async (_id: string) => {});
+    let { getSession, commitSession, destroySession } = createSessionStorage({
+      cookie: { secrets: ["secret1"] },
+      createData: async () => "session-id",
+      readData: async () => ({}),
+      updateData: async () => {},
+      deleteData,
+    });
+    let setCookie = await commitSession(await getSession());
+    let session = await getSession(getCookieFromSetCookie(setCookie));
+    await destroySession(session);
+
+    expect(deleteData).toHaveBeenCalledWith("session-id");
+  });
+});
+
 describe("In-memory session storage", () => {
   it("persists session data across requests", async () => {
     let { getSession, commitSession } = createMemorySessionStorage({
@@ -66,7 +104,7 @@ describe("In-memory session storage", () => {
     expect(session.get("user")).toEqual("mjackson");
   });
 
-  it("uses random hash keys as session ids", async () => {
+  it("uses random UUIDs as session ids", async () => {
     let { getSession, commitSession } = createMemorySessionStorage({
       cookie: { secrets: ["secret1"] },
     });
@@ -74,7 +112,7 @@ describe("In-memory session storage", () => {
     session.set("user", "mjackson");
     let setCookie = await commitSession(session);
     session = await getSession(getCookieFromSetCookie(setCookie));
-    expect(session.id).toMatch(/^[a-z0-9]{8}$/);
+    expect(session.id).toMatch(/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/);
   });
 });
 

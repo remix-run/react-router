@@ -9,7 +9,7 @@ order: 5
 
 ## Defining Actions
 
-Data mutations are done through Route actions defined on the `action` property of a route object. When the action completes, all loader data on the page is revalidated to keep your UI in sync with the data without writing any code to do it.
+Data mutations are done through Route actions defined on the `action` property of a route object. When the action completes, all loader data on the page is revalidated to keep your UI in sync with the data without writing any code to do it. To skip some or all of those reloads, see [Revalidation Optimization][optimize-revalidation].
 
 ```tsx
 import { createBrowserRouter } from "react-router";
@@ -136,3 +136,4 @@ function Project() {
 Next: [Navigating](./navigating)
 
 [fetchers]: ../../how-to/fetchers
+[optimize-revalidation]: ../../how-to/optimize-revalidation

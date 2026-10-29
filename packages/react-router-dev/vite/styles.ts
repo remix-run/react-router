@@ -141,7 +141,12 @@ const findDeps = async (
   }
 
   async function addFromUrl(url: string) {
-    let node = await vite.moduleGraph.getModuleByUrl(url);
+    // These are SSR URLs. The mixed `vite.moduleGraph` also resolves them for
+    // the client, which registers server-only imports as client dependencies.
+    let ssrNode = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
+    let node = ssrNode?.id
+      ? vite.moduleGraph.getModuleById(ssrNode.id)
+      : undefined;
 
     if (node) {
       await addFromNode(node);

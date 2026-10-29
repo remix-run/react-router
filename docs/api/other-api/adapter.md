@@ -22,7 +22,7 @@ Each adapter has the same API. Some adapters also have options specific to the p
 
 ## `@react-router/express`
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react-router_express.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/modules/_react-router_express.html)
 
 Here's an example with [Express][express]:
 
@@ -124,7 +124,7 @@ Make sure that `--conditions development` is included in the `dev` script so tha
 
 ## `@react-router/architect`
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react-router_architect.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/modules/_react-router_architect.html)
 
 Here's an example with Architect:
 
@@ -139,7 +139,7 @@ export const handler = createRequestHandler({
 
 ## `@react-router/cloudflare`
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react-router_cloudflare.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/modules/_react-router_cloudflare.html)
 
 Here's an example with Cloudflare:
 
@@ -173,7 +173,7 @@ export default {
 
 While not a direct "adapter" like the above, this package contains utilities for working with Node-based adapters.
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/modules/_react-router_node.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/modules/_react-router_node.html)
 
 ### Node Version Support
 

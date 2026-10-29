@@ -37,7 +37,9 @@ import {
   useRouteError,
   useSearchParams,
   useSubmit,
+  useViewTransitionState,
 } from "../../index";
+import { RouterProvider as DOMRouterProvider } from "../../lib/dom-export/dom-router-provider";
 import { createDeferred, tick } from "../router/utils/utils";
 import getHtml from "../utils/getHtml";
 import getWindow from "../utils/getWindow";
@@ -562,7 +564,7 @@ function testDomRouter(
         `);
       });
 
-      it("handles race conditions if router initialization completes prior to the layout effect router.subscribe() call", async () => {
+      it("handles lazy route initialization before subscription when another subscriber is already attached", async () => {
         const sleep = (ms: number) =>
           new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -570,16 +572,27 @@ function testDomRouter(
         let suspensePromise = sleep(100).then(() => "DATA");
 
         // Create a router that will initialize shortly after the suspense boundary resolves
+        let hydrateFallback = jest.fn(() => "Hydrate Fallback");
         let router = createTestRouter([
           {
             path: "/",
-            // Only fails when this is around 200ms - passes if you bump it to ~500ms
-            loader: () => sleep(200).then(() => "LOADER"),
-            Component: () => <p>Data:{useLoaderData()}</p>,
-            HydrateFallback: () => "Hydrate Fallback",
+            lazy: async () => {
+              await sleep(200);
+              return { Component: () => <p>Lazy Route</p> };
+            },
+            HydrateFallback: hydrateFallback,
           },
         ]);
         expect(router.state.initialized).toBe(false);
+
+        // Instrumentation may subscribe before RouterProvider mounts.
+        router.subscribe(() => {});
+        let subscribe = router.subscribe;
+        let initializedAtSubscription: boolean[] = [];
+        router.subscribe = (subscriber) => {
+          initializedAtSubscription.push(router.state.initialized);
+          return subscribe(subscriber);
+        };
 
         // Render a component that will suspend until `suspensePromise` resolves, then
         // renders RouterProvider which sets up listeners for the router state
@@ -600,12 +613,208 @@ function testDomRouter(
         });
 
         expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Lazy Route"));
+        expect(screen.queryByText("Suspense Fallback")).toBeNull();
+        expect(screen.queryByText("Hydrate Fallback")).toBeNull();
+        // Ensure initialization happened after the provider rendered its fallback
+        // but before it subscribed, so this actually exercises the race.
+        expect(hydrateFallback).toHaveBeenCalled();
+        expect(initializedAtSubscription[0]).toBe(true);
+      });
+
+      it("renders a discovered HydrateFallback before subscription while initialization is still pending", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+        let suspensePromise = sleep(100);
+        let loader = createDeferred();
+        let rootFallback = jest.fn(() => <p>Root Fallback</p>);
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              Component: Outlet,
+              HydrateFallback: rootFallback,
+            },
+          ],
+          {
+            window: getWindow("/child"),
+            async patchRoutesOnNavigation({ patch }) {
+              await sleep(200);
+              patch("root", [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: () => loader.promise,
+                  Component: () => <p>Child</p>,
+                  HydrateFallback: () => <p>Child Fallback</p>,
+                },
+              ]);
+            },
+          },
+        );
+        expect(router.state.initialized).toBe(false);
+
+        let subscribe = router.subscribe;
+        let statesAtSubscription: {
+          initialized: boolean;
+          routeIds: string[];
+        }[] = [];
+        router.subscribe = (subscriber) => {
+          statesAtSubscription.push({
+            initialized: router.state.initialized,
+            routeIds: router.state.matches.map((match) => match.route.id),
+          });
+          return subscribe(subscriber);
+        };
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
+        try {
+          await act(async () => {
+            render(
+              <React.Suspense fallback="Suspense Fallback">
+                <App />
+              </React.Suspense>,
+            );
+          });
+
+          await waitFor(() => expect(statesAtSubscription).toHaveLength(1));
+          // Discovery must finish after the initial render but before subscription,
+          // while the child loader keeps initialized false throughout the race.
+          expect(rootFallback).toHaveBeenCalled();
+          expect(statesAtSubscription[0]).toEqual({
+            initialized: false,
+            routeIds: ["root", "child"],
+          });
+          expect(router.state.initialized).toBe(false);
+          await waitFor(() => screen.getByText("Child Fallback"));
+          expect(screen.queryByText("Root Fallback")).toBeNull();
+
+          await act(async () => {
+            await loader.resolve("data");
+          });
+          await waitFor(() => screen.getByText("Child"));
+        } finally {
+          router.dispose();
+          await act(async () => {
+            await loader.resolve("data");
+          });
+        }
+      });
+
+      it("only reports initial loader errors once when initialization completes before subscription", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        let suspensePromise = sleep(100).then(() => "DATA");
+        let onError = jest.fn();
+        let router = createTestRouter([
+          {
+            path: "/",
+            loader: () =>
+              sleep(200).then(() => {
+                throw new Error("Loader failed");
+              }),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            ErrorBoundary: () => <p>Route Error Boundary</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        expect(router.state.initialized).toBe(false);
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} onError={onError} />;
+        }
+
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
+        await waitFor(() => screen.getByText("Route Error Boundary"));
+        expect(onError).toHaveBeenCalledTimes(1);
+      });
+
+      it("handles initialization races when another subscriber is already attached", async () => {
+        const sleep = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        let suspensePromise = sleep(100).then(() => "DATA");
+        let router = createTestRouter([
+          {
+            path: "/",
+            loader: () => sleep(200).then(() => "LOADER"),
+            Component: () => <p>Data:{useLoaderData()}</p>,
+            HydrateFallback: () => "Hydrate Fallback",
+          },
+        ]);
+        router.subscribe(() => {});
+        expect(router.state.initialized).toBe(false);
+
+        function App() {
+          // @ts-expect-error Needs React 19 types
+          React.use(suspensePromise);
+          return <RouterProvider router={router} />;
+        }
+
+        await act(async () => {
+          render(
+            <React.Suspense fallback="Suspense Fallback">
+              <App />
+            </React.Suspense>,
+          );
+        });
+
+        expect(screen.getByText("Suspense Fallback")).toBeDefined();
         await waitFor(() => screen.getByText("Data:LOADER"));
         expect(screen.queryByText("Suspense Fallback")).toBeNull();
       });
     });
 
     describe("navigations", () => {
+      it("renders a navigation from a route layout effect before subscription", async () => {
+        function Home() {
+          let navigate = useNavigate();
+          React.useLayoutEffect(() => {
+            void navigate("/other");
+          }, [navigate]);
+          return <h1>Home</h1>;
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Home },
+            { path: "/other", Component: () => <h1>Other</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        expect(router.state.initialized).toBe(true);
+
+        try {
+          render(<RouterProvider router={router} />);
+
+          // The child layout effect navigates before RouterProvider subscribes,
+          // without changing initialized from its initial value of true.
+          expect(router.state.location.pathname).toBe("/other");
+          expect(router.state.initialized).toBe(true);
+          await waitFor(() => screen.getByText("Other"));
+          expect(screen.queryByText("Home")).toBeNull();
+        } finally {
+          router.dispose();
+        }
+      });
+
       it("handles link navigations", async () => {
         let router = createTestRouter(
           [
@@ -1998,6 +2207,101 @@ function testDomRouter(
         // Back navigate to index page
         fireEvent.click(screen.getByText("Go back"));
         await waitFor(() => screen.getByText("Index Page"));
+      });
+
+      it('defaults <Form method="post"> to be a REPLACE navigation when its action is the current URL with characters that get encoded', async () => {
+        let router = createTestRouter(
+          [
+            {
+              Component: Layout,
+              children: [
+                { index: true, Component: () => <h1>Index Page</h1> },
+                {
+                  path: "café",
+                  action: () => "action data",
+                  Component: FormPage,
+                },
+              ],
+            },
+          ],
+          {},
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Layout() {
+          let navigate = useNavigate();
+          return (
+            <>
+              <Link to="café?q=a b">Go to Form</Link>
+              <button onClick={() => navigate(-1)}>Go back</button>
+              <div className="output">
+                <Outlet />
+              </div>
+            </>
+          );
+        }
+
+        function FormPage() {
+          let data = useActionData() as string | undefined;
+          return (
+            <Form method="post" action="/café?q=a b">
+              <p>Form Page</p>
+              <p>{data}</p>
+              <input name="test" defaultValue="value" />
+              <button type="submit">Submit</button>
+            </Form>
+          );
+        }
+
+        let html = () => getHtml(container.querySelector(".output")!);
+
+        // Start on index page
+        expect(html()).toMatch("Index Page");
+
+        // Navigate to form page
+        fireEvent.click(screen.getByText("Go to Form"));
+        await waitFor(() => screen.getByText("Form Page"));
+        expect(router.state.location.pathname).toBe("/caf%C3%A9");
+        expect(router.state.location.search).toBe("?q=a%20b");
+
+        // Submit without redirect does a replace
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("action data"));
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.pathname).toBe("/caf%C3%A9");
+        expect(router.state.location.search).toBe("?q=a%20b");
+
+        // Back navigate to index page
+        fireEvent.click(screen.getByText("Go back"));
+        await waitFor(() => screen.getByText("Index Page"));
+      });
+
+      it('defaults <Form method="post"> to be a REPLACE navigation when its action matches the current URL as loaded', async () => {
+        // Browsers encode the `'` in the query of a path URL but keep it as-is
+        // in a hash URL, so the loaded location differs between routers
+        let router = createTestRouter(
+          [
+            {
+              path: "search",
+              action: () => "action data",
+              Component() {
+                let data = useActionData() as string | undefined;
+                return (
+                  <Form method="post" action="/search?q=O'Reilly">
+                    <p>{data}</p>
+                    <button type="submit">Submit</button>
+                  </Form>
+                );
+              },
+            },
+          ],
+          { window: getWindow("/search?q=O'Reilly") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("action data"));
+        expect(router.state.historyAction).toBe("REPLACE");
       });
 
       it('Uses a PUSH navigation on <Form method="post"> if it redirects', async () => {
@@ -4129,6 +4433,100 @@ function testDomRouter(
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
           "/inbox/messages/1/2",
         );
+      });
+    });
+
+    describe('submit() with relative="path"', () => {
+      it("submits relative to the URL for navigations", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "inbox",
+              action: () => "INDEX",
+              children: [
+                {
+                  path: "messages",
+                  action: () => "MESSAGES",
+                  Component() {
+                    let actionData = useActionData();
+                    return <p>{actionData}</p>;
+                  },
+                },
+                {
+                  path: "messages/:id",
+                  Component() {
+                    let submit = useSubmit();
+                    return (
+                      <button
+                        onClick={() =>
+                          submit(
+                            { a: "1" },
+                            { method: "post", action: "..", relative: "path" },
+                          )
+                        }
+                      >
+                        Submit
+                      </button>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          { window: getWindow("/inbox/messages/1") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("MESSAGES"));
+        expect(router.state.location.pathname).toBe("/inbox/messages");
+      });
+
+      it("submits relative to the URL for fetchers", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "inbox",
+              action: () => "INDEX",
+              children: [
+                {
+                  path: "messages",
+                  action: () => "MESSAGES",
+                },
+                {
+                  path: "messages/:id",
+                  Component() {
+                    let fetcher = useFetcher();
+                    return (
+                      <>
+                        <button
+                          onClick={() =>
+                            fetcher.submit(
+                              { a: "1" },
+                              {
+                                method: "post",
+                                action: "..",
+                                relative: "path",
+                              },
+                            )
+                          }
+                        >
+                          Submit
+                        </button>
+                        {fetcher.data ? <p>{fetcher.data}</p> : null}
+                      </>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          { window: getWindow("/inbox/messages/1") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("MESSAGES"));
       });
     });
 
@@ -8950,6 +9348,147 @@ function testDomRouter(
           // Render of new location with navigation.state = "idle"
           [{ pathname: "/page" }, { state: "idle" }],
         ]);
+      });
+
+      describe("skipped by the browser", () => {
+        // When the browser skips a view transition, it still runs the update
+        // callback, rejects `ready` with the skip reason, and fulfills
+        // `updateCallbackDone` and `finished` once the callback is done.
+        // The messages are Chromium's.
+        function skippedViewTransition(
+          reason: DOMException,
+          ready?: Promise<void>,
+        ) {
+          return (update: () => unknown) => {
+            let updateCallbackDone = Promise.resolve()
+              .then(() => update())
+              .then(() => undefined);
+            return {
+              ready: ready ?? Promise.reject(reason),
+              updateCallbackDone,
+              finished: updateCallbackDone.then(() => undefined),
+              skipTransition: () => {},
+            };
+          };
+        }
+
+        let documentHidden = new DOMException(
+          "Transition was aborted because of invalid state. Document hidden",
+          "InvalidStateError",
+        );
+        let skippedByNewerTransition = new DOMException(
+          "Transition was skipped. New ViewTransition started",
+          "AbortError",
+        );
+
+        // Jest fails the test if `ready`'s rejection goes unhandled
+        async function navigateWithSkippedViewTransition({
+          reason,
+          visibilityState,
+          flushSync,
+          ready,
+        }: {
+          reason: DOMException;
+          visibilityState: DocumentVisibilityState;
+          flushSync: boolean;
+          ready?: Promise<void>;
+        }) {
+          let testWindow = getWindow("/");
+          Object.defineProperty(testWindow.document, "visibilityState", {
+            configurable: true,
+            get: () => visibilityState,
+          });
+          testWindow.document.startViewTransition = skippedViewTransition(
+            reason,
+            ready,
+          ) as unknown as Document["startViewTransition"];
+          let transitioningToPage: boolean[] = [];
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                Component() {
+                  transitioningToPage.push(useViewTransitionState("/page"));
+                  return <Outlet />;
+                },
+                children: [
+                  { index: true, Component: () => <h1>Home</h1> },
+                  { path: "page", Component: () => <h1>Page</h1> },
+                ],
+              },
+            ],
+            { window: testWindow },
+          );
+          render(<DOMRouterProvider router={router} />);
+          await act(() =>
+            router.navigate("/page", { viewTransition: true, flushSync }),
+          );
+          await waitFor(() => screen.getByText("Page"));
+          await waitFor(() => expect(transitioningToPage.at(-1)).toBe(false));
+          // Unhandled rejections are reported after the microtask queue drains
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          return transitioningToPage;
+        }
+
+        it("handles a transition skipped in a hidden document", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: documentHidden,
+            visibilityState: "hidden",
+            flushSync: false,
+          });
+          expect(transitioningToPage).toContain(true);
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
+
+        it("handles a flushSync transition skipped in a hidden document", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: documentHidden,
+            visibilityState: "hidden",
+            flushSync: true,
+          });
+          expect(transitioningToPage).toContain(true);
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
+
+        it("handles a transition skipped by a newer transition", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: skippedByNewerTransition,
+            visibilityState: "visible",
+            flushSync: false,
+          });
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
+
+        it.each([false, true])(
+          "rethrows unexpected ready rejections in a visible document (flushSync: %s)",
+          async (flushSync) => {
+            let reason = new DOMException(
+              "Duplicate view-transition-name",
+              "InvalidStateError",
+            );
+            let ready = Promise.reject<void>(reason);
+            let catchReady = ready.catch.bind(ready);
+            let handledReady: Promise<unknown> | undefined;
+            jest.spyOn(ready, "catch").mockImplementation((onRejected) => {
+              let result = catchReady(onRejected);
+              handledReady = result;
+              // Observe the expected rejection immediately so Jest does not
+              // report it as an unhandled rejection before the assertion.
+              result.catch(() => {});
+              return result;
+            });
+
+            await navigateWithSkippedViewTransition({
+              reason,
+              visibilityState: "visible",
+              flushSync,
+              ready,
+            });
+
+            expect(handledReady).toBeDefined();
+            await expect(handledReady).rejects.toBe(reason);
+          },
+        );
       });
     });
 

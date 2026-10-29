@@ -486,6 +486,11 @@ implementations.forEach((implementation) => {
                       lazy: () => import("./routes/client-route-component-props/home"),
                     },
                     {
+                      id: "client-loader-revalidation",
+                      path: "client-loader-revalidation",
+                      lazy: () => import("./routes/client-loader-revalidation/home"),
+                    },
+                    {
                       id: "client-error-boundary-props-client-loader",
                       path: "client-error-boundary-props-client-loader",
                       lazy: () => import("./routes/client-error-boundary-props-client-loader/home"),
@@ -586,6 +591,17 @@ implementations.forEach((implementation) => {
 
               export default function RootRoute() {
                 return <Outlet />;
+              }
+
+              export { shouldRevalidate } from "./root.client";
+            `,
+            "src/routes/root.client.tsx": js`
+              "use client";
+
+              export function shouldRevalidate({ currentUrl, defaultShouldRevalidate }) {
+                return currentUrl.pathname === "/client-loader-revalidation"
+                  ? false
+                  : defaultShouldRevalidate;
               }
             `,
 
@@ -1213,6 +1229,36 @@ implementations.forEach((implementation) => {
               }
             `,
 
+            "src/routes/client-loader-revalidation/home.tsx": js`
+              export { default, clientLoader } from "./home.client";
+            `,
+            "src/routes/client-loader-revalidation/home.client.tsx": js`
+              "use client";
+
+              import { useRevalidator } from "react-router";
+
+              let count = 0;
+
+              export async function clientLoader() {
+                return { count: ++count };
+              }
+
+              export default function HomeRoute({ loaderData }) {
+                const revalidator = useRevalidator();
+                return (
+                  <div>
+                    <p data-client-loader-count>{loaderData.count}</p>
+                    <button
+                      data-revalidate
+                      onClick={() => revalidator.revalidate()}
+                    >
+                      Revalidate
+                    </button>
+                  </div>
+                );
+              }
+            `,
+
             "src/routes/client-error-boundary-props-client-loader/home.tsx": js`
               export { default, clientLoader, ErrorBoundary } from "./home.client";
             `,
@@ -1359,7 +1405,7 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/await-component/home.tsx": js`
               import { Suspense } from "react";
-              import { Await } from "react-router";
+              import { Await, unstable_getRequest } from "react-router";
 
               import { ClientValue } from "./client";
               import { events } from "./events";
@@ -1370,11 +1416,14 @@ implementations.forEach((implementation) => {
                     resolve("Async Data");
                   });
                 });
+                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "unstable_promise"
+                  ? { unstable_promise: promise }
+                  : { resolve: promise };
 
                 return (
                   <>
                     <Suspense fallback={<p data-fallback>Loading...</p>}>
-                      <Await resolve={promise}>
+                      <Await {...props}>
                         <ClientValue />
                       </Await>
                     </Suspense>
@@ -1387,7 +1436,7 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/await-component/reject.tsx": js`
               import { Suspense } from "react";
-              import { Await } from "react-router";
+              import { Await, unstable_getRequest } from "react-router";
 
               import { ClientError } from "./client";
               import { events } from "./events";
@@ -1398,11 +1447,14 @@ implementations.forEach((implementation) => {
                     reject(new Error("Async Error"));
                   });
                 });
+                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "unstable_promise"
+                  ? { unstable_promise: promise }
+                  : { resolve: promise };
 
                 return (
                   <>
                     <Suspense fallback={<p data-fallback>Loading...</p>}>
-                      <Await resolve={promise} errorElement={<ClientError />}>
+                      <Await {...props} errorElement={<ClientError />}>
                         {(data) => (<p data-resolved>{data}</p>)}
                       </Await>
                     </Suspense>
@@ -1820,34 +1872,48 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        test("Supports Await component resolve", async ({ page }) => {
-          await page.goto(`http://localhost:${port}/await-component`, {
-            waitUntil: "commit",
+        ["resolve", "unstable_promise"].forEach((prop) => {
+          test(`Supports Await component ${prop} fulfillment`, async ({
+            page,
+          }) => {
+            await page.goto(
+              `http://localhost:${port}/await-component?prop=${prop}`,
+              {
+                waitUntil: "commit",
+              },
+            );
+            await page.waitForSelector("[data-fallback]");
+            await fetch(`http://localhost:${port}/await-component/api`, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain" },
+              body: "resolve",
+            });
+            const resolved = await page.waitForSelector("[data-resolved]");
+            expect(await resolved.innerText()).toContain("Async Data");
+            validateRSCHtml(await page.content());
           });
-          await page.waitForSelector("[data-fallback]");
-          await fetch(`http://localhost:${port}/await-component/api`, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: "resolve",
-          });
-          const resolved = await page.waitForSelector("[data-resolved]");
-          expect(await resolved.innerText()).toContain("Async Data");
-        });
 
-        test("Supports Await component rejection", async ({ page }) => {
-          await page.goto(`http://localhost:${port}/await-component/reject`, {
-            waitUntil: "commit",
+          test(`Supports Await component ${prop} rejection`, async ({
+            page,
+          }) => {
+            await page.goto(
+              `http://localhost:${port}/await-component/reject?prop=${prop}`,
+              {
+                waitUntil: "commit",
+              },
+            );
+            await page.waitForSelector("[data-fallback]");
+            await fetch(`http://localhost:${port}/await-component/api`, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain" },
+              body: "reject",
+            });
+            const rejected = await page.waitForSelector("[data-rejected]");
+            expect(await rejected.innerText()).toContain(
+              "An error occurred in the Server Components render.",
+            );
+            validateRSCHtml(await page.content());
           });
-          await page.waitForSelector("[data-fallback]");
-          await fetch(`http://localhost:${port}/await-component/api`, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: "reject",
-          });
-          const rejected = await page.waitForSelector("[data-rejected]");
-          expect(await rejected.innerText()).toContain(
-            "An error occurred in the Server Components render.",
-          );
         });
 
         test("Suppport throwing redirect Response from render", async ({
@@ -1873,8 +1939,7 @@ implementations.forEach((implementation) => {
           await page.goto(`http://localhost:${port}/render-redirect`);
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
-          await page.waitForURL(`https://example.com/`);
-          await expect(page.getByText("Example Domain")).toBeAttached();
+          await expect(page).toHaveURL(`https://example.com/`);
         });
 
         test("Handles unsupported protocol redirect Responses from render", async ({
@@ -1912,8 +1977,7 @@ implementations.forEach((implementation) => {
           await page.goto(`http://localhost:${port}/render-redirect/lazy`);
           await expect(page.getByText("home")).toBeAttached();
           await page.getByText("External").click();
-          await page.waitForURL(`https://example.com/`);
-          await expect(page.getByText("Example Domain")).toBeAttached();
+          await expect(page).toHaveURL(`https://example.com/`);
         });
 
         test("Handles unsupported protocol redirect Responses from suspended render", async ({
@@ -2326,6 +2390,32 @@ implementations.forEach((implementation) => {
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());
+        });
+
+        test("Allows client loaders to opt out of server revalidation once their component is rendered", async ({
+          page,
+        }) => {
+          await page.goto(
+            `http://localhost:${port}/client-loader-revalidation`,
+          );
+          await expect(page.locator("[data-client-loader-count]")).toHaveText(
+            "1",
+          );
+
+          const rscRequests: string[] = [];
+          page.on("request", (request) => {
+            const url = new URL(request.url());
+            if (url.pathname.endsWith(".rsc")) {
+              rscRequests.push(url.href);
+            }
+          });
+
+          await page.click("[data-revalidate]");
+          await expect(page.locator("[data-client-loader-count]")).toHaveText(
+            "2",
+          );
+
+          expect(rscRequests).toEqual([]);
         });
 
         test("Passes props to client ErrorBoundary when error is thrown in client loader", async ({

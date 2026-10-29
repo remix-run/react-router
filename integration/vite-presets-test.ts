@@ -238,6 +238,7 @@ test.describe("Vite / presets", async () => {
         "serverBundles",
         "serverModuleFormat",
         "ssr",
+        "unstable_apiServerOrigin",
         "splitRouteModules",
         "subResourceIntegrity",
         "allowedActionOrigins",
@@ -246,6 +247,7 @@ test.describe("Vite / presets", async () => {
 
       // Ensure future flags from presets are properly merged
       expect(buildEndArgsMeta.futureFlags).toEqual({
+        unstable_customRouteDiscovery: false,
         unstable_enableNodeReadableStream: false,
         unstable_optimizeDeps: true,
       });

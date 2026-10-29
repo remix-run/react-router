@@ -32,11 +32,24 @@ test.describe(async () => {
 
   test.describe(() => {
     test.beforeAll(async () => {
-      stop = await dev({ cwd, port });
+      let nodeEnv = process.env.NODE_ENV;
+      try {
+        // A reused worker may have loaded a production app before this test.
+        process.env.NODE_ENV = "production";
+        stop = await dev({ cwd, port });
+      } finally {
+        if (nodeEnv === undefined) {
+          delete process.env.NODE_ENV;
+        } else {
+          process.env.NODE_ENV = nodeEnv;
+        }
+      }
     });
     test.afterAll(() => stop());
 
-    test("Vite / NODE_ENV / dev", async ({ page }) => {
+    test("Vite / NODE_ENV / dev ignores inherited production mode", async ({
+      page,
+    }) => {
       let pageErrors: unknown[] = [];
       page.on("pageerror", (error) => pageErrors.push(error));
 

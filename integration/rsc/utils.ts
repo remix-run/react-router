@@ -24,7 +24,14 @@ export const implementations: Implementation[] = [
   {
     name: "vite",
     template: "rsc-vite",
-    build: ({ cwd }: { cwd: string }) => spawnSync("pnpm", ["build"], { cwd }),
+    build: ({ cwd }: { cwd: string }) =>
+      spawnSync("pnpm", ["build"], {
+        cwd,
+        env: {
+          ...process.env,
+          NODE_ENV: "production",
+        },
+      }),
     run: ({ cwd, port }) =>
       createDev(["server.js", "-p", String(port)])({
         cwd,

@@ -1,9 +1,5 @@
 import type { StaticHandler, StaticHandlerContext } from "../router/router";
-import type {
-  DataRouteObject,
-  ErrorResponse,
-  RouteBranch,
-} from "../router/utils";
+import type { ErrorResponse } from "../router/utils";
 import {
   defaultMapRouteProperties,
   isRouteErrorResponse,
@@ -40,7 +36,12 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
-import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getManifestPath,
+  isFogOfWarEnabled,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import {
   instrumentationResultMetaContext,
@@ -117,11 +118,16 @@ function derive(build: ServerBuild, mode?: string) {
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
-    // When runtime SSR is disabled, make our dev server behave like the deployed
-    // pre-rendered site would
-    if (!build.ssr) {
-      // Decode the URL path before checking against the prerender config
-      let decodedPath = decodeURI(normalizedPathname);
+    // When runtime document SSR is disabled, make our dev server behave like
+    // the deployed pre-rendered site would.
+    if (!build.ssr || build.unstable_apiOnly) {
+      // Decode the URL path before checking against the prerender config.
+      // Fall back to the raw path on a malformed percent-encoding, the same
+      // way route matching does.
+      let decodedPath = normalizedPathname;
+      try {
+        decodedPath = decodeURI(normalizedPathname);
+      } catch {}
 
       if (build.basename && build.basename !== "/") {
         let strippedPath = stripBasename(decodedPath, build.basename);
@@ -147,18 +153,19 @@ function derive(build: ServerBuild, mode?: string) {
         decodedPath = strippedPath;
       }
 
-      // When SSR is disabled this, file can only ever run during dev because we
-      // delete the server build at the end of the build
+      // Without API-only mode, this file only runs during dev or prerendering
+      // because we delete the server build at the end of the build.
       if (build.prerender.length === 0) {
-        // ssr:false and no prerender config indicates "SPA Mode"
+        // Without prerendered paths, render the SPA fallback.
         isSpaMode = true;
       } else if (
         !build.prerender.some(
           (p) => removeTrailingSlash(p) === removeTrailingSlash(decodedPath),
         )
       ) {
-        if (requestUrl.pathname.endsWith(".data")) {
-          // 404 on non-pre-rendered `.data` requests
+        if (requestUrl.pathname.endsWith(".data") && !build.unstable_apiOnly) {
+          // API-only builds can serve runtime data for non-prerendered routes.
+          // Otherwise, 404 on non-pre-rendered `.data` requests.
           errorHandler(
             new ErrorResponseImpl(
               404,
@@ -192,12 +199,7 @@ function derive(build: ServerBuild, mode?: string) {
       requestUrl.pathname === manifestUrl
     ) {
       try {
-        let res = await handleManifestRequest(
-          build,
-          staticHandler.dataRoutes,
-          staticHandler._internalRouteBranches,
-          requestUrl,
-        );
+        let res = await handleManifestRequest(build, staticHandler, requestUrl);
         return res;
       } catch (e) {
         handleError(e);
@@ -205,12 +207,23 @@ function derive(build: ServerBuild, mode?: string) {
       }
     }
 
+    if (
+      build.unstable_apiOnly &&
+      serverMode !== ServerMode.Development &&
+      !requestUrl.pathname.endsWith(".data") &&
+      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") !== "yes" &&
+      getBuildTimeHeader(request, "X-React-Router-Prerender") !== "yes"
+    ) {
+      return new Response(null, {
+        status: 404,
+        statusText: "Not Found",
+      });
+    }
+
     let matches = matchServerRoutes(
       build.routes,
-      staticHandler.dataRoutes,
-      staticHandler._internalRouteBranches,
+      staticHandler,
       normalizedPathname,
-      build.basename,
     );
     if (matches && matches.length > 0) {
       Object.assign(params, matches[0].params);
@@ -300,6 +313,8 @@ function derive(build: ServerBuild, mode?: string) {
     }
 
     if (request.method === "HEAD") {
+      // Cancel the dropped body so its stream (e.g. an open file) is released
+      response.body?.cancel().catch(() => {});
       return new Response(null, {
         headers: response.headers,
         status: response.status,
@@ -325,6 +340,18 @@ function derive(build: ServerBuild, mode?: string) {
   };
 }
 
+/**
+ * Creates a request handler for a React Router server build.
+ *
+ * This is a low-level API used by server adapters to translate incoming
+ * requests into React Router responses.
+ *
+ * @category Utils
+ * @param build The server build, or a function that resolves to the server
+ * build, used to handle requests.
+ * @param mode The mode in which the server build is running.
+ * @returns A request handler that returns a response for each incoming request.
+ */
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
   mode,
@@ -363,8 +390,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleManifestRequest(
   build: ServerBuild,
-  dataRoutes: DataRouteObject[],
-  branches: RouteBranch<DataRouteObject>[],
+  staticHandler: StaticHandler,
   url: URL,
 ) {
   if (url.toString().length > URL_LIMIT) {
@@ -392,13 +418,7 @@ async function handleManifestRequest(
       if (!path.startsWith("/")) {
         path = `/${path}`;
       }
-      let matches = matchServerRoutes(
-        build.routes,
-        dataRoutes,
-        branches,
-        path,
-        build.basename,
-      );
+      let matches = matchServerRoutes(build.routes, staticHandler, path);
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
@@ -526,16 +546,30 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: context.errors,
     };
+    let routeDiscovery = build.routeDiscovery;
+    if (
+      isFogOfWarEnabled(routeDiscovery, build.ssr) &&
+      shouldUseInitialRouteDiscovery(
+        context.location.pathname,
+        staticHandler._matchCost,
+      )
+    ) {
+      // Keep this response and its client router on the existing full-manifest
+      // path without changing discovery for other requests using this build.
+      routeDiscovery = { ...routeDiscovery, mode: "initial" };
+    }
     let baseServerHandoff: ServerHandoff = {
       basename: build.basename,
       future: build.future,
-      routeDiscovery: build.routeDiscovery,
+      routeDiscovery,
       ssr: build.ssr,
       isSpaMode,
+      unstable_apiOnly: build.unstable_apiOnly,
+      unstable_apiServerOrigin: build.unstable_apiServerOrigin,
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
-      branches: staticHandler._internalRouteBranches,
+      branches: [],
       routeModules: createEntryRouteModules(build.routes),
       staticHandlerContext: context,
       criticalCss,
@@ -552,8 +586,10 @@ async function handleDocumentRequest(
       renderMeta: {},
       future: build.future,
       ssr: build.ssr,
-      routeDiscovery: build.routeDiscovery,
+      routeDiscovery,
       isSpaMode,
+      unstable_apiOnly: build.unstable_apiOnly,
+      unstable_apiServerOrigin: build.unstable_apiServerOrigin,
       serializeError: (err) => serializeError(err, serverMode),
     };
 
@@ -581,10 +617,7 @@ async function handleDocumentRequest(
             error.statusText,
             data,
           );
-        } catch (
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          e
-        ) {
+        } catch {
           // If we can't unwrap the response - just leave it as-is
         }
       }
@@ -612,6 +645,7 @@ async function handleDocumentRequest(
       };
       entryContext = {
         ...entryContext,
+        branches: [],
         staticHandlerContext: context,
         serverHandoffString: createServerHandoffString(baseServerHandoff),
         serverHandoffStream: encodeViaTurboStream(

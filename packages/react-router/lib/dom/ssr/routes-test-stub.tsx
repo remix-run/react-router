@@ -109,7 +109,20 @@ export interface RoutesTestStubProps {
 }
 
 /**
+ * Creates a React component that renders the provided routes in a test-friendly
+ * React Router context.
+ *
+ * Use this to unit test components that rely on router context, such as
+ * `loaderData`, `actionData`, and route matches.
+ *
+ * @public
  * @category Utils
+ * @mode framework
+ * @mode data
+ * @param routes The route objects to render in the test router.
+ * @param _context An optional {@link RouterContextProvider} for supplying
+ * application context values to route middleware, loaders, and actions.
+ * @returns A React component that renders the test router.
  */
 export function createRoutesStub(
   routes: StubRouteObject[],

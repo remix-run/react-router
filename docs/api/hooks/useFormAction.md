@@ -55,8 +55,8 @@ function useFormAction(
     relative,
   }: {
     relative?: RelativeRoutingType;
-  } = ,
-): string {}
+  } = {},
+): string
 ```
 
 ## Params
