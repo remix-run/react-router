@@ -293,6 +293,65 @@ describe("navigation blocking with useBlocker", () => {
     act(() => root.unmount());
   });
 
+  it("removes the blocker when the router is recreated", async () => {
+    let setShow: (show: boolean) => void = () => {};
+    let recreateRouter: () => void = () => {};
+
+    function Guarded() {
+      let blocker = useBlocker(true);
+      return <p>{blocker.state}</p>;
+    }
+
+    let routes: RouteObject[] = [
+      {
+        Component() {
+          let [show, _setShow] = React.useState(true);
+          setShow = _setShow;
+          return (
+            <div>
+              <Link to="/about">/about</Link>
+              {show ? <Guarded /> : null}
+              <Outlet />
+            </div>
+          );
+        },
+        children: [
+          {
+            path: "/",
+            element: <h1>Home</h1>,
+          },
+          {
+            path: "/about",
+            element: <h1>About</h1>,
+          },
+        ],
+      },
+    ];
+
+    function App() {
+      let [router, setRouter] = React.useState(() =>
+        createMemoryRouter(routes),
+      );
+      recreateRouter = () => setRouter(createMemoryRouter(routes));
+      return <RouterProvider router={router} />;
+    }
+
+    act(() => {
+      root = ReactDOM.createRoot(node);
+      root.render(<App />);
+    });
+
+    act(() => recreateRouter());
+
+    // Once the blocking component unmounts, nothing should be left behind in
+    // the new router to block navigation
+    act(() => setShow(false));
+    act(() => click(node.querySelector("a[href='/about']")));
+    expect(node.querySelector("h1")?.textContent).toBe("About");
+
+    act(() => root.unmount());
+  });
+
   describe("on <Link> navigation", () => {
     describe("blocker returns false", () => {
       beforeEach(() => {
