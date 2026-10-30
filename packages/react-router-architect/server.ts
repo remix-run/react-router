@@ -53,7 +53,11 @@ export function createRequestHandler({
 export function createReactRouterRequest(
   event: APIGatewayProxyEventV2,
 ): Request {
-  let rawHost = event.requestContext.domainName || event.headers.host || "";
+  let rawHost =
+    event.headers["x-forwarded-host"] ||
+    event.requestContext.domainName ||
+    event.headers.host ||
+    "";
   let [hostname, portStr] = rawHost.split(":");
   hostname = hostname.split(/[\\/?#@]/)[0] || "localhost";
   let hostPort = Number.parseInt(portStr ?? "", 10);
