@@ -1,5 +1,6 @@
 import type { ComponentType, ReactElement } from "react";
 import type { Location } from "../../router/history";
+import { createPath } from "../../router/history";
 import type {
   ActionFunction,
   ActionFunctionArgs,
@@ -306,7 +307,18 @@ export async function loadRouteModule(
       throw error;
     }
 
-    window.location.reload();
+    // If this happened during a GET navigation, reload the navigation's target
+    // location instead of the page the user is leaving so the navigation isn't
+    // lost. Submissions can't be replayed, so reload the current page for those.
+    let navigation = window.__reactRouterDataRouter?.state.navigation;
+    if (
+      navigation?.location &&
+      (!navigation.formMethod || navigation.formMethod.toUpperCase() === "GET")
+    ) {
+      window.location.href = createPath(navigation.location);
+    } else {
+      window.location.reload();
+    }
 
     return new Promise(() => {
       // check out of this hook cause the DJs never gonna re[s]olve this
