@@ -1468,7 +1468,10 @@ export function createRouter(init: RouterInit): Router {
     // get references to the latest elements here
     if (newState.matches) {
       newState.matches = newState.matches.map((m) => {
-        let route = manifest[m.route.id]! as RouteObject;
+        let route = manifest[m.route.id] as RouteObject | undefined;
+        if (!route) {
+          return m;
+        }
         let matchRoute = m.route as RouteObject;
         if (
           matchRoute.element !== route.element ||

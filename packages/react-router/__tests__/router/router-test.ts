@@ -614,6 +614,80 @@ describe("a router", () => {
       });
     });
 
+    it.each(["PUSH", "REPLACE", "POP"] as const)(
+      "handles 404 routes without a root route (%s navigation)",
+      async (historyAction) => {
+        let t = setup({
+          routes: [
+            { id: "one", path: "/one" },
+            { id: "two", path: "/two" },
+          ],
+          initialEntries: ["/junk", "/one"],
+        });
+
+        if (historyAction === "POP") {
+          await t.router.navigate(-1);
+        } else {
+          await t.router.navigate("/junk", {
+            replace: historyAction === "REPLACE",
+          });
+        }
+
+        expect(t.router.state).toMatchObject({
+          historyAction,
+          initialized: true,
+          location: { pathname: "/junk" },
+          navigation: IDLE_NAVIGATION,
+          loaderData: {},
+          matches: [{ route: { id: "__shim-error-route__" } }],
+          errors: {
+            "__shim-error-route__": new ErrorResponseImpl(
+              404,
+              "Not Found",
+              new Error('No route matches URL "/junk"'),
+              true,
+            ),
+          },
+        });
+
+        await t.router.navigate("/two");
+
+        expect(t.router.state).toMatchObject({
+          location: { pathname: "/two" },
+          navigation: IDLE_NAVIGATION,
+          matches: [{ route: { id: "two" } }],
+          errors: null,
+        });
+      },
+    );
+
+    it("handles revalidation of 404 routes without a root route", async () => {
+      let t = setup({
+        routes: [
+          { id: "one", path: "/one" },
+          { id: "two", path: "/two" },
+        ],
+        initialEntries: ["/junk"],
+      });
+
+      await t.router.revalidate();
+
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/junk" },
+        navigation: IDLE_NAVIGATION,
+        revalidation: "idle",
+        matches: [{ route: { id: "__shim-error-route__" } }],
+        errors: {
+          "__shim-error-route__": new ErrorResponseImpl(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/junk"'),
+            true,
+          ),
+        },
+      });
+    });
+
     it("handles 404 routes when the root route contains a path (initialization)", () => {
       let t = setup({
         routes: [
