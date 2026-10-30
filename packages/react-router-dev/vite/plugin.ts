@@ -3103,9 +3103,10 @@ function getStaticPrerenderPaths(routes: DataRouteObject[]) {
     for (let route of subtree) {
       let newPath = [prefix, route.path].join("/").replace(/\/\/+/g, "/");
       if (route.path) {
-        let segments = route.path.split("/");
+        // Check the full path so static children of dynamic routes are skipped
+        let segments = newPath.split("/");
         if (segments.some((s) => s.startsWith(":") || s === "*")) {
-          paramRoutes.push(route.path);
+          paramRoutes.push(newPath.replace(/^\//, ""));
         } else {
           paths.push(newPath);
         }
