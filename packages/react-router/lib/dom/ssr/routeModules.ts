@@ -104,9 +104,9 @@ export interface HeadersFunction {
 export type HydrateFallbackComponent = ComponentType;
 
 /**
- * Optional, root-only `<Route Layout>` component to wrap the root content in.
- * Useful for defining the <html>/<head>/<body> document shell shared by the
- * Component, HydrateFallback, and ErrorBoundary
+ * Optional `<Route Layout>` component to wrap the route content in.
+ * Useful for keeping a persistent shell around the Component, HydrateFallback,
+ * and ErrorBoundary across all three states.
  */
 export type LayoutComponent = ComponentType<{
   children: ReactElement<
