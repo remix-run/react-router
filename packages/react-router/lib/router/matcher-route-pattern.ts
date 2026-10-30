@@ -266,6 +266,7 @@ function convertReactRouterPathToRoutePattern(path: string): string {
 
   let segments = path.split("/");
   let pattern = segments.shift() || "";
+  let separator = "/";
   for (let i = 0; i < segments.length; ) {
     let optionalRun: string[] = [];
     while (i < segments.length && isOptionalRouteSegment(segments[i])) {
@@ -278,11 +279,20 @@ function convertReactRouterPathToRoutePattern(path: string): string {
         (child, segment) => `/${segment}${child ? `(${child})` : ""}`,
         "",
       );
+
+      // Route pattern pathnames don't start with a `/`, so a leading optional
+      // run moves its `/` to the end (`:lang?/about` -> `(:lang/)about`)
+      if (pattern === "") {
+        nested = nested.slice(1) + (i < segments.length ? "/" : "");
+        separator = "";
+      }
+
       pattern += `(${nested})`;
       continue;
     }
 
-    pattern += `/${convertRouteSegment(segments[i])}`;
+    pattern += `${separator}${convertRouteSegment(segments[i])}`;
+    separator = "/";
     i++;
   }
 
