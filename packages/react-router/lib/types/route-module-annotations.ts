@@ -47,7 +47,9 @@ type MetaMatch<T extends MatchInfo> = Pretty<{
 type MetaMatches<T extends Array<MatchInfo>> =
   T extends [infer F extends MatchInfo, ...infer R extends Array<MatchInfo>]
     ? [MetaMatch<F>, ...MetaMatches<R>]
-    : Array<MetaMatch<MatchInfo> | undefined>;
+    : T extends []
+      ? []
+      : Array<MetaMatch<MatchInfo> | undefined>;
 
 type HasErrorBoundary<T extends RouteInfo> = T["module"] extends {
   ErrorBoundary: Func;
@@ -261,6 +263,20 @@ export type GetAnnotations<Info extends RouteInfo> = {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
+  // Generated metadata match tuples contain exactly the current route and its ancestors.
+  Expect<Equal<MetaMatches<[]>, []>>,
+  Expect<
+    Equal<MetaMatches<MatchInfo[]>, Array<MetaMatch<MatchInfo> | undefined>>
+  >,
+  Expect<
+    Equal<
+      MetaMatches<[{ id: "root"; module: {} }, { id: "leaf"; module: {} }]>,
+      [
+        MetaMatch<{ id: "root"; module: {} }>,
+        MetaMatch<{ id: "leaf"; module: {} }>,
+      ]
+    >
+  >,
   // Test that MetaArgs.loaderData is only potentially undefined when ErrorBoundary is present
   Expect<
     Equal<
