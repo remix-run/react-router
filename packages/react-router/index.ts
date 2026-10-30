@@ -190,6 +190,7 @@ export {
   NavLink,
   Form,
   ScrollRestoration,
+  useElementScrollRestoration as unstable_useElementScrollRestoration,
   useLinkClickHandler,
   useSearchParams,
   useSubmit,
