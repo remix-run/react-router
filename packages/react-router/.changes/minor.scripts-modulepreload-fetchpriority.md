@@ -1,0 +1,1 @@
+Allow configuring `fetchPriority` on route `<link rel="modulepreload">` tags via `<Scripts modulePreloadFetchPriority="low" />` to prevent bandwidth competition with render-blocking stylesheets over HTTP/2.
