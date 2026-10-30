@@ -494,6 +494,107 @@ test.describe("prefetch", () => {
         });
       });
 
+      test.describe("unstable_onPrefetch", () => {
+        let fixture: Fixture;
+        let appFixture: AppFixture;
+
+        test.beforeAll(async () => {
+          fixture = await createFixture({
+            templateName,
+            files: {
+              "app/routes/_index.tsx": js`
+                import { useState } from "react";
+                import { Link } from "react-router";
+
+                export default function Component() {
+                  let [count, setCount] = useState(0);
+                  let [prefetch, setPrefetch] = useState("intent");
+                  let [search, setSearch] = useState("");
+                  let [prefetchedTo, setPrefetchedTo] = useState("");
+                  let to = "/test" + search;
+                  return (
+                    <>
+                      <Link
+                        to={to}
+                        prefetch={prefetch}
+                        unstable_onPrefetch={() => {
+                          setCount((c) => c + 1);
+                          setPrefetchedTo(to);
+                        }}
+                      >
+                        Test page
+                      </Link>
+                      <p id="prefetch-count">{count}</p>
+                      <p id="prefetched-to">{prefetchedTo}</p>
+                      <button onClick={() => setPrefetch("render")}>
+                        Prefetch on render
+                      </button>
+                      <button onClick={() => setSearch("?note=2")}>
+                        Change destination
+                      </button>
+                    </>
+                  );
+                }
+              `,
+
+              "app/routes/test.tsx": js`
+                export function loader() {
+                  return null;
+                }
+                export default function Component() {
+                  return <h1>Test Page</h1>;
+                }
+              `,
+            },
+          });
+          appFixture = await createAppFixture(fixture);
+        });
+
+        test.afterAll(() => {
+          appFixture.close();
+        });
+
+        test("calls unstable_onPrefetch alongside the built-in prefetch tags on hover", async ({
+          page,
+        }) => {
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/", true);
+          await expect(page.locator("#prefetch-count")).toHaveText("0");
+
+          await page.hover("a[href='/test']");
+
+          await expect(page.locator("#prefetch-count")).toHaveText("1");
+          await expect(
+            page.locator("link[rel='prefetch'][as='fetch'][href='/test.data']"),
+          ).toHaveCount(1);
+        });
+
+        test("prefetches the new destination without remounting the link", async ({
+          page,
+        }) => {
+          let app = new PlaywrightFixture(appFixture, page);
+          await app.goto("/", true);
+          await page
+            .getByRole("button", { name: "Prefetch on render" })
+            .click();
+          await expect(page.locator("#prefetch-count")).toHaveText("1");
+          await expect(page.locator("#prefetched-to")).toHaveText("/test");
+
+          await page
+            .getByRole("button", { name: "Change destination" })
+            .click();
+          await expect(page.locator("#prefetch-count")).toHaveText("2");
+          await expect(page.locator("#prefetched-to")).toHaveText(
+            "/test?note=2",
+          );
+          await expect(
+            page.locator(
+              "link[rel='prefetch'][as='fetch'][href='/test.data?note=2']",
+            ),
+          ).toHaveCount(1);
+        });
+      });
+
       test.describe("other scenarios", () => {
         let fixture: Fixture;
         let appFixture: AppFixture;
