@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.5.2](#v852)
   - [v8.5.1](#v851)
     - [`<Await unstable_promise>`](#await-unstable_promise)
   - [v8.5.0](#v850)
@@ -121,6 +122,29 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.5.2
+
+Date: 2026-10-30
+
+### Patch Changes
+
+- `react-router` - Cancel the discarded response body for `HEAD` requests, so a resource route streaming a file no longer leaks its file descriptor ([#15634](https://github.com/remix-run/react-router/pull/15634))
+  - Keep observing nested deferred promise rejections after cancelling a data response so they cannot crash the server
+
+- `react-router` - Clear an `<Await>` render error when it receives a new `resolve` value, so the error element no longer stays on screen after navigating to a route whose data renders fine ([#15695](https://github.com/remix-run/react-router/pull/15695))
+
+- `@react-router/dev` - Serialize concurrent type generation to prevent filesystem races between `react-router dev` and `react-router typegen`. Report a timeout with cleanup instructions if the typegen lock cannot be acquired within 30 seconds. ([#15293](https://github.com/remix-run/react-router/pull/15293))
+
+- `@react-router/dev` - Fix RSC Framework Mode builds failing with "Vite RSC assets manifest not found" when using `@vitejs/plugin-rsc` 0.5.36 or later ([#15672](https://github.com/remix-run/react-router/pull/15672))
+
+  Preserve client version checks when the client build uses `write: false`.
+
+- `@react-router/node` - Keep handling errors from a cancelled Node stream until it closes, so a `HEAD` request for a file that fails to open no longer crashes the process ([#15634](https://github.com/remix-run/react-router/pull/15634))
+
+- `create-react-router` - Derive the generated package name from the project directory basename, including absolute paths, trailing separators, and paths entered at the directory prompt. ([#15698](https://github.com/remix-run/react-router/pull/15698))
+
+**Full Changelog**: [`v8.5.1...v8.5.2`](https://github.com/remix-run/react-router/compare/react-router@8.5.1...react-router@8.5.2)
 
 ## v8.5.1
 

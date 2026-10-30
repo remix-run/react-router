@@ -1,5 +1,11 @@
 # `create-react-router`
 
+## v8.5.2
+
+### Patch Changes
+
+- Derive the generated package name from the project directory basename, including absolute paths, trailing separators, and paths entered at the directory prompt. ([#15698](https://github.com/remix-run/react-router/pull/15698))
+
 ## v8.5.1
 
 ### Patch Changes
