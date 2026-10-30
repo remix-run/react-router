@@ -1690,6 +1690,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         };
       },
       configurePreviewServer(previewServer) {
+        let originalClose = previewServer.close.bind(previewServer);
+        let closePromise: Promise<void> | undefined;
+        previewServer.close = () => {
+          closePromise ??= (async () => {
+            try {
+              await originalClose();
+            } finally {
+              await closePluginResources();
+            }
+          })();
+          return closePromise;
+        };
+
         let cachedHandler: RequestHandler | null = null;
 
         async function getHandler(): Promise<RequestHandler> {
