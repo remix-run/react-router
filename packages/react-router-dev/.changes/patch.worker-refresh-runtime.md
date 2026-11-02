@@ -1,1 +1,1 @@
-Avoid accessing `window` in the React Refresh runtime when a web worker imports a JSX module.
+Allow web workers to import JSX modules, including components with hooks, without accessing `window` or missing React Refresh callbacks.
