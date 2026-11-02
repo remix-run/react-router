@@ -100,16 +100,15 @@ export async function sendReactRouterResponse(
   nodeResponse: Response,
 ): Promise<APIGatewayProxyStructuredResultV2> {
   let cookies: string[] = [];
+  let headerEntries: [string, string][] = [];
 
   // Arc/AWS API Gateway will send back set-cookies outside of response headers.
   for (let [key, value] of nodeResponse.headers.entries()) {
     if (key.toLowerCase() === "set-cookie") {
       cookies.push(value);
+    } else {
+      headerEntries.push([key, value]);
     }
-  }
-
-  if (cookies.length) {
-    nodeResponse.headers.delete("Set-Cookie");
   }
 
   let contentType = nodeResponse.headers.get("Content-Type");
@@ -126,7 +125,7 @@ export async function sendReactRouterResponse(
 
   return {
     statusCode: nodeResponse.status,
-    headers: Object.fromEntries(nodeResponse.headers.entries()),
+    headers: Object.fromEntries(headerEntries),
     cookies,
     body,
     isBase64Encoded,
