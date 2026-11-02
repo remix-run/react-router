@@ -110,6 +110,7 @@
     "pkg-types": "^2.3.1",
     "react-refresh": "^0.18.0",
     "semver": "^7.8.1",
+    "signal-exit": "^4.1.0",
     "tinyglobby": "^0.2.16",
     "valibot": "^1.4.1"
   },

@@ -626,6 +626,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     {
       name: "react-router/rsc/virtual-client-version",
+      // Run after the Vite RSC plugin, including its post-ordered
+      // `generateBundle` hook in 0.5.36 and later.
+      enforce: "post",
       resolveId(id) {
         if (id === virtual.clientVersion.id) {
           return virtual.clientVersion.resolvedId;
@@ -641,6 +644,7 @@ export default assetsManifest.clientVersion;
             : `export default "development";`;
         }
       },
+      // Use `generateBundle` so builds with `write: false` also get a version.
       generateBundle: {
         order: "post",
         async handler() {
