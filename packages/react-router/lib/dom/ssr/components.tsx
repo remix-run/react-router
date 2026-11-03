@@ -727,8 +727,8 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
  * during client-side updates.
  */
 let isHydrated = false;
-export function setIsHydrated() {
-  isHydrated = true;
+export function setIsHydrated(val = true) {
+  isHydrated = val;
 }
 
 /**
@@ -850,9 +850,14 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     let streamScript =
       "window.__reactRouterContext.stream = new ReadableStream({" +
       "start(controller){" +
-      "window.__reactRouterContext.streamController = controller;" +
+      "var enc = new TextEncoder();" +
+      "window.__reactRouterContext.streamController = {" +
+      "enqueue:function(c){controller.enqueue(typeof c==='string'?enc.encode(c):c);}," +
+      "close:function(){controller.close();}," +
+      "error:function(e){controller.error(e);}" +
+      "};" +
       "}" +
-      "}).pipeThrough(new TextEncoderStream());";
+      "});";
 
     let contextScript = staticContext
       ? `window.__reactRouterContext = ${serverHandoffString};${streamScript}`

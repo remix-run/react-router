@@ -1,6 +1,7 @@
 import { createStaticHandler } from "react-router";
 import { act, fireEvent, render } from "@testing-library/react";
 import * as React from "react";
+import { renderToString } from "react-dom/server.node";
 
 import {
   createMemoryRouter,
@@ -14,6 +15,7 @@ import {
 import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import {
   FrameworkContext,
+  setIsHydrated,
   usePrefetchBehavior,
 } from "../../../lib/dom/ssr/components";
 import {
@@ -278,11 +280,16 @@ describe("<HydratedRouter>", () => {
     window.__reactRouterManifest = context.manifest;
     window.__reactRouterContext!.stream = new ReadableStream({
       start(controller) {
-        window.__reactRouterContext!.streamController = controller;
+        let enc = new TextEncoder();
+        window.__reactRouterContext!.streamController = {
+          enqueue: (c: string | Uint8Array) =>
+            controller.enqueue(typeof c === "string" ? enc.encode(c) : c),
+          close: () => controller.close(),
+          error: (e: any) => controller.error(e),
+        };
       },
-    }).pipeThrough(new TextEncoderStream());
+    });
     window.__reactRouterContext!.streamController.enqueue(
-      // @ts-expect-error
       '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n',
     );
     window.__reactRouterContext!.streamController.close();
@@ -532,6 +539,10 @@ describe("<Links />", () => {
 });
 
 describe("<Scripts />", () => {
+  beforeEach(() => {
+    setIsHydrated(false);
+  });
+
   it("propagates nonce to modulepreload links", async () => {
     let staticHandlerContext = await createStaticHandler([
       { id: "root", path: "/" },
@@ -607,6 +618,61 @@ describe("<Scripts />", () => {
         'link[rel="modulepreload"][href="preload-b.js"]',
       ),
     ).toHaveAttribute("nonce", "test-nonce");
+  });
+
+  it("renders inline stream script with TextEncoder avoiding pipeThrough TextEncoderStream (#15486)", async () => {
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/" },
+    ]).query(new Request("http://localhost/"));
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      serverHandoffString: '{"test":true}',
+      staticHandlerContext,
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: [],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeDiscovery: { mode: "initial", manifestPath: "/__manifest" },
+      routeModules: {
+        root: {
+          default: () => (
+            <>
+              <h1>Root</h1>
+              <Scripts />
+            </>
+          ),
+        },
+      },
+    });
+
+    let html = renderToString(
+      <ServerRouter context={context} url="http://localhost/" />,
+    );
+
+    expect(html).toContain("window.__reactRouterContext.stream = new ReadableStream(");
+    expect(html).toContain("var enc = new TextEncoder();");
+    expect(html).toContain("controller.enqueue(typeof c==='string'?enc.encode(c):c)");
+    expect(html).not.toContain("pipeThrough");
+    expect(html).not.toContain("TextEncoderStream");
   });
 
   it("propagates the ServerRouter nonce to default HydrateFallback scripts when a route has a clientLoader without a HydrateFallback", async () => {

@@ -3,10 +3,17 @@ import type { ServerHandoff } from "../server-runtime/serverHandoff";
 import type { AssetsManifest } from "./ssr/entry";
 import type { RouteModules } from "./ssr/routeModules";
 
+export type WindowReactRouterStreamController = {
+  close(): void;
+  enqueue(chunk: string | Uint8Array): void;
+  error(error?: any): void;
+  desiredSize?: number | null;
+};
+
 export type WindowReactRouterContext = ServerHandoff & {
   state: HydrationState; // Deserialized via the stream
   stream: ReadableStream<Uint8Array> | undefined;
-  streamController: ReadableStreamDefaultController<Uint8Array>;
+  streamController: WindowReactRouterStreamController;
 };
 
 export interface ViewTransition {
