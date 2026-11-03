@@ -85,8 +85,10 @@ const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
   UNSAFE_WithHydrateFallbackProps;
 
 type ServerContext = {
+  headers: Headers;
   redirect?: Response;
   request: Request;
+  responseCreated: boolean;
   runningAction: boolean;
 };
 
@@ -105,6 +107,60 @@ export function getRequest() {
       "getRequest must be called from within a React Server render context",
     );
   return ctx.request;
+}
+
+/**
+ * Returns the headers that React Router will add to the response for the
+ * current request. Use it to set headers, such as `Set-Cookie`, from server
+ * functions, loaders, actions, and middleware (before calling `next()`).
+ *
+ * `Set-Cookie` headers are appended to the response. Other headers replace
+ * any value from route `headers` exports or the returned/thrown response.
+ *
+ * Throws once the response has been created, which includes while server
+ * components render.
+ *
+ * @example
+ * "use server";
+ * import { unstable_headers as headers } from "react-router";
+ *
+ * export async function setTheme(formData: FormData) {
+ *   let theme = String(formData.get("theme"));
+ *   headers().append("Set-Cookie", `theme=${theme}; Path=/`);
+ * }
+ *
+ * @name unstable_headers
+ * @public
+ * @category RSC
+ * @mode data
+ * @mode framework
+ * @returns The response {@link Headers} for the current request.
+ */
+export function headers(): Headers {
+  const ctx = ServerStorage.getStore();
+
+  if (!ctx)
+    throw new Error(
+      "headers must be called from within a React Server render context",
+    );
+  if (ctx.responseCreated)
+    throw new Error(
+      "headers can't be called after the response has been created. Set " +
+        "response headers in a server function, loader, action, or middleware " +
+        "(before calling next()), not while rendering server components.",
+    );
+  return ctx.headers;
+}
+
+function applyContextHeaders(target: Headers, source: Headers) {
+  for (let cookie of source.getSetCookie()) {
+    target.append("Set-Cookie", cookie);
+  }
+  for (let [key, value] of source) {
+    if (key.toLowerCase() !== "set-cookie") {
+      target.set(key, value);
+    }
+  }
 }
 
 export const redirect: typeof baseRedirect = (...args) => {
@@ -891,8 +947,17 @@ async function generateRenderResponse(
 
   let actionResult: Promise<unknown> | undefined;
   const ctx: ServerContext = {
+    headers: new Headers(),
     request,
+    responseCreated: false,
     runningAction: false,
+  };
+
+  let encodeResponse = generateResponse;
+  generateResponse = (match, options) => {
+    ctx.responseCreated = true;
+    applyContextHeaders(match.headers, ctx.headers);
+    return encodeResponse(match, options);
   };
 
   const result = await ServerStorage.run(ctx, () =>
@@ -1038,7 +1103,10 @@ async function generateRenderResponse(
     .trim()
     .toLowerCase();
   if (contentType !== "text/x-component") {
-    return tagResourceResponse(result);
+    ctx.responseCreated = true;
+    let response = tagResourceResponse(result);
+    applyContextHeaders(response.headers, ctx.headers);
+    return response;
   }
 
   return result;

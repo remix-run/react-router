@@ -556,6 +556,11 @@ implementations.forEach((implementation) => {
                       path: "/get-request",
                       lazy: () => import("./routes/get-request/get-request"),
                     },
+                    {
+                      id: "headers",
+                      path: "/headers",
+                      lazy: () => import("./routes/headers/home"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -1628,6 +1633,41 @@ implementations.forEach((implementation) => {
                 return <p>{request.method}</p>;
               }
             `,
+
+            "src/routes/headers/home.actions.ts": js`
+              "use server";
+              import { unstable_headers as headers } from "react-router";
+
+              export async function setCookie() {
+                headers().append("Set-Cookie", "from-server-function=1; Path=/");
+              }
+            `,
+            "src/routes/headers/home.tsx": js`
+              import { unstable_headers as headers } from "react-router";
+              import { setCookie } from "./home.actions";
+
+              export function loader() {
+                headers().set("X-Loader", "loader");
+                return null;
+              }
+
+              export default function HeadersRoute() {
+                let renderError = "none";
+                try {
+                  headers();
+                } catch (error) {
+                  renderError = error.message;
+                }
+                return (
+                  <div>
+                    <p data-render-error>{renderError}</p>
+                    <form action={setCookie}>
+                      <button type="submit" data-submit>Set cookie</button>
+                    </form>
+                  </div>
+                );
+              }
+            `,
           },
         });
       });
@@ -2020,6 +2060,29 @@ implementations.forEach((implementation) => {
           );
           const body = await response.text();
           expect(body).toContain("<p>POST</p>");
+        });
+
+        test("Supports unstable_headers in loaders and server functions", async ({
+          page,
+        }) => {
+          let documentResponse = await page.goto(
+            `http://localhost:${port}/headers`,
+          );
+          expect(documentResponse?.headers()["x-loader"]).toBe("loader");
+          await expect(page.locator("[data-render-error]")).toContainText(
+            "headers can't be called after the response has been created",
+          );
+
+          let actionResponse = page.waitForResponse(
+            (response) => response.request().method() === "POST",
+          );
+          await page.click("[data-submit]");
+          expect(
+            (await (await actionResponse).allHeaders())["set-cookie"],
+          ).toContain("from-server-function=1");
+          await expect
+            .poll(() => page.evaluate(() => document.cookie))
+            .toContain("from-server-function=1");
         });
       });
 
