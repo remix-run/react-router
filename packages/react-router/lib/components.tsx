@@ -435,7 +435,15 @@ export function RouterProvider({
     currentLocation: Location;
     nextLocation: Location;
   }>();
-  let fetcherData = React.useRef<Map<string, any>>(new Map());
+  let [fetcherData, setFetcherData] = React.useState<Map<string, any>>(() => {
+    let initialMap = new Map();
+    router.state.fetchers.forEach((fetcher, key) => {
+      if (fetcher.data !== undefined) {
+        initialMap.set(key, fetcher.data);
+      }
+    });
+    return initialMap;
+  });
   let handledErrors = React.useRef(
     new WeakSet<NonNullable<RouterState["errors"]>>(),
   );
@@ -468,12 +476,12 @@ export function RouterProvider({
         );
       }
 
-      newState.fetchers.forEach((fetcher, key) => {
-        if (fetcher.data !== undefined) {
-          fetcherData.current.set(key, fetcher.data);
-        }
-      });
-      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
+      let updateState = () => {
+        setFetcherData((prev) =>
+          getNextFetcherData(prev, newState.fetchers, deletedFetchers),
+        );
+        setStateImpl(newState);
+      };
 
       warnOnce(
         flushSync === false || reactDomFlushSyncImpl != null,
@@ -501,15 +509,15 @@ export function RouterProvider({
       // just update and be done with it
       if (!viewTransitionOpts || !isViewTransitionAvailable) {
         if (reactDomFlushSyncImpl && flushSync) {
-          reactDomFlushSyncImpl(() => setStateImpl(newState));
+          reactDomFlushSyncImpl(updateState);
         } else if (useTransitions === false) {
-          setStateImpl(newState);
+          updateState();
         } else {
           React.startTransition(() => {
             if (useTransitions === true) {
               setOptimisticState((s) => getOptimisticRouterState(s, newState));
             }
-            setStateImpl(newState);
+            updateState();
           });
         }
         return;
@@ -534,7 +542,7 @@ export function RouterProvider({
 
         // Update the DOM
         let t = router.window!.document.startViewTransition(() => {
-          reactDomFlushSyncImpl(() => setStateImpl(newState));
+          reactDomFlushSyncImpl(updateState);
         });
         handleSkippedViewTransition(t, router.window!.document);
 
@@ -624,12 +632,18 @@ export function RouterProvider({
       let renderPromise = renderDfd.promise;
       let transition = router.window.document.startViewTransition(async () => {
         if (useTransitions === false) {
+          setFetcherData((prev) =>
+            getNextFetcherData(prev, newState.fetchers, []),
+          );
           setStateImpl(newState);
         } else {
           React.startTransition(() => {
             if (useTransitions === true) {
               setOptimisticState((s) => getOptimisticRouterState(s, newState));
             }
+            setFetcherData((prev) =>
+              getNextFetcherData(prev, newState.fetchers, []),
+            );
             setStateImpl(newState);
           });
         }
@@ -755,9 +769,9 @@ export function RouterProvider({
   let fetchersContext = React.useMemo(
     () => ({
       fetchers: state.fetchers,
-      fetcherData: fetcherData.current,
+      fetcherData,
     }),
-    [state.fetchers],
+    [state.fetchers, fetcherData],
   );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
@@ -798,6 +812,33 @@ export function RouterProvider({
       {null}
     </>
   );
+}
+
+function getNextFetcherData(
+  prev: Map<string, any>,
+  fetchers: RouterState["fetchers"],
+  deletedFetchers: string[],
+): Map<string, any> {
+  let hasUpdates = false;
+  fetchers.forEach((fetcher, key) => {
+    if (fetcher.data !== undefined && prev.get(key) !== fetcher.data) {
+      hasUpdates = true;
+    }
+  });
+  if (!hasUpdates && deletedFetchers.some((key) => prev.has(key))) {
+    hasUpdates = true;
+  }
+  if (!hasUpdates) {
+    return prev;
+  }
+  let next = new Map(prev);
+  fetchers.forEach((fetcher, key) => {
+    if (fetcher.data !== undefined) {
+      next.set(key, fetcher.data);
+    }
+  });
+  deletedFetchers.forEach((key) => next.delete(key));
+  return next;
 }
 
 function getOptimisticRouterState(
