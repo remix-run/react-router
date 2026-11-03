@@ -91,12 +91,6 @@ const RESERVED_RESPONSE_HEADERS = new Set([
   "content-type",
   "location",
   "react-router-resource",
-  "x-remix-redirect",
-  "x-remix-reload-document",
-  "x-remix-replace",
-  "x-remix-response",
-  "x-remix-revalidate",
-  "x-remix-status",
 ]);
 
 type HeaderOperation =
@@ -136,7 +130,11 @@ class ResponseHeaders extends Headers {
     if (this.locked) {
       throw new Error(responseCreatedMessage);
     }
-    if (RESERVED_RESPONSE_HEADERS.has(name.toLowerCase())) {
+    let lowerName = name.toLowerCase();
+    if (
+      RESERVED_RESPONSE_HEADERS.has(lowerName) ||
+      lowerName.startsWith("x-remix-")
+    ) {
       throw new Error(
         `The "${name}" header is managed by React Router and can't be set ` +
           "with headers().",
@@ -154,19 +152,8 @@ type ServerContext = {
   headers: ResponseHeaders;
   redirect?: Response;
   request: Request;
-  // Responses that already include `headers`
-  responses: WeakSet<Response>;
   runningAction: boolean;
 };
-
-function createServerContext(request: Request): ServerContext {
-  return {
-    headers: new ResponseHeaders(),
-    request,
-    responses: new WeakSet(),
-    runningAction: false,
-  };
-}
 
 const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
   ___reactRouterServerStorage___?: AsyncLocalStorage<ServerContext>;
@@ -191,9 +178,9 @@ export function getRequest() {
  * resource routes, and middleware (before calling `next()`). It doesn't
  * contain the incoming request headers. Use `unstable_getRequest()` for those.
  *
- * `set`, `append`, and `delete` calls are applied in order on top of headers
- * from route `headers` exports and returned or thrown responses. `Set-Cookie`
- * headers are always appended, and exact duplicates are skipped.
+ * `set`, `append`, and `delete` calls are applied in order to the final
+ * response, on top of its other headers. `Set-Cookie` headers are always
+ * appended.
  *
  * Headers React Router manages, such as `Content-Type`, `Content-Length`, and
  * `Location`, can't be set. Writes throw once the response has been created,
@@ -235,15 +222,9 @@ export function headers(): Headers {
 
 function applyContextHeaders(ctx: ServerContext, target: Headers) {
   ctx.headers.locked = true;
-
-  let cookies = new Set(target.getSetCookie());
   for (let cookie of ctx.headers.getSetCookie()) {
-    if (!cookies.has(cookie)) {
-      cookies.add(cookie);
-      target.append("Set-Cookie", cookie);
-    }
+    target.append("Set-Cookie", cookie);
   }
-
   for (let operation of ctx.headers.operations) {
     if (operation.type === "delete") {
       target.delete(operation.name);
@@ -253,36 +234,6 @@ function applyContextHeaders(ctx: ServerContext, target: Headers) {
       target.set(operation.name, operation.value);
     }
   }
-}
-
-// Adds `headers()` to a response that doesn't include them yet, such as one
-// returned by middleware without calling `next()`
-function withContextHeaders(ctx: ServerContext, response: Response) {
-  if (ctx.responses.has(response)) {
-    return response;
-  }
-  if (
-    ctx.headers.operations.length === 0 &&
-    ctx.headers.getSetCookie().length === 0
-  ) {
-    ctx.headers.locked = true;
-    return response;
-  }
-  let headers = new Headers(response.headers);
-  applyContextHeaders(ctx, headers);
-  let result = new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
-  ctx.responses.add(result);
-  return result;
-}
-
-function finalizeResourceResponse(ctx: ServerContext, response: Response) {
-  return ctx.responses.has(response)
-    ? response
-    : withContextHeaders(ctx, tagResourceResponse(response));
 }
 
 export const redirect: typeof baseRedirect = (...args) => {
@@ -700,6 +651,11 @@ export async function matchRSCServerRequest({
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
   }
 
+  const ctx: ServerContext = {
+    headers: new ResponseHeaders(),
+    request: routerRequest,
+    runningAction: false,
+  };
   const leafMatch = matches?.[matches.length - 1];
   if (
     !isDataRequest &&
@@ -707,16 +663,21 @@ export async function matchRSCServerRequest({
     !leafMatch.route.Component &&
     !leafMatch.route.ErrorBoundary
   ) {
-    return generateResourceResponse(
-      routerRequest,
-      staticHandler,
-      leafMatch.route.id,
-      requestContext,
-      onError,
+    let response = await ServerStorage.run(ctx, () =>
+      generateResourceResponse(
+        routerRequest,
+        staticHandler,
+        leafMatch.route.id,
+        requestContext,
+        onError,
+      ),
     );
+    applyContextHeaders(ctx, response.headers);
+    return response;
   }
 
   let response = await generateRenderResponse(
+    ctx,
     routerRequest,
     staticHandler,
     basename,
@@ -733,6 +694,7 @@ export async function matchRSCServerRequest({
     routeDiscovery,
     clientVersion,
   );
+  applyContextHeaders(ctx, response.headers);
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
   response.headers.set("X-Remix-Response", "yes");
@@ -982,29 +944,25 @@ async function generateResourceResponse(
   requestContext: RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined,
 ) {
-  const ctx = createServerContext(request);
-
-  return ServerStorage.run(ctx, async () => {
-    try {
-      let response = await staticHandler.queryRoute(request, {
-        routeId,
-        requestContext,
-        async generateMiddlewareResponse(queryRoute) {
-          try {
-            let response = await queryRoute(request);
-            return finalizeResourceResponse(ctx, response);
-          } catch (error) {
-            return generateErrorResponse(error);
-          }
-        },
-        normalizePath: (r) => getNormalizedPath(r),
-      });
-      // Middleware can short-circuit before the response-generation callback runs.
-      return finalizeResourceResponse(ctx, response);
-    } catch (error) {
-      return generateErrorResponse(error);
-    }
-  });
+  try {
+    let response = await staticHandler.queryRoute(request, {
+      routeId,
+      requestContext,
+      async generateMiddlewareResponse(queryRoute) {
+        try {
+          let response = await queryRoute(request);
+          return tagResourceResponse(response);
+        } catch (error) {
+          return generateErrorResponse(error);
+        }
+      },
+      normalizePath: (r) => getNormalizedPath(r),
+    });
+    // Middleware can short-circuit before the response-generation callback runs.
+    return tagResourceResponse(response);
+  } catch (error) {
+    return generateErrorResponse(error);
+  }
 
   function generateErrorResponse(error: unknown) {
     let response: Response;
@@ -1023,7 +981,7 @@ async function generateResourceResponse(
       response = new Response("Internal Server Error", { status: 500 });
     }
 
-    return finalizeResourceResponse(ctx, response);
+    return tagResourceResponse(response);
   }
 }
 
@@ -1038,6 +996,7 @@ function tagResourceResponse(response: Response) {
 }
 
 async function generateRenderResponse(
+  ctx: ServerContext,
   request: Request,
   staticHandler: StaticHandler,
   basename: string | undefined,
@@ -1072,14 +1031,12 @@ async function generateRenderResponse(
       : null;
 
   let actionResult: Promise<unknown> | undefined;
-  const ctx = createServerContext(request);
-
+  // Server components render after the response is created, so `headers()`
+  // can't affect it from there
   let encodeResponse = generateResponse;
   generateResponse = (match, options) => {
-    applyContextHeaders(ctx, match.headers);
-    let response = encodeResponse(match, options);
-    ctx.responses.add(response);
-    return response;
+    ctx.headers.locked = true;
+    return encodeResponse(match, options);
   };
 
   const result = await ServerStorage.run(ctx, () =>
@@ -1225,10 +1182,10 @@ async function generateRenderResponse(
     .trim()
     .toLowerCase();
   if (contentType !== "text/x-component") {
-    return finalizeResourceResponse(ctx, result);
+    return tagResourceResponse(result);
   }
 
-  return withContextHeaders(ctx, result);
+  return result;
 }
 
 function generateRedirectResponse(

@@ -575,12 +575,7 @@ export async function setTheme(formData: FormData) {
 }
 ```
 
-`unstable_headers()` also works in loaders, actions, resource routes, and middleware (before calling `next()`). It only contains the outgoing response headers. Read incoming headers from the request instead.
-
-- `set`, `append`, and `delete` calls are applied in order on top of headers from route `headers` exports and returned or thrown responses
-- `Set-Cookie` headers are always appended, and exact duplicates are skipped
-- Headers React Router manages, such as `Content-Type`, `Content-Length`, and `Location`, can't be set
-- Writes throw once the response has been created, which includes while server components render. To change headers after calling `next()` in middleware, update the returned response's headers instead.
+`unstable_headers()` also works in loaders, actions, resource routes, and middleware (before calling `next()`). Its calls are applied to the final response, and `Set-Cookie` headers are always appended. Headers React Router manages, such as `Content-Type` and `Location`, can't be set, and writes throw once the response has been created, including while server components render.
 
 ### Client Properties
 
