@@ -1,10 +1,12 @@
 import {
+  getRequest,
   headers,
   matchRSCServerRequest,
   redirect,
   type RSCMatch,
   type RSCRouteConfigEntry,
 } from "../../lib/rsc/server.rsc";
+import { routeRSCServerRequest } from "../../lib/rsc/server.ssr";
 
 async function handleRequest(
   request: Request,
@@ -286,10 +288,10 @@ describe("unstable_headers", () => {
     );
 
     expect(String(renderError)).toMatch(
-      "headers can't be called after the response has been created",
+      "headers can't be used after the response has been created",
     );
     expect(String(middlewareError)).toMatch(
-      "headers can't be called after the response has been created",
+      "headers can't be used after the response has been created",
     );
   });
 
@@ -317,5 +319,271 @@ describe("unstable_headers", () => {
 
     expect(one.response.headers.get("X-Id")).toBe("1");
     expect(two.response.headers.get("X-Id")).toBe("2");
+  });
+
+  describe("resource routes", () => {
+    let routes: RSCRouteConfigEntry[] = [
+      {
+        id: "root",
+        path: "/",
+        middleware: [
+          async (_, next) => {
+            headers().append("Set-Cookie", "middleware=1");
+            return next();
+          },
+        ],
+        Component: () => null,
+        children: [
+          {
+            id: "api",
+            path: "api",
+            loader() {
+              headers().set("X-Loader", "loader");
+              return Response.json({ ok: true });
+            },
+          },
+          {
+            id: "api-error",
+            path: "api-error",
+            loader() {
+              headers().append("Set-Cookie", "loader=1");
+              throw new Response("Not found", { status: 404 });
+            },
+          },
+        ],
+      },
+    ];
+
+    test("adds headers from middleware and loaders", async () => {
+      let { response } = await handleRequest(
+        new Request("https://remix.run/api"),
+        routes,
+      );
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ ok: true });
+      expect(response.headers.get("React-Router-Resource")).toBe("true");
+      expect(response.headers.getSetCookie()).toEqual(["middleware=1"]);
+      expect(response.headers.get("X-Loader")).toBe("loader");
+    });
+
+    test("supports getRequest", async () => {
+      let { response } = await handleRequest(
+        new Request("https://remix.run/method"),
+        [
+          {
+            id: "method",
+            path: "/method",
+            loader: () => new Response(getRequest().method),
+          },
+        ],
+      );
+
+      expect(await response.text()).toBe("GET");
+    });
+
+    test("adds headers to thrown responses", async () => {
+      let { response } = await handleRequest(
+        new Request("https://remix.run/api-error"),
+        routes,
+      );
+
+      expect(response.status).toBe(404);
+      expect(response.headers.getSetCookie()).toEqual([
+        "middleware=1",
+        "loader=1",
+      ]);
+    });
+  });
+
+  test("adds headers to Flight responses returned by middleware", async () => {
+    let cached = new Response("Cached Flight", {
+      headers: { "Content-Type": "text/x-component" },
+    });
+    let { response } = await handleRequest(new Request("https://remix.run/"), [
+      {
+        id: "root",
+        path: "/",
+        middleware: [
+          async (_, next) => {
+            headers().append("Set-Cookie", "session=abc");
+            return next();
+          },
+          async () => cached.clone(),
+        ],
+        Component: () => null,
+      },
+    ]);
+
+    expect(await response.text()).toBe("Cached Flight");
+    expect(response.headers.getSetCookie()).toEqual(["session=abc"]);
+    expect(response.headers.get("X-Remix-Response")).toBe("yes");
+  });
+
+  test("doesn't duplicate cookies when middleware reuses next() headers", async () => {
+    let { response } = await handleRequest(new Request("https://remix.run/"), [
+      {
+        id: "root",
+        path: "/",
+        middleware: [
+          async (_, next) => {
+            headers().append("Set-Cookie", "a=1");
+            let res = await next();
+            throw redirect("/login", { headers: res.headers });
+          },
+        ],
+        Component: () => null,
+      },
+    ]);
+
+    expect(response.headers.getSetCookie()).toEqual(["a=1"]);
+  });
+
+  test.each([
+    "Content-Length",
+    "content-type",
+    "Location",
+    "React-Router-Resource",
+    "X-Remix-Response",
+  ])("rejects the React Router managed %s header", async (name) => {
+    let error: unknown;
+    await handleRequest(new Request("https://remix.run/"), [
+      {
+        id: "root",
+        path: "/",
+        loader() {
+          try {
+            headers().set(name, "1");
+          } catch (e) {
+            error = e;
+          }
+          return null;
+        },
+        Component: () => null,
+      },
+    ]);
+
+    expect(String(error)).toMatch(
+      `The "${name}" header is managed by React Router`,
+    );
+  });
+
+  test("throws when a held reference is written to after the response is created", async () => {
+    let lateWrite: Promise<unknown> | undefined;
+    let { response } = await handleRequest(new Request("https://remix.run/"), [
+      {
+        id: "root",
+        path: "/",
+        loader() {
+          let responseHeaders = headers();
+          lateWrite = new Promise((resolve) => setTimeout(resolve, 5)).then(
+            () => responseHeaders.set("X-Late", "1"),
+          );
+          lateWrite.catch(() => {});
+          return null;
+        },
+        Component: () => null,
+      },
+    ]);
+
+    await expect(lateWrite).rejects.toThrow(
+      "headers can't be used after the response has been created",
+    );
+    expect(response.headers.get("X-Late")).toBeNull();
+  });
+
+  test("applies set, append, and delete in order on top of route headers", async () => {
+    let { response } = await handleRequest(new Request("https://remix.run/"), [
+      {
+        id: "root",
+        path: "/",
+        headers: {
+          "Cache-Control": "max-age=60",
+          Vary: "Accept-Encoding",
+          "X-Remove": "route",
+        },
+        loader() {
+          headers().append("Vary", "Cookie");
+          headers().set("Cache-Control", "no-store");
+          headers().delete("X-Remove");
+          return null;
+        },
+        Component: () => null,
+      },
+    ]);
+
+    expect(response.headers.get("Vary")).toBe("Accept-Encoding, Cookie");
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.has("X-Remove")).toBe(false);
+  });
+
+  test("keeps headers on CSRF error responses", async () => {
+    let { response } = await handleRequest(
+      new Request("https://remix.run/", {
+        method: "POST",
+        headers: { Origin: "https://evil.com", "rsc-action-id": "action-id" },
+        body: "[]",
+      }),
+      [
+        {
+          id: "root",
+          path: "/",
+          middleware: [
+            async (_, next) => {
+              headers().append("Set-Cookie", "mw=1");
+              return next();
+            },
+          ],
+          Component: () => null,
+        },
+      ],
+      { serverFunction: () => {} },
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.headers.getSetCookie()).toEqual(["mw=1"]);
+  });
+
+  test("sends cookies once on no-JS server function redirects", async () => {
+    let match: RSCMatch | undefined;
+    let request = serverFunctionRequest("form");
+    let serverResponse = await matchRSCServerRequest({
+      createTemporaryReferenceSet: () => ({}),
+      decodeAction: async () => async () => {
+        headers().append("Set-Cookie", "a=b");
+        throw redirect("/target");
+      },
+      request,
+      routes: [rootRoute],
+      generateResponse(nextMatch) {
+        match = nextMatch;
+        return new Response("Encoded Flight", {
+          status: nextMatch.statusCode,
+          headers: nextMatch.headers,
+        });
+      },
+    });
+    let response = await routeRSCServerRequest({
+      request,
+      serverResponse,
+      createFromReadableStream: async () => match?.payload,
+      renderHTML() {
+        throw new Error("Redirect responses should not render HTML");
+      },
+    });
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("Location")).toBe("/target");
+    expect(response.headers.getSetCookie()).toEqual(["a=b"]);
+  });
+
+  test("explains when another copy of React Router handles the request", async () => {
+    let storage = (globalThis as any).___reactRouterServerStorage___;
+    expect(() =>
+      storage.run(
+        { request: new Request("https://remix.run/"), runningAction: false },
+        () => headers(),
+      ),
+    ).toThrow("Make sure only one copy of react-router is installed");
   });
 });

@@ -1636,25 +1636,25 @@ implementations.forEach((implementation) => {
 
             "src/routes/headers/home.actions.ts": js`
               "use server";
-              import { unstable_headers as headers } from "react-router";
+              import { unstable_headers } from "react-router";
 
               export async function setCookie() {
-                headers().append("Set-Cookie", "from-server-function=1; Path=/");
+                unstable_headers().append("Set-Cookie", "from-server-function=1; Path=/");
               }
             `,
             "src/routes/headers/home.tsx": js`
-              import { unstable_headers as headers } from "react-router";
+              import { unstable_headers } from "react-router";
               import { setCookie } from "./home.actions";
 
               export function loader() {
-                headers().set("X-Loader", "loader");
+                unstable_headers().set("X-Loader", "loader");
                 return null;
               }
 
               export default function HeadersRoute() {
                 let renderError = "none";
                 try {
-                  headers();
+                  unstable_headers();
                 } catch (error) {
                   renderError = error.message;
                 }
@@ -2070,7 +2070,7 @@ implementations.forEach((implementation) => {
           );
           expect(documentResponse?.headers()["x-loader"]).toBe("loader");
           await expect(page.locator("[data-render-error]")).toContainText(
-            "headers can't be called after the response has been created",
+            "headers can't be used after the response has been created",
           );
 
           let actionResponse = page.waitForResponse(

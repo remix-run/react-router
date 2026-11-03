@@ -84,13 +84,89 @@ const WithErrorBoundaryProps: typeof WithErrorBoundaryPropsType =
 const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
   UNSAFE_WithHydrateFallbackProps;
 
+// Headers React Router manages on RSC responses. Letting apps set these could
+// break the protocol (e.g. a stale Content-Length truncates the HTML document).
+const RESERVED_RESPONSE_HEADERS = new Set([
+  "content-length",
+  "content-type",
+  "location",
+  "react-router-resource",
+  "x-remix-redirect",
+  "x-remix-reload-document",
+  "x-remix-replace",
+  "x-remix-response",
+  "x-remix-revalidate",
+  "x-remix-status",
+]);
+
+type HeaderOperation =
+  | { type: "set" | "append"; name: string; value: string }
+  | { type: "delete"; name: string };
+
+class ResponseHeaders extends Headers {
+  locked = false;
+  operations: HeaderOperation[] = [];
+
+  append(name: string, value: string) {
+    this.assertWritable(name);
+    super.append(name, value);
+    this.record({ type: "append", name, value });
+  }
+
+  set(name: string, value: string) {
+    this.assertWritable(name);
+    super.set(name, value);
+    this.record({ type: "set", name, value });
+  }
+
+  delete(name: string) {
+    this.assertWritable(name);
+    super.delete(name);
+    this.record({ type: "delete", name });
+  }
+
+  private record(operation: HeaderOperation) {
+    // Cookies are applied from the final Set-Cookie values instead
+    if (operation.name.toLowerCase() !== "set-cookie") {
+      this.operations.push(operation);
+    }
+  }
+
+  private assertWritable(name: string) {
+    if (this.locked) {
+      throw new Error(responseCreatedMessage);
+    }
+    if (RESERVED_RESPONSE_HEADERS.has(name.toLowerCase())) {
+      throw new Error(
+        `The "${name}" header is managed by React Router and can't be set ` +
+          "with headers().",
+      );
+    }
+  }
+}
+
+const responseCreatedMessage =
+  "headers can't be used after the response has been created. Set response " +
+  "headers in a server function, loader, action, or middleware (before " +
+  "calling next()), not while rendering server components.";
+
 type ServerContext = {
-  headers: Headers;
+  headers: ResponseHeaders;
   redirect?: Response;
   request: Request;
-  responseCreated: boolean;
+  // Responses that already include `headers`
+  responses: WeakSet<Response>;
   runningAction: boolean;
 };
+
+function createServerContext(request: Request): ServerContext {
+  return {
+    headers: new ResponseHeaders(),
+    request,
+    responses: new WeakSet(),
+    runningAction: false,
+  };
+}
 
 const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
   ___reactRouterServerStorage___?: AsyncLocalStorage<ServerContext>;
@@ -110,23 +186,26 @@ export function getRequest() {
 }
 
 /**
- * Returns the headers that React Router will add to the response for the
- * current request. Use it to set headers, such as `Set-Cookie`, from server
- * functions, loaders, actions, and middleware (before calling `next()`).
+ * Returns the outgoing response headers for the current request. Use it to
+ * set headers, such as `Set-Cookie`, from server functions, loaders, actions,
+ * resource routes, and middleware (before calling `next()`). It doesn't
+ * contain the incoming request headers. Use `unstable_getRequest()` for those.
  *
- * `Set-Cookie` headers are appended to the response. Other headers replace
- * any value from route `headers` exports or the returned/thrown response.
+ * `set`, `append`, and `delete` calls are applied in order on top of headers
+ * from route `headers` exports and returned or thrown responses. `Set-Cookie`
+ * headers are always appended, and exact duplicates are skipped.
  *
- * Throws once the response has been created, which includes while server
- * components render.
+ * Headers React Router manages, such as `Content-Type`, `Content-Length`, and
+ * `Location`, can't be set. Writes throw once the response has been created,
+ * which includes while server components render.
  *
  * @example
  * "use server";
- * import { unstable_headers as headers } from "react-router";
+ * import { unstable_headers } from "react-router";
  *
  * export async function setTheme(formData: FormData) {
  *   let theme = String(formData.get("theme"));
- *   headers().append("Set-Cookie", `theme=${theme}; Path=/`);
+ *   unstable_headers().append("Set-Cookie", `theme=${theme}; Path=/`);
  * }
  *
  * @name unstable_headers
@@ -134,7 +213,7 @@ export function getRequest() {
  * @category RSC
  * @mode data
  * @mode framework
- * @returns The response {@link Headers} for the current request.
+ * @returns The outgoing response {@link Headers} for the current request.
  */
 export function headers(): Headers {
   const ctx = ServerStorage.getStore();
@@ -143,24 +222,67 @@ export function headers(): Headers {
     throw new Error(
       "headers must be called from within a React Server render context",
     );
-  if (ctx.responseCreated)
+  // The storage is shared through `globalThis`, so the request may be handled
+  // by another copy of React Router that doesn't support `headers()`
+  if (!(ctx.headers instanceof ResponseHeaders))
     throw new Error(
-      "headers can't be called after the response has been created. Set " +
-        "response headers in a server function, loader, action, or middleware " +
-        "(before calling next()), not while rendering server components.",
+      "headers isn't supported by the copy of React Router handling this " +
+        "request. Make sure only one copy of react-router is installed.",
     );
+  if (ctx.headers.locked) throw new Error(responseCreatedMessage);
   return ctx.headers;
 }
 
-function applyContextHeaders(target: Headers, source: Headers) {
-  for (let cookie of source.getSetCookie()) {
-    target.append("Set-Cookie", cookie);
-  }
-  for (let [key, value] of source) {
-    if (key.toLowerCase() !== "set-cookie") {
-      target.set(key, value);
+function applyContextHeaders(ctx: ServerContext, target: Headers) {
+  ctx.headers.locked = true;
+
+  let cookies = new Set(target.getSetCookie());
+  for (let cookie of ctx.headers.getSetCookie()) {
+    if (!cookies.has(cookie)) {
+      cookies.add(cookie);
+      target.append("Set-Cookie", cookie);
     }
   }
+
+  for (let operation of ctx.headers.operations) {
+    if (operation.type === "delete") {
+      target.delete(operation.name);
+    } else if (operation.type === "append") {
+      target.append(operation.name, operation.value);
+    } else {
+      target.set(operation.name, operation.value);
+    }
+  }
+}
+
+// Adds `headers()` to a response that doesn't include them yet, such as one
+// returned by middleware without calling `next()`
+function withContextHeaders(ctx: ServerContext, response: Response) {
+  if (ctx.responses.has(response)) {
+    return response;
+  }
+  if (
+    ctx.headers.operations.length === 0 &&
+    ctx.headers.getSetCookie().length === 0
+  ) {
+    ctx.headers.locked = true;
+    return response;
+  }
+  let headers = new Headers(response.headers);
+  applyContextHeaders(ctx, headers);
+  let result = new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+  ctx.responses.add(result);
+  return result;
+}
+
+function finalizeResourceResponse(ctx: ServerContext, response: Response) {
+  return ctx.responses.has(response)
+    ? response
+    : withContextHeaders(ctx, tagResourceResponse(response));
 }
 
 export const redirect: typeof baseRedirect = (...args) => {
@@ -860,25 +982,29 @@ async function generateResourceResponse(
   requestContext: RouterContextProvider | undefined,
   onError: ((error: unknown) => void) | undefined,
 ) {
-  try {
-    let response = await staticHandler.queryRoute(request, {
-      routeId,
-      requestContext,
-      async generateMiddlewareResponse(queryRoute) {
-        try {
-          let response = await queryRoute(request);
-          return tagResourceResponse(response);
-        } catch (error) {
-          return generateErrorResponse(error);
-        }
-      },
-      normalizePath: (r) => getNormalizedPath(r),
-    });
-    // Middleware can short-circuit before the response-generation callback runs.
-    return tagResourceResponse(response);
-  } catch (error) {
-    return generateErrorResponse(error);
-  }
+  const ctx = createServerContext(request);
+
+  return ServerStorage.run(ctx, async () => {
+    try {
+      let response = await staticHandler.queryRoute(request, {
+        routeId,
+        requestContext,
+        async generateMiddlewareResponse(queryRoute) {
+          try {
+            let response = await queryRoute(request);
+            return finalizeResourceResponse(ctx, response);
+          } catch (error) {
+            return generateErrorResponse(error);
+          }
+        },
+        normalizePath: (r) => getNormalizedPath(r),
+      });
+      // Middleware can short-circuit before the response-generation callback runs.
+      return finalizeResourceResponse(ctx, response);
+    } catch (error) {
+      return generateErrorResponse(error);
+    }
+  });
 
   function generateErrorResponse(error: unknown) {
     let response: Response;
@@ -897,7 +1023,7 @@ async function generateResourceResponse(
       response = new Response("Internal Server Error", { status: 500 });
     }
 
-    return tagResourceResponse(response);
+    return finalizeResourceResponse(ctx, response);
   }
 }
 
@@ -946,18 +1072,14 @@ async function generateRenderResponse(
       : null;
 
   let actionResult: Promise<unknown> | undefined;
-  const ctx: ServerContext = {
-    headers: new Headers(),
-    request,
-    responseCreated: false,
-    runningAction: false,
-  };
+  const ctx = createServerContext(request);
 
   let encodeResponse = generateResponse;
   generateResponse = (match, options) => {
-    ctx.responseCreated = true;
-    applyContextHeaders(match.headers, ctx.headers);
-    return encodeResponse(match, options);
+    applyContextHeaders(ctx, match.headers);
+    let response = encodeResponse(match, options);
+    ctx.responses.add(response);
+    return response;
   };
 
   const result = await ServerStorage.run(ctx, () =>
@@ -1103,13 +1225,10 @@ async function generateRenderResponse(
     .trim()
     .toLowerCase();
   if (contentType !== "text/x-component") {
-    ctx.responseCreated = true;
-    let response = tagResourceResponse(result);
-    applyContextHeaders(response.headers, ctx.headers);
-    return response;
+    return finalizeResourceResponse(ctx, result);
   }
 
-  return result;
+  return withContextHeaders(ctx, result);
 }
 
 function generateRedirectResponse(

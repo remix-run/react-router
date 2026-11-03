@@ -563,16 +563,24 @@ Server functions don't return a `Response`, so use `unstable_headers()` to set r
 ```tsx
 "use server";
 
-import { unstable_headers as headers } from "react-router";
+import { unstable_headers } from "react-router";
 import { themeCookie } from "./cookies.server.ts";
 
 export async function setTheme(formData: FormData) {
   let theme = String(formData.get("theme"));
-  headers().append("Set-Cookie", await themeCookie.serialize(theme));
+  unstable_headers().append(
+    "Set-Cookie",
+    await themeCookie.serialize(theme),
+  );
 }
 ```
 
-`unstable_headers()` also works in loaders, actions, and middleware (before calling `next()`). `Set-Cookie` headers are appended to the response, and other headers replace values from route `headers` exports or redirect responses. It throws once the response has been created, which includes while server components render.
+`unstable_headers()` also works in loaders, actions, resource routes, and middleware (before calling `next()`). It only contains the outgoing response headers. Read incoming headers from the request instead.
+
+- `set`, `append`, and `delete` calls are applied in order on top of headers from route `headers` exports and returned or thrown responses
+- `Set-Cookie` headers are always appended, and exact duplicates are skipped
+- Headers React Router manages, such as `Content-Type`, `Content-Length`, and `Location`, can't be set
+- Writes throw once the response has been created, which includes while server components render. To change headers after calling `next()` in middleware, update the returned response's headers instead.
 
 ### Client Properties
 
