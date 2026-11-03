@@ -1091,6 +1091,10 @@ export async function resolveEntryFiles({
   if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
   } else {
+    let isSpaMode =
+      reactRouterConfig.ssr === false &&
+      (reactRouterConfig.prerender == null ||
+        reactRouterConfig.prerender === false);
     let packageJsonPath = findEntry(rootDirectory, "package", {
       extensions: [".json"],
       absolute: true,
@@ -1107,7 +1111,7 @@ export async function resolveEntryFiles({
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
 
-    if (!deps["isbot"]) {
+    if (!isSpaMode && !deps["isbot"]) {
       console.log(
         "adding `isbot@5` to your package.json, you should commit this change",
       );
@@ -1126,11 +1130,12 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile =
+    let runtime =
       hasNodeDependency(deps) &&
       !reactRouterConfig.future.unstable_enableNodeReadableStream
-        ? `entry.server.node.tsx`
-        : `entry.server.web.tsx`;
+        ? "node"
+        : "web";
+    entryServerFile = `entry.server.${runtime}${isSpaMode ? ".spa" : ""}.tsx`;
   }
 
   let entryClientFilePath = userEntryClientFile
