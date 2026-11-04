@@ -1291,6 +1291,11 @@ export function createRouter(init: RouterInit): Router {
   // the globally incrementing load when a fetcher load lands after a completed
   // navigation
   let pendingNavigationLoadId = -1;
+  // The signal of a navigation whose loader phase is awaiting lazy route
+  // discovery. Its matches are not known yet, so a fetcher action
+  // revalidation that settles in that window must neither match against the
+  // undiscovered routes nor complete the navigation on its behalf (#15730).
+  let pendingNavigationDiscoverySignal: AbortSignal | null = null;
 
   // Fetchers that triggered data reloads as a result of their actions
   let fetchReloadIds = new Map<string, number>();
@@ -2505,11 +2510,15 @@ export function createRouter(init: RouterInit): Router {
         );
       }
 
+      pendingNavigationDiscoverySignal = request.signal;
       let discoverResult = await discoverRoutes(
         matches,
         location.pathname,
         request.signal,
       );
+      if (pendingNavigationDiscoverySignal === request.signal) {
+        pendingNavigationDiscoverySignal = null;
+      }
 
       if (
         (future.unstable_customRouteDiscovery && request.signal.aborted) ||
@@ -3089,8 +3098,13 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       abortController.signal,
     );
+    // While the navigation awaits discovery its routes are not patched in yet,
+    // so matching its location would hit a catch-all or nothing. Revalidate
+    // the current matches instead; the navigation loads its own once
+    // discovery completes.
     let matches =
-      state.navigation.state !== "idle"
+      state.navigation.state !== "idle" &&
+      pendingNavigationDiscoverySignal == null
         ? dataRouteMatcher.match(state.navigation.location)
         : state.matches;
 
@@ -3266,10 +3280,13 @@ export function createRouter(init: RouterInit): Router {
 
     // If we are currently in a navigation loading state and this fetcher is
     // more recent than the navigation, we want the newer data so abort the
-    // navigation and complete it with the fetcher data
+    // navigation and complete it with the fetcher data. A navigation that is
+    // still awaiting discovery has no matches to complete with, and it bumps
+    // its load id only afterwards, so leave it to finish on its own.
     if (
       state.navigation.state === "loading" &&
-      loadId > pendingNavigationLoadId
+      loadId > pendingNavigationLoadId &&
+      pendingNavigationDiscoverySignal == null
     ) {
       invariant(pendingAction, "Expected pending action");
       pendingNavigationController && pendingNavigationController.abort();
