@@ -1,12 +1,77 @@
+/**
+ * @jest-environment node
+ */
+
 import { decodeViaTurboStream } from "../../lib/dom/ssr/single-fetch";
 import {
   ErrorResponseImpl,
   isRouteErrorResponse,
+  type LoaderFunctionArgs,
 } from "../../lib/router/utils";
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { encodeViaTurboStream } from "../../lib/server-runtime/single-fetch";
 import { ServerMode } from "../../lib/server-runtime/mode";
 import { mockServerBuild } from "./utils";
+
+describe.each([false, true])(
+  "single fetch with v8_passThroughRequests=%s",
+  (v8_passThroughRequests) => {
+    it.each([
+      ["GET", "/items/foo.data.data", "/items/foo.data", false],
+      ["POST", "/items/foo.data.data", "/items/foo.data", false],
+      ["GET", "/items/foo.data.data", "/items/foo.data", true],
+      ["POST", "/items/foo.data.data", "/items/foo.data", true],
+      ["GET", "/items/foo.data/_.data", "/items/foo.data/", true],
+      ["POST", "/items/foo.data/_.data", "/items/foo.data/", true],
+    ] as const)(
+      "preserves .data in route params for %s %s matching %s (trailing slash aware=%s)",
+      async (
+        method,
+        requestPath,
+        pathname,
+        v8_trailingSlashAwareDataRequests,
+      ) => {
+        let routeId = "routes/items.$id";
+        let routeHandler = ({ params, request, url }: LoaderFunctionArgs) => ({
+          id: params.id,
+          requestUrl: request.url,
+          url: url.href,
+        });
+        let build = mockServerBuild(
+          {
+            [routeId]: {
+              path: "/items/:id",
+              default: {},
+              loader: routeHandler,
+              action: routeHandler,
+            },
+          },
+          {
+            future: {
+              v8_passThroughRequests,
+              v8_trailingSlashAwareDataRequests,
+            },
+          },
+        );
+        build.basename = "/base";
+        let handler = createRequestHandler(build);
+        let requestUrl = `http://example.com/base${requestPath}?index&a=1&_routes=${routeId}`;
+        let response = await handler(new Request(requestUrl, { method }));
+
+        expect(response.status).toBe(200);
+        if (!response.body) throw new Error("No body");
+        let decoded = await decodeViaTurboStream(response.body, global);
+        let result = decoded.value as any;
+        let expectedUrl = `http://example.com/base${pathname}?a=1`;
+        expect(method === "GET" ? result[routeId].data : result.data).toEqual({
+          id: "foo.data",
+          requestUrl: v8_passThroughRequests ? requestUrl : expectedUrl,
+          url: expectedUrl,
+        });
+      },
+    );
+  },
+);
 
 describe("loaders", () => {
   // so that HTML/Fetch requests are the same, and so redirects don't hang on to
