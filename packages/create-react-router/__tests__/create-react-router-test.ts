@@ -207,6 +207,36 @@ describe("create-react-router CLI", () => {
     ).toBe("prompts");
   });
 
+  it("succeeds when the initial Git commit fails", async () => {
+    let projectDir = getProjectDir("git-commit-failure");
+    let gitConfig = path.join(TEMP_DIR, "empty-gitconfig");
+    writeFileSync(gitConfig, "");
+
+    let { status, stderr } = await execCreateReactRouter({
+      args: [
+        projectDir,
+        "--no-install",
+        "--no-agent-skills",
+        "--git-init",
+      ],
+      interactive: false,
+      env: {
+        GIT_CONFIG_NOSYSTEM: "1",
+        GIT_CONFIG_GLOBAL: gitConfig,
+      },
+    });
+
+    expect(status).toBe(0);
+    expect(existsSync(path.join(projectDir, ".git"))).toBeTruthy();
+    expect(stderr).toContain("Git initialized, but the initial commit failed.");
+    expect(() =>
+      execFileSync("git", ["rev-parse", "--verify", "HEAD"], {
+        cwd: projectDir,
+        stdio: "ignore",
+      }),
+    ).toThrow();
+  });
+
   it.each(["relative", "trailing-separator", "absolute", "current"])(
     "uses the directory basename for a %s project path",
     async (kind) => {
