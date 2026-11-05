@@ -515,6 +515,7 @@ async function gitInitStep(ctx: Context) {
   }
 
   log("");
+  let commitFailed = false;
   await loadingIndicator({
     start: "Git initializing...",
     end: "Git initialized",
@@ -524,14 +525,28 @@ async function gitInitStep(ctx: Context) {
       try {
         await runCommand("git", ["init"], options);
         await runCommand("git", ["add", "."], options);
-        await runCommand("git", ["commit", "-m", commitMsg], options);
       } catch (err) {
         error("Oh no!", "Failed to initialize git.");
         throw err;
       }
+      // The initial commit is optional: it can fail on its own (e.g. when
+      // user.name/user.email are not configured) after the repo and staged
+      // files already exist. Don't abort the whole scaffold for it.
+      try {
+        await runCommand("git", ["commit", "-m", commitMsg], options);
+      } catch {
+        commitFailed = true;
+      }
     },
     ctx,
   });
+  if (commitFailed) {
+    info(
+      "Heads up!",
+      "Git was initialized, but the initial commit could not be created. " +
+        "Configure user.name and user.email, then commit manually.",
+    );
+  }
 }
 
 async function doneStep(ctx: Context) {
