@@ -266,6 +266,10 @@ async function run() {
     : app.listen(port, onListen);
 
   ["SIGTERM", "SIGINT"].forEach((signal) => {
-    process.once(signal, () => server?.close(console.error));
+    process.once(signal, () =>
+      server?.close((error) => {
+        if (error) console.error(error);
+      }),
+    );
   });
 }

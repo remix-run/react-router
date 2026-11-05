@@ -6,9 +6,6 @@ title: Pre-Rendering
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 Pre-Rendering allows you to speed up page loads for static content by rendering pages at build time instead of at runtime.
 
 ## Configuration

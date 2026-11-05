@@ -6,9 +6,6 @@ title: Streaming with Suspense
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 Streaming with React Suspense allows apps to speed up initial renders by deferring non-critical data and unblocking UI rendering.
 
 React Router supports React Suspense by returning promises from loaders and actions.
@@ -66,9 +63,28 @@ export default function MyComponent({
 }
 ```
 
-## With React 19
+## Opt into React's `use()` API
 
-If you're using React 19, you can use `React.use` instead of `Await`, but you'll need to create a new component and pass the promise down to trigger the suspense fallback.
+<docs-warning>The `unstable_promise` prop is experimental and may change in minor or patch releases.</docs-warning>
+
+Use `<Await unstable_promise>` instead of `<Await resolve>` to opt into `React.use` under the hood while keeping the Await API:
+
+```tsx
+<React.Suspense fallback={<div>Loading...</div>}>
+  <Await
+    unstable_promise={nonCriticalData}
+    errorElement={<LoadingError />}
+  >
+    {(value) => <h3>Non critical value: {value}</h3>}
+  </Await>
+</React.Suspense>
+```
+
+This should largely behave the same as `<Await resolve>` while avoiding the legacy React Router promise tracking. Both support render-prop children, `useAsyncValue`, and `useAsyncError`. One notable difference with `unstable_promise` is that `errorElement` only handles promise rejections. Errors thrown while rendering children bubble to the nearest React error boundary.
+
+## Use React directly
+
+You can also read the promise directly with `React.use`. Pass it to a child component rendered inside `<React.Suspense>` so the boundary can display its fallback while the promise is pending.
 
 ```tsx
 <React.Suspense fallback={<div>Loading...</div>}>
@@ -94,7 +110,7 @@ export const streamTimeout = 10_000;
 
 ## Handling early rejections (Node)
 
-React Router waits for all loaders to settle (via `Promise.all`) before it begins streaming the response. Once streaming has started, React Router catches subsequent rejections of your streamed promises and surfaces them to your `<Await>` (or React 19 `React.use`) error UI.
+React Router waits for all loaders to settle (via `Promise.all`) before it begins streaming the response. Once streaming has started, React Router catches subsequent rejections of your streamed promises and surfaces them to your `<Await>` (or `React.use`) error UI.
 
 However, if a streamed promise rejects _before_ all of the route's loaders have settled, React Router has not yet been able to attach a handler to it. In Node, an unhandled promise rejection will crash the process unless you have a top-level handler registered.
 

@@ -41,6 +41,7 @@ import type {
   RouteManifest,
   RouteMatch,
   RouteObject,
+  TrackedPromise,
   UIMatch,
 } from "./router/utils";
 import {
@@ -317,9 +318,6 @@ const navigateEffectWarning =
  * ### Prevent Scroll Reset
  *
  * [MODES: framework, data]
- *
- * <br/>
- * <br/>
  *
  * To prevent {@link ScrollRestoration | `<ScrollRestoration>`} from resetting
  * the scroll position, use the `preventScrollReset` option.
@@ -1762,7 +1760,11 @@ export function useRouteError(): unknown {
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
-  return value?._data;
+  return value && "status" in value && !("_tracked" in value)
+    ? value.status === "fulfilled"
+      ? value.value
+      : undefined
+    : (value as TrackedPromise | null)?._data;
 }
 
 /**
@@ -1792,7 +1794,11 @@ export function useAsyncValue(): unknown {
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
-  return value?._error;
+  return value && "status" in value && !("_tracked" in value)
+    ? value.status === "rejected"
+      ? value.reason
+      : undefined
+    : (value as TrackedPromise | null)?._error;
 }
 
 let blockerId = 0;

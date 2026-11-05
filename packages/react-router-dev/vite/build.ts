@@ -1,6 +1,10 @@
 import type * as Vite from "vite";
 import { preloadVite, getVite } from "./vite";
 
+export interface ReactRouterBuildContext {
+  close: () => Promise<void>;
+}
+
 export interface ViteBuildOptions {
   assetsInlineLimit?: number;
   clearScreen?: boolean;
@@ -79,5 +83,15 @@ export async function build(root: string, viteBuildOptions: ViteBuildOptions) {
       },
     ],
   });
-  await builder.buildApp();
+  try {
+    await builder.buildApp();
+  } finally {
+    // Vite stops running buildApp hooks on failure, so the plugin's final
+    // cleanup hook may not run. The CLI owns this boundary and can always close.
+    let { __reactRouterBuildContext: buildContext } =
+      builder.config as Vite.ResolvedConfig & {
+        __reactRouterBuildContext?: ReactRouterBuildContext;
+      };
+    await buildContext?.close();
+  }
 }

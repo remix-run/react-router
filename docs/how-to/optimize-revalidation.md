@@ -6,9 +6,6 @@ title: Revalidation Optimization
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 After a mutation or some navigations, React Router re-runs loaders so
 the UI stays in sync with the server. That default is the right
 starting point. When a loader is expensive, or a mutation cannot
