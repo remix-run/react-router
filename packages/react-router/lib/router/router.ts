@@ -1277,6 +1277,12 @@ export function createRouter(init: RouterInit): Router {
   //  - X-Remix-Revalidate (from redirect)
   let isRevalidationRequired = false;
 
+  // Load id when a mutation last succeeded, until a load started after that
+  // lands.  A 4xx/5xx action skips revalidation by default, but must not drop a
+  // reload it interrupted or superseded (`isRevalidationRequired` can't tell,
+  // since every submission sets it for itself).
+  let pendingMutationLoadId: number | null = null;
+
   // Use this internal array to capture fetcher loads that were cancelled by an
   // action navigation and require revalidation
   let cancelledFetcherLoads: Set<string> = new Set();
@@ -2385,6 +2391,8 @@ export function createRouter(init: RouterInit): Router {
       if (request.signal.aborted) {
         return { shortCircuited: true };
       }
+
+      trackMutationResult(result);
     }
 
     if (isRedirectResult(result)) {
@@ -2585,7 +2593,8 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       dataRouteMatcher,
       pendingActionResult,
-      callSiteDefaultShouldRevalidate,
+      callSiteDefaultShouldRevalidate ??
+        getOwedMutationRevalidation(pendingActionResult?.[1]),
     );
 
     pendingNavigationLoadId = ++incrementingLoadId;
@@ -2601,6 +2610,7 @@ export function createRouter(init: RouterInit): Router {
       ) &&
       revalidatingFetchers.length === 0
     ) {
+      markRevalidationLanded(pendingNavigationLoadId);
       let workingFetchers = new Map(state.fetchers);
       let didUpdateFetcherRedirects = markFetchRedirectsDone(workingFetchers);
       completeNavigation(
@@ -2747,6 +2757,7 @@ export function createRouter(init: RouterInit): Router {
       clientErrors.set(errors, newClientErrors);
     }
 
+    markRevalidationLanded(pendingNavigationLoadId);
     let didUpdateFetcherRedirects = markFetchRedirectsDone(workingFetchers);
     let didAbortFetchLoads = abortStaleFetchLoads(
       pendingNavigationLoadId,
@@ -3029,6 +3040,8 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    trackMutationResult(actionResult);
+
     // We don't want errors bubbling up to the UI or redirects processed for
     // unmounted fetchers so we just revert them to idle
     if (fetchersQueuedForDeletion.has(key)) {
@@ -3118,7 +3131,8 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       dataRouteMatcher,
       [match.route.id, actionResult],
-      callSiteDefaultShouldRevalidate,
+      callSiteDefaultShouldRevalidate ??
+        getOwedMutationRevalidation(actionResult),
     );
 
     // Build an updated fetchers map for the updateState call below without
@@ -3262,6 +3276,7 @@ export function createRouter(init: RouterInit): Router {
       finalFetchers,
     );
 
+    markRevalidationLanded(loadId);
     abortStaleFetchLoads(loadId, finalFetchers);
 
     // If we are currently in a navigation loading state and this fetcher is
@@ -3763,6 +3778,31 @@ export function createRouter(init: RouterInit): Router {
       loaderResults,
       fetcherResults,
     };
+  }
+
+  function trackMutationResult(result: DataResult) {
+    let isFailure =
+      isErrorResult(result) ||
+      (!isRedirectResult(result) && (result.statusCode ?? 200) >= 400);
+    if (!isFailure) {
+      pendingMutationLoadId = incrementingLoadId;
+    }
+  }
+
+  // Loads started before the mutation completed may have read older data
+  function markRevalidationLanded(landedId: number) {
+    if (pendingMutationLoadId != null && landedId > pendingMutationLoadId) {
+      pendingMutationLoadId = null;
+    }
+  }
+
+  // Passed as the call-site default so it also overrides the default a
+  // `dataStrategy` gives to `shouldCallHandler` (i.e., single fetch skips 4xx/5xx)
+  function getOwedMutationRevalidation(actionResult?: PendingActionResult[1]) {
+    return pendingMutationLoadId != null &&
+      (actionResult?.statusCode ?? 200) >= 400
+      ? true
+      : undefined;
   }
 
   function interruptActiveLoads() {
