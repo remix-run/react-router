@@ -97,6 +97,11 @@ import {
 import type { SerializeFrom } from "../types/route-data";
 import type { ClientInstrumentation } from "../router/instrumentation";
 import { escapeHtml } from "./ssr/markup";
+import {
+  ELEMENT_SCROLL_STORAGE_SUFFIX,
+  getElementScrollManager,
+  type ElementScrollRegistration,
+} from "./element-scroll-restoration";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
@@ -2082,7 +2087,6 @@ export function ScrollRestoration({
   ...props
 }: ScrollRestorationProps) {
   let remixContext = React.useContext(FrameworkContext);
-  let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
   let matches = useMatches();
   useScrollRestoration({ getKey, storageKey });
@@ -2099,7 +2103,7 @@ export function ScrollRestoration({
       let userKey = getScrollRestorationKey(
         location,
         matches,
-        basename,
+        "/", // useLocation() has already stripped the basename.
         getKey,
       );
       return userKey !== location.key ? userKey : null;
@@ -2115,7 +2119,11 @@ export function ScrollRestoration({
     return null;
   }
 
-  let restoreScroll = ((storageKey: string, restoreKey: string) => {
+  let restoreScroll = ((
+    storageKey: string,
+    restoreKey: string,
+    elementStorageKey: string,
+  ) => {
     if (!window.history.state || !window.history.state.key) {
       let key = Math.random().toString(32).slice(2);
       window.history.replaceState({ key }, "");
@@ -2130,6 +2138,51 @@ export function ScrollRestoration({
       console.error(error);
       sessionStorage.removeItem(storageKey);
     }
+    try {
+      let stored = JSON.parse(
+        sessionStorage.getItem(elementStorageKey) || "null",
+      );
+      let key = restoreKey || window.history.state.key;
+      if (
+        stored?.version !== 1 ||
+        !stored.positions ||
+        !Object.hasOwn(stored.positions, key)
+      ) {
+        return;
+      }
+      let positions = stored.positions[key];
+      if (!positions || typeof positions !== "object") return;
+      for (let [selector, position] of Object.entries(positions)) {
+        try {
+          if (
+            !position ||
+            typeof position !== "object" ||
+            !("x" in position) ||
+            !("y" in position) ||
+            typeof position.x !== "number" ||
+            typeof position.y !== "number" ||
+            !Number.isFinite(position.x) ||
+            !Number.isFinite(position.y)
+          )
+            continue;
+          let element = document.querySelector(selector);
+          if (!element) continue;
+          element.scrollLeft = position.x;
+          element.scrollTop = position.y;
+          (window.__reactRouterElementScrollRestoration ||= []).push({
+            storageKey: elementStorageKey,
+            key,
+            locationKey: window.history.state.key,
+            selector,
+            element,
+          });
+        } catch {
+          // One invalid selector must not prevent other targets from restoring.
+        }
+      }
+    } catch {
+      // Element storage is optional and independent of window restoration.
+    }
   }).toString();
 
   if (props.nonce == null && remixContext?.nonce) {
@@ -2143,7 +2196,12 @@ export function ScrollRestoration({
       dangerouslySetInnerHTML={{
         __html: `(${restoreScroll})(${escapeHtml(
           JSON.stringify(storageKey || SCROLL_RESTORATION_STORAGE_KEY),
-        )}, ${escapeHtml(JSON.stringify(ssrKey))})`,
+        )}, ${escapeHtml(JSON.stringify(ssrKey))}, ${escapeHtml(
+          JSON.stringify(
+            (storageKey || SCROLL_RESTORATION_STORAGE_KEY) +
+              ELEMENT_SCROLL_STORAGE_SUFFIX,
+          ),
+        )})`,
       }}
     />
   );
@@ -3036,6 +3094,82 @@ function getScrollRestorationKey(
 }
 
 /**
+ * Restore an independently scrolling element on navigation. The selector should
+ * identify one stable, unique container across routes and reloads. Mount this
+ * hook with the container; no returned props or ref are needed.
+ *
+ * ```tsx
+ * function Sidebar() {
+ *   unstable_useElementScrollRestoration("#sidebar");
+ *   return <aside id="sidebar" style={{ overflow: "auto", height: "100vh" }} />;
+ * }
+ * ```
+ *
+ * Multiple containers share the root {@link ScrollRestoration}'s `getKey` and
+ * `storageKey`. Without that component, Data Mode and Framework SPA Mode use
+ * `location.key` and default storage. Standalone hooks do not manage window
+ * scrolling. Framework SSR requires the root component after container markup
+ * to restore persisted selectors before hydration. RSC consumers use this hook
+ * in a client component.
+ *
+ * Restoration is attempted once per navigation or container mount. Hydration
+ * does not repeat an early script restoration. Missing targets are skipped and
+ * growing content, images, or virtualizers do not trigger retries; render the
+ * content needed for restoration with the container.
+ *
+ * See the [Element Scroll Restoration guide](../../how-to/element-scroll-restoration)
+ * for root configuration and multiple-container examples.
+ *
+ * @name unstable_useElementScrollRestoration
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @param selector A CSS selector identifying the scroll container. The first
+ * matching element is used.
+ * @returns {void}
+ */
+export function useElementScrollRestoration(selector: string): void {
+  let { router } = useDataRouterContext("useElementScrollRestoration");
+  let { restoreElementScrollPositions, preventScrollReset } =
+    useDataRouterState("useElementScrollRestoration");
+  let location = useLocation();
+  let { basename } = React.useContext(NavigationContext);
+  let committedLocation = React.useMemo(
+    () =>
+      basename === "/"
+        ? location
+        : {
+            ...location,
+            pathname: joinPaths([basename, location.pathname]),
+          },
+    [basename, location],
+  );
+  let matches = useMatches();
+  let token = React.useRef<ElementScrollRegistration>({});
+
+  React.useLayoutEffect(() => {
+    return getElementScrollManager(router).register(token.current, selector);
+  }, [router, selector]);
+  React.useLayoutEffect(() => {
+    getElementScrollManager(router).update(token.current, {
+      location: committedLocation,
+      identity: location,
+      matches,
+      positions: restoreElementScrollPositions,
+      preventScrollReset,
+    });
+  }, [
+    router,
+    committedLocation,
+    location,
+    matches,
+    restoreElementScrollPositions,
+    preventScrollReset,
+  ]);
+}
+
+/**
  * When rendered inside a {@link RouterProvider}, will restore scroll positions
  * on navigations
  *
@@ -3072,7 +3206,16 @@ export function useScrollRestoration({
   let location = useLocation();
   let matches = useMatches();
   let navigation = useNavigation();
+  let elementRoot = React.useRef({});
 
+  React.useLayoutEffect(() => {
+    return getElementScrollManager(router).configure(elementRoot.current, {
+      storageKey: storageKey || SCROLL_RESTORATION_STORAGE_KEY,
+      getKey: (location, matches) =>
+        getScrollRestorationKey(location, matches, basename, getKey) ||
+        location.key,
+    });
+  }, [router, basename, getKey, storageKey]);
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {
     window.history.scrollRestoration = "manual";
@@ -3094,7 +3237,7 @@ export function useScrollRestoration({
   usePageHide(
     React.useCallback(() => {
       if (navigation.state === "idle") {
-        let key = getScrollRestorationKey(location, matches, basename, getKey);
+        let key = getScrollRestorationKey(location, matches, "/", getKey);
         savedScrollPositions[key] = window.scrollY;
       }
       try {
@@ -3109,7 +3252,7 @@ export function useScrollRestoration({
         );
       }
       window.history.scrollRestoration = "auto";
-    }, [navigation.state, getKey, basename, location, matches, storageKey]),
+    }, [navigation.state, getKey, location, matches, storageKey]),
   );
 
   // Read in any saved scroll locations

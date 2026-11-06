@@ -29,6 +29,108 @@ describe("scroll restoration", () => {
     },
   ];
 
+  describe("element scroll restoration", () => {
+    it("captures synchronous navigations and snapshots both axes independently of window", async () => {
+      let t = setup({ routes: [{ path: "*" }], initialEntries: ["/one"] });
+      let positions = {
+        "/one": {
+          "#sidebar": { x: 0, y: 12.5 },
+          "#content": { x: -10, y: 200 },
+        },
+        "/two": { "#sidebar": { x: 40, y: 0 } },
+      };
+      let save = jest.fn();
+      t.router.enableElementScrollRestoration({
+        save,
+        restore: (location) => ({
+          storageKey: "test",
+          key: location.pathname,
+          positions: positions[location.pathname as keyof typeof positions],
+        }),
+      });
+      await t.router.navigate("/two");
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(t.router.state.restoreElementScrollPositions).toEqual({
+        storageKey: "test",
+        key: "/two",
+        positions: positions["/two"],
+      });
+      let snapshot = t.router.state.restoreElementScrollPositions;
+      positions["/two"]["#sidebar"].y = 75;
+      expect(snapshot).toEqual({
+        storageKey: "test",
+        key: "/two",
+        positions: { "#sidebar": { x: 40, y: 0 } },
+      });
+      expect(t.router.state.restoreScrollPosition).toBeNull();
+      await t.router.navigate(-1);
+      expect(save).toHaveBeenCalledTimes(2);
+      expect(t.router.state.restoreElementScrollPositions).toEqual({
+        storageKey: "test",
+        key: "/one",
+        positions: positions["/one"],
+      });
+    });
+
+    it("does not publish an aborted loader navigation and restores a redirect destination", async () => {
+      let t = setup({
+        routes: SCROLL_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: { loaderData: { index: "INDEX" } },
+      });
+      let save = jest.fn();
+      t.router.enableElementScrollRestoration({
+        save,
+        restore: (location) => ({
+          storageKey: "test",
+          key: location.pathname,
+          positions: { "#content": { x: 0, y: 150 } },
+        }),
+      });
+      let pending = await t.navigate("/tasks");
+      await t.navigate("/no-loader");
+      await pending.loaders.tasks.resolve("STALE");
+      expect(t.router.state.location.pathname).toBe("/no-loader");
+      expect(t.router.state.restoreElementScrollPositions).toMatchObject({
+        key: "/no-loader",
+      });
+      let redirecting = await t.navigate("/tasks");
+      await redirecting.loaders.tasks.redirect("/no-loader");
+      expect(t.router.state.location.pathname).toBe("/no-loader");
+      expect(t.router.state.restoreElementScrollPositions).toMatchObject({
+        key: "/no-loader",
+      });
+      expect(save).toHaveBeenCalled();
+    });
+
+    it("suppresses revalidation and clears stale snapshots after unregistering", async () => {
+      let t = setup({ routes: [{ path: "*" }], initialEntries: ["/one"] });
+      expect(t.router.state).not.toHaveProperty(
+        "restoreElementScrollPositions",
+      );
+      let disable = t.router.enableElementScrollRestoration({
+        save() {},
+        restore: () => ({
+          storageKey: "test",
+          key: "entry",
+          positions: { "#content": { x: 10, y: 90 } },
+        }),
+      });
+      await t.router.navigate("/two", { preventScrollReset: true });
+      expect(t.router.state.preventScrollReset).toBe(true);
+      expect(t.router.state.restoreElementScrollPositions).toEqual({
+        storageKey: "test",
+        key: "entry",
+        positions: { "#content": { x: 10, y: 90 } },
+      });
+      await t.router.revalidate();
+      expect(t.router.state.restoreElementScrollPositions).toBe(false);
+      disable();
+      await t.router.navigate("/three");
+      expect(t.router.state.restoreElementScrollPositions).toBeUndefined();
+    });
+  });
+
   describe("scroll restoration", () => {
     it("restores scroll on initial load (w/o hydrationData)", async () => {
       let t = setup({
