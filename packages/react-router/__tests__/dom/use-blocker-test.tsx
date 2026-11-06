@@ -9,7 +9,9 @@ import {
   Outlet,
   RouterProvider,
   useBlocker,
+  useLocation,
   useNavigate,
+  useSearchParams,
 } from "../../index";
 
 type Router = ReturnType<typeof createMemoryRouter>;
@@ -1158,6 +1160,70 @@ describe("navigation blocking with useBlocker", () => {
         let h1 = node.querySelector("h1");
         expect(h1?.textContent).toBe("Contact");
       });
+    });
+  });
+
+  describe("when the destination route updates search params on mount", () => {
+    // https://github.com/remix-run/react-router/issues/11144
+    it("does not block a second time", async () => {
+      let routes: RouteObject[] = [
+        {
+          element: React.createElement(() => {
+            // Blocks while the current location is "/", matching a common
+            // real-world shape: a form page that blocks navigation while
+            // it's the active route, and stops blocking once it's not.
+            let location = useLocation();
+            let b = useBlocker(location.pathname === "/");
+            blocker = b;
+            return (
+              <div>
+                <Link to="/about">About</Link>
+                {b.state === "blocked" && (
+                  <button data-action="proceed" onClick={b.proceed}>
+                    Proceed
+                  </button>
+                )}
+                <Outlet />
+              </div>
+            );
+          }),
+          children: [
+            { index: true, element: <h1>Home</h1> },
+            {
+              path: "about",
+              element: React.createElement(() => {
+                let [, setSearchParams] = useSearchParams();
+                React.useEffect(() => {
+                  setSearchParams({ foo: "bar" });
+                  // eslint-disable-next-line react-hooks/exhaustive-deps
+                }, []);
+                return <h1>About</h1>;
+              }),
+            },
+          ],
+        },
+      ];
+      router = createMemoryRouter(routes, { initialEntries: ["/"] });
+      act(() => {
+        root = ReactDOM.createRoot(node);
+        root.render(<RouterProvider router={router} />);
+      });
+
+      act(() => {
+        click(node.querySelector("a[href='/about']"));
+      });
+      expect(blocker?.state).toBe("blocked");
+
+      act(() => {
+        click(node.querySelector("button[data-action='proceed']"));
+      });
+
+      // The destination route's own setSearchParams-on-mount navigation
+      // must not trigger a second block -- the source route (and its
+      // blocking condition) is no longer active.
+      expect(blocker?.state).toBe("unblocked");
+      expect(node.querySelector("h1")?.textContent).toBe("About");
+      expect(router.state.location.search).toBe("?foo=bar");
     });
   });
 });
