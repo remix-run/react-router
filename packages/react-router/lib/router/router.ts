@@ -3084,6 +3084,8 @@ export function createRouter(init: RouterInit): Router {
     // Start the data load for current matches, or the next location if we're
     // in the middle of a navigation
     let nextLocation = state.navigation.location || state.location;
+    // POP and revalidation may reuse a location key for a new navigation.
+    let revalidationNavigationController = pendingNavigationController;
     let revalidationRequest = createClientSideRequest(
       init.history,
       nextLocation,
@@ -3195,7 +3197,8 @@ export function createRouter(init: RouterInit): Router {
 
     // Discard reloads for an abandoned navigation, but allow current-page updates.
     if (
-      nextLocation.key !== state.navigation.location?.key &&
+      (nextLocation.key !== state.navigation.location?.key ||
+        revalidationNavigationController !== pendingNavigationController) &&
       (nextLocation.pathname !== state.location.pathname ||
         nextLocation.search !== state.location.search)
     ) {

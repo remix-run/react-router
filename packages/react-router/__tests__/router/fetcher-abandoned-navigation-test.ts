@@ -125,6 +125,82 @@ for (let unstable_customRouteDiscovery of [false, true]) {
       expect(mutation.fetcher).toMatchObject({ state: "idle", data: "ACTION" });
     });
 
+    it("does not restore an unmounted mutation when its abandoned reload finishes", async () => {
+      let { t, mutation, next } = await startRace();
+      t.router.deleteFetcher("mutation");
+      await mutation.loaders.previous.resolve("ABANDONED DATA");
+      expect(t.router.state.fetchers.has("mutation")).toBe(false);
+      expect(t.router._internalFetchControllers.has("mutation")).toBe(false);
+      expect(t.router.state.loaderData).toEqual({ current: "CURRENT" });
+      await next.loaders.next.resolve("NEXT");
+      expect(t.router._internalFetchControllers.size).toBe(0);
+    });
+
+    it.each([
+      ["data", "POP"],
+      ["error", "POP"],
+      ["redirect", "POP"],
+      ["data", "revalidation"],
+      ["error", "revalidation"],
+      ["redirect", "revalidation"],
+    ])(
+      "ignores an abandoned %s when %s reuses the same location key",
+      async (outcome, interruption) => {
+        let t = setup({
+          future: { unstable_customRouteDiscovery },
+          routes: [
+            { id: "current", path: "/current", loader: true, action: true },
+            { id: "previous", path: "/previous", loader: true },
+            { id: "redirect", path: "/redirect", loader: true },
+          ],
+          initialEntries: [
+            { pathname: "/previous", key: "previous-entry" },
+            { pathname: "/current", key: "current-entry" },
+          ],
+          initialIndex: 1,
+          hydrationData: { loaderData: { current: "CURRENT" } },
+        });
+        let mutation = await t.fetch("/current", "mutation", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        t.shimHelper(mutation.loaders, "fetch", "loader", "previous");
+        await t.navigate(-1);
+        await mutation.actions.current.resolve("ACTION");
+        if (interruption === "POP") {
+          await t.navigate(1);
+        }
+        let latest =
+          interruption === "POP" ? await t.navigate(-1) : await t.revalidate();
+        expect(t.router.state.navigation.location?.key).toBe("previous-entry");
+
+        if (outcome === "error") {
+          await mutation.loaders.previous.reject(new Error("ABANDONED ERROR"));
+        } else {
+          await mutation.loaders.previous.resolve(
+            outcome === "redirect" ? redirect("/redirect") : "ABANDONED DATA",
+          );
+        }
+        expect(t.router.state.loaderData).toEqual({ current: "CURRENT" });
+        expect(t.router.state.errors).toBeNull();
+        expect(t.router.state.location.pathname).toBe("/current");
+        expect(t.router.state.navigation).toMatchObject({
+          state: "loading",
+          location: { pathname: "/previous", key: "previous-entry" },
+        });
+        expect(latest.loaders.previous.signal.aborted).toBe(false);
+        expect(mutation.fetcher).toMatchObject({
+          state: "idle",
+          data: "ACTION",
+        });
+        await latest.loaders.previous.resolve("LATEST PREVIOUS");
+        expect(t.router.state.loaderData).toEqual({
+          previous: "LATEST PREVIOUS",
+        });
+        expect(t.router.state.navigation.state).toBe("idle");
+      },
+    );
+
     it.each(["error", "redirect"])(
       "ignores a secondary fetcher's %s from the abandoned reload",
       async (outcome) => {
