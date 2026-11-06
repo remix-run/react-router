@@ -1794,6 +1794,55 @@ describe("a router", () => {
       expect(t.router.state.navigation?.location?.search).toBe("?foo=bar");
     });
 
+    it("sends the full pattern to loaders of absolute child routes", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            children: [
+              {
+                id: "users",
+                path: "/users",
+                loader: true,
+                children: [
+                  {
+                    id: "user",
+                    path: "/users/:id",
+                    loader: true,
+                    children: [
+                      {
+                        id: "edit",
+                        path: "edit",
+                        loader: true,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let nav = await t.navigate("/users/1");
+      expect(nav.loaders.users.stub).toHaveBeenCalledWith(
+        expect.objectContaining({ pattern: "/users/:id" }),
+      );
+      expect(nav.loaders.user.stub).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { id: "1" }, pattern: "/users/:id" }),
+      );
+
+      let nav2 = await t.navigate("/users/1/edit");
+      expect(nav2.loaders.edit.stub).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { id: "1" },
+          pattern: "/users/:id/edit",
+        }),
+      );
+    });
+
     it("handles errors thrown from loaders", async () => {
       let t = setup({
         routes: TASK_ROUTES,
