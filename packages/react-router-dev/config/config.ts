@@ -285,6 +285,11 @@ export type ReactRouterConfig = {
    * }
    *
    * app.use(createRequestHandler({ build: getBuild }));
+   * ```
+   *
+   * To make the decision at runtime without a custom server, for example
+   * behind a reverse proxy that terminates TLS or for domains only known at
+   * runtime, export `unstable_validateActionOrigin` from `entry.server.tsx`.
    */
   allowedActionOrigins?: string[];
 };

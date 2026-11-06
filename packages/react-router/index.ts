@@ -271,6 +271,10 @@ export type {
   ServerBuild,
   ServerEntryModule,
 } from "./lib/server-runtime/build";
+export type {
+  ValidateActionOriginArgs as unstable_ValidateActionOriginArgs,
+  ValidateActionOriginFunction as unstable_ValidateActionOriginFunction,
+} from "./lib/actions";
 
 export type {
   Cookie,

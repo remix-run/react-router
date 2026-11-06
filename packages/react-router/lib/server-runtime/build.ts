@@ -11,6 +11,7 @@ import type {
 } from "../dom/ssr/entry";
 import type { ServerRouteManifest } from "./routes";
 import type { ServerInstrumentation } from "../router/instrumentation";
+import type { ValidateActionOriginFunction } from "../actions";
 
 type OptionalCriticalCss = CriticalCss | undefined;
 
@@ -99,4 +100,5 @@ export interface ServerEntryModule {
   handleError?: HandleErrorFunction;
   instrumentations?: ServerInstrumentation[];
   streamTimeout?: number;
+  unstable_validateActionOrigin?: ValidateActionOriginFunction;
 }

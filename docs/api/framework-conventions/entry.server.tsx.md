@@ -155,6 +155,59 @@ For an example, please refer to the default [`entry.server.tsx`][node-streaming-
 
 Note that this does not handle thrown `Response` instances from your `loader`/`action` functions. The intention of this handler is to find bugs in your code which result in unexpected thrown errors. If you are detecting a scenario and throwing a 401/404/etc. `Response` in your `loader`/`action` then it's an expected flow that is handled by your code. If you also wish to log, or send those to an external service, that should be done at the time you throw the response.
 
+### `unstable_validateActionOrigin`
+
+<docs-warning>`unstable_validateActionOrigin` is experimental and may change in minor or patch releases.</docs-warning>
+
+Before React Router runs an `action` for a form submission or fetcher, it compares the request's `Origin` header with the origin of `request.url` and with [`allowedActionOrigins`][allowed-action-origins], and responds with `400 Bad Request` when neither matches. Like `allowedActionOrigins`, this does not apply to resource routes. You can export an optional `unstable_validateActionOrigin` function to make that decision yourself, for example when the allowed origins are only known at runtime.
+
+The function receives the `request`, the raw `origin` header (`null` when it is absent) and `allowed`, the result of the built-in check. Return `true` to run the action; any other value rejects it. A malformed `Origin` header is rejected before your function is called, and an error thrown by your function rejects the submission and is passed to [`handleError`](#handleerror).
+
+Don't read the request body in this function, the action still needs it. For submissions made after hydration (`<Form>`, `useSubmit` and fetchers), `request.url` is the route's `.data` URL.
+
+```tsx
+import type { unstable_ValidateActionOriginFunction } from "react-router";
+
+export const unstable_validateActionOrigin: unstable_ValidateActionOriginFunction =
+  async ({ origin, allowed }) => {
+    if (allowed) return true;
+    if (!origin || origin === "null") return false;
+    // Like `allowedActionOrigins`, but loaded at runtime
+    let trustedHosts = await getTrustedHosts();
+    return trustedHosts.includes(new URL(origin).host);
+  };
+```
+
+**Behind a TLS-terminating proxy**
+
+When a reverse proxy terminates TLS, `request.url` uses `http:` while the browser sends an `https:` origin. If your hosts are known at build time, list them in [`allowedActionOrigins`][allowed-action-origins], which matches hosts regardless of the scheme. Otherwise, prefer configuring your server to trust the proxy, for example with Express's [`trust proxy`][express-trust-proxy] setting and `@react-router/express`, so `request.url` itself is correct. If your server can't be configured that way, you can accept the scheme the proxy reports:
+
+```tsx
+import type { unstable_ValidateActionOriginFunction } from "react-router";
+
+export const unstable_validateActionOrigin: unstable_ValidateActionOriginFunction =
+  ({ request, origin, allowed }) => {
+    if (allowed) return true;
+    if (!origin || origin === "null") return false;
+    let originUrl = new URL(origin);
+    let forwardedProto = request.headers
+      .get("X-Forwarded-Proto")
+      ?.split(",")[0]
+      .trim();
+    return (
+      originUrl.host === new URL(request.url).host &&
+      originUrl.protocol === `${forwardedProto}:`
+    );
+  };
+```
+
+<docs-warning>Only trust `X-Forwarded-*` headers when a proxy you control sets them and clients cannot reach your server directly.</docs-warning>
+
+In RSC Framework Mode there is no `entry.server.tsx`: pass `unstable_validateActionOrigin` to [`matchRSCServerRequest`][match-rsc-server-request] in your `entry.rsc.tsx` instead.
+
+[allowed-action-origins]: ./react-router.config.ts#allowedactionorigins
+[express-trust-proxy]: https://expressjs.com/en/guide/behind-proxies.html
+[match-rsc-server-request]: ../rsc/matchRSCServerRequest
 [client-entry]: ./entry.client.tsx
 [serverrouter]: ../framework-routers/ServerRouter
 [streaming]: ../../how-to/suspense
