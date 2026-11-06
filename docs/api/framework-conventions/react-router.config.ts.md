@@ -69,6 +69,8 @@ async function getBuild() {
 app.use(createRequestHandler({ build: getBuild }));
 ```
 
+To make the decision at runtime without a custom server, for example behind a reverse proxy that terminates TLS or for domains only known at runtime, export [`unstable_validateActionOrigin`][validate-action-origin] from `entry.server.tsx`.
+
 ### `appDirectory`
 
 The path to the `app` directory, relative to the root directory. Defaults to `"app"`.
@@ -255,3 +257,4 @@ export default {
 [pre-rendering]: ../../how-to/pre-rendering
 [spa-mode]: ../../how-to/spa
 [lazy-route-discovery]: ../../explanation/lazy-route-discovery
+[validate-action-origin]: ./entry.server.tsx#unstable_validateactionorigin

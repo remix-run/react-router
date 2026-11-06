@@ -64,3 +64,50 @@ test.describe("Default Server Entry", () => {
     );
   });
 });
+
+test.describe("Server Entry unstable_validateActionOrigin", () => {
+  let fixture: Fixture;
+
+  test.beforeAll(async () => {
+    fixture = await createFixture({
+      files: {
+        "app/entry.server.tsx": js`
+          export default function handleRequest(request, status, headers) {
+            return new Response("", { status, headers });
+          }
+
+          export function unstable_validateActionOrigin({ request, allowed }) {
+            return allowed || request.headers.get("X-Forwarded-Proto") === "https";
+          }
+        `,
+
+        "app/routes/_index.tsx": js`
+          export function action() {
+            return null;
+          }
+          export default function () {
+            return <div/>
+          }
+        `,
+      },
+    });
+  });
+
+  // The fixture serves `test://test`, whose origin never matches a browser
+  // `https:` origin, so only the exported function can let a submission through
+  let submit = (headers: Record<string, string>) =>
+    fixture.requestDocument("/?index", {
+      method: "POST",
+      headers: { Origin: "https://test", ...headers },
+    });
+
+  test("runs an action the exported function allows", async () => {
+    let response = await submit({ "X-Forwarded-Proto": "https" });
+    expect(response.status).toBe(200);
+  });
+
+  test("rejects an action the exported function does not allow", async () => {
+    let response = await submit({});
+    expect(response.status).toBe(400);
+  });
+});
