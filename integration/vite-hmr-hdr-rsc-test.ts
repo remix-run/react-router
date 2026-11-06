@@ -389,4 +389,69 @@ test.describe("Vite HMR & HDR (RSC)", () => {
     );
     await expect(hmrStatus).toHaveText("Client Route HMR: 0");
   });
+
+  test("default route without loader revalidates on HMR", async ({
+    page,
+    dev,
+  }) => {
+    const files: Files = async ({ port }) => ({
+      "vite.config.js": (
+        await viteConfig.basic({ port, templateName })
+      ).replace("react(), rsc(),", "rsc(),"),
+      "app/routes.ts": `
+        import { index, layout, route } from "@react-router/dev/routes";
+
+        export default [
+          layout("./routes/layout.tsx", [
+            route("apps", "./routes/apps/layout.tsx", [
+              index("./routes/apps/index.tsx"),
+            ]),
+          ]),
+        ];
+      `,
+      "app/routes/layout.tsx": `
+        import { Outlet } from "react-router";
+
+        export function loader() {
+          return { ready: true };
+        }
+
+        export default function Layout() {
+          return <main><h1>Apps</h1><Outlet /></main>;
+        }
+      `,
+      "app/routes/apps/layout.tsx": `
+        import { Outlet } from "react-router";
+
+        export default function AppsLayout() {
+          return <Outlet />;
+        }
+      `,
+      "app/routes/apps/index.tsx": `
+        export default function AppsIndex() {
+          return (
+            <h2 data-hmr>Default route: before</h2>
+          );
+        }
+      `,
+    });
+    const { cwd, port } = await dev(files, templateName);
+    const edit = createEditor(cwd);
+    let pageLoadCount = 0;
+    page.on("load", () => pageLoadCount++);
+
+    await page.goto(`http://localhost:${port}/apps`, {
+      waitUntil: "networkidle",
+    });
+    const message = page.locator("[data-hmr]");
+    await expect(message).toHaveText("Default route: before");
+
+    await edit("app/routes/apps/index.tsx", (contents) =>
+      contents.replace("before", "after"),
+    );
+
+    await expect(message).toHaveText("Default route: after");
+    expect(pageLoadCount).toBe(1);
+    expect(page.errors).toEqual([]);
+  });
 });
