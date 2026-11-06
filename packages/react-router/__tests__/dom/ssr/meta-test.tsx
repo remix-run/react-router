@@ -121,6 +121,7 @@ describe("meta", () => {
           {
             index: true,
             meta({ matches }) {
+              expect(matches.map((match) => match.id)).toEqual(["root", "0-0"]);
               let rootModule = matches.find((match) => match.id === "root");
               // @ts-expect-error
               let rootCharSet = rootModule?.meta.find((meta) => meta.charSet);
