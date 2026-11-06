@@ -265,8 +265,12 @@ export async function loadRouteModule(
   route: EntryRoute,
   routeModulesCache: RouteModules,
 ): Promise<RouteModule> {
-  if (route.id in routeModulesCache) {
-    return routeModulesCache[route.id] as RouteModule;
+  // An empty slot (`{ [id]: undefined }`) is `in` the cache but is not a module.
+  // Returning it made prefetch and route.lazy read `.links` on undefined.
+  // Fall through to import() instead.
+  let cached = routeModulesCache[route.id];
+  if (cached) {
+    return cached;
   }
 
   try {
