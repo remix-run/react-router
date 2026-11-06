@@ -18,6 +18,28 @@ test.describe("SPA Mode", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 
+  test("does not install isbot for a default SPA entry", async () => {
+    let templatePackage = JSON.parse(
+      fs.readFileSync(
+        path.resolve("integration/helpers/vite-7-template/package.json"),
+        "utf8",
+      ),
+    );
+    delete templatePackage.dependencies.isbot;
+
+    let cwd = await createProject({
+      "package.json": JSON.stringify(templatePackage, null, 2),
+      "react-router.config.ts": reactRouterConfig({ ssr: false }),
+    });
+
+    let result = build({ cwd });
+    expect(result.status, result.stderr.toString("utf8")).toBe(0);
+    let packageAfterBuild = JSON.parse(
+      fs.readFileSync(path.join(cwd, "package.json"), "utf8"),
+    );
+    expect(packageAfterBuild.dependencies).not.toHaveProperty("isbot");
+  });
+
   [true, false].forEach((splitRouteModules) => {
     test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
       test.describe("custom builds", () => {
