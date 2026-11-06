@@ -621,6 +621,48 @@ describe("create-react-router CLI", () => {
     expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
   });
 
+  it("completes scaffolding when the optional initial git commit fails", async () => {
+    // #15735: git init + add succeed but the initial commit fails (e.g. no
+    // user.name/user.email). Scaffolding must still complete, with a note.
+    let projectDir = getProjectDir("git-commit-failure");
+
+    mockedSpawn.mockImplementation((command, args) => {
+      let child = new EventEmitter();
+      let failed =
+        command === "git" && Array.isArray(args) && args[0] === "commit";
+      process.nextTick(() => child.emit("exit", failed ? 1 : 0, null));
+      return child as ReturnType<typeof spawn>;
+    });
+
+    let output = "";
+    let stdoutMock = jest
+      .spyOn(process.stdout, "write")
+      .mockImplementation((chunk) => {
+        output += String(chunk);
+        return true;
+      });
+
+    await createReactRouter([
+      projectDir,
+      "--template",
+      path.join(__dirname, "fixtures", "blank"),
+      "--git-init",
+      "--no-install",
+      "--yes",
+      "--no-agent-skills",
+    ]);
+
+    stdoutMock.mockReset();
+
+    expect(mockedSpawn).toHaveBeenCalledWith(
+      "git",
+      expect.arrayContaining(["commit", "-m"]),
+      expect.anything(),
+    );
+    expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(stripAnsi(output)).toMatch(/initial commit could not be created/i);
+  });
+
   it("runs npm install by default", async () => {
     let originalUserAgent = process.env.npm_config_user_agent;
     process.env.npm_config_user_agent = undefined;
