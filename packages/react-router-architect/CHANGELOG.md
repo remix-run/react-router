@@ -1,5 +1,14 @@
 # `@react-router/architect`
 
+## v8.5.2
+
+### Patch Changes
+
+- Fix `sendReactRouterResponse` throwing `TypeError: immutable` when a `fetch()` response sets cookies ([#15714](https://github.com/remix-run/react-router/pull/15714))
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+  - [`@react-router/node@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.2)
+
 ## v8.5.1
 
 ### Patch Changes

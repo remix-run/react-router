@@ -1,5 +1,19 @@
 # `@react-router/dev`
 
+## v8.5.2
+
+### Patch Changes
+
+- Serialize concurrent type generation to prevent filesystem races between `react-router dev` and `react-router typegen`. Report a timeout with cleanup instructions if the typegen lock cannot be acquired within 30 seconds. ([#15293](https://github.com/remix-run/react-router/pull/15293))
+
+- Fix RSC Framework Mode builds failing with "Vite RSC assets manifest not found" when using `@vitejs/plugin-rsc` 0.5.36 or later ([#15672](https://github.com/remix-run/react-router/pull/15672))
+
+  Preserve client version checks when the client build uses `write: false`.
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+  - [`@react-router/node@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.2)
+  - [`@react-router/serve@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.2)
+
 ## v8.5.1
 
 ### Patch Changes
