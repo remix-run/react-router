@@ -2772,7 +2772,10 @@ export function createRouter(init: RouterInit): Router {
       // This is cast to `any` currently because `RouteData`uses any and it
       // would be a breaking change to use any.
       // TODO: (v9) change `RouteData` to use `unknown` instead of `any`
+      // Keep the data of routes that are still rendered during the `loading`
+      // state. The final commit replaces it with the new action's data only.
       return {
+        ...state.actionData,
         [pendingActionResult[0]]: pendingActionResult[1].data as any,
       };
     } else if (state.actionData) {
