@@ -534,7 +534,7 @@ async function gitInitStep(ctx: Context) {
       } catch (err) {
         error(
           "Git initialized, but the initial commit failed.",
-          "Configure Git user.name and user.email, then create the commit manually.",
+          "Ensure Git user.name and user.email are configured, then create the commit manually.",
         );
         if (ctx.debug) {
           console.error(err);
