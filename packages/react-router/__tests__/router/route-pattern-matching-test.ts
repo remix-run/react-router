@@ -147,6 +147,29 @@ describe("unstable route-pattern matching", () => {
     expect(router.match("/view/%23abc")?.[0].params).toEqual({ id: "#abc" });
   });
 
+  it("matches malformed percent-encodings as raw path params", () => {
+    let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let router = createMemoryRouter(
+      [
+        { path: "/users/:id", id: "user" },
+        { path: "/files/*", id: "files" },
+      ],
+      {
+        future: routePatternFuture,
+        initialEntries: ["/"],
+      },
+    );
+
+    expect(router.match("/users/%")?.[0].params).toEqual({ id: "%" });
+    expect(router.match("/users/100%")?.[0].params).toEqual({ id: "100%" });
+    expect(router.match("/users/%FF")?.[0].params).toEqual({ id: "%FF" });
+    expect(router.match("/files/a/%zz")?.[0].params).toEqual({ "*": "a/%zz" });
+    expect(consoleWarn).toHaveBeenCalledWith(
+      expect.stringMatching("malformed URL segment"),
+    );
+    consoleWarn.mockRestore();
+  });
+
   it("matches routes case-insensitively by default", () => {
     let router = createMemoryRouter([{ path: "/Users", id: "users" }], {
       future: routePatternFuture,
