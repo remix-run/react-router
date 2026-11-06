@@ -1097,6 +1097,24 @@ export interface LinkProps extends Omit<
   prefetch?: PrefetchBehavior;
 
   /**
+   * Called each time the link's `prefetch` behavior triggers or its resolved
+   * destination changes while prefetching is active, so you can
+   * prefetch anything else the destination needs, such as data in your own
+   * cache. Unlike built-in prefetching, this also works in Data Mode.
+   *
+   * ```tsx
+   * <Link
+   *   to="/notes"
+   *   prefetch="intent"
+   *   unstable_onPrefetch={() => {
+   *     queryClient.prefetchQuery({ queryKey: ["notes"], queryFn: getNotes });
+   *   }}
+   * />
+   * ```
+   */
+  unstable_onPrefetch?: () => void;
+
+  /**
    * Will use document navigation instead of client side routing when the link is
    * clicked: the browser will handle the transition normally (as if it were an
    * [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)).
@@ -1317,6 +1335,7 @@ export interface LinkProps extends Omit<
  * @param {LinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
  * @param {LinkProps.defaultShouldRevalidate} props.defaultShouldRevalidate n/a
  * @param {LinkProps.mask} props.mask [modes: framework, data] n/a
+ * @param {LinkProps.unstable_onPrefetch} props.unstable_onPrefetch [modes: framework, data] n/a
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -1324,6 +1343,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       onClick,
       discover = "render",
       prefetch = "none",
+      unstable_onPrefetch,
       relative,
       reloadDocument,
       replace,
@@ -1378,6 +1398,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
       prefetch,
       rest,
+      unstable_onPrefetch,
+      href,
     );
 
     let internalOnClick = useLinkClickHandler(to, {
@@ -1626,6 +1648,7 @@ export interface NavLinkProps extends Omit<
  * @param {NavLinkProps.style} props.style n/a
  * @param {NavLinkProps.to} props.to n/a
  * @param {NavLinkProps.viewTransition} props.viewTransition [modes: framework, data] n/a
+ * @param {NavLinkProps.unstable_onPrefetch} props.unstable_onPrefetch [modes: framework, data] n/a
  */
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
