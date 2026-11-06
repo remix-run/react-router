@@ -155,13 +155,15 @@ function __hmr_import(module) {
 }
 
 const routeUpdates = new Map();
-window.__reactRouterRouteModuleUpdates = new Map();
+if (typeof window !== "undefined") {
+  window.__reactRouterRouteModuleUpdates = new Map();
 
-import.meta.hot.on("react-router:hmr", async ({ route }) => {
-  if (route) {
-    routeUpdates.set(route.id, route);
-  }
-});
+  import.meta.hot.on("react-router:hmr", async ({ route }) => {
+    if (route) {
+      routeUpdates.set(route.id, route);
+    }
+  });
+}
 
 exports.__hmr_import = __hmr_import;
 exports.registerExportsForReactRefresh = registerExportsForReactRefresh;

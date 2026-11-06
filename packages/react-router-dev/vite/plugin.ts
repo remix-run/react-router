@@ -2944,8 +2944,8 @@ const REACT_REFRESH_HEADER = `
 import RefreshRuntime from "${virtualHmrRuntime.id}";
 
 const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
-let prevRefreshReg;
-let prevRefreshSig;
+let $RefreshReg$ = () => {};
+let $RefreshSig$ = () => (type) => type;
 
 if (import.meta.hot && !inWebWorker) {
   if (!window.__vite_plugin_react_preamble_installed__) {
@@ -2954,18 +2954,14 @@ if (import.meta.hot && !inWebWorker) {
     );
   }
 
-  prevRefreshReg = window.$RefreshReg$;
-  prevRefreshSig = window.$RefreshSig$;
-  window.$RefreshReg$ = (type, id) => {
+  $RefreshReg$ = (type, id) => {
     RefreshRuntime.register(type, __SOURCE__ + " " + id)
   };
-  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+  $RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
 }`.replaceAll("\n", ""); // Header is all on one line so source maps aren't affected
 
 const REACT_REFRESH_FOOTER = `
 if (import.meta.hot && !inWebWorker) {
-  window.$RefreshReg$ = prevRefreshReg;
-  window.$RefreshSig$ = prevRefreshSig;
   RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
     RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
     import.meta.hot.accept((nextExports) => {
