@@ -2998,6 +2998,78 @@ function testDomRouter(
           </div>"
         `);
       });
+
+      it('supports a basename on <Form method="post" action="/?index">', async () => {
+        let indexAction = jest.fn(() => "index action");
+        let pathAction = jest.fn(() => "path action");
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Outlet,
+              children: [
+                { index: true, action: indexAction },
+                {
+                  path: "path",
+                  action: pathAction,
+                  Component() {
+                    return (
+                      <Form method="post" action="/?index">
+                        <button type="submit">Submit</button>
+                      </Form>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            basename: "/base",
+            window: getWindow("/base/path"),
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/base?index",
+        );
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => expect(indexAction).toHaveBeenCalledTimes(1));
+        expect(pathAction).not.toHaveBeenCalled();
+      });
+
+      it('supports a basename on <Form method="post" action="/?index"> submitted without a button', async () => {
+        let indexAction = jest.fn(() => "index action");
+        let pathAction = jest.fn(() => "path action");
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Outlet,
+              children: [
+                { index: true, action: indexAction },
+                {
+                  path: "path",
+                  action: pathAction,
+                  Component() {
+                    return <Form method="post" action="/?index" />;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            basename: "/base",
+            window: getWindow("/base/path"),
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        fireEvent.submit(container.querySelector("form")!);
+        await waitFor(() => expect(indexAction).toHaveBeenCalledTimes(1));
+        expect(pathAction).not.toHaveBeenCalled();
+      });
     });
 
     describe("call-site revalidation opt-out", () => {
