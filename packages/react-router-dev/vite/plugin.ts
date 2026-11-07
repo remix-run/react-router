@@ -531,6 +531,9 @@ const writeFileSafe = async (file: string, contents: string): Promise<void> => {
   await writeFile(file, contents);
 };
 
+const isDotServerModuleId = (id: string) =>
+  /\.server(\.[cm]?[jt]sx?)?$/.test(id) || /\/\.server\//.test(id);
+
 const getExportNames = (code: string): string[] => {
   let [, exportSpecifiers] = esModuleLexer(code);
   return exportSpecifiers.map(({ n: name }) => name);
@@ -818,6 +821,44 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         ),
       );
     }
+  };
+
+  let getDotServerError = (id: string, importer: string) => {
+    let vite = getVite();
+    let importerShort = vite.normalizePath(
+      path.relative(ctx.rootDirectory, importer),
+    );
+    if (isRoute(ctx.reactRouterConfig, importer)) {
+      let serverOnlyExports = SERVER_ONLY_ROUTE_EXPORTS.map(
+        (xport) => `\`${xport}\``,
+      ).join(", ");
+      return Error(
+        [
+          colors.red(`Server-only module referenced by client`),
+          "",
+          `    '${id}' imported by route '${importerShort}'`,
+          "",
+          `  React Router automatically removes server-code from these exports:`,
+          `    ${serverOnlyExports}`,
+          "",
+          `  But other route exports in '${importerShort}' depend on '${id}'.`,
+          "",
+          "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
+          "",
+        ].join("\n"),
+      );
+    }
+
+    return Error(
+      [
+        colors.red(`Server-only module referenced by client`),
+        "",
+        `    '${id}' imported by '${importerShort}'`,
+        "",
+        "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
+        "",
+      ].join("\n"),
+    );
   };
 
   let getServerEntry = async ({ routeIds }: { routeIds?: Array<string> }) => {
@@ -2318,15 +2359,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
     {
       name: "react-router:dot-server",
+      apply: "serve",
       applyToEnvironment(environment) {
         return environment.config.consumer === "client";
       },
       enforce: "pre",
       async resolveId(id, importer, options) {
         // https://vitejs.dev/config/dep-optimization-options
-        let isOptimizeDeps =
-          viteCommand === "serve" &&
-          (options as { scan?: boolean })?.scan === true;
+        let isOptimizeDeps = (options as { scan?: boolean })?.scan === true;
 
         if (isOptimizeDeps) return;
 
@@ -2336,55 +2376,45 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let resolved = await this.resolve(id, importer, options);
         if (!resolved) return;
 
-        let serverFileRE = /\.server(\.[cm]?[jt]sx?)?$/;
-        let serverDirRE = /\/\.server\//;
-        let isDotServer =
-          serverFileRE.test(resolved!.id) || serverDirRE.test(resolved!.id);
-        if (!isDotServer) return resolved;
+        if (!isDotServerModuleId(resolved.id)) return resolved;
 
         if (!importer) return resolved;
-        if (viteCommand !== "build" && importer.endsWith(".html")) {
+        if (importer.endsWith(".html")) {
           // Vite has a special `index.html` importer for `resolveId` within `transformRequest`
           // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/transformRequest.ts#L158
           // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/pluginContainer.ts#L668
           return resolved;
         }
 
-        let vite = getVite();
-        let importerShort = vite.normalizePath(
-          path.relative(ctx.rootDirectory, importer),
-        );
-        if (isRoute(ctx.reactRouterConfig, importer)) {
-          let serverOnlyExports = SERVER_ONLY_ROUTE_EXPORTS.map(
-            (xport) => `\`${xport}\``,
-          ).join(", ");
-          throw Error(
-            [
-              colors.red(`Server-only module referenced by client`),
-              "",
-              `    '${id}' imported by route '${importerShort}'`,
-              "",
-              `  React Router automatically removes server-code from these exports:`,
-              `    ${serverOnlyExports}`,
-              "",
-              `  But other route exports in '${importerShort}' depend on '${id}'.`,
-              "",
-              "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
-              "",
-            ].join("\n"),
-          );
-        }
+        throw getDotServerError(id, importer);
+      },
+    },
+    {
+      name: "react-router:dot-server-build",
+      apply: "build",
+      applyToEnvironment(environment) {
+        return environment.config.consumer === "client";
+      },
+      // Builds check the resolved imports once per module here, rather than
+      // resolving every import a second time in `resolveId`.
+      async moduleParsed({
+        id: importer,
+        code,
+        importedIds,
+        dynamicallyImportedIds,
+      }) {
+        for (let resolvedId of [...importedIds, ...dynamicallyImportedIds]) {
+          if (!isDotServerModuleId(resolvedId)) continue;
 
-        throw Error(
-          [
-            colors.red(`Server-only module referenced by client`),
-            "",
-            `    '${id}' imported by '${importerShort}'`,
-            "",
-            "  See https://reactrouter.com/explanation/code-splitting#removal-of-server-code",
-            "",
-          ].join("\n"),
-        );
+          let specifier = resolvedId;
+          for (let { n } of code ? esModuleLexer(code)[0] : []) {
+            if (n && (await this.resolve(n, importer))?.id === resolvedId) {
+              specifier = n;
+              break;
+            }
+          }
+          throw getDotServerError(specifier, importer);
+        }
       },
     },
     {
