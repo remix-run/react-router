@@ -18,133 +18,138 @@ export const removeExports = (
   let removedExportLocalNames = new Set<string>();
 
   traverse(ast, {
-    ExportDeclaration(path) {
-      // export { foo };
-      // export { bar } from "./module";
-      if (path.node.type === "ExportNamedDeclaration") {
-        if (path.node.specifiers.length) {
-          path.node.specifiers = path.node.specifiers.filter((specifier) => {
-            // Filter out individual specifiers
-            if (
-              specifier.type === "ExportSpecifier" &&
-              specifier.exported.type === "Identifier"
-            ) {
-              if (exportsToRemove.includes(specifier.exported.name)) {
-                exportsFiltered = true;
-                // Track the local identifier if it's different from the exported name
-                if (
-                  specifier.local &&
-                  specifier.local.name !== specifier.exported.name
-                ) {
-                  removedExportLocalNames.add(specifier.local.name);
+    // Exports and the assignments to them that are removed below can only
+    // be top-level statements, so the rest of the module isn't visited.
+    Program(program) {
+      let statements = program.get("body");
+
+      statements.forEach((path) => {
+        if (!path.isExportDeclaration()) return;
+
+        // export { foo };
+        // export { bar } from "./module";
+        if (path.node.type === "ExportNamedDeclaration") {
+          if (path.node.specifiers.length) {
+            path.node.specifiers = path.node.specifiers.filter((specifier) => {
+              // Filter out individual specifiers
+              if (
+                specifier.type === "ExportSpecifier" &&
+                specifier.exported.type === "Identifier"
+              ) {
+                if (exportsToRemove.includes(specifier.exported.name)) {
+                  exportsFiltered = true;
+                  // Track the local identifier if it's different from the exported name
+                  if (
+                    specifier.local &&
+                    specifier.local.name !== specifier.exported.name
+                  ) {
+                    removedExportLocalNames.add(specifier.local.name);
+                  }
+                  return false;
                 }
-                return false;
               }
-            }
-            return true;
-          });
-          // Remove the entire export statement if all specifiers were removed
-          if (path.node.specifiers.length === 0) {
-            markedForRemoval.add(path);
-          }
-        }
-
-        // export const foo = ...;
-        // export const [ foo ] = ...;
-        if (path.node.declaration?.type === "VariableDeclaration") {
-          let declaration = path.node.declaration;
-          declaration.declarations = declaration.declarations.filter(
-            (declaration) => {
-              // export const foo = ...;
-              // export const foo = ..., bar = ...;
-              if (
-                declaration.id.type === "Identifier" &&
-                exportsToRemove.includes(declaration.id.name)
-              ) {
-                // Filter out individual variables
-                exportsFiltered = true;
-                return false;
-              }
-
-              // export const [ foo ] = ...;
-              // export const { foo } = ...;
-              if (
-                declaration.id.type === "ArrayPattern" ||
-                declaration.id.type === "ObjectPattern"
-              ) {
-                // NOTE: These exports cannot be safely removed, so instead we
-                // validate them to ensure that any exports that are intended to
-                // be removed are not present
-                validateDestructuredExports(declaration.id, exportsToRemove);
-              }
-
               return true;
-            },
-          );
-          // Remove the entire export statement if all variables were removed
-          if (declaration.declarations.length === 0) {
-            markedForRemoval.add(path);
+            });
+            // Remove the entire export statement if all specifiers were removed
+            if (path.node.specifiers.length === 0) {
+              markedForRemoval.add(path);
+            }
           }
-        }
 
-        // export function foo() {}
-        if (path.node.declaration?.type === "FunctionDeclaration") {
-          let id = path.node.declaration.id;
-          if (id && exportsToRemove.includes(id.name)) {
-            markedForRemoval.add(path);
+          // export const foo = ...;
+          // export const [ foo ] = ...;
+          if (path.node.declaration?.type === "VariableDeclaration") {
+            let declaration = path.node.declaration;
+            declaration.declarations = declaration.declarations.filter(
+              (declaration) => {
+                // export const foo = ...;
+                // export const foo = ..., bar = ...;
+                if (
+                  declaration.id.type === "Identifier" &&
+                  exportsToRemove.includes(declaration.id.name)
+                ) {
+                  // Filter out individual variables
+                  exportsFiltered = true;
+                  return false;
+                }
+
+                // export const [ foo ] = ...;
+                // export const { foo } = ...;
+                if (
+                  declaration.id.type === "ArrayPattern" ||
+                  declaration.id.type === "ObjectPattern"
+                ) {
+                  // NOTE: These exports cannot be safely removed, so instead we
+                  // validate them to ensure that any exports that are intended to
+                  // be removed are not present
+                  validateDestructuredExports(declaration.id, exportsToRemove);
+                }
+
+                return true;
+              },
+            );
+            // Remove the entire export statement if all variables were removed
+            if (declaration.declarations.length === 0) {
+              markedForRemoval.add(path);
+            }
           }
-        }
 
-        // export class Foo() {}
-        if (path.node.declaration?.type === "ClassDeclaration") {
-          let id = path.node.declaration.id;
-          if (id && exportsToRemove.includes(id.name)) {
-            markedForRemoval.add(path);
+          // export function foo() {}
+          if (path.node.declaration?.type === "FunctionDeclaration") {
+            let id = path.node.declaration.id;
+            if (id && exportsToRemove.includes(id.name)) {
+              markedForRemoval.add(path);
+            }
           }
-        }
-      }
 
-      // export default ...;
-      if (path.node.type === "ExportDefaultDeclaration") {
-        if (exportsToRemove.includes("default")) {
-          markedForRemoval.add(path);
-          // Track the identifier being exported as default
-          if (path.node.declaration) {
-            if (path.node.declaration.type === "Identifier") {
-              removedExportLocalNames.add(path.node.declaration.name);
-            } else if (
-              (path.node.declaration.type === "FunctionDeclaration" ||
-                path.node.declaration.type === "ClassDeclaration") &&
-              path.node.declaration.id
-            ) {
-              removedExportLocalNames.add(path.node.declaration.id.name);
+          // export class Foo() {}
+          if (path.node.declaration?.type === "ClassDeclaration") {
+            let id = path.node.declaration.id;
+            if (id && exportsToRemove.includes(id.name)) {
+              markedForRemoval.add(path);
             }
           }
         }
-      }
-    },
-  });
 
-  // Remove top-level property assignments to removed exports. Handles
-  // `clientLoader.hydrate = true`, `Component.displayName = "..."`, etc.
-  traverse(ast, {
-    ExpressionStatement(path) {
-      // Only handle top-level statements
-      if (!path.parentPath.isProgram()) {
-        return;
-      }
-
-      if (path.node.expression.type === "AssignmentExpression") {
-        const left = path.node.expression.left;
-        if (
-          left.type === "MemberExpression" &&
-          left.object.type === "Identifier" &&
-          (exportsToRemove.includes(left.object.name) ||
-            removedExportLocalNames.has(left.object.name))
-        ) {
-          markedForRemoval.add(path);
+        // export default ...;
+        if (path.node.type === "ExportDefaultDeclaration") {
+          if (exportsToRemove.includes("default")) {
+            markedForRemoval.add(path);
+            // Track the identifier being exported as default
+            if (path.node.declaration) {
+              if (path.node.declaration.type === "Identifier") {
+                removedExportLocalNames.add(path.node.declaration.name);
+              } else if (
+                (path.node.declaration.type === "FunctionDeclaration" ||
+                  path.node.declaration.type === "ClassDeclaration") &&
+                path.node.declaration.id
+              ) {
+                removedExportLocalNames.add(path.node.declaration.id.name);
+              }
+            }
+          }
         }
-      }
+      });
+
+      // Remove top-level property assignments to removed exports. Handles
+      // `clientLoader.hydrate = true`, `Component.displayName = "..."`, etc.
+      statements.forEach((path) => {
+        if (!path.isExpressionStatement()) return;
+
+        if (path.node.expression.type === "AssignmentExpression") {
+          const left = path.node.expression.left;
+          if (
+            left.type === "MemberExpression" &&
+            left.object.type === "Identifier" &&
+            (exportsToRemove.includes(left.object.name) ||
+              removedExportLocalNames.has(left.object.name))
+          ) {
+            markedForRemoval.add(path);
+          }
+        }
+      });
+
+      program.stop();
     },
   });
 
