@@ -172,6 +172,17 @@ function exactIdRegExp(...ids: string[]): RegExp {
   return new RegExp(`^(?:${ids.map(escapeRegExp).join("|")})$`);
 }
 
+// Only narrows down the modules that reach `getRoute()`, which still compares
+// the full path, so matching on the file name is enough.
+function routeFileNameRegExp(reactRouterConfig: ResolvedReactRouterConfig) {
+  let fileNames = new Set(
+    Object.values(reactRouterConfig.routes).map((route) =>
+      escapeRegExp(path.basename(route.file)),
+    ),
+  );
+  return new RegExp(`(?:^|/)(?:${[...fileNames].join("|")})(?:\\?.*)?$`);
+}
+
 const buildClientRouteIdRegExp = new RegExp(
   `${escapeRegExp(BUILD_CLIENT_ROUTE_QUERY_STRING)}$`,
 );
@@ -2067,56 +2078,61 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       // all reference the same underlying file. This plugin addresses this by
       // ensuring that any explicit imports of a route module resolve to a
       // module that simply re-exports from its underlying chunks, if present.
-      async transform(code, id) {
-        // Ensure we're only operating on routes
-        if (!isRoute(ctx.reactRouterConfig, id)) {
-          return;
-        }
+      transform: {
+        get filter() {
+          return { id: routeFileNameRegExp(ctx.reactRouterConfig) };
+        },
+        async handler(code, id) {
+          // Ensure we're only operating on routes
+          if (!isRoute(ctx.reactRouterConfig, id)) {
+            return;
+          }
 
-        // Ensure we're only operating on raw route module imports
-        if (isRouteVirtualModule(id)) {
-          return;
-        }
+          // Ensure we're only operating on raw route module imports
+          if (isRouteVirtualModule(id)) {
+            return;
+          }
 
-        let { hasRouteChunks, chunkedExports } =
-          await detectRouteChunksIfEnabled(cache, ctx, id, code);
+          let { hasRouteChunks, chunkedExports } =
+            await detectRouteChunksIfEnabled(cache, ctx, id, code);
 
-        // If there are no chunks, we can let this resolve to the raw route
-        // module since there's no risk of duplication
-        if (!hasRouteChunks) {
-          return;
-        }
+          // If there are no chunks, we can let this resolve to the raw route
+          // module since there's no risk of duplication
+          if (!hasRouteChunks) {
+            return;
+          }
 
-        let sourceExports = await getRouteModuleExports(
-          viteChildCompiler,
-          ctx,
-          id,
-        );
+          let sourceExports = await getRouteModuleExports(
+            viteChildCompiler,
+            ctx,
+            id,
+          );
 
-        let isMainChunkExport = (name: string) =>
-          !chunkedExports.includes(name as string & RouteChunkExportName);
+          let isMainChunkExport = (name: string) =>
+            !chunkedExports.includes(name as string & RouteChunkExportName);
 
-        let mainChunkReexports = sourceExports
-          .filter(isMainChunkExport)
-          .join(", ");
+          let mainChunkReexports = sourceExports
+            .filter(isMainChunkExport)
+            .join(", ");
 
-        let chunkBasePath = `./${path.basename(id)}`;
+          let chunkBasePath = `./${path.basename(id)}`;
 
-        return [
-          `export { ${mainChunkReexports} } from "${getRouteChunkModuleId(
-            chunkBasePath,
-            "main",
-          )}";`,
-          ...chunkedExports.map(
-            (exportName) =>
-              `export { ${exportName} } from "${getRouteChunkModuleId(
-                chunkBasePath,
-                exportName,
-              )}";`,
-          ),
-        ]
-          .filter(Boolean)
-          .join("\n");
+          return [
+            `export { ${mainChunkReexports} } from "${getRouteChunkModuleId(
+              chunkBasePath,
+              "main",
+            )}";`,
+            ...chunkedExports.map(
+              (exportName) =>
+                `export { ${exportName} } from "${getRouteChunkModuleId(
+                  chunkBasePath,
+                  exportName,
+                )}";`,
+            ),
+          ]
+            .filter(Boolean)
+            .join("\n");
+        },
       },
     },
     {
@@ -2395,80 +2411,89 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     },
     {
       name: "react-router:route-exports",
-      async transform(code, id, options) {
-        // Ensure we perform this transform on all route module chunks
-        if (isRouteChunkModuleId(id)) {
-          id = id.split("?")[0];
-        }
-
-        let route = getRoute(ctx.reactRouterConfig, id);
-        if (!route) return;
-
-        let isServerEnvironment = isReactRouterServerEnvironment(
-          ctx,
-          this.environment.name,
-        );
-
-        if (
-          !options?.ssr &&
-          isSpaModeEnabled(ctx.reactRouterConfig) &&
-          !isApiOnlyMode(ctx.reactRouterConfig)
-        ) {
-          let exportNames = getExportNames(code);
-          let serverOnlyExports = exportNames.filter((exp) => {
-            // Root route can have a loader in SPA mode
-            if (route.id === "root" && exp === "loader") {
-              return false;
-            }
-            return SERVER_ONLY_ROUTE_EXPORTS.includes(exp);
-          });
-
-          if (serverOnlyExports.length > 0) {
-            let str = serverOnlyExports.map((e) => `\`${e}\``).join(", ");
-            let message =
-              `SPA Mode: ${serverOnlyExports.length} invalid route export(s) in ` +
-              `\`${route.file}\`: ${str}. See https://reactrouter.com/how-to/spa ` +
-              `for more information.`;
-            throw Error(message);
+      transform: {
+        // Routes can be added while the dev server is running, so only a
+        // build can narrow this hook down to the route files.
+        get filter() {
+          return viteCommand === "build"
+            ? { id: routeFileNameRegExp(ctx.reactRouterConfig) }
+            : undefined;
+        },
+        async handler(code, id, options) {
+          // Ensure we perform this transform on all route module chunks
+          if (isRouteChunkModuleId(id)) {
+            id = id.split("?")[0];
           }
 
-          if (route.id !== "root") {
-            let hasHydrateFallback = exportNames.some(
-              (exp) => exp === "HydrateFallback",
-            );
-            if (hasHydrateFallback) {
+          let route = getRoute(ctx.reactRouterConfig, id);
+          if (!route) return;
+
+          let isServerEnvironment = isReactRouterServerEnvironment(
+            ctx,
+            this.environment.name,
+          );
+
+          if (
+            !options?.ssr &&
+            isSpaModeEnabled(ctx.reactRouterConfig) &&
+            !isApiOnlyMode(ctx.reactRouterConfig)
+          ) {
+            let exportNames = getExportNames(code);
+            let serverOnlyExports = exportNames.filter((exp) => {
+              // Root route can have a loader in SPA mode
+              if (route.id === "root" && exp === "loader") {
+                return false;
+              }
+              return SERVER_ONLY_ROUTE_EXPORTS.includes(exp);
+            });
+
+            if (serverOnlyExports.length > 0) {
+              let str = serverOnlyExports.map((e) => `\`${e}\``).join(", ");
               let message =
-                `SPA Mode: Invalid \`HydrateFallback\` export found in ` +
-                `\`${route.file}\`. \`HydrateFallback\` is only permitted on ` +
-                `the root route in SPA Mode. See https://reactrouter.com/how-to/spa ` +
+                `SPA Mode: ${serverOnlyExports.length} invalid route export(s) in ` +
+                `\`${route.file}\`: ${str}. See https://reactrouter.com/how-to/spa ` +
                 `for more information.`;
               throw Error(message);
             }
+
+            if (route.id !== "root") {
+              let hasHydrateFallback = exportNames.some(
+                (exp) => exp === "HydrateFallback",
+              );
+              if (hasHydrateFallback) {
+                let message =
+                  `SPA Mode: Invalid \`HydrateFallback\` export found in ` +
+                  `\`${route.file}\`. \`HydrateFallback\` is only permitted on ` +
+                  `the root route in SPA Mode. See https://reactrouter.com/how-to/spa ` +
+                  `for more information.`;
+                throw Error(message);
+              }
+            }
           }
-        }
 
-        let [filepath] = id.split("?");
+          let [filepath] = id.split("?");
 
-        let ast = parse(code, { sourceType: "module" });
-        if (!options?.ssr) {
-          removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
-        } else if (
-          isApiOnlyMode(ctx.reactRouterConfig) &&
-          isServerEnvironment &&
-          !isPrerenderingEnabled(ctx.reactRouterConfig) &&
-          viteCommand === "build" &&
-          route.id !== "root"
-        ) {
-          removeExports(ast, CLIENT_ROUTE_EXPORTS);
-        }
-        decorateComponentExportsWithProps(ast, code);
-        return generate(ast, {
-          sourceMaps:
-            this.environment.mode !== "build" ||
-            Boolean(this.environment.config.build.sourcemap),
-          filename: id,
-          sourceFileName: filepath,
-        });
+          let ast = parse(code, { sourceType: "module" });
+          if (!options?.ssr) {
+            removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+          } else if (
+            isApiOnlyMode(ctx.reactRouterConfig) &&
+            isServerEnvironment &&
+            !isPrerenderingEnabled(ctx.reactRouterConfig) &&
+            viteCommand === "build" &&
+            route.id !== "root"
+          ) {
+            removeExports(ast, CLIENT_ROUTE_EXPORTS);
+          }
+          decorateComponentExportsWithProps(ast, code);
+          return generate(ast, {
+            sourceMaps:
+              this.environment.mode !== "build" ||
+              Boolean(this.environment.config.build.sourcemap),
+            filename: id,
+            sourceFileName: filepath,
+          });
+        },
       },
     },
     {
