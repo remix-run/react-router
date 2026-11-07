@@ -730,6 +730,14 @@ let isHydrated = false;
 export function setIsHydrated() {
   isHydrated = true;
 }
+/**
+ * Reset the hydration state for testing.
+ *
+ * @internal
+ */
+export function resetIsHydrated() {
+  isHydrated = false;
+}
 
 /**
  * A couple common attributes:
@@ -768,6 +776,12 @@ export type ScriptsProps = Omit<
    * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
+  /**
+   * The [`fetchpriority`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/fetchPriority)
+   * attribute to apply to route modulepreload [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
+   * elements (e.g. `"low"` to prevent bandwidth competition with render-blocking styles).
+   */
+  modulePreloadFetchPriority?: "low" | "high" | "auto" | undefined;
 };
 
 /**
@@ -804,6 +818,7 @@ export type ScriptsProps = Omit<
  * tags
  */
 export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
+  let { modulePreloadFetchPriority } = scriptProps;
   let {
     manifest,
     serverHandoffString,
@@ -1030,6 +1045,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
           crossOrigin={scriptProps.crossOrigin}
           integrity={sri[path]}
           nonce={scriptProps.nonce}
+          fetchPriority={modulePreloadFetchPriority}
           suppressHydrationWarning
         />
       ))}
