@@ -312,6 +312,12 @@ class StreamPump {
     this.stream.off("error", this.error);
     this.stream.off("end", this.close);
     this.stream.off("close", this.close);
+
+    // The destroyed stream can still emit an error (e.g. a file that fails to
+    // open after the cancel), so keep handling it until the stream closes
+    let ignoreError = () => {};
+    this.stream.on("error", ignoreError);
+    this.stream.once("close", () => this.stream.off("error", ignoreError));
   }
 
   enqueue(chunk: Uint8Array | string) {

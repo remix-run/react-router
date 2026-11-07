@@ -212,6 +212,7 @@ function createHydratedRouter({
       fetchImplementation,
       ssrInfo.context.unstable_apiOnly === true,
       ssrInfo.context.unstable_apiServerOrigin,
+      ssrInfo.context.isSpaMode,
     ),
     patchRoutesOnNavigation: discoveryRuntime
       ? getCustomPatchRoutesOnNavigationFunction(() => router, discoveryRuntime)

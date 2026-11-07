@@ -315,7 +315,9 @@ export function createSessionStorage<Data = SessionData, FlashData = Data>({
       return cookie.serialize(id, options);
     },
     async destroySession(session, options) {
-      await deleteData(session.id);
+      if (session.id) {
+        await deleteData(session.id);
+      }
       return cookie.serialize("", {
         ...options,
         maxAge: undefined,

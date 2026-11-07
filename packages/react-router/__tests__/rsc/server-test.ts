@@ -1,4 +1,8 @@
+import * as React from "react";
+import { renderToString } from "react-dom/server.node";
+
 import {
+  Await,
   matchRSCServerRequest,
   type RSCMatch,
   type RSCRouteConfigEntry,
@@ -7,6 +11,127 @@ import { routeRSCServerRequest } from "../../lib/rsc/server.ssr";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
+  describe("Await", () => {
+    describe.each(["resolve", "unstable_promise"] as const)("%s", (prop) => {
+      test.each(["Value", undefined, null, false, 0, ""])(
+        "supplies the resolved value to children: %p",
+        async (value) => {
+          let received: unknown = "unset";
+          await Await({
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: value }
+              : { resolve: value }),
+            children(data) {
+              received = data;
+              return null;
+            },
+          });
+          expect(received).toBe(value);
+        },
+      );
+
+      test("supplies fulfilled promises to children", async () => {
+        let promise = Promise.resolve("Value");
+        let received: unknown;
+        await Await({
+          ...(prop === "unstable_promise"
+            ? { unstable_promise: promise }
+            : { resolve: promise }),
+          children(value) {
+            received = value;
+            return null;
+          },
+        });
+        expect(received).toBe("Value");
+      });
+
+      test("propagates rejections without an errorElement", async () => {
+        let error = new Error("Rejected");
+        let promise = Promise.reject(error);
+        promise.catch(() => {});
+        await expect(
+          Await({
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: promise }
+              : { resolve: promise }),
+            children: "Success",
+          }),
+        ).rejects.toBe(error);
+      });
+
+      test("propagates child render errors past errorElement", async () => {
+        let error = new Error("Render failed");
+        await expect(
+          Await({
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: "Value" }
+              : { resolve: "Value" }),
+            children() {
+              throw error;
+            },
+            errorElement: "Await error",
+          }),
+        ).rejects.toBe(error);
+      });
+
+      test.each([undefined, null, false, 0, "", NaN, 0n])(
+        "propagates rejections with falsy errorElement=%p",
+        async (errorElement) => {
+          let error = new Error("Rejected");
+          let promise = Promise.reject(error);
+          await expect(
+            Await({
+              ...(prop === "unstable_promise"
+                ? { unstable_promise: promise }
+                : { resolve: promise }),
+              children: "Success",
+              errorElement,
+            }),
+          ).rejects.toBe(error);
+        },
+      );
+
+      test("renders an empty fragment errorElement on rejection", async () => {
+        let promise = Promise.reject(new Error("Rejected"));
+        let result = await Await({
+          ...(prop === "unstable_promise"
+            ? { unstable_promise: promise }
+            : { resolve: promise }),
+          children: "Success",
+          errorElement: React.createElement(React.Fragment),
+        });
+        expect(renderToString(result)).toBe("");
+      });
+    });
+
+    test("accepts promise-like values", async () => {
+      let received: unknown;
+      await Await({
+        unstable_promise: {
+          then(resolve: (value: string) => void) {
+            resolve("Thenable");
+          },
+        },
+        children(value) {
+          received = value;
+          return null;
+        },
+      });
+      expect(received).toBe("Thenable");
+    });
+
+    test.each([{}, { resolve: undefined, unstable_promise: undefined }])(
+      "requires exactly one promise prop: %p",
+      async (props) => {
+        await expect(
+          Await({ ...props, children: null } as any),
+        ).rejects.toThrow(
+          "<Await> requires exactly one of `resolve` or `unstable_promise`",
+        );
+      },
+    );
+  });
+
   test("reuses the static handler route matcher after exploding lazy routes", async () => {
     let childRoute: RSCRouteConfigEntry = {
       id: "child",
@@ -395,6 +520,59 @@ describe("RSC server", () => {
         status: 302,
       });
     });
+  });
+
+  test("switches to initial discovery above the pathname work limit", async () => {
+    let routeDiscovery = Object.freeze({ mode: "lazy" } as const);
+    let routes: RSCRouteConfigEntry[] = [
+      {
+        id: "root",
+        path: "",
+        Component: () => null,
+        children: [
+          { id: "other", path: "other" },
+          { id: "splat", path: "*", Component: () => null },
+        ],
+      },
+    ];
+
+    async function getPayload(pathname: string) {
+      let match: RSCMatch | undefined;
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request(`https://remix.run${pathname}`),
+        routes,
+        routeDiscovery,
+        generateResponse(nextMatch) {
+          match = nextMatch;
+          return new Response(null, { status: nextMatch.statusCode });
+        },
+      });
+      expect(response.status).toBe(200);
+      if (match?.payload.type !== "render") {
+        throw new Error("Expected a render payload");
+      }
+      return match.payload;
+    }
+
+    let pathname = `/${Array.from({ length: 60 }, (_, i) => i % 10).join("/")}`;
+    let payload = await getPayload(pathname);
+    expect(payload.routeDiscovery.mode).toBe("lazy");
+    expect(await payload.patches).toEqual([]);
+
+    payload = await getPayload(`${pathname}.rsc`);
+    expect(payload.routeDiscovery.mode).toBe("lazy");
+    expect(await payload.patches).toEqual([]);
+
+    pathname = `/${Array.from({ length: 70 }, (_, i) => i % 10).join("/")}`;
+    payload = await getPayload(pathname);
+    expect(payload.routeDiscovery.mode).toBe("initial");
+    expect((await payload.patches).map((patch) => patch.id)).toEqual(["other"]);
+
+    payload = await getPayload(`${pathname}.rsc`);
+    expect(payload.routeDiscovery.mode).toBe("initial");
+    expect((await payload.patches).map((patch) => patch.id)).toEqual(["other"]);
+    expect(routeDiscovery.mode).toBe("lazy");
   });
 });
 

@@ -88,6 +88,47 @@ function getFiles() {
   };
 }
 
+test("switches to initial discovery above the pathname work limit", async ({
+  page,
+}) => {
+  let fixture = await createFixtureBase({
+    files: {
+      ...getFiles(),
+      "app/routes/$.tsx": js`
+        export default function Splat() {
+          return <h1>Sample page</h1>;
+        }
+      `,
+    },
+  });
+  let appFixture = await createAppFixture(fixture);
+  let app = new PlaywrightFixture(appFixture, page);
+
+  try {
+    let response = await app.goto(
+      `/${Array.from({ length: 60 }, (_, i) => i % 10).join("/")}`,
+    );
+    expect(response.status()).toBe(200);
+    expect(
+      await page.evaluate(
+        () => (window as any).__reactRouterContext.routeDiscovery.mode,
+      ),
+    ).toBe("lazy");
+
+    response = await app.goto(
+      `/${Array.from({ length: 70 }, (_, i) => i % 10).join("/")}`,
+    );
+    expect(response.status()).toBe(200);
+    expect(
+      await page.evaluate(
+        () => (window as any).__reactRouterContext.routeDiscovery.mode,
+      ),
+    ).toBe("initial");
+  } finally {
+    await appFixture.close();
+  }
+});
+
 for (let customDiscovery of [false, true]) {
   test.describe(`Fog of War (custom discovery: ${customDiscovery})`, () => {
     testFogOfWar(customDiscovery);
@@ -931,6 +972,69 @@ function testFogOfWar(unstable_customRouteDiscovery: boolean) {
     ).toEqual(["root", "routes/_index", "routes/$", "routes/static"]);
   });
 
+  test("discovers routes for paths containing commas", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Outlet, Scripts } from "react-router";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head></head>
+                <body>
+                  <nav>
+                    <Link to="/tags/a,b">/tags/a,b</Link>
+                  </nav>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>
+          }
+        `,
+        "app/routes/tags.a,b.tsx": js`
+          export default function Component() {
+            return <h2 id="tags">Tags</h2>;
+          }
+        `,
+        "app/routes/$.tsx": js`
+          export default function Component() {
+            return <h2 id="splat">Splat</h2>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(await app.getHtml("#index")).toMatch("Index");
+    await page.waitForFunction(
+      () => (window as any).__reactRouterManifest.routes["routes/tags.a,b"],
+    );
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(
+        /\/__manifest\?paths=%2Ftags%2C%2Ftags%2Fa%252Cb&version=/,
+      ),
+    ]);
+
+    await app.clickLink("/tags/a,b");
+    await page.waitForSelector("#tags");
+    expect(await app.getHtml("#tags")).toMatch("Tags");
+  });
+
   test("does not re-request for previously discovered slug routes", async ({
     page,
   }) => {
@@ -1199,6 +1303,11 @@ function testFogOfWar(unstable_customRouteDiscovery: boolean) {
     let fixture = await createFixture({
       files: {
         ...getFiles(),
+        // Keep discovery of /a/b from racing the manifest assertion after visiting /a.
+        "app/routes/a.tsx": getFiles()["app/routes/a.tsx"].replace(
+          'to="/a/b"',
+          'to="/a/b" discover="none"',
+        ),
         "app/routes/_index.tsx": js`
           import { Link } from "react-router";
           export default function Index() {
