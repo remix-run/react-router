@@ -1632,6 +1632,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           configFile: false,
           envDir: false,
           plugins: [
+            {
+              // The child compiler is only used to read the exports of route
+              // modules, which don't depend on where their imports resolve.
+              name: "react-router:child-compiler-externals",
+              enforce: "pre",
+              resolveId(id, importer) {
+                if (importer) return { id, external: true };
+              },
+            },
             childCompilerPlugins
               // Exclude this plugin from the child compiler to prevent an
               // infinite loop (plugin creates a child compiler with the same
