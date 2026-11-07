@@ -6,9 +6,6 @@ title: View Transitions
 
 [MODES: framework, data, declarative]
 
-<br/>
-<br/>
-
 Use React's [`<ViewTransition>`][react-view-transition] component to animate client-side navigations. This requires React and React DOM 19.3 or later.
 
 <docs-warning>

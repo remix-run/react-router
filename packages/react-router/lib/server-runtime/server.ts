@@ -36,7 +36,12 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
-import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getManifestPath,
+  isFogOfWarEnabled,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import {
   instrumentationResultMetaContext,
@@ -113,11 +118,16 @@ function derive(build: ServerBuild, mode?: string) {
     let isSpaMode =
       getBuildTimeHeader(request, "X-React-Router-SPA-Mode") === "yes";
 
-    // When runtime SSR is disabled, make our dev server behave like the deployed
-    // pre-rendered site would
-    if (!build.ssr) {
-      // Decode the URL path before checking against the prerender config
-      let decodedPath = decodeURI(normalizedPathname);
+    // When runtime document SSR is disabled, make our dev server behave like
+    // the deployed pre-rendered site would.
+    if (!build.ssr || build.unstable_apiOnly) {
+      // Decode the URL path before checking against the prerender config.
+      // Fall back to the raw path on a malformed percent-encoding, the same
+      // way route matching does.
+      let decodedPath = normalizedPathname;
+      try {
+        decodedPath = decodeURI(normalizedPathname);
+      } catch {}
 
       if (build.basename && build.basename !== "/") {
         let strippedPath = stripBasename(decodedPath, build.basename);
@@ -143,18 +153,19 @@ function derive(build: ServerBuild, mode?: string) {
         decodedPath = strippedPath;
       }
 
-      // When SSR is disabled this, file can only ever run during dev because we
-      // delete the server build at the end of the build
+      // Without API-only mode, this file only runs during dev or prerendering
+      // because we delete the server build at the end of the build.
       if (build.prerender.length === 0) {
-        // ssr:false and no prerender config indicates "SPA Mode"
+        // Without prerendered paths, render the SPA fallback.
         isSpaMode = true;
       } else if (
         !build.prerender.some(
           (p) => removeTrailingSlash(p) === removeTrailingSlash(decodedPath),
         )
       ) {
-        if (requestUrl.pathname.endsWith(".data")) {
-          // 404 on non-pre-rendered `.data` requests
+        if (requestUrl.pathname.endsWith(".data") && !build.unstable_apiOnly) {
+          // API-only builds can serve runtime data for non-prerendered routes.
+          // Otherwise, 404 on non-pre-rendered `.data` requests.
           errorHandler(
             new ErrorResponseImpl(
               404,
@@ -194,6 +205,19 @@ function derive(build: ServerBuild, mode?: string) {
         handleError(e);
         return new Response("Unknown Server Error", { status: 500 });
       }
+    }
+
+    if (
+      build.unstable_apiOnly &&
+      serverMode !== ServerMode.Development &&
+      !requestUrl.pathname.endsWith(".data") &&
+      getBuildTimeHeader(request, "X-React-Router-SPA-Mode") !== "yes" &&
+      getBuildTimeHeader(request, "X-React-Router-Prerender") !== "yes"
+    ) {
+      return new Response(null, {
+        status: 404,
+        statusText: "Not Found",
+      });
     }
 
     let matches = matchServerRoutes(
@@ -289,6 +313,8 @@ function derive(build: ServerBuild, mode?: string) {
     }
 
     if (request.method === "HEAD") {
+      // Cancel the dropped body so its stream (e.g. an open file) is released
+      response.body?.cancel().catch(() => {});
       return new Response(null, {
         headers: response.headers,
         status: response.status,
@@ -520,12 +546,26 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: context.errors,
     };
+    let routeDiscovery = build.routeDiscovery;
+    if (
+      isFogOfWarEnabled(routeDiscovery, build.ssr) &&
+      shouldUseInitialRouteDiscovery(
+        context.location.pathname,
+        staticHandler._matchCost,
+      )
+    ) {
+      // Keep this response and its client router on the existing full-manifest
+      // path without changing discovery for other requests using this build.
+      routeDiscovery = { ...routeDiscovery, mode: "initial" };
+    }
     let baseServerHandoff: ServerHandoff = {
       basename: build.basename,
       future: build.future,
-      routeDiscovery: build.routeDiscovery,
+      routeDiscovery,
       ssr: build.ssr,
       isSpaMode,
+      unstable_apiOnly: build.unstable_apiOnly,
+      unstable_apiServerOrigin: build.unstable_apiServerOrigin,
     };
     let entryContext: EntryContext = {
       manifest: build.assets,
@@ -546,8 +586,10 @@ async function handleDocumentRequest(
       renderMeta: {},
       future: build.future,
       ssr: build.ssr,
-      routeDiscovery: build.routeDiscovery,
+      routeDiscovery,
       isSpaMode,
+      unstable_apiOnly: build.unstable_apiOnly,
+      unstable_apiServerOrigin: build.unstable_apiServerOrigin,
       serializeError: (err) => serializeError(err, serverMode),
     };
 

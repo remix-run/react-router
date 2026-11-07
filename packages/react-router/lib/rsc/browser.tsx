@@ -46,6 +46,7 @@ import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
 import {
   URL_LIMIT,
+  getManifestPathsParam,
   getPathsWithAncestors,
   handleClientVersionMismatch,
 } from "../dom/ssr/fog-of-war";
@@ -1049,7 +1050,7 @@ function getManifestUrl(
       "",
     );
     url = new URL(`${basename}/.manifest`, window.location.origin);
-    url.searchParams.set("paths", paths.sort().join(","));
+    url.searchParams.set("paths", getManifestPathsParam(paths));
   }
 
   if (clientVersion !== undefined) {

@@ -6,9 +6,6 @@ title: Form Validation
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 This guide walks through a simple signup form implementation. You will likely want to pair these concepts with third-party validation libraries and error components, but this guide only focuses on the moving pieces for React Router.
 
 ## 1. Setting Up

@@ -30,7 +30,9 @@ const config: PlaywrightTestConfig = {
   },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 3 : 0,
-  reporter: process.env.CI ? "dot" : [["html", { open: "never" }]],
+  reporter: process.env.CI
+    ? [["./reporters/progress.ts"]]
+    : [["html", { open: "never" }]],
   use: { actionTimeout: 0 },
 
   projects: [

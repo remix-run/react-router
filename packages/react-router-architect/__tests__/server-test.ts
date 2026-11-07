@@ -1,4 +1,6 @@
 import fsp from "node:fs/promises";
+import http from "node:http";
+import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type {
@@ -336,6 +338,49 @@ describe("architect createReactRouterRequest", () => {
 
     expect(request.url).toBe("https://localhost/foo");
   });
+
+  it("preserves binary base64 encoded request bodies", async () => {
+    let image = await fsp.readFile(path.join(__dirname, "554828.jpeg"));
+
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: { "content-type": "image/jpeg" },
+        body: image.toString("base64"),
+        isBase64Encoded: true,
+        requestContext: {
+          http: {
+            method: "POST",
+          } as APIGatewayProxyEventV2["requestContext"]["http"],
+        },
+      }),
+    );
+
+    let body = Buffer.from(await request.arrayBuffer());
+    expect(body.equals(image)).toBe(true);
+  });
+
+  it("decodes text base64 encoded request bodies", async () => {
+    let text = "name=caf\u00e9&emoji=\ud83d\udc4b";
+
+    let request = createReactRouterRequest(
+      createMockEvent({
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: Buffer.from(text).toString("base64"),
+        isBase64Encoded: true,
+        requestContext: {
+          http: {
+            method: "POST",
+          } as APIGatewayProxyEventV2["requestContext"]["http"],
+        },
+      }),
+    );
+
+    expect(await request.clone().text()).toBe(text);
+
+    let formData = await request.formData();
+    expect(formData.get("name")).toBe("caf\u00e9");
+    expect(formData.get("emoji")).toBe("\ud83d\udc4b");
+  });
 });
 
 describe("sendReactRouterResponse", () => {
@@ -372,5 +417,30 @@ describe("sendReactRouterResponse", () => {
     let result = await sendReactRouterResponse(response);
 
     expect(result.body).toMatch(image.toString("base64"));
+  });
+
+  it("handles responses with immutable headers and cookies", async () => {
+    // Responses from fetch() have immutable headers
+    let server = http.createServer((_req, res) => {
+      res.setHeader("Set-Cookie", ["foo=bar; Path=/", "bar=baz; Path=/"]);
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true }));
+    });
+    await new Promise<void>((resolve) => server.listen(0, resolve));
+
+    try {
+      let { port } = server.address() as AddressInfo;
+      let response = await fetch(`http://127.0.0.1:${port}/`);
+
+      let result = await sendReactRouterResponse(response);
+
+      expect(result.statusCode).toBe(200);
+      expect(result.cookies).toEqual(["foo=bar; Path=/", "bar=baz; Path=/"]);
+      expect(result.headers).not.toHaveProperty("set-cookie");
+      expect(result.headers).toHaveProperty("content-type", "application/json");
+      expect(result.body).toBe(JSON.stringify({ ok: true }));
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 });

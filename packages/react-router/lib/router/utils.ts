@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { Equal, Expect } from "../types/utils";
-import type { Location, Path, To } from "./history";
+import type { Action as NavigationType, Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 import {
   ABSOLUTE_URL_REGEX,
@@ -283,6 +283,13 @@ interface DataFunctionArgs<Context> {
    * In Framework mode, this is a normalized URL with React-Router-specific
    * implementation details removed (`.data` suffixes, `index`/`_routes` search
    * params). For the raw incoming URL, use `request.url`.
+   *
+   * This normalization preserves standard URL pathname encoding and casing.
+   * For example, a request to `/%61dmin.data` produces a `url.pathname` of
+   * `/%61dmin`. This is not a canonical representation of the matched route.
+   * For authorization, attach {@link https://reactrouter.com/how-to/middleware#authentication server middleware}
+   * to the protected route or a common ancestor instead of relying on literal
+   * pathname-prefix comparisons.
    */
   url: URL;
   /**
@@ -514,6 +521,17 @@ export interface DataStrategyMatch extends RouteMatch<string, DataRouteObject> {
   ) => Promise<DataStrategyResult>;
 }
 
+/**
+ * The operation that initiated a data strategy execution. Static handler
+ * executions use `"static"`.
+ */
+export type DataStrategyInitiator =
+  | "initialization"
+  | "navigation"
+  | "fetcher"
+  | "revalidation"
+  | "static";
+
 export interface DataStrategyFunctionArgs<
   Context = DefaultContext,
 > extends DataFunctionArgs<Context> {
@@ -525,8 +543,23 @@ export interface DataStrategyFunctionArgs<
     cb: DataStrategyFunction<Context>,
   ) => Promise<Record<string, DataStrategyResult>>;
   /**
-   * The key of the fetcher we are calling `dataStrategy` for, otherwise `null`
-   * for navigational executions
+   * The operation that initiated this data strategy execution
+   *
+   * This field is experimental and subject to breaking changes.
+   */
+  unstable_initiator: DataStrategyInitiator;
+  /**
+   * The history action (`"PUSH"`, `"REPLACE"`, or `"POP"`) for a navigation-
+   * initiated execution, including fetchers reloaded by that navigation.
+   * `null` for initialization, fetcher, revalidation, and static executions.
+   *
+   * This field is experimental and subject to breaking changes.
+   */
+  unstable_navigationType: NavigationType | null;
+  /**
+   * The key of the fetcher targeted by this data strategy execution, otherwise
+   * `null`. Fetchers reloaded during a navigation or revalidation retain that
+   * `unstable_initiator` while providing their key here.
    */
   fetcherKey: string | null;
 }
@@ -544,6 +577,9 @@ export interface DataStrategyFunction<Context = DefaultContext> {
     args: DataStrategyFunctionArgs<Context>,
   ): Promise<Record<string, DataStrategyResult>>;
 }
+
+// Internal control flow for application-owned Framework discovery recovery.
+export class DiscoveryCancelledError extends Error {}
 
 export type PatchRoutesOnNavigationFunctionArgs = {
   signal: AbortSignal;
@@ -1777,7 +1813,7 @@ export function compilePath(
           return "/([^\\/]+)";
         },
       ) // Dynamic segment
-      .replace(/\/([\w-]+)\?(?=\/|$|\()/g, "(?:/$1)?"); // Optional static segment (non-capturing)
+      .replace(/\/((?:[^/?()[\]*^\\]|\\.)+)\?(?=\/|$|\()/g, "(?:/$1)?"); // Optional static segment (non-capturing)
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });

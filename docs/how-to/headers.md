@@ -6,9 +6,6 @@ title: HTTP Headers
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 ## Reading request headers
 
 The `request` sent to route handlers is a standard Web Fetch [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request), so you can read headers directly from the [`request.headers`](https://developer.mozilla.org/en-US/docs/Web/API/Request/headers) property:
