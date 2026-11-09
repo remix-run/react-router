@@ -1949,12 +1949,19 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     [basename, shouldBlock],
   );
 
+  // Effect cleanup/reconnection preserves state but creates a new registration.
+  let ownedBlockerKey = React.useRef("");
+
   // This effect is in charge of blocker key assignment and deletion (which is
   // tightly coupled to the key)
   React.useEffect(() => {
     let key = String(++blockerId);
+    ownedBlockerKey.current = key;
     setBlockerKey(key);
-    return () => router.deleteBlocker(key);
+    return () => {
+      ownedBlockerKey.current = "";
+      router.deleteBlocker(key);
+    };
   }, [router]);
 
   // This effect handles assigning the blockerFunction.  This is to handle
@@ -1962,7 +1969,7 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   // effect so we don't get an orphaned blockerFunction in the router with a
   // key of "".  Until then we just have the IDLE_BLOCKER.
   React.useEffect(() => {
-    if (blockerKey !== "") {
+    if (blockerKey !== "" && blockerKey === ownedBlockerKey.current) {
       router.getBlocker(blockerKey, blockerFunction);
     }
   }, [router, blockerKey, blockerFunction]);
