@@ -1,5 +1,15 @@
 # `@react-router/serve`
 
+## v8.5.1
+
+### Patch Changes
+
+- Avoid writing a blank line to stderr when the server shuts down successfully ([#15641](https://github.com/remix-run/react-router/pull/15641))
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/express@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+
 ## v8.5.0
 
 ### Unstable Changes

@@ -238,19 +238,9 @@ async function projectNameStep(ctx: Context) {
       initial: "./my-react-router-app",
     });
     ctx.cwd = name!;
-    ctx.projectName = toValidProjectName(name!);
-    return;
   }
 
-  let name = ctx.cwd;
-  if (name === "." || name === "./") {
-    let parts = process.cwd().split(path.sep);
-    name = parts[parts.length - 1];
-  } else if (name.startsWith("./") || name.startsWith("../")) {
-    let parts = name.split("/");
-    name = parts[parts.length - 1];
-  }
-  ctx.projectName = toValidProjectName(name);
+  ctx.projectName = toValidProjectName(path.basename(path.resolve(ctx.cwd)));
 }
 
 async function copyTemplateToTempDirStep(ctx: Context) {
