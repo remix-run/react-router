@@ -139,7 +139,15 @@ async function run() {
   app.use(morgan("tiny"));
 
   if (build.fetch) {
-    app.all("*", createRequestListener(build.fetch));
+    let listener = createRequestListener(build.fetch);
+    app.all("*", async (req, res, next) => {
+      try {
+        await listener(req, res);
+      } catch (error) {
+        // Express 4 does not handle rejected promises from async listeners.
+        next(error);
+      }
+    });
   } else {
     app.all(
       "*",
