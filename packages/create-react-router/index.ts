@@ -238,19 +238,9 @@ async function projectNameStep(ctx: Context) {
       initial: "./my-react-router-app",
     });
     ctx.cwd = name!;
-    ctx.projectName = toValidProjectName(name!);
-    return;
   }
 
-  let name = ctx.cwd;
-  if (name === "." || name === "./") {
-    let parts = process.cwd().split(path.sep);
-    name = parts[parts.length - 1];
-  } else if (name.startsWith("./") || name.startsWith("../")) {
-    let parts = name.split("/");
-    name = parts[parts.length - 1];
-  }
-  ctx.projectName = toValidProjectName(name);
+  ctx.projectName = toValidProjectName(path.basename(path.resolve(ctx.cwd)));
 }
 
 async function copyTemplateToTempDirStep(ctx: Context) {
@@ -533,11 +523,22 @@ async function gitInitStep(ctx: Context) {
       let commitMsg = "Initial commit from create-react-router";
       try {
         await runCommand("git", ["init"], options);
-        await runCommand("git", ["add", "."], options);
-        await runCommand("git", ["commit", "-m", commitMsg], options);
       } catch (err) {
         error("Oh no!", "Failed to initialize git.");
         throw err;
+      }
+
+      try {
+        await runCommand("git", ["add", "."], options);
+        await runCommand("git", ["commit", "-m", commitMsg], options);
+      } catch (err) {
+        error(
+          "Git initialized, but the initial add/commit failed.",
+          "Ensure Git user.name and user.email are configured, then create the commit manually.",
+        );
+        if (ctx.debug) {
+          console.error(err);
+        }
       }
     },
     ctx,

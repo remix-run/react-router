@@ -1842,6 +1842,7 @@ type AwaitErrorBoundaryProps = React.PropsWithChildren<{
 
 type AwaitErrorBoundaryState = {
   error: any;
+  resolve: AwaitErrorBoundaryProps["resolve"];
 };
 
 enum AwaitRenderStatus {
@@ -1856,11 +1857,22 @@ class AwaitErrorBoundary extends React.Component<
 > {
   constructor(props: AwaitErrorBoundaryProps) {
     super(props);
-    this.state = { error: null };
+    this.state = { error: null, resolve: props.resolve };
   }
 
   static getDerivedStateFromError(error: any) {
     return { error };
+  }
+
+  static getDerivedStateFromProps(
+    props: AwaitErrorBoundaryProps,
+    state: AwaitErrorBoundaryState,
+  ) {
+    // A render error belongs to the previous `resolve`
+    if (props.resolve !== state.resolve) {
+      return { error: null, resolve: props.resolve };
+    }
+    return null;
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
