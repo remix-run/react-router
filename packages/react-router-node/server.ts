@@ -34,8 +34,23 @@ export function createRequestListener(
 ): RequestListener {
   let handleRequest = createRequestHandler(options.build, options.mode);
 
-  return createRequestListener_(async (request, client) => {
+  let listener = createRequestListener_(async (request, client) => {
     let loadContext = await options.getLoadContext?.(request, client);
     return handleRequest(request, loadContext);
   });
+
+  return async (req, res) => {
+    try {
+      // Request construction can fail before the listener's error handler runs.
+      await listener(req, res);
+    } catch (error) {
+      console.error(error);
+      if (res.headersSent || res.destroyed) {
+        res.destroy();
+      } else {
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Internal Server Error");
+      }
+    }
+  };
 }
