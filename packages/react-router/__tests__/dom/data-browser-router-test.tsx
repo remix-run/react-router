@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import * as React from "react";
 import type {
+  ActionFunctionArgs,
   DataStrategyResult,
   ErrorResponse,
   Fetcher,
@@ -3000,8 +3001,10 @@ function testDomRouter(
         `);
       });
 
-      it('supports a basename on <Form method="post" action="/?index">', async () => {
-        let indexAction = jest.fn(() => "index action");
+      it("preserves search and hash when submitting a root <Form> action with a basename", async () => {
+        let indexAction = jest.fn(
+          ({ request }: ActionFunctionArgs) => request.url,
+        );
         let pathAction = jest.fn(() => "path action");
         let router = createTestRouter(
           [
@@ -3015,7 +3018,7 @@ function testDomRouter(
                   action: pathAction,
                   Component() {
                     return (
-                      <Form method="post" action="/?index">
+                      <Form method="post" action="/?index&x=a%23b#details">
                         <button type="submit">Submit</button>
                       </Form>
                     );
@@ -3032,29 +3035,40 @@ function testDomRouter(
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/base?index",
+          "/base?index&x=a%23b#details",
         );
 
         fireEvent.click(screen.getByText("Submit"));
-        await waitFor(() => expect(indexAction).toHaveBeenCalledTimes(1));
+        await waitFor(() =>
+          expect(router.state.location).toMatchObject({
+            pathname: "/base",
+            search: "?index&x=a%23b",
+            hash: "#details",
+          }),
+        );
+        expect(indexAction).toHaveBeenCalledTimes(1);
+        expect(indexAction.mock.calls[0][0].request.url).toBe(
+          "http://localhost/base?index&x=a%23b",
+        );
         expect(pathAction).not.toHaveBeenCalled();
       });
 
-      it('supports a basename on <Form method="post" action="/?index"> submitted without a button', async () => {
-        let indexAction = jest.fn(() => "index action");
+      it('supports a basename on <Form action="/#details"> submitted without a button', async () => {
+        let rootAction = jest.fn(() => "root action");
         let pathAction = jest.fn(() => "path action");
         let router = createTestRouter(
           [
             {
               path: "/",
               Component: Outlet,
+              action: rootAction,
               children: [
-                { index: true, action: indexAction },
+                { index: true },
                 {
                   path: "path",
                   action: pathAction,
                   Component() {
-                    return <Form method="post" action="/?index" />;
+                    return <Form method="post" action="/#details" />;
                   },
                 },
               ],
@@ -3068,7 +3082,14 @@ function testDomRouter(
         let { container } = render(<RouterProvider router={router} />);
 
         fireEvent.submit(container.querySelector("form")!);
-        await waitFor(() => expect(indexAction).toHaveBeenCalledTimes(1));
+        await waitFor(() =>
+          expect(router.state.location).toMatchObject({
+            pathname: "/base",
+            search: "",
+            hash: "#details",
+          }),
+        );
+        expect(rootAction).toHaveBeenCalledTimes(1);
         expect(pathAction).not.toHaveBeenCalled();
       });
 
@@ -3114,6 +3135,86 @@ function testDomRouter(
         await waitFor(() => expect(indexAction).toHaveBeenCalledTimes(1));
         expect(pathAction).not.toHaveBeenCalled();
       });
+
+      it("submits a root fetcher.Form action with a basename without navigating", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Outlet,
+              children: [
+                {
+                  index: true,
+                  action: ({ request }) => request.url,
+                },
+                {
+                  path: "path",
+                  Component() {
+                    let fetcher = useFetcher();
+                    return (
+                      <fetcher.Form
+                        method="post"
+                        action="/?index&x=a%23b#details"
+                      >
+                        <p>{fetcher.data}</p>
+                        <button type="submit">Submit</button>
+                      </fetcher.Form>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          { basename: "/base", window: getWindow("/base/path") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await screen.findByText("http://localhost/base?index&x=a%23b");
+        expect(router.state.location).toMatchObject({
+          pathname: "/base/path",
+          search: "",
+          hash: "",
+        });
+        router.dispose();
+      });
+
+      it.each(["?", "#"])(
+        "preserves an explicit %s submitter target from an index route",
+        async (formAction) => {
+          let parentAction = jest.fn(() => "parent");
+          let indexAction = jest.fn(() => "index");
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                Component: Outlet,
+                action: parentAction,
+                children: [
+                  {
+                    index: true,
+                    action: indexAction,
+                    element: (
+                      <Form method="post">
+                        <button type="submit" formAction={formAction}>
+                          Submit
+                        </button>
+                      </Form>
+                    ),
+                  },
+                ],
+              },
+            ],
+            { window: getWindow("/") },
+          );
+          render(<RouterProvider router={router} />);
+
+          fireEvent.click(screen.getByText("Submit"));
+          await waitFor(() => expect(parentAction).toHaveBeenCalledTimes(1));
+          expect(indexAction).not.toHaveBeenCalled();
+          router.dispose();
+        },
+      );
     });
 
     describe("call-site revalidation opt-out", () => {

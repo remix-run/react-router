@@ -266,8 +266,11 @@ function getFormEncType(encType: string | null) {
   return encType;
 }
 
-// Strip the basename from the pathname only: the action may have a search/hash
 function stripBasenameFromAction(action: string, basename: string) {
+  // Without a basename, preserve explicit targets such as "?" and "#".
+  // Turning them into an empty action changes index-route targeting.
+  if (basename === "/") return action;
+
   let path = parsePath(action);
   let pathname = stripBasename(path.pathname || "", basename);
   return pathname == null ? null : createPath({ ...path, pathname });

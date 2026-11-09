@@ -1,1 +1,1 @@
-Strip the `basename` from only the pathname of a `<Form action>` or `formAction`, so a root action with a search or hash such as `/?index` no longer submits to the current route
+Fix submissions to root form actions containing search parameters or a hash when a `basename` is configured
