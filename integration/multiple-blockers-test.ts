@@ -156,6 +156,28 @@ test("Data multiple blockers use browser history", async ({ page }) => {
   }
 });
 
+test("Framework SPA hydration forwards the multiple blockers flag", async ({
+  page,
+}) => {
+  let fixture = await createFixture({
+    files: {
+      ...fixtureFiles(true),
+      "react-router.config.ts": js`
+        export default {
+          ssr: false,
+          future: { unstable_multipleBlockers: true },
+        };
+      `,
+    },
+  });
+  let app = await createAppFixture(fixture);
+  try {
+    await assertSerialPop(page, app.serverUrl);
+  } finally {
+    await app.close();
+  }
+});
+
 test("RSC Data forwards the client future prop", async ({ page }) => {
   let implementation = implementations[0];
   let port = await getPort();
@@ -206,12 +228,15 @@ test("native prompts confirm sequentially and cancel the whole attempt", async (
     files: {
       ...fixtureFiles(true),
       "app/guarded.tsx": js`
+        import { useEffect, useState } from "react";
         import { Link, unstable_usePrompt as usePrompt } from "react-router";
         export function Links() { return <Link to="/d">D</Link>; }
         export default function Guarded() {
           usePrompt({ when: true, message: "Leave Profile?" });
           usePrompt({ when: true, message: "Leave Notes?" });
-          return <><h1>C</h1><Links /></>;
+          let [ready, setReady] = useState(false);
+          useEffect(() => setReady(true), []);
+          return <><h1>C</h1>{ready && <Links />}</>;
         }
       `,
     },
@@ -222,13 +247,13 @@ test("native prompts confirm sequentially and cancel the whole attempt", async (
     let messages: string[] = [];
     let approve = false;
     page.on("dialog", async (dialog) => {
-      messages.push(dialog.message());
       if (approve) await dialog.accept();
       else await dialog.dismiss();
+      messages.push(dialog.message());
     });
     await page.getByRole("link", { name: "D", exact: true }).click();
     await expect(page).toHaveURL(`${app.serverUrl}/c`);
-    expect(messages).toEqual(["Leave Profile?"]);
+    await expect.poll(() => messages).toEqual(["Leave Profile?"]);
 
     approve = true;
     await page.getByRole("link", { name: "D", exact: true }).click();
