@@ -533,7 +533,7 @@ async function gitInitStep(ctx: Context) {
         await runCommand("git", ["commit", "-m", commitMsg], options);
       } catch (err) {
         error(
-          "Git initialized, but the initial commit failed.",
+          "Git initialized, but the initial add/commit failed.",
           "Ensure Git user.name and user.email are configured, then create the commit manually.",
         );
         if (ctx.debug) {
