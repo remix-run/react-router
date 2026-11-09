@@ -213,12 +213,7 @@ describe("create-react-router CLI", () => {
     writeFileSync(gitConfig, "");
 
     let { status, stderr } = await execCreateReactRouter({
-      args: [
-        projectDir,
-        "--no-install",
-        "--no-agent-skills",
-        "--git-init",
-      ],
+      args: [projectDir, "--no-install", "--no-agent-skills", "--git-init"],
       interactive: false,
       env: {
         GIT_CONFIG_NOSYSTEM: "1",
