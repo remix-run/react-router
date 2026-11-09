@@ -149,27 +149,38 @@ describe("multiple navigation blockers", () => {
     expect(history.index).toBe(1);
   });
 
-  it("checks newly registered and previously clean forms at handoff", async () => {
+  it("visits each initial registration once, using its current predicate when its turn arrives", async () => {
     initialize();
     let aDirty = false;
-    router.getBlocker("A", () => aDirty);
+    let first = jest.fn(() => aDirty);
+    let last = jest.fn(() => true);
+    router.getBlocker("A", first);
     router.getBlocker("B", () => true);
+    router.getBlocker("D", () => false);
     await router.navigate("/one");
     expect(blocker("B").state).toBe("blocked");
-    let b = blocker("B");
     aDirty = true;
+    router.getBlocker("D", last);
     router.getBlocker("C", () => true);
-    expect(blocker("B")).toBe(b);
-    expect(blocker("C").state).toBe("unblocked");
 
-    b.proceed?.();
+    blocker("B").proceed?.();
+    expect(blocker("D").state).toBe("blocked");
+    expect(blocker("A")).toEqual(IDLE_BLOCKER);
+    expect(blocker("C")).toEqual(IDLE_BLOCKER);
+    blocker("D").proceed?.();
+    await navigationCompleted("/one");
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(last).toHaveBeenCalledTimes(1);
+
+    await router.navigate("/two");
     expect(blocker("A").state).toBe("blocked");
-    expect(blocker("B")).toEqual(IDLE_BLOCKER);
     blocker("A").proceed?.();
+    blocker("B").proceed?.();
+    blocker("D").proceed?.();
     expect(blocker("C").state).toBe("blocked");
     blocker("C").proceed?.();
-    await navigationCompleted("/one");
-    expect(history.index).toBe(1);
+    await navigationCompleted("/two");
+    expect(first).toHaveBeenCalledTimes(2);
   });
 
   it("keeps explicit approvals after edits but requires a selected clean form to respond", async () => {
@@ -196,62 +207,121 @@ describe("multiple navigation blockers", () => {
     expect(first).toHaveBeenCalledTimes(1);
   });
 
-  it("removing the selected form hands off to another mounted form", async () => {
+  it("removing the selected form cancels without asking another mounted form", async () => {
     initialize();
     router.getBlocker("A", () => true);
     router.getBlocker("B", () => true);
     await router.navigate("/one");
-    expect(blocker("A").state).toBe("blocked");
     let removedA = blocker("A");
+    expect(removedA.state).toBe("blocked");
     router.deleteBlocker("A");
     await tick();
     expect(router.state.blockers.has("A")).toBe(false);
-    expect(blocker("B").state).toBe("blocked");
+    expect(blocker("B")).toEqual(IDLE_BLOCKER);
     removedA.proceed?.();
     removedA.reset?.();
-    expect(blocker("B").state).toBe("blocked");
     expect(router.state.location.pathname).toBe("/");
-    blocker("B").reset?.();
+    expect(history.index).toBe(0);
+
+    await router.navigate("/two");
+    expect(blocker("B").location?.pathname).toBe("/two");
+    blocker("B").proceed?.();
+    await navigationCompleted("/two");
   });
 
-  it("removing an approved form preserves B's confirmation, and removing B releases the attempt", async () => {
+  it("selected cleanup cannot cancel a new navigation requested by a subscriber", async () => {
     initialize();
     router.getBlocker("A", () => true);
     router.getBlocker("B", () => true);
     await router.navigate("/one");
-    expect(blocker("A").state).toBe("blocked");
+    let oldA = blocker("A");
+    let started = false;
+    let nextNavigation: Promise<void> | undefined;
+    let unsubscribe = router.subscribe((state) => {
+      if (!started && !state.blockers.has("A")) {
+        started = true;
+        nextNavigation = router.navigate("/two");
+      }
+    });
+    try {
+      router.deleteBlocker("A");
+      await nextNavigation;
+      let b = blocker("B");
+      expect(b.state).toBe("blocked");
+      expect(b.location?.pathname).toBe("/two");
+      oldA.proceed?.();
+      oldA.reset?.();
+      expect(blocker("B")).toBe(b);
+      b.proceed?.();
+      await navigationCompleted("/two");
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it("removing an approved form preserves B's confirmation, and removing B discards the attempt", async () => {
+    initialize();
+    router.getBlocker("A", () => true);
+    router.getBlocker("B", () => true);
+    await router.navigate("/one");
     blocker("A").proceed?.();
     let b = blocker("B");
     expect(b.state).toBe("blocked");
     router.deleteBlocker("A");
-    await tick();
     expect(blocker("B")).toBe(b);
-    expect(router.state.location.pathname).toBe("/");
 
-    let completed = navigationCompleted("/one");
     router.deleteBlocker("B");
-    await completed;
+    await tick();
     b.proceed?.();
     b.reset?.();
+    expect(router.state.location.pathname).toBe("/");
     expect(router.state.blockers.size).toBe(0);
+    expect(history.index).toBe(0);
+
+    await router.navigate("/two");
+    expect(router.state.location.pathname).toBe("/two");
     expect(history.index).toBe(1);
   });
 
-  it("a replacement registration participates before a removal can release navigation", async () => {
+  it("a selected replacement registration protects the next explicit navigation", async () => {
     initialize();
     router.getBlocker("A", () => true);
     await router.navigate("/one");
-    expect(blocker("A").state).toBe("blocked");
     let oldA = blocker("A");
     router.deleteBlocker("A");
     router.getBlocker("A-new", () => true);
     await tick();
     expect(router.state.location.pathname).toBe("/");
-    expect(blocker("A-new").state).toBe("blocked");
+    expect(blocker("A-new")).toEqual(IDLE_BLOCKER);
+
+    await router.navigate("/two");
+    let freshA = blocker("A-new");
+    expect(freshA.state).toBe("blocked");
     oldA.proceed?.();
     oldA.reset?.();
-    expect(blocker("A-new").state).toBe("blocked");
-    blocker("A-new").reset?.();
+    expect(blocker("A-new")).toBe(freshA);
+    freshA.proceed?.();
+    await navigationCompleted("/two");
+  });
+
+  it("skips a queued registration that was removed even if its key is reused", async () => {
+    initialize();
+    router.getBlocker("A", () => true);
+    router.getBlocker("B", () => true);
+    await router.navigate("/one");
+    router.deleteBlocker("B");
+    router.getBlocker("B", () => true);
+    expect(blocker("A").state).toBe("blocked");
+    blocker("A").proceed?.();
+    await tick();
+    expect(router.state.location.pathname).toBe("/one");
+    expect(blocker("B")).toEqual(IDLE_BLOCKER);
+
+    await router.navigate("/two");
+    blocker("A").proceed?.();
+    expect(blocker("B").state).toBe("blocked");
+    blocker("B").proceed?.();
+    await navigationCompleted("/two");
   });
 
   it("preserves the current confirmation and earlier approvals through revalidation", async () => {

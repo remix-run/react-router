@@ -139,7 +139,7 @@ describe("multiple useBlocker registrations", () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  it("continues through mounted guards when the selected form is removed", async () => {
+  it("cancels when the selected form is removed and requires a new navigation", async () => {
     let setShowA: (show: boolean) => void = () => {};
     let setShowB: (show: boolean) => void = () => {};
     function Layout() {
@@ -162,19 +162,21 @@ describe("multiple useBlocker registrations", () => {
     expect(blockers.A.state).toBe("blocked");
     let removedSelection = blockers.A;
     await act(async () => setShowA(false));
-    expect(blockers.B.state).toBe("blocked");
+    expect(blockers.B.state).toBe("unblocked");
     expect(node.querySelector("h1")?.textContent).toBe("Home");
 
     act(() => {
       removedSelection.reset?.();
       removedSelection.proceed?.();
     });
-    expect(blockers.B.state).toBe("blocked");
+    expect(blockers.B.state).toBe("unblocked");
     await act(async () => setShowB(false));
-    expect(node.querySelector("h1")?.textContent).toBe("Next");
+    expect(node.querySelector("h1")?.textContent).toBe("Home");
+    await act(() => router.navigate("/other"));
+    expect(node.querySelector("h1")?.textContent).toBe("Other");
   });
 
-  it("requires new consent from a remounted form while another confirmation is pending", async () => {
+  it("defers a remounted form to the next navigation while another confirmation is pending", async () => {
     let setShowA: (show: boolean) => void = () => {};
     function Layout() {
       let [showA, updateShowA] = React.useState(true);
@@ -199,15 +201,19 @@ describe("multiple useBlocker registrations", () => {
     expect(blockers.A.state).toBe("unblocked");
     expect(blockers.B.state).toBe("blocked");
 
+    await act(async () => clickButton("Approve B"));
+    expect(blockers.A.state).toBe("unblocked");
+    expect(node.querySelector("h1")?.textContent).toBe("Next");
+
+    await act(() => router.navigate("/other"));
+    expect(blockers.B.state).toBe("blocked");
     act(() => clickButton("Approve B"));
     expect(blockers.A.state).toBe("blocked");
-    expect(blockers.B.state).toBe("unblocked");
-    expect(node.querySelector("h1")?.textContent).toBe("Home");
     await act(async () => clickButton("Approve A"));
-    expect(node.querySelector("h1")?.textContent).toBe("Next");
+    expect(node.querySelector("h1")?.textContent).toBe("Other");
   });
 
-  it("does not resume through transient Activity cleanup and fresh registration", async () => {
+  it("discards confirmation through Activity cleanup and guards the next request", async () => {
     let changeMode: () => void = () => {};
     function Layout() {
       let [mode, setMode] = React.useState<"visible" | "hidden">("visible");
@@ -232,10 +238,12 @@ describe("multiple useBlocker registrations", () => {
     let oldSelection = blockers.A;
     await act(async () => changeMode());
     expect(node.querySelector("h1")?.textContent).toBe("Home");
-    expect(blockers.A.state).toBe("blocked");
+    expect(blockers.A.state).toBe("unblocked");
     act(() => oldSelection.proceed?.());
     expect(node.querySelector("h1")?.textContent).toBe("Home");
+    await act(() => router.navigate("/other"));
+    expect(blockers.A.state).toBe("blocked");
     await act(async () => clickButton("Approve A"));
-    expect(node.querySelector("h1")?.textContent).toBe("Next");
+    expect(node.querySelector("h1")?.textContent).toBe("Other");
   });
 });

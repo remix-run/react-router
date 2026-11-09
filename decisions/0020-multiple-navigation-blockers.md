@@ -12,11 +12,21 @@ Multiple registrations use the existing `useBlocker` hook by default as an addit
 
 ## Contract
 
-One router-owned intent coordinates sequential consent in registration order. Predicates remain synchronous. Each `proceed()` approves only its registration for that intent; the selected `reset()` cancels the entire intent. The existing three-state public union remains: intermediate approving hooks become unblocked, and the final approving hook becomes proceeding. Approvals remain private and cover subsequent edits. Approved hooks have no revocation handle.
+Blocking stops the attempted navigation and leaves the user on the current page. The destination is retained only for explicit confirmation; a blocker's lifetime does not keep a navigation running. Multiple hooks coordinate one sequence of confirmations before that destination can be attempted.
 
-At handoff, evaluate current live, unapproved predicates, including newly mounted guards and previously false predicates. Updating a predicate preserves its position. Real remounts have fresh ownership. Removing the selected registration advances through the remaining guards and can resume the intent; removing an approved registration does not cancel another guard's confirmation. Defer removal handoff until effect cleanup/reconnection settles. A selected mounted guard becoming clean still requires an explicit response.
+Each request snapshots the currently registered keys in registration order and consumes that queue once. Predicates remain synchronous and are evaluated using their current functions when their turns arrive. Checked clean registrations are not revisited. Newly mounted or remounted registrations participate in the next request. Updating a predicate preserves its position; removing an unselected queued registration skips it, even if its key is later reused.
 
-A newer explicit navigation replaces pending consent and discards prior approvals. Guard callbacks capture intent, registration, and selection ownership so stale responses are no-ops. This is distinct from an older accepted navigation's transport ownership: it may still commit while a newer request is blocked, invalidating consent based on the previous source. Uninterrupted revalidation preserves consent.
+Each `proceed()` advances to the next applicable queued registration. The existing three-state public union remains: intermediate approving hooks become unblocked, and the final approving hook becomes proceeding. Passing a registration consumes its turn, so later edits do not reopen it. Approved hooks have no revocation handle.
+
+The selected `reset()` or selected unmount cancels the entire attempt and discards the remaining queue. Selected unmount does not advance to another blocker or retry navigation. Removing an approved or unselected registration leaves another hook's confirmation alone. Effect cleanup/reconnection cancels the selected attempt immediately; fresh ownership participates in the next explicit request. A selected mounted guard becoming clean still requires an explicit response.
+
+A new explicit navigation replaces the pending attempt with a fresh queue. Callbacks verify attempt and selected registration ownership so obsolete responses are no-ops. An older accepted navigation may still commit while a newer request is blocked, invalidating confirmation based on the previous source. Uninterrupted revalidation preserves the current queue and confirmation.
+
+## Simplification choices
+
+A one-pass queue replaces the private approval set and repeated scans over all live predicates. Because each registration can be selected only once in an attempt, callbacks need no selection generation. Selected removal cancels rather than hands off, eliminating the removal microtask and automatic continuation. Registration removal and cancellation publish one blocker-state update so cleanup cannot overwrite a navigation started by a subscriber.
+
+The broader history ordering and accepted-navigation interruption policy remain unchanged. These guarantees are separate from blocker membership and still apply to an already-issued native traversal.
 
 ## History ownership
 

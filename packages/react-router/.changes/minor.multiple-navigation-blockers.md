@@ -1,3 +1,3 @@
 Support multiple `useBlocker` hooks with sequential confirmation in registration order
 
-Each hook approves the current navigation independently, and any selected blocker can cancel the whole attempt. Unmounted blockers stop applying, and callbacks from obsolete confirmations are ignored.
+Each navigation request visits its initial registrations once, using their current predicates when their turns arrive. The selected blocker can cancel the whole attempt with `reset()` or by unmounting. Newly mounted blockers participate in the next request, and callbacks from obsolete confirmations are ignored.

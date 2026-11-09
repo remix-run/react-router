@@ -4069,10 +4069,7 @@ export function createRouter(init: RouterInit): Router {
 
   function deleteBlocker(key: string) {
     blockerFunctions.delete(key);
-    let blockers = new Map(state.blockers);
-    blockers.delete(key);
     blockerCoordinator.deleted(key);
-    updateState({ blockers });
   }
 
   function handleNavigational404(pathname: string) {

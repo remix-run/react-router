@@ -73,6 +73,21 @@ async function assertSerialPop(page: Page, origin: string) {
   await page.goBack();
   await expect(page.getByTestId("A")).toHaveText("A:blocked");
   await expect(page).toHaveURL(`${origin}/c`);
+  await page.getByRole("button", { name: "Remove guards" }).click();
+  await expect(page.getByTestId("A")).toHaveCount(0);
+  await expect(page).toHaveURL(`${origin}/c`);
+  await page.getByRole("link", { name: "D", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "D", exact: true }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(page.getByTestId("A")).toHaveText("A:unblocked");
+  await expect(page.getByTestId("B")).toHaveText("B:unblocked");
+  await expect(page).toHaveURL(`${origin}/c`);
+
+  await page.goBack();
+  await expect(page.getByTestId("A")).toHaveText("A:blocked");
+  await expect(page).toHaveURL(`${origin}/c`);
   await page.getByRole("button", { name: "Approve A" }).click();
   await expect(page.getByTestId("A")).toHaveText("A:unblocked");
   await expect(page.getByTestId("B")).toHaveText("B:blocked");

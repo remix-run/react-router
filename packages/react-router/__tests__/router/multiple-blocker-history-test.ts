@@ -381,34 +381,30 @@ describe("multiple blockers with asynchronous history", () => {
     await visit(-1, "/c");
   });
 
-  it("removing the last selected blocker cannot replay until restoration has been observed", async () => {
+  it("selected removal finishes source restoration without replaying the discarded navigation", async () => {
     initialize();
     registerTwo();
     let navigation = router.navigate(-1);
     browser.flushPop();
     await navigation;
-    expect(blocker("A").state).toBe("blocked");
     let oldA = blocker("A");
+    expect(oldA.state).toBe("blocked");
     router.deleteBlocker("A");
-    await tick();
-    expect(blocker("B").state).toBe("blocked");
-    let oldB = blocker("B");
     router.deleteBlocker("B");
     await tick();
     expect(browser.issued).toEqual([-1, 1]);
     expect(router.state.location.pathname).toBe("/c");
-    browser.flushTraversal();
+    await browser.flushAll();
+    oldA.proceed?.();
+    oldA.reset?.();
     await tick();
     expect(browser.issued).toEqual([-1, 1]);
-    browser.flushEvent();
-    await browser.flushAll();
-    await navigationCompleted("/b");
-    expect(browser.issued).toEqual([-1, 1, -1]);
-    oldA.proceed?.();
-    oldB.proceed?.();
-    oldB.reset?.();
+    expect(browser.history.location.pathname).toBe("/c");
+    expect(browser.history.index).toBe(2);
     expect(router.state.blockers.size).toBe(0);
-    expect(browser.history.index).toBe(1);
+
+    await visit(-1, "/b");
+    expect(browser.issued).toEqual([-1, 1, -1]);
   });
 
   it.each([

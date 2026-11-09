@@ -1902,11 +1902,14 @@ let blockerId = 0;
  * }
  * ```
  *
- * Multiple hooks confirm sequentially in registration order. `proceed()`
- * approves this hook for the current attempt; if another hook blocks, this hook
- * returns to `unblocked` without a cancellation handle. Approval covers later edits until the attempt is canceled or replaced.
- * The selected hook's `reset()` cancels the whole attempt. Unmounted hooks no
- * longer apply. See [multiple navigation blockers](../../how-to/multiple-navigation-blockers).
+ * Each navigation request snapshots the registered hooks in registration order.
+ * Each registration is checked once, using its latest predicate when its turn
+ * arrives. New registrations and previously checked clean hooks wait for the
+ * next request. `proceed()` approves this hook; if another hook blocks, this hook
+ * returns to `unblocked`. Only the final approving hook becomes `proceeding`.
+ * The selected hook's `reset()` or unmount cancels the attempt. Removing another
+ * hook leaves the selected confirmation alone. See
+ * [multiple navigation blockers](../../how-to/multiple-navigation-blockers).
  *
  * @public
  * @category Hooks

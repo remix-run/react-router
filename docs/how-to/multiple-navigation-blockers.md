@@ -6,7 +6,7 @@ title: Multiple Navigation Blockers
 
 [MODES: framework, data]
 
-Use `useBlocker` in each component when independent editors need their own dirty-state checks and confirmation UI. The router asks each applicable blocker in registration order, showing one blocked hook at a time. Every remaining blocker must approve before the navigation resumes.
+Use `useBlocker` in each component when independent editors need their own dirty-state checks and confirmation UI. Each navigation request snapshots the registered blockers in registration order. The router visits each registration once, showing one blocked hook at a time. Each blocker that returns `true` must approve before navigation can start.
 
 This works in Data and Framework Mode, including their RSC client routers. RSC blockers belong in client components. Declarative Mode does not support `useBlocker`.
 
@@ -68,10 +68,14 @@ Approval lasts for the current attempt, including further edits made while anoth
 ## Changes while confirmation is pending
 
 - A new navigation request replaces the pending attempt and discards all its approvals. Even a new request to the same URL starts fresh.
-- At each handoff, the router evaluates the latest predicates of live, unapproved registrations. A previously clean form that becomes dirty, or a newly mounted blocker, gets a turn before navigation resumes.
-- Updating a predicate preserves registration order. A real unmount/remount creates a fresh registration and loses its old approval. Registration order does not promise parent-first or child-first route ordering.
+- The queue contains the registrations present when the request starts. Each registration is evaluated once, using its latest predicate when its turn arrives. A queued form can become dirty before its turn and still block.
+- A registration already checked while clean is not reconsidered during that attempt. Newly mounted or remounted blockers participate in the next navigation request.
+- Updating a predicate preserves registration order. Registration order does not promise parent-first or child-first route ordering.
 - If the selected, mounted editor becomes clean, explicitly call its `proceed()` to continue or `reset()` to stay. A predicate changing to `false` does not decide that for you.
-- An unmounted blocker stops applying. Removing the selected blocker advances to the remaining blockers and can resume navigation if none blocks. Removing an already approved blocker leaves another component's confirmation pending. Activity content whose effects are disconnected has no active registration; place protection outside Activity if it must remain active while hidden.
+- Removing the selected blocker cancels the attempt and discards its approvals. It leaves the user on the current page without asking another blocker or navigating automatically. Removing an approved or queued blocker leaves the selected confirmation alone; removed queued registrations are skipped.
+- Activity content whose effects are disconnected has no active registration. Disconnecting the selected blocker cancels its attempt; reconnecting registers it for the next request. Place protection outside Activity if it must remain active while hidden.
+
+Blocking stops the attempted navigation; the remembered destination is available for an explicit `proceed()`. The blocker does not keep a navigation running for its lifetime. If saving removes the selected editor, explicitly navigate after the save. To continue to the originally requested destination, capture `blocker.location` before unmounting and pass it to `navigate()`.
 
 A blocked `navigate()` promise settles when confirmation is requested; it does not wait for every approval or for the eventual loader. Fetcher saves and revalidation can continue while blocked. Uninterrupted revalidation preserves consent. An older accepted navigation may still complete while a newer request is blocked; its commit cancels that pending confirmation because the source page changed.
 

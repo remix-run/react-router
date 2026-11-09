@@ -1,11 +1,10 @@
 import type { Blocker, BlockerFunction } from "./router";
 import type { Location, Action } from "./history";
 
-interface BlockerIntent {
+interface BlockerAttempt {
   args: Parameters<BlockerFunction>[0];
-  approved: Set<string>;
+  remaining: string[];
   selected?: string;
-  selection: number;
   resume: (take: () => boolean) => void;
   beforeBlock?: () => void;
 }
@@ -23,7 +22,7 @@ export function createBlockerCoordinator({
   getBlockers: () => Map<string, Blocker>;
   publish: (blockers: Map<string, Blocker>) => void;
 }) {
-  let current: BlockerIntent | undefined;
+  let current: BlockerAttempt | undefined;
 
   function clearStates() {
     let blockers = getBlockers();
@@ -43,38 +42,37 @@ export function createBlockerCoordinator({
     }
   }
 
-  function select(intent: BlockerIntent, approvingKey?: string): boolean {
-    if (current !== intent) return false;
+  function select(attempt: BlockerAttempt, approvingKey?: string): boolean {
+    if (current !== attempt) return false;
     let key: string | undefined;
-    for (let [candidate, fn] of [...functions]) {
-      if (!intent.approved.has(candidate) && fn(intent.args)) {
+    while (attempt.remaining.length > 0) {
+      let candidate = attempt.remaining.shift()!;
+      let fn = functions.get(candidate);
+      if (fn?.(attempt.args)) {
         key = candidate;
         break;
       }
     }
-    if (current !== intent) return false;
+    if (current !== attempt) return false;
 
     let blockers = new Map(clearStates());
-    intent.selected = key;
-    let selection = ++intent.selection;
+    attempt.selected = key;
     if (key) {
-      let beforeBlock = intent.beforeBlock;
-      intent.beforeBlock = undefined;
+      let beforeBlock = attempt.beforeBlock;
+      attempt.beforeBlock = undefined;
       beforeBlock?.();
-      if (current !== intent) return true;
+      if (current !== attempt) return true;
       let selectedKey = key;
       let isSelected = () =>
-        current === intent &&
-        intent.selected === selectedKey &&
-        intent.selection === selection &&
+        current === attempt &&
+        attempt.selected === selectedKey &&
         functions.has(selectedKey);
       blockers.set(selectedKey, {
         state: "blocked",
-        location: intent.args.nextLocation,
+        location: attempt.args.nextLocation,
         proceed() {
           if (!isSelected()) return;
-          intent.approved.add(selectedKey);
-          if (!select(intent, selectedKey)) resume(intent);
+          if (!select(attempt, selectedKey)) resume(attempt);
         },
         reset() {
           if (isSelected()) cancel();
@@ -87,7 +85,7 @@ export function createBlockerCoordinator({
     if (approvingKey && functions.has(approvingKey)) {
       blockers.set(approvingKey, {
         state: "proceeding",
-        location: intent.args.nextLocation,
+        location: attempt.args.nextLocation,
         proceed: undefined,
         reset: undefined,
       });
@@ -102,10 +100,10 @@ export function createBlockerCoordinator({
     return false;
   }
 
-  function resume(intent: BlockerIntent) {
-    if (current !== intent) return;
-    intent.resume(() => {
-      if (current !== intent) return false;
+  function resume(attempt: BlockerAttempt) {
+    if (current !== attempt) return;
+    attempt.resume(() => {
+      if (current !== attempt) return false;
       current = undefined;
       return true;
     });
@@ -121,35 +119,34 @@ export function createBlockerCoordinator({
     beforeBlock?: () => void,
   ) {
     cancel(false);
-    let intent: BlockerIntent = {
+    let attempt: BlockerAttempt = {
       args,
-      approved: new Set(),
-      selection: 0,
+      remaining: [...functions.keys()],
       resume: continuation,
       beforeBlock,
     };
-    current = intent;
-    if (select(intent)) return true;
-    if (current !== intent) return true;
+    current = attempt;
+    if (select(attempt)) return true;
+    if (current !== attempt) return true;
     // The caller owns the initially unblocked navigation.
     current = undefined;
     return false;
   }
 
   function deleted(key: string) {
-    let intent = current;
-    if (!intent) return;
-    intent.approved.delete(key);
-    if (intent.selected !== key) return;
-    intent.selected = undefined;
-    ++intent.selection;
-    // React may clean up and reconnect effects in the same commit. Wait until
-    // their registrations settle before treating removal as permission to leave.
-    queueMicrotask(() => {
-      if (current === intent && intent.selected === undefined) {
-        if (!select(intent)) resume(intent);
-      }
-    });
+    let wasSelected = current?.selected === key;
+    if (wasSelected) {
+      // Removing the confirmation discards the attempt; only proceed retries it.
+      cancel(false);
+    } else if (current) {
+      // A new registration reusing this key belongs to the next attempt.
+      current.remaining = current.remaining.filter(
+        (candidate) => candidate !== key,
+      );
+    }
+    let blockers = new Map(wasSelected ? clearStates() : getBlockers());
+    blockers.delete(key);
+    publish(blockers);
   }
 
   return { block, cancel, deleted };
