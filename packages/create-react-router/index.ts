@@ -523,13 +523,13 @@ async function gitInitStep(ctx: Context) {
       let commitMsg = "Initial commit from create-react-router";
       try {
         await runCommand("git", ["init"], options);
-        await runCommand("git", ["add", "."], options);
       } catch (err) {
         error("Oh no!", "Failed to initialize git.");
         throw err;
       }
 
       try {
+        await runCommand("git", ["add", "."], options);
         await runCommand("git", ["commit", "-m", commitMsg], options);
       } catch (err) {
         error(
