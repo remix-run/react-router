@@ -82,7 +82,10 @@ export async function singleFetchAction(
             }
           }
         : undefined,
-      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
+      // Normalize the original request because handlerRequest may already have
+      // its .data suffix removed when v8_passThroughRequests is disabled.
+      normalizePath: () =>
+        getNormalizedPath(request, build.basename, build.future),
     });
 
     return handleQueryResult(result);
@@ -175,7 +178,10 @@ export async function singleFetchLoaders(
             }
           }
         : undefined,
-      normalizePath: (r) => getNormalizedPath(r, build.basename, build.future),
+      // Normalize the original request because handlerRequest may already have
+      // its .data suffix removed when v8_passThroughRequests is disabled.
+      normalizePath: () =>
+        getNormalizedPath(request, build.basename, build.future),
     });
 
     return handleQueryResult(result);
