@@ -33,18 +33,15 @@ describe("multiple usePrompt registrations", () => {
   });
 
   function render(Component: React.ComponentType) {
-    router = createMemoryRouter(
-      [
-        {
-          Component,
-          children: [
-            { index: true, element: <h1>Home</h1> },
-            { path: "next", element: <h1>Next</h1> },
-          ],
-        },
-      ],
-      { future: { unstable_multipleBlockers: true } },
-    );
+    router = createMemoryRouter([
+      {
+        Component,
+        children: [
+          { index: true, element: <h1>Home</h1> },
+          { path: "next", element: <h1>Next</h1> },
+        ],
+      },
+    ]);
     act(() => root.render(<RouterProvider router={router} />));
   }
 

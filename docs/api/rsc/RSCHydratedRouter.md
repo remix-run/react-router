@@ -60,7 +60,6 @@ function RSCHydratedRouter({
   fetch: fetchImplementation = fetch,
   payload,
   getContext,
-  future,
 }: RSCHydratedRouterProps)
 ```
 
@@ -86,8 +85,4 @@ navigation or fetcher call.
 ### payload
 
 The decoded [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html) to hydrate.
-
-### future
-
-Client navigation experiments, applied when the router is first hydrated.
 

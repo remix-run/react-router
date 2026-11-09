@@ -13,7 +13,6 @@ describe("multiple navigation blockers", () => {
     router = createRouter({
       history,
       routes: [{ path: "/" }, { path: "/one" }, { path: "/two" }],
-      future: { unstable_multipleBlockers: true },
       ...options,
     }).initialize();
   }
@@ -43,29 +42,6 @@ describe("multiple navigation blockers", () => {
   }
 
   afterEach(() => router?.dispose());
-
-  it.each([undefined, false])(
-    "preserves last-registration selection when the flag is %s",
-    async (unstable_multipleBlockers) => {
-      initialize({ future: { unstable_multipleBlockers } });
-      let first = jest.fn(() => true);
-      let last = jest.fn(() => false);
-      let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
-      try {
-        router.getBlocker("A", first);
-        router.getBlocker("B", last);
-        await router.navigate("/one");
-        expect(router.state.location.pathname).toBe("/one");
-        expect(first).not.toHaveBeenCalled();
-        expect(last).toHaveBeenCalledTimes(1);
-        expect(warn).toHaveBeenCalledWith(
-          "A router only supports one blocker at a time",
-        );
-      } finally {
-        warn.mockRestore();
-      }
-    },
-  );
 
   it("a later clean registration cannot suppress an earlier dirty form", async () => {
     initialize();
@@ -408,13 +384,20 @@ describe("multiple navigation blockers", () => {
     expect(blocker("A").state).toBe("blocked");
     expect(blocker("A").location?.pathname).toBe("/two");
     expect(requestSignal?.aborted).toBe(false);
+    let freshA = blocker("A");
     oldA.proceed?.();
-    expect(blocker("A").state).toBe("blocked");
-    blocker("A").proceed?.();
+    oldA.reset?.();
+    expect(blocker("A")).toBe(freshA);
+    freshA.proceed?.();
     await navigationCompleted("/two");
     expect(requestSignal?.aborted).toBe(true);
     await data.resolve("ONE");
+    oldA.proceed?.();
+    oldA.reset?.();
+    freshA.proceed?.();
+    freshA.reset?.();
     expect(router.state.location.pathname).toBe("/two");
+    expect(blocker("A")).toEqual(IDLE_BLOCKER);
   });
 
   it("resumes a normalized submission once with its REPLACE, state, and scroll options", async () => {

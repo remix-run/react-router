@@ -1,14 +1,14 @@
-# Experimental sequential navigation blockers
+# Sequential navigation blockers
 
 Date: 2026-11-09
 
-Status: experiment; proposal advancement and stabilization remain subject to governance
+Status: proposed implementation; formal adoption remains subject to governance
 
 ## Context
 
 Independent editors need to own their dirty-state predicates and confirmation UI. The singleton assumption in [the original useBlocker decision](./0001-use-blocker.md) cannot protect an earlier dirty registration when a later clean registration suppresses it. Existing applications can aggregate conditions into one blocker, but that couples otherwise independent components.
 
-The experiment is opt-in through `future.unstable_multipleBlockers`. It applies to client components using Data, Framework, RSC Data, or RSC Framework routers. The existing singleton behavior remains the default.
+Multiple registrations use the existing `useBlocker` hook by default as an additive minor feature. It applies to client components using Data, Framework, RSC Data, or RSC Framework routers. Each new navigation requires fresh consent, unmounted registrations stop applying, and obsolete callbacks are ignored; these also correct single-blocker lifecycle bugs.
 
 ## Contract
 
@@ -22,8 +22,8 @@ A newer explicit navigation replaces pending consent and discards prior approval
 
 Keep consent, accepted data navigation, and issued browser traversal separate. All guards share one POP source restoration and one accepted replay. Once a `history.go()` is issued, its physical event must be observed even if logical consent is superseded. A superseding programmatic request during replay restores the committed source before writing history. Ready older commits are serialized before queued requests normalize against that source. Accepting replay invalidates older transport work before dispatch.
 
-Unknown external history and rapid native traversal cannot be reliably correlated: browser history exposes no operation identifier. The experiment never issues `go(0)` as compensation. Custom discovery cancellation uses the same traversal serialization.
+Unknown external history and rapid native traversal cannot be reliably correlated: browser history exposes no operation identifier. The coordinator never issues `go(0)` as compensation. Custom discovery cancellation uses the same traversal serialization.
 
 ## Boundaries
 
-The experiment adds no reason metadata, waiting state, async predicate, priority, global bypass, or cross-router coordination API. Direct server-function calls and fetcher work are not guarded mutations. Native unload protection remains independent. Mode/configuration plumbing, tests, and the user-facing contract are documented in [the multiple blockers guide](../docs/how-to/multiple-navigation-blockers.md).
+This feature adds no reason metadata, waiting state, async predicate, priority, global bypass, or cross-router coordination API. Direct server-function calls and fetcher work are not guarded mutations. Native unload protection remains independent. The user-facing contract is documented in [the multiple blockers guide](../docs/how-to/multiple-navigation-blockers.md).

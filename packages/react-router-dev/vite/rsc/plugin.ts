@@ -625,20 +625,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       },
     },
     {
-      name: "react-router/rsc/virtual-client-future",
-      resolveId(id) {
-        if (id === virtual.clientFuture.id)
-          return virtual.clientFuture.resolvedId;
-      },
-      load(id) {
-        if (id === virtual.clientFuture.resolvedId) {
-          return `export default ${JSON.stringify({
-            unstable_multipleBlockers: config.future.unstable_multipleBlockers,
-          })};`;
-        }
-      },
-    },
-    {
       name: "react-router/rsc/virtual-client-version",
       // Run after the Vite RSC plugin, including its post-ordered
       // `generateBundle` hook in 0.5.36 and later.
@@ -907,7 +893,6 @@ export default assetsManifest.clientVersion;
 }
 
 const virtual = {
-  clientFuture: create("unstable_rsc/client-future"),
   routeConfig: create("unstable_rsc/routes"),
   subResourceIntegrity: create("unstable_rsc/subresource-integrity"),
   routeDiscovery: create("unstable_rsc/route-discovery"),

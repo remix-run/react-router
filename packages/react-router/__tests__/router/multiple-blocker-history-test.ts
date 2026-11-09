@@ -110,7 +110,6 @@ describe("multiple blockers with asynchronous history", () => {
     router = createRouter({
       history: browser.history,
       routes: ["/a", "/b", "/c", "/d", "/e"].map((path) => ({ path })),
-      future: { unstable_multipleBlockers: true },
       ...options,
     }).initialize();
   }
@@ -473,7 +472,6 @@ describe("multiple blockers with asynchronous history", () => {
   it("disposal settles a canceled discovery POP and the navigation queued behind its restoration", async () => {
     initialize({
       future: {
-        unstable_multipleBlockers: true,
         unstable_customRouteDiscovery: true,
       },
       routes: [{ path: "/a" }, { path: "/c" }, { path: "/d" }],

@@ -55,19 +55,16 @@ describe("multiple useBlocker registrations", () => {
     Component: React.ComponentType,
     nextLoader?: RouteObject["loader"],
   ) {
-    let router = createMemoryRouter(
-      [
-        {
-          Component,
-          children: [
-            { index: true, element: <h1>Home</h1> },
-            { path: "next", element: <h1>Next</h1>, loader: nextLoader },
-            { path: "other", element: <h1>Other</h1> },
-          ],
-        },
-      ],
-      { future: { unstable_multipleBlockers: true } },
-    );
+    let router = createMemoryRouter([
+      {
+        Component,
+        children: [
+          { index: true, element: <h1>Home</h1> },
+          { path: "next", element: <h1>Next</h1>, loader: nextLoader },
+          { path: "other", element: <h1>Other</h1> },
+        ],
+      },
+    ]);
     routers.push(router);
     return router;
   }

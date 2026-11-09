@@ -1,5 +1,4 @@
 import { test, expect, type Page } from "@playwright/test";
-import { readFile } from "node:fs/promises";
 import getPort from "get-port";
 import {
   createFixture,
@@ -44,11 +43,8 @@ const guarded = js`
   }
 `;
 
-function fixtureFiles(enabled: boolean) {
+function fixtureFiles() {
   return {
-    "react-router.config.ts": js`
-      export default { future: { unstable_multipleBlockers: ${enabled} } };
-    `,
     "app/guarded.tsx": guarded,
     "app/routes/c.tsx": js`export { default } from "../guarded";`,
     ...Object.fromEntries(
@@ -103,33 +99,24 @@ for (let [mode, templateName] of [
   ["Framework", "vite-7-template"],
   ["RSC Framework", "rsc-vite-framework"],
 ] as const) {
-  for (let enabled of [false, true]) {
-    test(`${mode} multiple blockers flag ${enabled}`, async ({ page }) => {
-      let fixture = await createFixture({
-        templateName,
-        files: fixtureFiles(enabled),
-      });
-      let app = await createAppFixture(fixture);
-      try {
-        if (enabled) {
-          await assertSerialPop(page, app.serverUrl);
-        } else {
-          await page.goto(`${app.serverUrl}/c`);
-          await page.getByRole("link", { name: "D", exact: true }).click();
-          await expect(page.getByTestId("B")).toHaveText("B:blocked");
-          await expect(page.getByTestId("A")).toHaveText("A:unblocked");
-        }
-      } finally {
-        await app.close();
-      }
+  test(`${mode} supports multiple blockers by default`, async ({ page }) => {
+    let fixture = await createFixture({
+      templateName,
+      files: fixtureFiles(),
     });
-  }
+    let app = await createAppFixture(fixture);
+    try {
+      await assertSerialPop(page, app.serverUrl);
+    } finally {
+      await app.close();
+    }
+  });
 }
 
 test("Data multiple blockers use browser history", async ({ page }) => {
   let fixture = await createFixture({
     files: {
-      ...fixtureFiles(false),
+      ...fixtureFiles(),
       "app/root.tsx": js`
       import { Links, Scripts } from "react-router";
       export default function Root() {
@@ -143,7 +130,7 @@ test("Data multiple blockers use browser history", async ({ page }) => {
       let router = createBrowserRouter(["a", "b", "c", "d"].map(path => ({
         path: "/" + path,
         element: path === "c" ? <Guarded/> : <><h1>{path.toUpperCase()}</h1><Links/></>,
-      })), { future: { unstable_multipleBlockers: true } });
+      })));
       createRoot(document.getElementById("app")).render(<RouterProvider router={router}/>);
     `,
     },
@@ -156,16 +143,13 @@ test("Data multiple blockers use browser history", async ({ page }) => {
   }
 });
 
-test("Framework SPA hydration forwards the multiple blockers flag", async ({
-  page,
-}) => {
+test("Framework SPA hydration supports multiple blockers", async ({ page }) => {
   let fixture = await createFixture({
     files: {
-      ...fixtureFiles(true),
+      ...fixtureFiles(),
       "react-router.config.ts": js`
         export default {
           ssr: false,
-          future: { unstable_multipleBlockers: true },
         };
       `,
     },
@@ -178,21 +162,13 @@ test("Framework SPA hydration forwards the multiple blockers flag", async ({
   }
 });
 
-test("RSC Data forwards the client future prop", async ({ page }) => {
+test("RSC Data supports multiple blockers by default", async ({ page }) => {
   let implementation = implementations[0];
   let port = await getPort();
-  let browserEntry = await readFile(
-    new URL("./helpers/rsc-vite/src/entry.browser.tsx", import.meta.url),
-    "utf8",
-  );
   let stop = await setupRscTest({
     implementation,
     port,
     files: {
-      "src/entry.browser.tsx": browserEntry.replace(
-        "<RSCHydratedRouter",
-        "<RSCHydratedRouter future={{ unstable_multipleBlockers: true }}",
-      ),
       "src/guarded.tsx": guarded,
       "src/routes.ts": js`
       export const routes = [{ id: "root", path: "", lazy: () => import("./routes/root"), children: [
@@ -226,7 +202,7 @@ test("native prompts confirm sequentially and cancel the whole attempt", async (
 }) => {
   let fixture = await createFixture({
     files: {
-      ...fixtureFiles(true),
+      ...fixtureFiles(),
       "app/guarded.tsx": js`
         import { useEffect, useState } from "react";
         import { Link, unstable_usePrompt as usePrompt } from "react-router";
@@ -298,7 +274,7 @@ test("a new request after native replay restores C before pushing D", async ({
       true,
     );
   });
-  let fixture = await createFixture({ files: fixtureFiles(true) });
+  let fixture = await createFixture({ files: fixtureFiles() });
   let app = await createAppFixture(fixture);
   try {
     await page.goto(`${app.serverUrl}/a`);

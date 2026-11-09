@@ -450,8 +450,6 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  /** Enables sequential consent from multiple independently registered blockers. */
-  unstable_multipleBlockers?: boolean;
   /** @internal Enables application-controlled Framework route discovery. */
   unstable_customRouteDiscovery?: boolean;
   /** Enables route-pattern matching after calling `unstable_preloadRoutePattern()`. */
@@ -1314,18 +1312,12 @@ export function createRouter(init: RouterInit): Router {
   // Store blocker functions in a separate Map outside of router state since
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
-  let blockerCoordinator = future.unstable_multipleBlockers
-    ? createBlockerCoordinator({
-        functions: blockerFunctions,
-        idle: IDLE_BLOCKER,
-        getBlockers: () => state.blockers,
-        publish: (blockers) => updateState({ blockers }),
-      })
-    : undefined;
-
-  // Flag to ignore the next history update, so we can revert the URL change on
-  // a POP navigation that was blocked by the user without touching router state
-  let unblockBlockerHistoryUpdate: (() => void) | undefined = undefined;
+  let blockerCoordinator = createBlockerCoordinator({
+    functions: blockerFunctions,
+    idle: IDLE_BLOCKER,
+    getBlockers: () => state.blockers,
+    publish: (blockers) => updateState({ blockers }),
+  });
 
   let blockerRequestId = 0;
   let activeNavigationId = 0;
@@ -1381,7 +1373,7 @@ export function createRouter(init: RouterInit): Router {
     if (location.key !== operation.target.key) {
       // Native history gives no traversal identifier. Never replay old consent
       // after an event that cannot be correlated with the router's traversal.
-      blockerCoordinator?.cancel();
+      blockerCoordinator.cancel();
       warning(
         false,
         "A native history navigation interrupted a blocked traversal. " +
@@ -1434,132 +1426,64 @@ export function createRouter(init: RouterInit): Router {
     // state.  We'll update our own state once the navigation completes
     unlistenHistory = init.history.listen(
       ({ action: historyAction, location, delta }) => {
-        if (blockerCoordinator && blockerHistoryOperation) {
+        if (blockerHistoryOperation) {
           finishBlockerHistory(location, delta);
           return;
         }
-        // Ignore this event if it was just us resetting the URL from a
-        // blocked or canceled POP navigation
-        if (unblockBlockerHistoryUpdate) {
-          unblockBlockerHistoryUpdate();
-          unblockBlockerHistoryUpdate = undefined;
-          return;
-        }
-
-        if (blockerCoordinator) {
-          let requestId = ++blockerRequestId;
-          let source = state.location;
-          if (delta != null && delta !== 0) {
-            let restoration = createDeferred<void>();
-            let blocked = blockerCoordinator.block(
-              {
-                currentLocation: source,
-                nextLocation: location,
-                historyAction,
-              },
-              (take) => {
-                void restoration.promise.then(async () => {
-                  await waitForBlockerHistory();
-                  if (pendingDiscoveryCancellation)
-                    await pendingDiscoveryCancellation;
-                  if (disposed || !take()) return;
-                  // The new POP has been accepted. Prevent an older transport
-                  // from writing history between dispatch and its popstate.
-                  pendingNavigationController?.abort();
-                  pendingNavigationController = null;
-                  ++activeNavigationId;
-                  pendingHistoryCommit = undefined;
-                  void traverseBlockerHistory(
-                    "replay",
-                    delta,
-                    source,
-                    location,
-                    requestId,
-                  );
-                });
-              },
-              () => {
+        let requestId = ++blockerRequestId;
+        let source = state.location;
+        if (delta != null && delta !== 0) {
+          let restoration = createDeferred<void>();
+          let blocked = blockerCoordinator.block(
+            {
+              currentLocation: source,
+              nextLocation: location,
+              historyAction,
+            },
+            (take) => {
+              void restoration.promise.then(async () => {
+                await waitForBlockerHistory();
+                if (pendingDiscoveryCancellation)
+                  await pendingDiscoveryCancellation;
+                if (disposed || !take()) return;
+                // The new POP has been accepted. Prevent an older transport
+                // from writing history between dispatch and its popstate.
+                pendingNavigationController?.abort();
+                pendingNavigationController = null;
+                ++activeNavigationId;
+                pendingHistoryCommit = undefined;
                 void traverseBlockerHistory(
-                  "restore",
-                  -delta,
-                  location,
+                  "replay",
+                  delta,
                   source,
+                  location,
                   requestId,
-                ).then(() => restoration.resolve());
-              },
-            );
-            if (blocked) {
-              pendingPopstateNavigationDfd?.resolve();
-              pendingPopstateNavigationDfd = null;
-              return;
-            }
-          } else {
-            blockerCoordinator.cancel();
-            warning(
-              blockerFunctions.size === 0,
-              "Navigation blocking requires a router-owned, nonzero history delta. " +
-                "External history changes and zero-delta POP events are not supported.",
-            );
-          }
-          if (future.unstable_customRouteDiscovery) {
-            pendingPopstateDelta += delta || 0;
-          }
-          return startNavigation(historyAction, location);
-        }
-
-        warning(
-          blockerFunctions.size === 0 || delta != null,
-          "You are trying to use a blocker on a POP navigation to a location " +
-            "that was not created by @remix-run/router. This will fail silently in " +
-            "production. This can happen if you are navigating outside the router " +
-            "via `window.history.pushState`/`window.location.hash` instead of using " +
-            "router navigation APIs.  This can also happen if you are using " +
-            "createHashRouter and the user manually changes the URL.",
-        );
-
-        let blockerKey = shouldBlockNavigation({
-          currentLocation: state.location,
-          nextLocation: location,
-          historyAction,
-        });
-
-        if (blockerKey && delta != null) {
-          // Restore the URL to match the current UI, but don't update router state
-          let nextHistoryUpdatePromise = new Promise<void>((resolve) => {
-            unblockBlockerHistoryUpdate = resolve;
-          });
-          init.history.go(delta * -1);
-
-          // Put the blocker into a blocked state
-          updateBlocker(blockerKey, {
-            state: "blocked",
-            location,
-            proceed() {
-              updateBlocker(blockerKey!, {
-                state: "proceeding",
-                proceed: undefined,
-                reset: undefined,
-                location,
+                );
               });
-              // Re-do the same POP navigation we just blocked, after the url
-              // restoration is also complete.  See:
-              // https://github.com/remix-run/react-router/issues/11613
-              nextHistoryUpdatePromise.then(() => init.history.go(delta));
             },
-            reset() {
-              let blockers = new Map(state.blockers);
-              blockers.set(blockerKey!, IDLE_BLOCKER);
-              updateState({ blockers });
+            () => {
+              void traverseBlockerHistory(
+                "restore",
+                -delta,
+                location,
+                source,
+                requestId,
+              ).then(() => restoration.resolve());
             },
-          });
-
-          // Resolve the promise for the blocked popstate
-          pendingPopstateNavigationDfd?.resolve();
-          pendingPopstateNavigationDfd = null;
-
-          return;
+          );
+          if (blocked) {
+            pendingPopstateNavigationDfd?.resolve();
+            pendingPopstateNavigationDfd = null;
+            return;
+          }
+        } else {
+          blockerCoordinator.cancel();
+          warning(
+            blockerFunctions.size === 0,
+            "Navigation blocking requires a router-owned, nonzero history delta. " +
+              "External history changes and zero-delta POP events are not supported.",
+          );
         }
-
         if (future.unstable_customRouteDiscovery) {
           pendingPopstateDelta += delta || 0;
         }
@@ -1598,7 +1522,7 @@ export function createRouter(init: RouterInit): Router {
     ++requestedNavigationId;
     ++activeNavigationId;
     pendingHistoryCommit = undefined;
-    blockerCoordinator?.cancel(false);
+    blockerCoordinator.cancel(false);
     let historyOperation = blockerHistoryOperation;
     blockerHistoryOperation = undefined;
     historyOperation?.onComplete?.();
@@ -1780,7 +1704,7 @@ export function createRouter(init: RouterInit): Router {
     // so we can start fresh.  A revalidation is not a navigation, so it must
     // leave any active blocker untouched.
     let blockers = state.blockers;
-    if (!isUninterruptedRevalidation) blockerCoordinator?.cancel(false);
+    if (!isUninterruptedRevalidation) blockerCoordinator.cancel(false);
     if (blockers.size > 0 && !isUninterruptedRevalidation) {
       blockers = new Map(blockers);
       blockers.forEach((_, k) => blockers.set(k, IDLE_BLOCKER));
@@ -1896,17 +1820,16 @@ export function createRouter(init: RouterInit): Router {
     to: number | To | null,
     opts?: RouterNavigateOptions,
   ) {
-    let requestId = blockerCoordinator ? ++blockerRequestId : undefined;
-    blockerCoordinator?.cancel();
+    let requestId = ++blockerRequestId;
+    blockerCoordinator.cancel();
     // Consume call-site metadata before a history gate yields to newer requests.
     let instrumentationNavigateMetaReceiver =
-      !blockerCoordinator || typeof to === "number"
+      typeof to === "number"
         ? undefined
         : consumeInstrumentationClientResultMetaReceiver(router);
     if (blockerHistoryOperation) await waitForBlockerHistory();
     if (pendingDiscoveryCancellation) await pendingDiscoveryCancellation;
-    if (blockerCoordinator && (disposed || requestId !== blockerRequestId))
-      return;
+    if (disposed || requestId !== blockerRequestId) return;
     // If another popstate is pending and we're about to interrupt it, resolve
     // the promise since we'll never reach completeNavigation for *that* popstate
     pendingPopstateNavigationDfd?.resolve();
@@ -1934,12 +1857,6 @@ export function createRouter(init: RouterInit): Router {
       return promise;
     }
 
-    // Consume this immediately before any async work kicks off so it doesn't stick
-    // around for subsequent interrupting navigations
-    if (!blockerCoordinator) {
-      instrumentationNavigateMetaReceiver =
-        consumeInstrumentationClientResultMetaReceiver(router);
-    }
     let normalizedPath = normalizeTo(
       state.location,
       state.matches,
@@ -2058,61 +1975,26 @@ export function createRouter(init: RouterInit): Router {
       instrumentationNavigateMetaReceiver,
     };
 
-    if (blockerCoordinator) {
-      if (
-        blockerCoordinator.block(
-          { currentLocation, nextLocation, historyAction },
-          (take) => {
-            void (async () => {
-              if (blockerHistoryOperation) await waitForBlockerHistory();
-              if (pendingDiscoveryCancellation)
-                await pendingDiscoveryCancellation;
-              if (!disposed && take()) {
-                void startNavigation(
-                  historyAction,
-                  nextLocation,
-                  navigationOptions,
-                );
-              }
-            })();
-          },
-        )
+    if (
+      blockerCoordinator.block(
+        { currentLocation, nextLocation, historyAction },
+        (take) => {
+          void (async () => {
+            if (blockerHistoryOperation) await waitForBlockerHistory();
+            if (pendingDiscoveryCancellation)
+              await pendingDiscoveryCancellation;
+            if (!disposed && take()) {
+              void startNavigation(
+                historyAction,
+                nextLocation,
+                navigationOptions,
+              );
+            }
+          })();
+        },
       )
-        return;
-      await startNavigation(historyAction, nextLocation, navigationOptions);
+    )
       return;
-    }
-
-    let blockerKey = shouldBlockNavigation({
-      currentLocation,
-      nextLocation,
-      historyAction,
-    });
-
-    if (blockerKey) {
-      // Put the blocker into a blocked state
-      updateBlocker(blockerKey, {
-        state: "blocked",
-        location: nextLocation,
-        proceed() {
-          updateBlocker(blockerKey!, {
-            state: "proceeding",
-            proceed: undefined,
-            reset: undefined,
-            location: nextLocation,
-          });
-          // Send the same navigation through
-          navigate(to, opts);
-        },
-        reset() {
-          let blockers = new Map(state.blockers);
-          blockers.set(blockerKey!, IDLE_BLOCKER);
-          updateState({ blockers });
-        },
-      });
-      return;
-    }
-
     await startNavigation(historyAction, nextLocation, navigationOptions);
   }
 
@@ -2207,13 +2089,11 @@ export function createRouter(init: RouterInit): Router {
       dataStrategyInitiator?: DataStrategyInitiator;
     },
   ): Promise<void> {
-    let navigationId = blockerCoordinator ? ++requestedNavigationId : undefined;
+    let navigationId = ++requestedNavigationId;
     if (blockerHistoryOperation) await waitForBlockerHistory();
     if (pendingDiscoveryCancellation) await pendingDiscoveryCancellation;
-    if (blockerCoordinator) {
-      if (disposed || navigationId !== requestedNavigationId) return;
-      ++activeNavigationId;
-    }
+    if (disposed || navigationId !== requestedNavigationId) return;
+    ++activeNavigationId;
     // Abort any in-progress navigations and start a new one. Unset any ongoing
     // uninterrupted revalidations unless told otherwise, since we want this
     // new navigation to update history normally
@@ -2483,22 +2363,17 @@ export function createRouter(init: RouterInit): Router {
       // Use the same compensating POP as navigation blockers. Additional native
       // Back/Forward presses during restoration have the same known limitation:
       // history does not identify which traversal caused the next POP event.
-      if (blockerCoordinator) {
-        void waitForBlockerHistory().then(() => {
-          if (disposed) return finishCancellation();
-          void traverseBlockerHistory(
-            "restore",
-            -delta,
-            init.history.location,
-            state.location,
-            blockerRequestId,
-            finishCancellation,
-          );
-        });
-      } else {
-        unblockBlockerHistoryUpdate = finishCancellation;
-        init.history.go(-delta);
-      }
+      void waitForBlockerHistory().then(() => {
+        if (disposed) return finishCancellation();
+        void traverseBlockerHistory(
+          "restore",
+          -delta,
+          init.history.location,
+          state.location,
+          blockerRequestId,
+          finishCancellation,
+        );
+      });
     } else {
       finishCancellation();
     }
@@ -3772,7 +3647,7 @@ export function createRouter(init: RouterInit): Router {
       currentUrl,
       "allow-explicit",
     );
-    if (blockerCoordinator && (!isNavigation || isUninterruptedRevalidation)) {
+    if (!isNavigation || isUninterruptedRevalidation) {
       // Background work may finish while consent is pending. Its redirect is
       // a new departure, unlike a redirect continuing an accepted navigation.
       let requestId = ++blockerRequestId;
@@ -4194,70 +4069,10 @@ export function createRouter(init: RouterInit): Router {
 
   function deleteBlocker(key: string) {
     blockerFunctions.delete(key);
-    if (blockerCoordinator) {
-      let blockers = new Map(state.blockers);
-      blockers.delete(key);
-      blockerCoordinator.deleted(key);
-      updateState({ blockers });
-    } else {
-      state.blockers.delete(key);
-    }
-  }
-
-  // Utility function to update blockers, ensuring valid state transitions
-  function updateBlocker(key: string, newBlocker: Blocker) {
-    let blocker = state.blockers.get(key) || IDLE_BLOCKER;
-
-    // Poor mans state machine :)
-    // https://mermaid.live/edit#pako:eNqVkc9OwzAMxl8l8nnjAYrEtDIOHEBIgwvKJTReGy3_lDpIqO27k6awMG0XcrLlnz87nwdonESogKXXBuE79rq75XZO3-yHds0RJVuv70YrPlUrCEe2HfrORS3rubqZfuhtpg5C9wk5tZ4VKcRUq88q9Z8RS0-48cE1iHJkL0ugbHuFLus9L6spZy8nX9MP2CNdomVaposqu3fGayT8T8-jJQwhepo_UtpgBQaDEUom04dZhAN1aJBDlUKJBxE1ceB2Smj0Mln-IBW5AFU2dwUiktt_2Qaq2dBfaKdEup85UV7Yd-dKjlnkabl2Pvr0DTkTreM
-    invariant(
-      (blocker.state === "unblocked" && newBlocker.state === "blocked") ||
-        (blocker.state === "blocked" && newBlocker.state === "blocked") ||
-        (blocker.state === "blocked" && newBlocker.state === "proceeding") ||
-        (blocker.state === "blocked" && newBlocker.state === "unblocked") ||
-        (blocker.state === "proceeding" && newBlocker.state === "unblocked"),
-      `Invalid blocker state transition: ${blocker.state} -> ${newBlocker.state}`,
-    );
-
     let blockers = new Map(state.blockers);
-    blockers.set(key, newBlocker);
+    blockers.delete(key);
+    blockerCoordinator.deleted(key);
     updateState({ blockers });
-  }
-
-  function shouldBlockNavigation({
-    currentLocation,
-    nextLocation,
-    historyAction,
-  }: {
-    currentLocation: Location;
-    nextLocation: Location;
-    historyAction: NavigationType;
-  }): string | undefined {
-    if (blockerFunctions.size === 0) {
-      return;
-    }
-
-    // We only support a single active blocker at the moment since we don't have
-    // any compelling use cases for multi-blocker yet
-    if (blockerFunctions.size > 1) {
-      warning(false, "A router only supports one blocker at a time");
-    }
-
-    let entries = Array.from(blockerFunctions.entries());
-    let [blockerKey, blockerFunction] = entries[entries.length - 1];
-    let blocker = state.blockers.get(blockerKey);
-
-    if (blocker && blocker.state === "proceeding") {
-      // If the blocker is currently proceeding, we don't need to re-check
-      // it and can let this navigation continue
-      return;
-    }
-
-    // At this point, we know we're unblocked/blocked so we need to check the
-    // user-provided blocker function
-    if (blockerFunction({ currentLocation, nextLocation, historyAction })) {
-      return blockerKey;
-    }
   }
 
   function handleNavigational404(pathname: string) {

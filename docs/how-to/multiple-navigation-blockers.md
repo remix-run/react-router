@@ -1,51 +1,14 @@
 ---
 title: Multiple Navigation Blockers
-unstable: true
 ---
 
 # Multiple Navigation Blockers
 
 [MODES: framework, data]
 
-<docs-warning>This feature is experimental. Its API and behavior may change in a patch or minor release.</docs-warning>
+Use `useBlocker` in each component when independent editors need their own dirty-state checks and confirmation UI. The router asks each applicable blocker in registration order, showing one blocked hook at a time. Every remaining blocker must approve before the navigation resumes.
 
-Enable `future.unstable_multipleBlockers` when independent components need their own dirty-state checks and confirmation UI. The router asks each applicable blocker in registration order, showing one blocked hook at a time. Every remaining blocker must approve before the navigation resumes.
-
-## Enable the experiment
-
-In Framework Mode, including RSC Framework Mode with its default client entry:
-
-```ts filename=react-router.config.ts
-import type { Config } from "@react-router/dev/config";
-
-export default {
-  future: { unstable_multipleBlockers: true },
-} satisfies Config;
-```
-
-In Data Mode:
-
-```tsx
-import { createBrowserRouter } from "react-router";
-
-const router = createBrowserRouter(routes, {
-  future: { unstable_multipleBlockers: true },
-});
-```
-
-In RSC Data Mode, pass the client option when hydrating the router. Pass the same option if you provide a custom RSC Framework client entry:
-
-```tsx
-import { unstable_RSCHydratedRouter as RSCHydratedRouter } from "react-router/dom";
-
-<RSCHydratedRouter
-  payload={payload}
-  createFromReadableStream={createFromReadableStream}
-  future={{ unstable_multipleBlockers: true }}
-/>;
-```
-
-RSC blockers belong in client components. Configure the flag when creating or hydrating the router; changing it later does not recreate the router. Declarative Mode does not support `useBlocker`.
+This works in Data and Framework Mode, including their RSC client routers. RSC blockers belong in client components. Declarative Mode does not support `useBlocker`.
 
 ## Give each editor its own confirmation
 
