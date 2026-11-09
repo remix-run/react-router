@@ -228,7 +228,9 @@ describe("create-react-router CLI", () => {
 
     expect(status).toBe(0);
     expect(existsSync(path.join(projectDir, ".git"))).toBeTruthy();
-    expect(stderr).toContain("Git initialized, but the initial commit failed.");
+    expect(stderr).toContain(
+      "Git initialized, but the initial add/commit failed.",
+    );
     expect(() =>
       execFileSync("git", ["rev-parse", "--verify", "HEAD"], {
         cwd: projectDir,
