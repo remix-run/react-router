@@ -1,1 +1,1 @@
-Fix `useBlocker` leaving orphaned registrations when Activity effects reconnect or the router is replaced
+Fix `useBlocker` leaving behind a stale blocker that keeps blocking navigation after its component is hidden and shown again with `<Activity>`, or after the router is recreated
