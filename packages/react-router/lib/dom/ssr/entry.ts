@@ -59,6 +59,7 @@ export interface EntryContext extends FrameworkContextObject {
 }
 
 export interface FutureConfig {
+  unstable_multipleBlockers?: boolean;
   unstable_customRouteDiscovery?: boolean;
 }
 

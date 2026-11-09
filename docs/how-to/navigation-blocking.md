@@ -8,6 +8,8 @@ title: Navigation Blocking
 
 When users are in the middle of a workflow, like filling out an important form, you may want to prevent them from navigating away from the page.
 
+For independent components with separate confirmation UI, see the experimental [multiple navigation blockers](./multiple-navigation-blockers) guide.
+
 This example will show:
 
 - Setting up a route with a form and action called with a fetcher

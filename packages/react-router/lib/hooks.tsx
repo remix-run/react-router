@@ -1902,6 +1902,13 @@ let blockerId = 0;
  * }
  * ```
  *
+ * With `future.unstable_multipleBlockers` enabled, hooks confirm sequentially in
+ * registration order. `proceed()` approves this hook for the current attempt;
+ * if another hook blocks, this hook returns to `unblocked` without a cancellation
+ * handle. Approval covers later edits until the attempt is canceled or replaced.
+ * The selected hook's `reset()` cancels the whole attempt. Unmounted hooks no
+ * longer apply. See [multiple navigation blockers](../../how-to/multiple-navigation-blockers).
+ *
  * @public
  * @category Hooks
  * @mode framework

@@ -43,6 +43,12 @@ _No known planned breaking changes yet_
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may have breaking changes in patch or minor releases - adopt with caution!
 
+### `future.unstable_multipleBlockers`
+
+[MODES: framework, data]
+
+Enable sequential confirmation from independently registered `useBlocker` hooks. Each applicable blocker approves the current navigation before it resumes. See [multiple navigation blockers](../how-to/multiple-navigation-blockers) for configuration, the two-editor example, and approval/cancellation semantics. RSC client components can opt in through the Framework configuration or `unstable_RSCHydratedRouter`'s `future` prop.
+
 ### `future.unstable_enableNodeReadableStream`
 
 [MODES: framework]

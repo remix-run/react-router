@@ -195,6 +195,8 @@ function createHydratedRouter({
     routes,
     history: createBrowserHistory(),
     future: {
+      unstable_multipleBlockers:
+        ssrInfo.context.future.unstable_multipleBlockers,
       unstable_customRouteDiscovery:
         ssrInfo.context.future.unstable_customRouteDiscovery,
     },
