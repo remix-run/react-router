@@ -1920,7 +1920,11 @@ let blockerId = 0;
  * @returns A {@link Blocker} object with state and reset functionality
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
-  let { router, basename } = useDataRouterContext("useBlocker");
+  let {
+    router,
+    basename,
+    static: isStatic,
+  } = useDataRouterContext("useBlocker");
   let state = useDataRouterState("useBlocker");
 
   let [blockerKey, setBlockerKey] = React.useState("");
@@ -1957,26 +1961,33 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   );
 
   // Effect cleanup/reconnection preserves state but creates a new registration.
-  let ownedBlockerKey = React.useRef("");
+  let ownedBlocker = React.useRef<
+    { router: DataRouter; key: string } | undefined
+  >(undefined);
 
   // This effect is in charge of blocker key assignment and deletion (which is
   // tightly coupled to the key)
   React.useEffect(() => {
     let key = String(++blockerId);
-    ownedBlockerKey.current = key;
+    ownedBlocker.current = { router, key };
     setBlockerKey(key);
     return () => {
-      ownedBlockerKey.current = "";
+      ownedBlocker.current = undefined;
       router.deleteBlocker(key);
     };
   }, [router]);
 
-  // This effect handles assigning the blockerFunction.  This is to handle
-  // unstable blocker function identities, and happens only after the prior
-  // effect so we don't get an orphaned blockerFunction in the router with a
-  // key of "".  Until then we just have the IDLE_BLOCKER.
-  React.useEffect(() => {
-    if (blockerKey !== "" && blockerKey === ownedBlockerKey.current) {
+  // Publish the committed predicate before destination passive effects can
+  // navigate. Wait for a key owned by this effect lifetime before registering.
+  // Static routers never register blockers and do not need a layout effect.
+  let useRegistrationEffect = isStatic
+    ? React.useEffect
+    : React.useLayoutEffect;
+  useRegistrationEffect(() => {
+    if (
+      ownedBlocker.current?.router === router &&
+      blockerKey === ownedBlocker.current.key
+    ) {
       router.getBlocker(blockerKey, blockerFunction);
     }
   }, [router, blockerKey, blockerFunction]);
