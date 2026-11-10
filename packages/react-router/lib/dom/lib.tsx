@@ -190,7 +190,7 @@ export interface DOMRouterOpts {
    *
    * You will almost always include a complete set of `loaderData` to hydrate a
    * server-rendered app. But in advanced use-cases (such as Framework Mode's
-   * [`clientLoader`](../../start/framework/route-module#clientLoader)), you may
+   * [`clientLoader`](../../start/framework/route-module#clientloader)), you may
    * want to include `loaderData` for only some routes that were loaded/rendered
    * on the server. This allows you to hydrate _some_ of the routes (such as the
    * app layout/shell) while showing a `HydrateFallback` component and running
@@ -329,7 +329,7 @@ export interface DOMRouterOpts {
    * To combat this, we introduced [`route.lazy`](../../start/data/route-object#lazy)
    * in [v6.9.0](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v690)
    * which lets you lazily load the route _implementation_ ([`loader`](../../start/data/route-object#loader),
-   * [`Component`](../../start/data/route-object#Component), etc.) while still
+   * [`Component`](../../start/data/route-object#component), etc.) while still
    * providing the route _definition_ aspects up front (`path`, `index`, etc.).
    * This is a good middle ground. React Router still knows about your route
    * definitions (the lightweight part) up front and can perform synchronous
