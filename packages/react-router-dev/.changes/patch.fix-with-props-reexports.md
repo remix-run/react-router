@@ -1,1 +1,1 @@
-Fix route component props (`loaderData`, `params`, etc.) being `undefined` when a route module re-exports its `default`, `ErrorBoundary`, or `HydrateFallback` export (i.e., `export { default } from "./component"`) (#12455)
+Pass route component props (`loaderData`, `params`, etc.) to `default`, `ErrorBoundary`, and `HydrateFallback` exports declared with export specifiers, including re-exports (e.g., `export { default } from "./component"`) and local aliases (`export { Page as default }`)

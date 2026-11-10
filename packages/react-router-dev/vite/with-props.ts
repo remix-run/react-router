@@ -81,7 +81,7 @@ export const decorateComponentExportsWithProps = (
                   [
                     local.name === "default"
                       ? t.importDefaultSpecifier(imported)
-                      : t.importSpecifier(imported, t.identifier(local.name)),
+                      : t.importSpecifier(imported, local),
                   ],
                   t.stringLiteral(source.value),
                 ),

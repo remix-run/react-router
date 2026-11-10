@@ -49,6 +49,22 @@ describe("decorateComponentExportsWithProps", () => {
     `);
   });
 
+  it("wraps string-named source re-exports", () => {
+    expect(
+      transform(`
+        export { "my-component" as default, "ErrorBoundary" as ErrorBoundary } from "./component";
+      `),
+    ).toMatchInlineSnapshot(`
+      "import { UNSAFE_withComponentProps as _UNSAFE_withComponentProps, UNSAFE_withErrorBoundaryProps as _UNSAFE_withErrorBoundaryProps } from "react-router";
+      import { "my-component" as _Component } from "./component";
+      const _default = _UNSAFE_withComponentProps(_Component);
+      export { _default as default };
+      import { "ErrorBoundary" as _ErrorBoundary } from "./component";
+      const _ErrorBoundary2 = _UNSAFE_withErrorBoundaryProps(_ErrorBoundary);
+      export { _ErrorBoundary2 as ErrorBoundary };"
+    `);
+  });
+
   it("wraps local bindings exported as default", () => {
     expect(
       transform(`
@@ -100,25 +116,34 @@ describe("decorateComponentExportsWithProps", () => {
     `);
   });
 
-  it("wraps local bindings exported before they are initialized", async () => {
+  it("wraps late local bindings while retaining other export specifiers", async () => {
     let code = transform(`
-      export { Page as default };
+      export { Page as default, Boundary as ErrorBoundary, loader };
       const Page = () => "page";
+      const Boundary = () => "error";
+      const loader = () => "data";
     `);
     expect(code).toMatchInlineSnapshot(`
-     "import { UNSAFE_withComponentProps as _UNSAFE_withComponentProps } from "react-router";
+     "import { UNSAFE_withComponentProps as _UNSAFE_withComponentProps, UNSAFE_withErrorBoundaryProps as _UNSAFE_withErrorBoundaryProps } from "react-router";
+     export { loader };
      const Page = () => "page";
+     const Boundary = () => "error";
+     const loader = () => "data";
      const _default = _UNSAFE_withComponentProps(Page);
-     export { _default as default };"
+     export { _default as default };
+     const _ErrorBoundary = _UNSAFE_withErrorBoundaryProps(Boundary);
+     export { _ErrorBoundary as ErrorBoundary };"
     `);
 
     // Evaluate the module to ensure we don't read \`Page\` before it's initialized
     let source = code
       .replace(/^import .*\n/, "")
-      .replace(/_UNSAFE_withComponentProps/g, "((c) => c)");
+      .replace(/_UNSAFE_with(?:Component|ErrorBoundary)Props/g, "((c) => c)");
     let mod = await import(
       "data:text/javascript," + encodeURIComponent(source)
     );
     expect(mod.default()).toBe("page");
+    expect(mod.ErrorBoundary()).toBe("error");
+    expect(mod.loader()).toBe("data");
   });
 });
