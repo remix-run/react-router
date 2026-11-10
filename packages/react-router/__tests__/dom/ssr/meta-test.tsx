@@ -108,7 +108,10 @@ describe("meta", () => {
       {
         id: "root",
         path: "/",
-        meta: () => [{ charSet: "utf-8" }],
+        meta({ matches }) {
+          expect(matches.map((match) => match.id)).toEqual(["root"]);
+          return [{ charSet: "utf-8" }];
+        },
         Component() {
           return (
             <>
