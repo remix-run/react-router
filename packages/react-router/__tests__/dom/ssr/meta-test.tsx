@@ -108,7 +108,10 @@ describe("meta", () => {
       {
         id: "root",
         path: "/",
-        meta: () => [{ charSet: "utf-8" }],
+        meta({ matches }) {
+          expect(matches.map((match) => match.id)).toEqual(["root"]);
+          return [{ charSet: "utf-8" }];
+        },
         Component() {
           return (
             <>
@@ -121,7 +124,6 @@ describe("meta", () => {
           {
             index: true,
             meta({ matches }) {
-              expect(matches.map((match) => match.id)).toEqual(["root", "0-0"]);
               let rootModule = matches.find((match) => match.id === "root");
               // @ts-expect-error
               let rootCharSet = rootModule?.meta.find((meta) => meta.charSet);

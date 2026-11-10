@@ -378,9 +378,14 @@ test.describe("typegen", () => {
     await $("pnpm typecheck");
   });
 
-  test("matches", async ({ edit, $ }) => {
-    await edit({
-      "app/routes.ts": tsx`
+  for (let rsc of [false, true]) {
+    test(`matches (${rsc ? "RSC Framework" : "Framework"})`, async ({
+      edit,
+      $,
+    }) => {
+      await edit({
+        "vite.config.ts": viteConfig({ rsc }),
+        "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
 
         export default [
@@ -391,7 +396,7 @@ test.describe("typegen", () => {
           ])
         ] satisfies RouteConfig;
       `,
-      "app/routes/parent1.tsx": tsx`
+        "app/routes/parent1.tsx": tsx`
         import { Outlet } from "react-router"
 
         export function loader() {
@@ -407,7 +412,7 @@ test.describe("typegen", () => {
           )
         }
       `,
-      "app/routes/parent2.tsx": tsx`
+        "app/routes/parent2.tsx": tsx`
         import { Outlet } from "react-router"
 
         export function loader() {
@@ -423,7 +428,7 @@ test.describe("typegen", () => {
           )
         }
       `,
-      "app/routes/current.tsx": tsx`
+        "app/routes/current.tsx": tsx`
         import type { Expect, Equal } from "../expect-type"
         import type { Route } from "./+types/current"
 
@@ -434,6 +439,9 @@ test.describe("typegen", () => {
         export function meta({ matches }: Route.MetaArgs) {
           const parent1 = matches[1]
           type Test1 = Expect<Equal<typeof parent1.loaderData, { parent1: number }>>
+
+          const foundParent1 = matches.find((match) => match.id === "routes/parent1")
+          type TestFind = Expect<Equal<typeof foundParent1, typeof parent1 | undefined>>
 
           const parent2 = matches[2]
           type Test2 = Expect<Equal<typeof parent2.loaderData, { parent2: number }>>
@@ -465,9 +473,10 @@ test.describe("typegen", () => {
           }
         }
       `,
+      });
+      await $("pnpm typecheck");
     });
-    await $("pnpm typecheck");
-  });
+  }
 
   test("route files with absolute paths", async ({ edit, $ }) => {
     await edit({
