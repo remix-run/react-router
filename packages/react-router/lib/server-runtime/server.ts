@@ -36,7 +36,12 @@ import {
 } from "./single-fetch";
 import { getDocumentHeaders } from "./headers";
 import type { EntryRoute } from "../dom/ssr/routes";
-import { URL_LIMIT, getManifestPath } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getManifestPath,
+  isFogOfWarEnabled,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import type { InstrumentRequestHandlerFunction } from "../router/instrumentation";
 import {
   instrumentationResultMetaContext,
@@ -308,6 +313,8 @@ function derive(build: ServerBuild, mode?: string) {
     }
 
     if (request.method === "HEAD") {
+      // Cancel the dropped body so its stream (e.g. an open file) is released
+      response.body?.cancel().catch(() => {});
       return new Response(null, {
         headers: response.headers,
         status: response.status,
@@ -539,10 +546,22 @@ async function handleDocumentRequest(
       actionData: context.actionData,
       errors: context.errors,
     };
+    let routeDiscovery = build.routeDiscovery;
+    if (
+      isFogOfWarEnabled(routeDiscovery, build.ssr) &&
+      shouldUseInitialRouteDiscovery(
+        context.location.pathname,
+        staticHandler._matchCost,
+      )
+    ) {
+      // Keep this response and its client router on the existing full-manifest
+      // path without changing discovery for other requests using this build.
+      routeDiscovery = { ...routeDiscovery, mode: "initial" };
+    }
     let baseServerHandoff: ServerHandoff = {
       basename: build.basename,
       future: build.future,
-      routeDiscovery: build.routeDiscovery,
+      routeDiscovery,
       ssr: build.ssr,
       isSpaMode,
       unstable_apiOnly: build.unstable_apiOnly,
@@ -567,7 +586,7 @@ async function handleDocumentRequest(
       renderMeta: {},
       future: build.future,
       ssr: build.ssr,
-      routeDiscovery: build.routeDiscovery,
+      routeDiscovery,
       isSpaMode,
       unstable_apiOnly: build.unstable_apiOnly,
       unstable_apiServerOrigin: build.unstable_apiServerOrigin,

@@ -1,1 +1,0 @@
-Fix a `<Form method="post">` submission to the current URL pushing a duplicate history entry instead of replacing it when its `action` is written with characters that get percent-encoded, such as spaces or non-ASCII characters

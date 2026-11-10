@@ -10,7 +10,7 @@ import type {
   LinksFunction,
   MetaFunction,
 } from "../dom/ssr/routeModules";
-import { type Location } from "../router/history";
+import { invariant as routerInvariant, type Location } from "../router/history";
 import {
   createStaticHandler,
   isDataWithResponseInit,
@@ -41,7 +41,11 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
-import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getPathsWithAncestors,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import invariant from "../server-runtime/invariant";
 
@@ -144,12 +148,18 @@ const cachedResolvePromise: <T>(
   },
 );
 
-export const Await: typeof AwaitType = (async ({
-  children,
-  resolve,
-  errorElement,
-}: React.ComponentProps<typeof AwaitType>) => {
-  let promise = cachedResolvePromise(resolve);
+export const Await: typeof AwaitType = (async (
+  props: React.ComponentProps<typeof AwaitType>,
+) => {
+  routerInvariant(
+    "resolve" in props !== "unstable_promise" in props,
+    "<Await> requires exactly one of `resolve` or `unstable_promise`",
+  );
+  let { children, errorElement } = props;
+  let usePromise = "unstable_promise" in props;
+  let promise = cachedResolvePromise(
+    usePromise ? props.unstable_promise : props.resolve,
+  );
   let resolved: Awaited<typeof promise> = await promise;
 
   if (resolved.status === "rejected" && !errorElement) {
@@ -158,7 +168,9 @@ export const Await: typeof AwaitType = (async ({
   if (resolved.status === "rejected") {
     return React.createElement(UNSAFE_AwaitContextProvider, {
       children: React.createElement(React.Fragment, null, errorElement),
-      value: { _tracked: true, _error: resolved.reason } as TrackedPromise,
+      value: usePromise
+        ? resolved
+        : ({ _tracked: true, _error: resolved.reason } as TrackedPromise),
     });
   }
 
@@ -167,7 +179,9 @@ export const Await: typeof AwaitType = (async ({
 
   return React.createElement(UNSAFE_AwaitContextProvider, {
     children: toRender,
-    value: { _tracked: true, _data: resolved.value } as TrackedPromise,
+    value: usePromise
+      ? resolved
+      : ({ _tracked: true, _data: resolved.value } as TrackedPromise),
   });
 }) as any;
 
@@ -1256,8 +1270,12 @@ async function getRenderPayload(
     }),
   );
 
+  let pathname = staticContext.location.pathname;
+  let useInitialRouteDiscovery =
+    (routeDiscovery?.mode === "initial" && !isDataRequest) ||
+    shouldUseInitialRouteDiscovery(pathname, staticHandler._matchCost);
   let patches: Promise<RSCRouteManifest[]>;
-  if (routeDiscovery?.mode === "initial" && !isDataRequest) {
+  if (useInitialRouteDiscovery) {
     patches = getAllRoutePatches(routes, basename).then((patches) =>
       patches.filter(
         (patch) => !staticContext.matches.some((m) => m.route.id === patch.id),
@@ -1265,7 +1283,8 @@ async function getRenderPayload(
     );
   } else {
     patches = getAdditionalRoutePatches(
-      getPathsWithAncestors([staticContext.location.pathname]),
+      // The full pathname is last and its matches are already in the payload.
+      getPathsWithAncestors([pathname]).slice(0, -1),
       staticHandler,
       staticContext.matches.map((m) => m.route.id),
     );
@@ -1273,6 +1292,9 @@ async function getRenderPayload(
 
   return {
     ...baseRenderPayload,
+    routeDiscovery: useInitialRouteDiscovery
+      ? ({ mode: "initial" } satisfies RouteDiscovery)
+      : baseRenderPayload.routeDiscovery,
     matches: await matchesPromise,
     patches,
   };
