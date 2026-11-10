@@ -1348,6 +1348,8 @@ describe("navigation blocking with useBlocker", () => {
       expect(blocker?.state).toBe("unblocked");
       expect(node.querySelector("h1")?.textContent).toBe("About");
       expect(router.state.location.search).toBe("?foo=bar");
+
+      act(() => root.unmount());
     });
   });
 });
