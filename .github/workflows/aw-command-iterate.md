@@ -132,7 +132,6 @@ jobs:
   report_unpushable_target:
     name: Explain why the pull request cannot be updated
     needs: [resolve_iteration_target]
-    if: needs.resolve_iteration_target.outputs.can-push == 'false'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -140,6 +139,8 @@ jobs:
       pull-requests: read
     steps:
       - name: Ask the contributor to allow maintainer edits
+        # Keep this job successful for writable PRs so its dependent agent can run.
+        if: needs.resolve_iteration_target.outputs.can-push == 'false'
         uses: actions/github-script@v9
         env:
           EXPECTED_REPOSITORY: remix-run/react-router

@@ -6,9 +6,6 @@ title: Using handle
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 You can build dynamic UI elements like breadcrumbs based on your route hierarchy using the [`useMatches`][use-matches] hook and [`handle`][handle] route exports.
 
 ## Understanding the Basics

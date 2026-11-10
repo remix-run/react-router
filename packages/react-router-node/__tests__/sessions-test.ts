@@ -125,6 +125,107 @@ describe("File session storage", () => {
     expect(typeof fileData.expires).toBe("string");
   });
 
+  if (process.platform !== "win32") {
+    it.each([
+      { mode: 0o600, umask: 0o022 },
+      { mode: 0o640, umask: 0o077 },
+    ])(
+      "preserves existing file permissions when committing a session (mode $mode, umask $umask)",
+      async ({ mode, umask }) => {
+        let { getSession, commitSession } = createFileSessionStorage({
+          dir,
+          cookie: { secrets: ["secret1"] },
+        });
+        let session = await getSession();
+        session.set("user", "mjackson");
+        let cookie = getCookieFromSetCookie(await commitSession(session));
+        session = await getSession(cookie);
+        let file = getFile(dir, session.id);
+        await fsp.chmod(file, mode);
+
+        let originalUmask = process.umask(umask);
+        try {
+          session.set("user", "ryanflorence");
+          await commitSession(session);
+
+          expect((await getSession(cookie)).get("user")).toBe("ryanflorence");
+          expect((await fsp.stat(file)).mode & 0o777).toBe(mode);
+        } finally {
+          process.umask(originalUmask);
+        }
+      },
+    );
+  }
+
+  it("recreates a missing file when committing an existing session", async () => {
+    let { getSession, commitSession } = createFileSessionStorage({
+      dir,
+      cookie: { secrets: ["secret1"] },
+    });
+    let cookie = getCookieFromSetCookie(
+      await commitSession(await getSession()),
+    );
+    let session = await getSession(cookie);
+    await fsp.unlink(getFile(dir, session.id));
+    session.set("user", "mjackson");
+
+    await commitSession(session);
+
+    expect((await getSession(cookie)).get("user")).toBe("mjackson");
+  });
+
+  it("keeps the session readable when it is committed concurrently", async () => {
+    let { getSession, commitSession } = createFileSessionStorage({
+      dir,
+      cookie: { secrets: ["secret1"] },
+    });
+    let cookie = getCookieFromSetCookie(
+      await commitSession(await getSession()),
+    );
+
+    for (let i = 0; i < 10; i++) {
+      let longSession = await getSession(cookie);
+      longSession.set("value", "a".repeat(20_000));
+      let shortSession = await getSession(cookie);
+      shortSession.set("value", "b");
+
+      await Promise.all([
+        commitSession(longSession),
+        commitSession(shortSession),
+      ]);
+
+      let session = await getSession(cookie);
+      expect(["a".repeat(20_000), "b"]).toContain(session.get("value"));
+    }
+  });
+
+  it("doesn't throw when reading a session that is being committed", async () => {
+    let { getSession, commitSession } = createFileSessionStorage({
+      dir,
+      cookie: { secrets: ["secret1"] },
+    });
+    let session = await getSession();
+    session.set("value", "a".repeat(64 * 1024));
+    let cookie = getCookieFromSetCookie(await commitSession(session));
+    session = await getSession(cookie);
+
+    let reads: Promise<unknown>[] = [];
+    for (let i = 0; i < 20; i++) {
+      let committed = false;
+      let commit = commitSession(session).finally(() => (committed = true));
+      while (!committed) {
+        reads.push(getSession(cookie));
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+      await commit;
+    }
+
+    let results = await Promise.allSettled(reads);
+    expect(results.filter((result) => result.status === "rejected")).toEqual(
+      [],
+    );
+  });
+
   describe("when a new secret shows up in the rotation", () => {
     it("unsigns old session cookies using the old secret and encodes new cookies using the new secret", async () => {
       let { getSession, commitSession } = createFileSessionStorage({

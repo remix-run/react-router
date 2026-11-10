@@ -397,6 +397,7 @@ function RSCPrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
+  let { unstable_apiServerOrigin } = useFrameworkContext();
 
   let dataHrefs = React.useMemo(() => {
     if (page === location.pathname + location.search + location.hash) {
@@ -404,7 +405,7 @@ function RSCPrefetchPageLinksImpl({
       // since it would always trigger a prefetch of the existing loaders
       return [];
     }
-    let url = singleFetchUrl(page, "rsc");
+    let url = singleFetchUrl(page, "rsc", unstable_apiServerOrigin);
 
     let hasSomeRoutesWithShouldRevalidate = false;
     let targetRoutes: string[] = [];
@@ -420,8 +421,10 @@ function RSCPrefetchPageLinksImpl({
       url.searchParams.set("_routes", targetRoutes.join(","));
     }
 
-    return [url.pathname + url.search];
-  }, [page, location, nextMatches]);
+    return [
+      unstable_apiServerOrigin ? url.toString() : url.pathname + url.search,
+    ];
+  }, [page, location, nextMatches, unstable_apiServerOrigin]);
 
   return (
     <>
@@ -440,7 +443,8 @@ function PrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { manifest, routeModules } = useFrameworkContext();
+  let { manifest, routeModules, unstable_apiServerOrigin } =
+    useFrameworkContext();
   let { matches } = useDataRouterState("PrefetchPageLinks");
   let { loaderData } = useDataRouterData("PrefetchPageLinks");
 
@@ -504,7 +508,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(page, "data");
+    let url = singleFetchUrl(page, "data", unstable_apiServerOrigin);
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -518,7 +522,9 @@ function PrefetchPageLinksImpl({
       );
     }
 
-    return [url.pathname + url.search];
+    return [
+      unstable_apiServerOrigin ? url.toString() : url.pathname + url.search,
+    ];
   }, [
     loaderData,
     location,
@@ -527,6 +533,7 @@ function PrefetchPageLinksImpl({
     nextMatches,
     page,
     routeModules,
+    unstable_apiServerOrigin,
   ]);
 
   let moduleHrefs = React.useMemo(
