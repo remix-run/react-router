@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getAwaitPromise, getPromiseResult } from "./await";
 
 import type {
   InitialEntry,
@@ -23,7 +24,7 @@ import type {
   RouterSubscriber,
   RouterInit,
 } from "./router/router";
-import { createRouter } from "./router/router";
+import { createRouter, clientErrors } from "./router/router";
 import type {
   DataRouteObject,
   DataStrategyFunction,
@@ -74,6 +75,7 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
+import { FrameworkContext } from "./dom/ssr/components";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
@@ -354,6 +356,27 @@ export interface RouterProviderProps {
   useTransitions?: boolean;
 }
 
+// We never wait for a view transition's animation to start, so nothing else
+// observes `ready`. A skipped transition rejects it: with an `AbortError` when
+// `skipTransition()` or a newer transition skipped it, and with an
+// `InvalidStateError` when the browser skips it in a hidden document. Handle
+// those rejections and rethrow any other one, such as a duplicate
+// `view-transition-name`.
+function handleSkippedViewTransition(
+  transition: ViewTransition,
+  document: Document,
+) {
+  transition.ready.catch((reason: unknown) => {
+    let skipped =
+      document.visibilityState === "hidden" ||
+      (typeof reason === "object" &&
+        reason !== null &&
+        "name" in reason &&
+        reason.name === "AbortError");
+    if (!skipped) throw reason;
+  });
+}
+
 /**
  * Render the UI for the given {@link DataRouter}. This component should
  * typically be at the top of an app's element tree. The router prop should
@@ -399,6 +422,8 @@ export function RouterProvider({
 
   let [_state, setStateImpl] = React.useState(router.state);
   let [state, setOptimisticState] = useOptimistic(_state);
+  // Rendered state may lag behind notifications during a transition.
+  let lastState = React.useRef(state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -411,12 +436,27 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
+  let handledErrors = React.useRef(
+    new WeakSet<NonNullable<RouterState["errors"]>>(),
+  );
 
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
       { deletedFetchers, newErrors, flushSync, viewTransitionOpts },
     ) => {
+      lastState.current = newState;
+
+      if (newErrors && newState.errors && clientErrors.has(newState.errors)) {
+        if (handledErrors.current.has(newState.errors)) {
+          newErrors = null;
+        } else {
+          // Mark these before invoking user code, including when onError is
+          // absent, so effect replays/resubscriptions don't report them again.
+          handledErrors.current.add(newState.errors);
+        }
+      }
+
       // Send router errors through onError
       if (newErrors && onError) {
         Object.values(newErrors).forEach((error) =>
@@ -496,6 +536,7 @@ export function RouterProvider({
         let t = router.window!.document.startViewTransition(() => {
           reactDomFlushSyncImpl(() => setStateImpl(newState));
         });
+        handleSkippedViewTransition(t, router.window!.document);
 
         // Clean up after the animation completes
         t.finished.finally(() => {
@@ -545,11 +586,26 @@ export function RouterProvider({
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>).
-  // If the router finished initializing (and emitted errors) before this
-  // subscriber was attached, `subscribe()` replays that notification so
-  // `onError` still fires for initial data load errors.
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
+  // State may change before our first render or between render and
+  // subscription. Recover missed state/errors without relying on other
+  // subscribers or reporting errors again during StrictMode effect replays.
+  React.useLayoutEffect(() => {
+    let errors = router.state.errors;
+    let newErrors = errors ? clientErrors.get(errors) : null;
+    if (
+      lastState.current !== router.state ||
+      (errors && newErrors && !handledErrors.current.has(errors))
+    ) {
+      setState(router.state, {
+        deletedFetchers: [],
+        flushSync: false,
+        newErrors: newErrors ?? null,
+      });
+    }
+  }, [router, setState]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
@@ -579,6 +635,7 @@ export function RouterProvider({
         }
         await renderPromise;
       });
+      handleSkippedViewTransition(transition, router.window.document);
       transition.finished.finally(() => {
         setRenderDfd(undefined);
         setTransition(undefined);
@@ -793,6 +850,14 @@ export function DataRoutes({
     "You must render this element inside a <DataRouterContext.Provider> element",
   );
 
+  let discoveryRuntime =
+    React.useContext(FrameworkContext)?.routeDiscoveryRuntime;
+  React.useEffect(() => {
+    // This effect runs after the initialized route tree commits and its hooks
+    // register. Descendants still suspended behind their own boundaries do not
+    // delay eager discovery.
+    if (state.initialized) discoveryRuntime?.markReady();
+  }, [state.initialized, discoveryRuntime]);
   return useRoutesImpl(routes, undefined, {
     router: dataRouterContext.router,
     manifest,
@@ -1486,6 +1551,26 @@ export interface AwaitResolveRenderFunction<Resolve = any> {
  */
 export interface AwaitProps<Resolve> {
   /**
+   * <docs-warning>This prop is currently unstable and may change in minor or patch
+   * releases.</docs-warning>
+   *
+   * A promise (or value) to read using React's `use()` API in client components.
+   * Unlike `resolve` in client components, this accepts promise-like values
+   * without modifying the source promise.
+   *
+   * `errorElement` handles promise rejections. Errors thrown while rendering
+   * children bubble to the nearest React error boundary.
+   *
+   * ```tsx
+   * <Await unstable_promise={reviewsPromise} errorElement={<ReviewsError />}>
+   *   {(reviews) => <Reviews items={reviews} />}
+   * </Await>
+   * ```
+   *
+   * Pass exactly one of `unstable_promise` or `resolve`.
+   */
+  unstable_promise?: never;
+  /**
    * When using a function, the resolved value is provided as the parameter.
    *
    * ```tsx [2]
@@ -1511,14 +1596,17 @@ export interface AwaitProps<Resolve> {
   children: React.ReactNode | AwaitResolveRenderFunction<Resolve>;
 
   /**
-   * The error element renders instead of the `children` when the [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+   * The error element renders instead of the `children` when the
+   * [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
    * rejects.
    *
+   * When using `resolve`, errors thrown while rendering `children` are
+   * also caught and rendered here. With `unstable_promise`, only promise
+   * rejections are handled; errors thrown while rendering `children` bubble to
+   * the nearest React error boundary.
+   *
    * ```tsx
-   * <Await
-   *   errorElement={<div>Oops</div>}
-   *   resolve={reviewsPromise}
-   * >
+   * <Await resolve={reviewsPromise} errorElement={<div>Oops</div>}>
    *   <Reviews />
    * </Await>
    * ```
@@ -1527,10 +1615,7 @@ export interface AwaitProps<Resolve> {
    * child component
    *
    * ```tsx
-   * <Await
-   *   errorElement={<ReviewsError />}
-   *   resolve={reviewsPromise}
-   * >
+   * <Await resolve={reviewsPromise} errorElement={<ReviewsError />}>
    *   <Reviews />
    * </Await>
    *
@@ -1589,10 +1674,43 @@ export interface AwaitProps<Resolve> {
   resolve: Resolve;
 }
 
+interface AwaitPromiseProps<Resolve> extends Omit<
+  AwaitProps<Resolve>,
+  "resolve" | "unstable_promise"
+> {
+  resolve?: never;
+  /**
+   * A promise (or value) to read using React's `use()` API in client components.
+   * Unlike `resolve` in client components, this accepts promise-like values
+   * without modifying the source promise.
+   *
+   * `errorElement` handles promise rejections. Errors thrown while rendering
+   * children bubble to the nearest React error boundary.
+   *
+   * ```tsx
+   * <Await unstable_promise={reviewsPromise} errorElement={<ReviewsError />}>
+   *   {(reviews) => <Reviews items={reviews} />}
+   * </Await>
+   * ```
+   *
+   * Pass exactly one of `unstable_promise` or `resolve`.
+   */
+  unstable_promise: Resolve;
+}
+
 /**
  * Used to render promise values with automatic error handling.
  *
+ * Passing the promise through `resolve` uses React Router-specific promise tracking, while passing
+ * it through `unstable_promise` uses React's built-in [`use()`](https://react.dev/reference/react/use)
+ * API.
+ *
  * **Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
+ *
+ * <docs-warning>The `unstable_promise` prop is currently unstable and may change in minor or patch
+ * releases. We plan to stabilize `<Await promise>` and deprecate `<Await resolve>` during v8, and then
+ * drop `<Await resolve>` in v9. Please see below for minor `errorElement` behavioral differences
+ * between the two approaches.</docs-warning>
  *
  * @example
  * import { Await, useLoaderData } from "react-router";
@@ -1612,15 +1730,9 @@ export interface AwaitProps<Resolve> {
  *       <h1>{book.title}</h1>
  *       <p>{book.description}</p>
  *       <React.Suspense fallback={<ReviewsSkeleton />}>
- *         <Await
- *           resolve={reviews}
- *           errorElement={
- *             <div>Could not load reviews 😬</div>
- *           }
- *           children={(resolvedReviews) => (
- *             <Reviews items={resolvedReviews} />
- *           )}
- *         />
+ *         <Await resolve={reviews} errorElement={<BookError />}>
+ *           {(resolvedReviews) => <Reviews items={resolvedReviews} />}
+ *         </Await>
  *       </React.Suspense>
  *     </div>
  *   );
@@ -1634,13 +1746,17 @@ export interface AwaitProps<Resolve> {
  * @param {AwaitProps.children} props.children n/a
  * @param {AwaitProps.errorElement} props.errorElement n/a
  * @param {AwaitProps.resolve} props.resolve n/a
+ * @param {AwaitProps.unstable_promise} props.unstable_promise n/a
  * @returns React element for the rendered awaited value
  */
-export function Await<Resolve>({
-  children,
-  errorElement,
-  resolve,
-}: AwaitProps<Resolve>) {
+export function Await<Resolve>(
+  props: AwaitProps<Resolve> | AwaitPromiseProps<Resolve>,
+) {
+  invariant(
+    "resolve" in props !== "unstable_promise" in props,
+    "<Await> requires exactly one of `resolve` or `unstable_promise`",
+  );
+  let { children, errorElement } = props;
   let dataRouterContext = React.useContext(DataRouterContext);
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
 
@@ -1662,14 +1778,59 @@ export function Await<Resolve>({
     [dataRouterContext, dataRouterStateContext],
   );
 
+  if ("unstable_promise" in props) {
+    return (
+      <AwaitPromise
+        value={props.unstable_promise}
+        errorElement={errorElement}
+        onError={onError}
+      >
+        {children}
+      </AwaitPromise>
+    );
+  }
+
   return (
     <AwaitErrorBoundary
-      resolve={resolve}
+      resolve={props.resolve}
       errorElement={errorElement}
       onError={onError}
     >
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
+  );
+}
+
+function AwaitPromise({
+  value,
+  children,
+  errorElement,
+  onError,
+}: {
+  value: unknown;
+  children: React.ReactNode | AwaitResolveRenderFunction;
+  errorElement?: React.ReactNode;
+  onError: (error: unknown) => void;
+}) {
+  let result: PromiseSettledResult<unknown> =
+    value != null &&
+    (typeof value === "object" || typeof value === "function") &&
+    "then" in value &&
+    typeof value.then === "function"
+      ? React.use(getAwaitPromise(value as PromiseLike<unknown>, onError))
+      : { status: "fulfilled", value };
+
+  if (result.status === "rejected" && !errorElement) {
+    throw result.reason;
+  }
+  return (
+    <AwaitContext.Provider value={result}>
+      {result.status === "rejected" ? (
+        errorElement
+      ) : (
+        <ResolveAwait>{children}</ResolveAwait>
+      )}
+    </AwaitContext.Provider>
   );
 }
 
@@ -1681,6 +1842,7 @@ type AwaitErrorBoundaryProps = React.PropsWithChildren<{
 
 type AwaitErrorBoundaryState = {
   error: any;
+  resolve: AwaitErrorBoundaryProps["resolve"];
 };
 
 enum AwaitRenderStatus {
@@ -1695,11 +1857,22 @@ class AwaitErrorBoundary extends React.Component<
 > {
   constructor(props: AwaitErrorBoundaryProps) {
     super(props);
-    this.state = { error: null };
+    this.state = { error: null, resolve: props.resolve };
   }
 
   static getDerivedStateFromError(error: any) {
     return { error };
+  }
+
+  static getDerivedStateFromProps(
+    props: AwaitErrorBoundaryProps,
+    state: AwaitErrorBoundaryState,
+  ) {
+    // A render error belongs to the previous `resolve`
+    if (props.resolve !== state.resolve) {
+      return { error: null, resolve: props.resolve };
+    }
+    return null;
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
@@ -1747,15 +1920,48 @@ class AwaitErrorBoundary extends React.Component<
       // Raw (untracked) promise - track it
       status = AwaitRenderStatus.pending;
       Object.defineProperty(resolve, "_tracked", { get: () => true });
-      promise = resolve.then(
-        (data: any) =>
-          Object.defineProperty(resolve, "_data", { get: () => data }),
-        (error: any) => {
-          // Log promise rejections
-          this.props.onError?.(error);
-          Object.defineProperty(resolve, "_error", { get: () => error });
-        },
-      );
+      let result = getPromiseResult(resolve);
+      if (result) {
+        // Read an already-settled result without another tick while preserving
+        // the existing tracked-promise contract.
+        promise = resolve;
+        if (result.status === "fulfilled") {
+          status = AwaitRenderStatus.success;
+          Object.defineProperty(resolve, "_data", {
+            get: () => result.value,
+          });
+        } else {
+          status = AwaitRenderStatus.error;
+          Object.defineProperty(resolve, "_error", {
+            get: () => result.reason,
+          });
+          // Report once when consumed, as with an ordinary untracked promise.
+          Promise.resolve(resolve).catch((reason) => {
+            try {
+              this.props.onError?.(reason);
+            } catch (error) {
+              // Reporting failures must not create an unhandled rejection.
+              console.error(
+                "<Await> caught the following error in onError",
+                error,
+              );
+            }
+          });
+        }
+      } else {
+        // Wrap in `Promise.resolve()` because React Flight's `ReactPromise`
+        // chunks pass `instanceof Promise` but return `undefined` from `.then()`.
+        // Native promises are returned as-is by `Promise.resolve()`.
+        promise = Promise.resolve(resolve).then(
+          (data: any) =>
+            Object.defineProperty(resolve, "_data", { get: () => data }),
+          (error: any) => {
+            // Log promise rejections
+            this.props.onError?.(error);
+            Object.defineProperty(resolve, "_error", { get: () => error });
+          },
+        );
+      }
     }
 
     if (status === AwaitRenderStatus.error && !errorElement) {

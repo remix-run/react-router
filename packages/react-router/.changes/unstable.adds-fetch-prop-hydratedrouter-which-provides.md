@@ -1,9 +1,0 @@
-Add a new `<HydratedRouter unstable_fetch>` prop which allows applicatons to provide a custom fetch implementation for client-side issued manifest and data requests
-
-- The function receives the intended request as well as context identifying the type of request
-- Data request context includes `navigationType` (`"PUSH"`, `"REPLACE"`, or `"POP"` for navigation-initiated requests, including reloaded fetchers; `null` otherwise). Data strategies receive the same value as `unstable_navigationType`.
-- The custom fetch context is a discriminated union, so narrowing `type` to `"navigation"` guarantees a non-null `navigationType`, while other data requests have a `null` `navigationType`. Fetchers reloaded after an initialization redirect retain the `"initialization"` type and include their fetcher key.
-- Like other router initialization options, the implementation is captured when the singleton router is created and thus subsequent prop changes are ignored
-- Browser-managed data prefetches from `<Link prefetch>` use native `<link rel="prefetch">` elements and do not call the custom implementation
-- Intended use cases include custom fetch options, custom headers, automatic retry logic, response header inspection, etc.
-- This is not intended to alter response bodies because they are turbo-stream encoded and that would beak the types expected by your component code

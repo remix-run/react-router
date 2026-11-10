@@ -611,3 +611,20 @@ Matt described how users can encounter repeated reloads when a rolling deploymen
 Matt said the custom fetch and hybrid API backend work was nearing completion. Pedro raised requests for better coordination between React Router's Vite plugin and the official React plugin, particularly around when React Refresh should run after server updates. The team planned to gauge demand for plugin hooks and review pending Cloudflare Vite plugin compatibility work.
 
 </details>
+
+<details>
+<summary>2026-10-20 Meeting Notes</summary>
+
+**Status Updates**
+
+Matt reported that v8.5.0 had shipped with three unstable features and the view transition deprecation. Mark was investigating coordination between React Router's Vite plugin and React hooks, and Matt planned to follow up on pending Cloudflare Vite plugin compatibility PRs.
+
+**RSC Application Testing and Server Actions**
+
+Brooks reported that the React Router website store was running with RSC on staging after correcting cookie-related `Vary` handling that caused duplicate prefetch requests. The group discussed simplifying the application by relying on the default RSC Framework entry files. They also reviewed a merged fix for document middleware responses being incorrectly decoded as RSC payloads. Jacob proposed a React Router configuration option to disable server actions for applications that do not use them, in the context of keeping React dependencies current with security fixes. The configuration shape and default remained open.
+
+**Await and Suspense Behavior**
+
+Matt reviewed work to use React's `use` internally in `Await`, including handling React thenables that are not native Promise instances. The group discussed retaining `Await` as a convenience API versus recommending `use` directly. A separate proposal to prime serialized promises before rendering aimed to avoid unnecessary Suspense fallbacks when applications update through external stores. Matt planned to investigate its performance cost and the affected application's use of transitions before proceeding.
+
+</details>

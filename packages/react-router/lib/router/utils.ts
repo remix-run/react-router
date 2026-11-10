@@ -283,6 +283,13 @@ interface DataFunctionArgs<Context> {
    * In Framework mode, this is a normalized URL with React-Router-specific
    * implementation details removed (`.data` suffixes, `index`/`_routes` search
    * params). For the raw incoming URL, use `request.url`.
+   *
+   * This normalization preserves standard URL pathname encoding and casing.
+   * For example, a request to `/%61dmin.data` produces a `url.pathname` of
+   * `/%61dmin`. This is not a canonical representation of the matched route.
+   * For authorization, attach {@link https://reactrouter.com/how-to/middleware#authentication server middleware}
+   * to the protected route or a common ancestor instead of relying on literal
+   * pathname-prefix comparisons.
    */
   url: URL;
   /**
@@ -570,6 +577,9 @@ export interface DataStrategyFunction<Context = DefaultContext> {
     args: DataStrategyFunctionArgs<Context>,
   ): Promise<Record<string, DataStrategyResult>>;
 }
+
+// Internal control flow for application-owned Framework discovery recovery.
+export class DiscoveryCancelledError extends Error {}
 
 export type PatchRoutesOnNavigationFunctionArgs = {
   signal: AbortSignal;

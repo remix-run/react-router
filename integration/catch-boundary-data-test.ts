@@ -53,7 +53,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
                 Links,
                 Meta,
                 Outlet,
-                Scripts,
+                ${templateName === "rsc-vite-framework" ? "" : "Scripts,"}
                 useLoaderData,
                 useMatches,
               } from "react-router";
@@ -72,7 +72,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
                     <body>
                       <div id="root-data">{loaderData}</div>
                       <Outlet />
-                      <Scripts />
+                      ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                     </body>
                   </html>
                 );
@@ -88,7 +88,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
                     <body>
                       <div id="root-boundary">${ROOT_BOUNDARY_TEXT}</div>
                       <div id="root-boundary-data">{loaderData}</div>
-                      <Scripts />
+                      ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                     </body>
                   </html>
                 );

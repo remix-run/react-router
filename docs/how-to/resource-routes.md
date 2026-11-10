@@ -6,9 +6,6 @@ title: Resource Routes
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 When server rendering, routes can serve "resources" instead of rendering components, like images, PDFs, JSON payloads, webhooks, etc.
 
 ## Defining a Resource Route

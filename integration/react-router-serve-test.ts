@@ -139,6 +139,13 @@ test.describe("react-router-serve", () => {
               "public/.well-known/security.txt":
                 "Contact: mailto:security@example.com",
               "public/.hidden.txt": "should not be served",
+              // Handle requests that fall through static serving without logging
+              // an expected unmatched-route error from the default boundary.
+              "app/routes/$.tsx": js`
+                export function loader() {
+                  return new Response("Not Found", { status: 404 });
+                }
+              `,
             },
           });
           appFixture = await createAppFixture(fixture);

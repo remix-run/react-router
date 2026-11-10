@@ -324,7 +324,7 @@ React Router makes it easy to store sessions in your own database if needed. The
 - `createData` will be called from `commitSession` on the initial session creation when no session ID exists in the cookie
 - `readData` will be called from `getSession` when a session ID exists in the cookie
 - `updateData` will be called from `commitSession` when a session ID already exists in the cookie
-- `deleteData` is called from `destroySession`
+- `deleteData` is called from `destroySession` when the session has an ID
 
 The following example shows how you could do this using a generic database client:
 
