@@ -23,6 +23,43 @@ export function injectRSCPayload(
   // invalid HTML by injecting RSC in between two partial chunks of HTML.
   let buffered: Uint8Array[] = [];
   let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Stops all pending work after the readable side closes. You can call it more than once.
+  async function stop(reason: unknown) {
+    cancelled = true;
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+    buffered.length = 0;
+    // Resolve before the cancel. If `rscStream` is a tee branch, its cancel waits for
+    // the other branch, and `flush()` must not wait.
+    resolveFlightDataPromise();
+    // `writeRSCStream` releases the reader lock when it stops. A released reader cannot
+    // cancel the stream.
+    if (rscReader && rscStream.locked) {
+      await rscReader.cancel(reason).catch(() => {});
+    } else {
+      await rscStream.cancel(reason).catch(() => {});
+    }
+  }
+
+  // Returns `false` if the readable side is closed. If the readable side is cancelled
+  // while `flush()` runs, the transformer's `cancel()` does not run. A failed enqueue is
+  // then the only signal, so the RSC stream stays open until the next enqueue.
+  function tryEnqueue(
+    controller: TransformStreamDefaultController<Uint8Array>,
+    chunk: Uint8Array,
+  ) {
+    try {
+      controller.enqueue(chunk);
+      return true;
+    } catch (error) {
+      void stop(error);
+      return false;
+    }
+  }
+
   function flushBufferedChunks(
     controller: TransformStreamDefaultController<Uint8Array>,
   ) {
@@ -31,7 +68,9 @@ export function injectRSCPayload(
       if (buf.endsWith(trailer)) {
         buf = buf.slice(0, -trailer.length);
       }
-      controller.enqueue(encoder.encode(buf));
+      if (!tryEnqueue(controller, encoder.encode(buf))) {
+        return;
+      }
     }
 
     buffered.length = 0;
@@ -69,21 +108,10 @@ export function injectRSCPayload(
         clearTimeout(timeout);
         flushBufferedChunks(controller);
       }
-      controller.enqueue(encoder.encode("</body></html>"));
+      tryEnqueue(controller, encoder.encode("</body></html>"));
     },
     async cancel(reason) {
-      cancelled = true;
-      if (timeout) {
-        clearTimeout(timeout);
-        timeout = null;
-      }
-      buffered.length = 0;
-      if (rscReader) {
-        await rscReader.cancel(reason).catch(() => {});
-      } else {
-        await rscStream.cancel(reason).catch(() => {});
-      }
-      resolveFlightDataPromise();
+      await stop(reason);
     },
   };
   return new TransformStream(transformer);

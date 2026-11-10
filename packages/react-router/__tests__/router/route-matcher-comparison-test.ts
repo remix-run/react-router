@@ -26,6 +26,22 @@ function summarizeMatches(
 }
 
 describe("V6 regex and route-pattern matcher comparison", () => {
+  it("refreshes the regex match cost when replacing routes", () => {
+    let matcher = new V6RegExMatcher("/");
+    matcher.update([
+      {
+        id: "root",
+        path: "/",
+        children: [{ id: "layout", children: [{ id: "leaf", path: "leaf" }] }],
+      },
+    ]);
+    expect(matcher.matchCost).toBe(4);
+
+    matcher.update([{ id: "replacement", path: "/" }]);
+    expect(matcher.matchCost).toBe(1);
+    expect(matcher.match("/leaf")).toBeNull();
+  });
+
   describe("shared behavior", () => {
     function assertSameBehavior(
       routes: DataRouteObject[],

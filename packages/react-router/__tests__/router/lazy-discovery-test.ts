@@ -1027,6 +1027,56 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("exposes discovered matches in state during initial hydration", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let childLoaderDfd = createDeferred();
+
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/parent/child"] }),
+      routes: [
+        {
+          id: "parent",
+          path: "parent",
+        },
+      ],
+      async patchRoutesOnNavigation({ patch }) {
+        let children = await childrenDfd.promise;
+        patch("parent", children);
+      },
+    });
+    router.initialize();
+
+    expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
+
+    childrenDfd.resolve([
+      {
+        id: "child",
+        path: "child",
+        loader: () => childLoaderDfd.promise,
+      },
+    ]);
+    await tick();
+    // The discovered route is surfaced while its loader is still pending so
+    // the UI can render down to its `HydrateFallback`
+    expect(router.state.initialized).toBe(false);
+    expect(router.state.navigation).toBe(IDLE_NAVIGATION);
+    expect(router.state.loaderData).toEqual({});
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent",
+      "child",
+    ]);
+
+    childLoaderDfd.resolve("CHILD");
+    await tick();
+    expect(router.state.initialized).toBe(true);
+    expect(router.state.loaderData).toEqual({ child: "CHILD" });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent",
+      "child",
+    ]);
+  });
+
   it("discovers routes during initial SPA renders when a splat route matches", async () => {
     let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
 

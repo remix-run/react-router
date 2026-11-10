@@ -238,19 +238,9 @@ async function projectNameStep(ctx: Context) {
       initial: "./my-react-router-app",
     });
     ctx.cwd = name!;
-    ctx.projectName = toValidProjectName(name!);
-    return;
   }
 
-  let name = ctx.cwd;
-  if (name === "." || name === "./") {
-    let parts = process.cwd().split(path.sep);
-    name = parts[parts.length - 1];
-  } else if (name.startsWith("./") || name.startsWith("../")) {
-    let parts = name.split("/");
-    name = parts[parts.length - 1];
-  }
-  ctx.projectName = toValidProjectName(name);
+  ctx.projectName = toValidProjectName(path.basename(path.resolve(ctx.cwd)));
 }
 
 async function copyTemplateToTempDirStep(ctx: Context) {
@@ -533,11 +523,22 @@ async function gitInitStep(ctx: Context) {
       let commitMsg = "Initial commit from create-react-router";
       try {
         await runCommand("git", ["init"], options);
-        await runCommand("git", ["add", "."], options);
-        await runCommand("git", ["commit", "-m", commitMsg], options);
       } catch (err) {
         error("Oh no!", "Failed to initialize git.");
         throw err;
+      }
+
+      try {
+        await runCommand("git", ["add", "."], options);
+        await runCommand("git", ["commit", "-m", commitMsg], options);
+      } catch (err) {
+        error(
+          "Git initialized, but the initial add/commit failed.",
+          "Ensure Git user.name and user.email are configured, then create the commit manually.",
+        );
+        if (ctx.debug) {
+          console.error(err);
+        }
       }
     },
     ctx,
@@ -630,14 +631,58 @@ async function installDependencies({
   }
 }
 
+const WINDOWS_CMD_SHIMS = new Set([
+  "npm",
+  "npx",
+  "pnpm",
+  "pnpx",
+  "yarn",
+  "yarnpkg",
+]);
+
+const WINDOWS_EXE_SHIMS = new Set(["bun", "bunx"]);
+
+function resolveWindowsCommand(
+  command: string,
+  args: string[],
+): [string, string[]] {
+  // Don't modify explicit paths or commands that already have an extension.
+  if (
+    command.includes("/") ||
+    command.includes("\\") ||
+    command.includes(".")
+  ) {
+    return [command, args];
+  }
+
+  const normalizedCommand = command.toLowerCase();
+
+  if (WINDOWS_CMD_SHIMS.has(normalizedCommand)) {
+    return ["cmd.exe", ["/d", "/s", "/c", command, ...args]];
+  }
+
+  if (WINDOWS_EXE_SHIMS.has(normalizedCommand)) {
+    return [`${command}.exe`, args];
+  }
+
+  return [command, args];
+}
+
 function runCommand(
   command: string,
   args: string[],
   options: { cwd: string; stdio: StdioOptions },
 ) {
   return new Promise<void>((resolve, reject) => {
-    let child = spawn(command, args, options);
+    const [resolvedCommand, resolvedArgs] =
+      process.platform === "win32"
+        ? resolveWindowsCommand(command, args)
+        : [command, args];
+
+    const child = spawn(resolvedCommand, resolvedArgs, options);
+
     child.on("error", reject);
+
     child.on("exit", (code, signal) => {
       if (code === 0) {
         resolve();
