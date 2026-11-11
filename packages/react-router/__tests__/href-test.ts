@@ -42,6 +42,15 @@ describe("href", () => {
     expect(href("/a/:b.zip", { b: "hello" })).toBe("/a/hello.zip");
   });
 
+  it("keeps the slash of an omitted optional param followed by static text", () => {
+    expect(href("/sitemap/:lang?.xml", { lang: "en" })).toBe("/sitemap/en.xml");
+    expect(href("/sitemap/:lang?.xml")).toBe("/sitemap/.xml");
+    expect(href("/:lang?.xml")).toBe("/.xml");
+    // the generated path matches its own pattern
+    let match = matchPath("/sitemap/:lang?.xml", href("/sitemap/:lang?.xml"));
+    expect(match?.params).toStrictEqual({ lang: undefined });
+  });
+
   it("encodes param values that contain a /", () => {
     expect(href("/products/:id", { id: "shoes/2026-summer" })).toBe(
       "/products/shoes%2F2026-summer",

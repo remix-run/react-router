@@ -51,7 +51,13 @@ export function href<Path extends keyof Args>(
   let result = trimTrailingSplat(path) // Ignore trailing / and /*, we'll handle it below
     .replace(
       /\/:([\w-]+)(\?)?/g, // same regex as in .\router\utils.ts: compilePath().
-      (_: string, param: string, questionMark: string | undefined) => {
+      (
+        match: string,
+        param: string,
+        questionMark: string | undefined,
+        index: number,
+        str: string,
+      ) => {
         const isRequired = questionMark === undefined;
         const value = params?.[param];
         if (isRequired && value === undefined) {
@@ -59,7 +65,13 @@ export function href<Path extends keyof Args>(
             `Path '${path}' requires param '${param}' but it was not provided`,
           );
         }
-        return value == null ? "" : "/" + encodePathParam(stringify(value));
+        if (value == null) {
+          // Like compilePath(), keep the `/` of an omitted optional param that
+          // is followed by static text in the same segment (`/:lang?.xml`)
+          const nextChar = str.charAt(index + match.length);
+          return !isRequired && nextChar && nextChar !== "/" ? "/" : "";
+        }
+        return "/" + encodePathParam(stringify(value));
       },
     );
 
