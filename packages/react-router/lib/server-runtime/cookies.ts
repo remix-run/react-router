@@ -124,6 +124,7 @@ export const createCookie = (
         value === "" ? "" : await encodeCookieValue(value, secrets),
         {
           ...options,
+          ...(serializeOptions?.expires && { maxAge: undefined }),
           ...serializeOptions,
         },
       );
