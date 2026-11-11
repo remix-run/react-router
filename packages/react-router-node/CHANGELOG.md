@@ -1,5 +1,13 @@
 # `@react-router/node`
 
+## v7.18.6
+
+### Patch Changes
+
+- Improve error handling in `createRequestListener` ([#15744](https://github.com/remix-run/react-router/pull/15744))
+- Updated dependencies:
+  - [`react-router@7.18.6`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.6)
+
 ## v7.18.5
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # `react-router`
 
+## v7.18.6
+
+### Patch Changes
+
+- Fix hydration of streamed `Suspense` boundaries in development with `v8_viteEnvironmentApi` by clearing critical CSS in a transition, preserving server-rendered content while lazy client code loads ([#15747](https://github.com/remix-run/react-router/pull/15747))
+- Preserve route parameters ending in `.data` in single fetch loader and action requests when `future.v8_passThroughRequests` is disabled. ([#15734](https://github.com/remix-run/react-router/pull/15734))
+
 ## v7.18.5
 
 ### Patch Changes

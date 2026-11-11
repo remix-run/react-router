@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.18.6](#v7186)
   - [v7.18.5](#v7185)
   - [v7.18.4](#v7184)
   - [v7.18.3](#v7183)
@@ -183,6 +184,19 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.18.6
+
+Date: 2026-11-11
+
+### Patch Changes
+
+- `react-router` - Fix hydration of streamed `Suspense` boundaries in development with `v8_viteEnvironmentApi` by clearing critical CSS in a transition, preserving server-rendered content while lazy client code loads ([#15747](https://github.com/remix-run/react-router/pull/15747))
+- `react-router` - Preserve route parameters ending in `.data` in single fetch loader and action requests when `future.v8_passThroughRequests` is disabled. ([#15734](https://github.com/remix-run/react-router/pull/15734))
+- `@react-router/node` - Improve error handling in `createRequestListener` ([#15744](https://github.com/remix-run/react-router/pull/15744))
+- `@react-router/serve` - Improve request-listener error handling when serving RSC applications ([#15744](https://github.com/remix-run/react-router/pull/15744))
+
+**Full Changelog**: [`v7.18.5...v7.18.6`](https://github.com/remix-run/react-router/compare/react-router@7.18.5...react-router@7.18.6)
 
 ## v7.18.5
 
