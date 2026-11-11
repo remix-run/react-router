@@ -1902,6 +1902,15 @@ let blockerId = 0;
  * }
  * ```
  *
+ * Each navigation request snapshots the registered hooks in registration order.
+ * Each registration is checked once, using its latest predicate when its turn
+ * arrives. New registrations and previously checked clean hooks wait for the
+ * next request. `proceed()` approves this hook; if another hook blocks, this hook
+ * returns to `unblocked`. Only the final approving hook becomes `proceeding`.
+ * The selected hook's `reset()` or unmount cancels the attempt. Removing another
+ * hook leaves the selected confirmation alone. See
+ * [multiple navigation blockers](../../how-to/multiple-navigation-blockers).
+ *
  * @public
  * @category Hooks
  * @mode framework
@@ -1913,7 +1922,11 @@ let blockerId = 0;
  * @returns A {@link Blocker} object with state and reset functionality
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
-  let { router, basename } = useDataRouterContext("useBlocker");
+  let {
+    router,
+    basename,
+    static: isStatic,
+  } = useDataRouterContext("useBlocker");
   let state = useDataRouterState("useBlocker");
 
   let [blockerKey, setBlockerKey] = React.useState("");
@@ -1949,31 +1962,34 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     [basename, shouldBlock],
   );
 
-  // The key owned by the currently mounted effect below.  `blockerKey` state
-  // survives the effect being torn down and set up again (i.e., `<Activity>`
-  // hiding and showing the component, or a new `router`), so it can briefly
-  // point at a key that has already been deleted.
-  let activeBlockerKey = React.useRef("");
+  // Effect cleanup/reconnection preserves state but creates a new registration.
+  let ownedBlocker = React.useRef<
+    { router: DataRouter; key: string } | undefined
+  >(undefined);
 
   // This effect is in charge of blocker key assignment and deletion (which is
   // tightly coupled to the key)
   React.useEffect(() => {
     let key = String(++blockerId);
-    activeBlockerKey.current = key;
+    ownedBlocker.current = { router, key };
     setBlockerKey(key);
     return () => {
-      activeBlockerKey.current = "";
+      ownedBlocker.current = undefined;
       router.deleteBlocker(key);
     };
   }, [router]);
 
-  // This effect handles assigning the blockerFunction.  This is to handle
-  // unstable blocker function identities, and happens only after the prior
-  // effect so we don't get an orphaned blockerFunction in the router with a
-  // key of "".  Until then we just have the IDLE_BLOCKER.  It also skips a
-  // stale `blockerKey` so a deleted key is never registered again.
-  React.useEffect(() => {
-    if (blockerKey !== "" && blockerKey === activeBlockerKey.current) {
+  // Publish the committed predicate before destination passive effects can
+  // navigate. Wait for a key owned by this effect lifetime before registering.
+  // Static routers never register blockers and do not need a layout effect.
+  let useRegistrationEffect = isStatic
+    ? React.useEffect
+    : React.useLayoutEffect;
+  useRegistrationEffect(() => {
+    if (
+      ownedBlocker.current?.router === router &&
+      blockerKey === ownedBlocker.current.key
+    ) {
       router.getBlocker(blockerKey, blockerFunction);
     }
   }, [router, blockerKey, blockerFunction]);
