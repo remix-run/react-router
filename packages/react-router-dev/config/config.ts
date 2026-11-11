@@ -171,12 +171,45 @@ export type ReactRouterConfig = {
    * Setting it to a value higher than one can increase the speed of the build,
    * but may consume more resources, and send more concurrent requests to the
    * server/CMS.
+   *
+   * `timeout` defaults to 10,000 ms (10 seconds). Sets the request timeout in milliseconds.
+   *
+   * `retryCount` defaults to 0. Sets the number of times to retry failed requests (5xx errors and timeouts).
+   *
+   * `retryDelay` defaults to 500 ms. Sets the delay in milliseconds between retry attempts.
+   *
+   * `maxRedirects` defaults to 0. Sets the maximum number of redirects to follow.
    */
   prerender?:
     | PrerenderPaths
     | {
         paths: PrerenderPaths;
+        /**
+         * Number of concurrent requests to prerender.
+         * @default 1
+         */
         concurrency?: number;
+        /**
+         * Number of times to retry failed requests (5xx errors and timeouts).
+         * Does not retry 4xx client errors.
+         * @default 0
+         */
+        retryCount?: number;
+        /**
+         * Delay in milliseconds between retry attempts.
+         * @default 500
+         */
+        retryDelay?: number;
+        /**
+         * Maximum number of redirects to follow.
+         * @default 0
+         */
+        maxRedirects?: number;
+        /**
+         * Request timeout in milliseconds.
+         * @default 10000
+         */
+        timeout?: number;
       };
   /**
    * An array of React Router plugin config presets to ease integration with
@@ -470,6 +503,95 @@ function err<T>(error: string): Result<T> {
   return { ok: false, error };
 }
 
+export function validatePrerenderConfig(
+  prerender: unknown,
+): string | undefined {
+  let isValidPrerenderPathsConfig = (p: unknown) =>
+    typeof p === "boolean" || typeof p === "function" || Array.isArray(p);
+
+  let isValidPrerenderConfig =
+    isValidPrerenderPathsConfig(prerender) ||
+    (typeof prerender === "object" &&
+      prerender !== null &&
+      "paths" in prerender &&
+      isValidPrerenderPathsConfig(prerender.paths));
+
+  if (!isValidPrerenderConfig) {
+    return (
+      "The `prerender`/`prerender.paths` config must be a boolean, an array " +
+      "of string paths, or a function returning a boolean or array of string paths."
+    );
+  }
+
+  if (typeof prerender === "object" && prerender !== null) {
+    let obj = prerender as Record<string, unknown>;
+
+    if ("unstable_concurrency" in obj) {
+      return "The `prerender.unstable_concurrency` config field has been stabilized as `prerender.concurrency`";
+    }
+
+    if (
+      "concurrency" in obj &&
+      obj.concurrency !== undefined &&
+      !(
+        typeof obj.concurrency === "number" &&
+        Number.isInteger(obj.concurrency) &&
+        obj.concurrency > 0
+      )
+    ) {
+      return "The `prerender.concurrency` config must be a positive integer if specified.";
+    }
+
+    if (
+      "timeout" in obj &&
+      obj.timeout !== undefined &&
+      !(
+        typeof obj.timeout === "number" &&
+        Number.isInteger(obj.timeout) &&
+        obj.timeout >= 0
+      )
+    ) {
+      return "The `prerender.timeout` config must be a non-negative integer if specified.";
+    }
+
+    if (
+      "retryCount" in obj &&
+      obj.retryCount !== undefined &&
+      !(
+        typeof obj.retryCount === "number" &&
+        Number.isInteger(obj.retryCount) &&
+        obj.retryCount >= 0
+      )
+    ) {
+      return "The `prerender.retryCount` config must be a non-negative integer if specified.";
+    }
+
+    if (
+      "retryDelay" in obj &&
+      obj.retryDelay !== undefined &&
+      !(
+        typeof obj.retryDelay === "number" &&
+        Number.isInteger(obj.retryDelay) &&
+        obj.retryDelay >= 0
+      )
+    ) {
+      return "The `prerender.retryDelay` config must be a non-negative integer if specified.";
+    }
+
+    if (
+      "maxRedirects" in obj &&
+      obj.maxRedirects !== undefined &&
+      !(
+        typeof obj.maxRedirects === "number" &&
+        Number.isInteger(obj.maxRedirects) &&
+        obj.maxRedirects >= 0
+      )
+    ) {
+      return "The `prerender.maxRedirects` config must be a non-negative integer if specified.";
+    }
+  }
+}
+
 async function resolveConfig({
   root,
   viteRunnerContext,
@@ -597,39 +719,9 @@ async function resolveConfig({
   }
 
   if (prerender) {
-    let isValidPrerenderPathsConfig = (p: unknown) =>
-      typeof p === "boolean" || typeof p === "function" || Array.isArray(p);
-
-    let isValidPrerenderConfig =
-      isValidPrerenderPathsConfig(prerender) ||
-      (typeof prerender === "object" &&
-        "paths" in prerender &&
-        isValidPrerenderPathsConfig(prerender.paths));
-
-    if (!isValidPrerenderConfig) {
-      return err(
-        "The `prerender`/`prerender.paths` config must be a boolean, an array " +
-          "of string paths, or a function returning a boolean or array of string paths.",
-      );
-    }
-
-    if (typeof prerender === "object" && "unstable_concurrency" in prerender) {
-      return err(
-        "The `prerender.unstable_concurrency` config field has been stabilized as `prerender.concurrency`",
-      );
-    }
-
-    let isValidConcurrencyConfig =
-      typeof prerender != "object" ||
-      !("concurrency" in prerender) ||
-      (typeof prerender.concurrency === "number" &&
-        Number.isInteger(prerender.concurrency) &&
-        prerender.concurrency > 0);
-
-    if (!isValidConcurrencyConfig) {
-      return err(
-        "The `prerender.concurrency` config must be a positive integer if specified.",
-      );
+    let error = validatePrerenderConfig(prerender);
+    if (error) {
+      return err(error);
     }
   }
 

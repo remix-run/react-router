@@ -35,7 +35,7 @@ import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 import { prerender } from "../plugins/prerender";
-import { getPrerenderPaths } from "../plugin";
+import { getPrerenderConfig, getPrerenderPaths } from "../plugin";
 
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 
@@ -731,9 +731,7 @@ export default assetsManifest.clientVersion;
     warnOnClientSourceMaps(),
     prerender({
       config() {
-        return {
-          concurrency: getPrerenderConcurrencyConfig(config),
-        };
+        return getPrerenderConfig(config);
       },
       logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
       cleanup: () => configLoader.close(),
@@ -969,14 +967,3 @@ function createRSCOptimizeDepsRouteModulesPlugin({
 
 const getClientBuildDirectory = (viteConfig: Vite.ResolvedConfig) =>
   path.resolve(viteConfig.root, viteConfig.environments.client.build.outDir);
-
-function getPrerenderConcurrencyConfig(
-  reactRouterConfig: ResolvedReactRouterConfig,
-): number {
-  let concurrency = 1;
-  let { prerender } = reactRouterConfig;
-  if (typeof prerender === "object" && "concurrency" in prerender) {
-    concurrency = prerender.concurrency ?? 1;
-  }
-  return concurrency;
-}

@@ -508,7 +508,9 @@ async function nodeHttpFetch(
             status === 304 ||
             (status >= 100 && status < 200)
           );
-          resolve(new Response(hasBody ? responseBody : null, init));
+          const response = new Response(hasBody ? responseBody : null, init);
+          Object.defineProperty(response, "url", { value: request.url });
+          resolve(response);
         });
         res.on("error", reject);
       },

@@ -79,6 +79,31 @@ export default {
 } satisfies Config;
 ```
 
+### Request Options
+
+You can configure request timeouts, retries, and redirect behavior when prerendering:
+
+- `concurrency`: Number of concurrent requests to prerender (default: `1`).
+- `timeout`: Request timeout in milliseconds (default: `10000`).
+- `retryCount`: Number of times to retry failed requests on 5xx errors or timeouts (default: `0`).
+- `retryDelay`: Delay in milliseconds between retry attempts (default: `500`).
+- `maxRedirects`: Maximum number of internal redirects to follow (default: `0`).
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  prerender: {
+    paths: ["/", "/about"],
+    concurrency: 1,
+    timeout: 60_000,
+    retryCount: 2,
+    retryDelay: 1000,
+    maxRedirects: 5,
+  },
+} satisfies Config;
+```
+
 ## Pre-Rendering with/without a Runtime Server
 
 Pre-Rendering can be used with these `ssr` config values:

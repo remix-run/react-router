@@ -3,6 +3,8 @@ import type { AddressInfo } from "node:net";
 import type * as Vite from "vite";
 
 import { getResolvedUrl, prerender } from "../vite/plugins/prerender";
+import { getPrerenderConfig } from "../vite/plugin";
+import type { ResolvedReactRouterConfig } from "../config/config";
 
 const preview = jest.fn() as jest.MockedFunction<typeof Vite.preview>;
 (jest as any).unstable_mockModule("vite", () => ({ preview }));
@@ -148,4 +150,164 @@ describe("prerender HTTP requests", () => {
       ]);
     },
   );
+
+  async function drivePlugin(plugin: ReturnType<typeof prerender>) {
+    let configResolved = plugin.configResolved!;
+    await (
+      typeof configResolved === "function"
+        ? configResolved
+        : configResolved.handler
+    ).call(
+      {} as Vite.MinimalPluginContextWithoutEnvironment,
+      {
+        configFile: undefined,
+        root: ".",
+        environments: { client: { build: { outDir: "." } } },
+      } as unknown as Vite.ResolvedConfig,
+    );
+    let buildAppHook = plugin.buildApp!;
+    await (
+      typeof buildAppHook === "function" ? buildAppHook : buildAppHook.handler
+    ).call(
+      {} as Vite.MinimalPluginContextWithoutEnvironment,
+      {} as Vite.ViteBuilder,
+    );
+  }
+
+  test("retries failed 5xx requests according to retryCount and retryDelay", async () => {
+    let attempts = 0;
+    server = http.createServer((request, response) => {
+      attempts++;
+      if (attempts < 3) {
+        response.statusCode = 500;
+        response.end("Server Error");
+      } else {
+        response.statusCode = 200;
+        response.end("Success after retries");
+      }
+    });
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(0, "127.0.0.1", resolve);
+    });
+    let { port } = server.address() as AddressInfo;
+
+    preview.mockResolvedValue({
+      httpServer: server,
+      resolvedUrls: { local: [`http://127.0.0.1:${port}/`], network: [] },
+      close: closeServer,
+    } as unknown as Vite.PreviewServer);
+
+    let reactRouterConfig = {
+      prerender: {
+        paths: ["/retry-test"],
+        retryCount: 2,
+        retryDelay: 10,
+      },
+    } as unknown as ResolvedReactRouterConfig;
+
+    let responseBody = "";
+    let plugin = prerender({
+      config: () => getPrerenderConfig(reactRouterConfig),
+      requests: ["http://localhost/retry-test"],
+      async postProcess(request, response) {
+        responseBody = await response.text();
+        return [];
+      },
+    });
+
+    await drivePlugin(plugin);
+
+    expect(attempts).toBe(3);
+    expect(responseBody).toBe("Success after retries");
+  });
+
+  test("times out slow requests when timeout option is configured", async () => {
+    server = http.createServer((request, response) => {
+      // Delay response longer than the timeout
+      setTimeout(() => {
+        response.end("Too slow");
+      }, 100);
+    });
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(0, "127.0.0.1", resolve);
+    });
+    let { port } = server.address() as AddressInfo;
+
+    preview.mockResolvedValue({
+      httpServer: server,
+      resolvedUrls: { local: [`http://127.0.0.1:${port}/`], network: [] },
+      close: closeServer,
+    } as unknown as Vite.PreviewServer);
+
+    let reactRouterConfig = {
+      prerender: {
+        paths: ["/timeout-test"],
+        timeout: 20,
+        retryCount: 0,
+      },
+    } as unknown as ResolvedReactRouterConfig;
+
+    let errorHandled: Error | undefined;
+    let plugin = prerender({
+      config: () => getPrerenderConfig(reactRouterConfig),
+      requests: ["http://localhost/timeout-test"],
+      handleError(request, error) {
+        errorHandled = error;
+      },
+    });
+
+    await drivePlugin(plugin);
+
+    expect(errorHandled).toBeDefined();
+    expect(errorHandled?.message).toMatch(/timed out|timeout|aborted/i);
+  });
+
+  test("follows internal redirects up to maxRedirects option", async () => {
+    let requestedUrls: string[] = [];
+    server = http.createServer((request, response) => {
+      requestedUrls.push(request.url!);
+      if (request.url === "/initial") {
+        response.writeHead(302, { Location: "/redirected" });
+        response.end();
+      } else {
+        response.writeHead(200);
+        response.end("Redirect destination");
+      }
+    });
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(0, "127.0.0.1", resolve);
+    });
+    let { port } = server.address() as AddressInfo;
+
+    preview.mockResolvedValue({
+      httpServer: server,
+      resolvedUrls: { local: [`http://127.0.0.1:${port}/`], network: [] },
+      close: closeServer,
+    } as unknown as Vite.PreviewServer);
+
+    let reactRouterConfig = {
+      prerender: {
+        paths: ["/initial"],
+        maxRedirects: 1,
+      },
+    } as unknown as ResolvedReactRouterConfig;
+
+    let finalResponse = "";
+    let plugin = prerender({
+      config: () => getPrerenderConfig(reactRouterConfig),
+      requests: ["http://localhost/initial"],
+      async postProcess(request, response) {
+        finalResponse = await response.text();
+        return [];
+      },
+    });
+
+    await drivePlugin(plugin);
+
+    expect(requestedUrls).toEqual(["/initial", "/redirected"]);
+    expect(finalResponse).toBe("Redirect destination");
+  });
 });

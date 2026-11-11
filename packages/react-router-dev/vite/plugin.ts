@@ -95,7 +95,7 @@ import { decorateComponentExportsWithProps } from "./with-props";
 import { loadDotenv } from "./load-dotenv";
 import { validatePluginOrder } from "./plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
-import type { PrerenderRequest } from "./plugins/prerender";
+import type { PrerenderConfig, PrerenderRequest } from "./plugins/prerender";
 import { prerender } from "./plugins/prerender";
 
 export type LoadCssContents = (
@@ -2580,9 +2580,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     prerender({
       config() {
         process.env.IS_RR_BUILD_REQUEST = "yes";
-        return {
-          concurrency: getPrerenderConcurrencyConfig(ctx.reactRouterConfig),
-        };
+        return getPrerenderConfig(ctx.reactRouterConfig);
       },
       async requests() {
         invariant(viteConfig);
@@ -3930,15 +3928,31 @@ function assertPrerenderPathsMatchRoutes(
   }
 }
 
-function getPrerenderConcurrencyConfig(
+export function getPrerenderConfig(
   reactRouterConfig: ResolvedReactRouterConfig,
-): number {
-  let concurrency = 1;
+): PrerenderConfig {
   let { prerender } = reactRouterConfig;
-  if (typeof prerender === "object" && "concurrency" in prerender) {
-    concurrency = prerender.concurrency ?? 1;
+  if (
+    typeof prerender === "object" &&
+    prerender !== null &&
+    !Array.isArray(prerender)
+  ) {
+    let {
+      concurrency = 1,
+      timeout,
+      retryCount,
+      retryDelay,
+      maxRedirects,
+    } = prerender;
+    return {
+      concurrency,
+      ...(timeout !== undefined ? { timeout } : {}),
+      ...(retryCount !== undefined ? { retryCount } : {}),
+      ...(retryDelay !== undefined ? { retryDelay } : {}),
+      ...(maxRedirects !== undefined ? { maxRedirects } : {}),
+    };
   }
-  return concurrency;
+  return { concurrency: 1 };
 }
 
 function createDataRequest(
