@@ -3,6 +3,8 @@ name: Feature Request
 on:
   pull_request_target:
     types: [labeled]
+  issues:
+    types: [labeled]
 
 permissions: {}
 
@@ -11,6 +13,7 @@ jobs:
     name: Close Feature Request
     if: >
       github.repository == 'remix-run/react-router' &&
+      github.event_name == 'pull_request_target' &&
       github.event.label.name == 'feature-request'
     runs-on: ubuntu-latest
     permissions:
@@ -36,3 +39,46 @@ jobs:
 
             If you have any questions, you can always reach out on [Discord](https://remix.run/discord). Thanks again for providing feedback and helping us make React Router even better!
         run: gh pr close "$PR_NUMBER" --repo remix-run/react-router --comment "$COMMENT_BODY"
+
+  propose-feature-request:
+    name: Create Feature Proposal
+    if: >
+      github.repository == 'remix-run/react-router' &&
+      github.event_name == 'issues' &&
+      github.event.label.name == 'feature-request'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      discussions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+
+    # Keep issue content as data: do not checkout repository code or
+    # interpolate issue titles/bodies into shell commands.
+    steps:
+      - name: Create Proposal
+        id: proposal
+        shell: bash
+        run: |
+          title=$(jq -r '.issue.title' "$GITHUB_EVENT_PATH")
+          jq -r '"_Originally opened by @" + .issue.user.login + " in " + .issue.html_url + "._\n\n" + (.issue.body // "")' \
+            "$GITHUB_EVENT_PATH" > "$RUNNER_TEMP/proposal.md"
+          discussion_url=$(gh discussion create --repo remix-run/react-router \
+            --category proposals --title "$title" --body-file "$RUNNER_TEMP/proposal.md")
+
+          echo "url=$discussion_url" >> "$GITHUB_OUTPUT"
+
+      - name: Comment and close issue
+        env:
+          COMMENT_BODY: |
+            To align with our [Open Governance](https://remix.run/blog/rr-governance) model, all new features go through the [Proposal/RFC process](https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#new-feature-process).
+
+            We've created a [Proposal discussion](${{ steps.proposal.outputs.url }}) from this issue so we can evaluate and discuss the feature there. The Proposal links back to this issue, where the existing comments remain available.
+
+            We're closing this issue so the conversation can continue in the Proposal. Please wait until the proposal has been accepted and advanced to Stage 1 before opening an implementation PR.
+
+            If you have any questions, you can always reach out on [Discord](https://remix.run/discord). Thanks again for providing feedback and helping us make React Router even better!
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo remix-run/react-router --body "$COMMENT_BODY"
+          gh issue close "$ISSUE_NUMBER" --repo remix-run/react-router --reason "not planned"
