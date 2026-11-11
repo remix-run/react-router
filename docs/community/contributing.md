@@ -76,9 +76,9 @@ major.require-node-24.md
 unstable.update-unstable-api.md
 ```
 
-## Code of Conduct/Contributor License Agreement
+## License
 
-All contributors must review the [review the CLA](https://github.com/remix-run/react-router/blob/main/CLA.md) and sign it by [adding their github username to `contributors.yml`](https://github.com/remix-run/react-router/blob/main/contributors.yml).
+By contributing to React Router, you agree that your contributions will be licensed under the [MIT License](https://github.com/remix-run/react-router/blob/main/LICENSE.md).
 
 ### Docs + Examples
 

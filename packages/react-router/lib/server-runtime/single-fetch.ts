@@ -49,10 +49,7 @@ export async function singleFetchAction(
           ? build.allowedActionOrigins
           : [],
       );
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {
+    } catch {
       return handleQueryError(new Error("Bad Request"), 400);
     }
 

@@ -203,6 +203,9 @@ Can be a string or a partial [`Path`](https://api.reactrouter.com/v8/interfaces/
 
 [modes: framework, data]
 
+**Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+component instead. See the [migration guide](../../how-to/view-transitions).
+
 Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
 for this navigation.
 

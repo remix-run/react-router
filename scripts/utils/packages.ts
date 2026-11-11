@@ -161,29 +161,3 @@ export function getPackageDependencies(packageName: string): string[] {
   let info = getPackageInfoMap().get(packageName);
   return info?.dependencies ?? [];
 }
-
-/**
- * Builds a reverse dependency graph: maps each package to the set of packages
- * that depend on it.
- */
-export function buildReverseDependencyGraph(): Map<string, Set<string>> {
-  let graph = new Map<string, Set<string>>();
-  let packageInfoMap = getPackageInfoMap();
-
-  // Initialize empty sets for all packages
-  for (let packageName of packageInfoMap.keys()) {
-    graph.set(packageName, new Set());
-  }
-
-  // Build reverse edges
-  for (let [packageName, info] of packageInfoMap) {
-    for (let dep of info.dependencies) {
-      let dependents = graph.get(dep);
-      if (dependents) {
-        dependents.add(packageName);
-      }
-    }
-  }
-
-  return graph;
-}

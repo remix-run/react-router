@@ -45,7 +45,7 @@ ${colors.blueBright("react-router")}
     --json              Print the routes as JSON
   \`reveal\` Options:
     --config, -c        Use specified Vite config file (string)
-    --no-typescript     Generate plain JavaScript files
+    --no-typescript     Generate plain JavaScript files (deprecated; will be removed in v9)
   \`typegen\` Options:
     --watch             Automatically regenerate types whenever route config (\`routes.ts\`) or route modules change
 
@@ -198,6 +198,11 @@ export async function run(
 
   flags.interactive = flags.interactive ?? isMain;
   if (values["no-typescript"]) {
+    console.warn(
+      colors.yellow(
+        "The --no-typescript flag is deprecated and will be removed in React Router v9.",
+      ),
+    );
     flags.typescript = false;
   }
 

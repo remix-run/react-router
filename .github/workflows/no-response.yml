@@ -2,8 +2,8 @@ name: No Response
 
 on:
   schedule:
-    # Schedule for five minutes after the hour, every hour
-    - cron: "5 * * * *"
+    - cron: "0 8 * * 1-5" # 8am ET Monday-Friday
+      timezone: "America/New_York"
 
 permissions:
   issues: write

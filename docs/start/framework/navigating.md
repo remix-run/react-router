@@ -44,10 +44,6 @@ a.active {
 a.pending {
   animate: pulse 1s infinite;
 }
-
-a.transitioning {
-  /* css transition is running */
-}
 ```
 
 It also has callback props on `className`, `style`, and `children` with the states for inline styling or conditional rendering:
@@ -56,11 +52,10 @@ It also has callback props on `className`, `style`, and `children` with the stat
 // className
 <NavLink
   to="/messages"
-  className={({ isActive, isPending, isTransitioning }) =>
+  className={({ isActive, isPending }) =>
     [
       isPending ? "pending" : "",
       isActive ? "active" : "",
-      isTransitioning ? "transitioning" : "",
     ].join(" ")
   }
 >
@@ -72,11 +67,10 @@ It also has callback props on `className`, `style`, and `children` with the stat
 // style
 <NavLink
   to="/messages"
-  style={({ isActive, isPending, isTransitioning }) => {
+  style={({ isActive, isPending }) => {
     return {
       fontWeight: isActive ? "bold" : "",
       color: isPending ? "red" : "black",
-      viewTransitionName: isTransitioning ? "slide" : "",
     };
   }}
 >
@@ -87,11 +81,13 @@ It also has callback props on `className`, `style`, and `children` with the stat
 ```tsx
 // children
 <NavLink to="/tasks">
-  {({ isActive, isPending, isTransitioning }) => (
+  {({ isActive }) => (
     <span className={isActive ? "active" : ""}>Tasks</span>
   )}
 </NavLink>
 ```
+
+For animated navigations, see [View Transitions](../../how-to/view-transitions). The legacy `isTransitioning` render prop and `transitioning` class are deprecated in favor of React's `<ViewTransition>` component.
 
 ## Link
 

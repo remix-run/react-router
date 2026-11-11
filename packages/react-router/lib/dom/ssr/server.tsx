@@ -94,7 +94,7 @@ export function ServerRouter({
   }
 
   let router = createStaticRouter(routes, context.staticHandlerContext, {
-    branches: context.branches,
+    future: context.future,
   });
 
   return (
@@ -108,7 +108,9 @@ export function ServerRouter({
           future: context.future,
           ssr: context.ssr,
           isSpaMode: context.isSpaMode,
+          unstable_apiOnly: context.unstable_apiOnly,
           routeDiscovery: context.routeDiscovery,
+          unstable_apiServerOrigin: context.unstable_apiServerOrigin,
           nonce,
           serializeError: context.serializeError,
           renderMeta: context.renderMeta,

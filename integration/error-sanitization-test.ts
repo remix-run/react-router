@@ -325,7 +325,11 @@ test.describe("Error Sanitization", () => {
       process.env.NODE_ENV = "development";
     });
     test.afterEach(() => {
-      process.env.NODE_ENV = ogEnv;
+      if (ogEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = ogEnv;
+      }
     });
 
     test("renders document without errors", async () => {

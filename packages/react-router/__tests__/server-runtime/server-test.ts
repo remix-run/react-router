@@ -2,6 +2,8 @@
  * @jest-environment node
  */
 
+import { setImmediate } from "node:timers/promises";
+
 import {
   createContext,
   RouterContextProvider,
@@ -12,6 +14,7 @@ import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 import { mockServerBuild } from "./utils";
+import { Deferred } from "../../vendor/turbo-stream-v2/utils";
 
 function spyConsole() {
   // https://github.com/facebook/react/issues/7047
@@ -27,6 +30,74 @@ function spyConsole() {
 
   return spy;
 }
+
+describe("API-only build-time document requests", () => {
+  it.each([
+    [false, {}, 404],
+    [false, { "X-React-Router-Prerender": "yes" }, 404],
+    [false, { "X-React-Router-SPA-Mode": "yes" }, 404],
+    [true, {}, 404],
+    [true, { "X-React-Router-Prerender": "no" }, 404],
+    [true, { "X-React-Router-Prerender-Data": "data" }, 404],
+    [true, { "X-React-Router-Prerender": "yes" }, 200],
+    [true, { "X-React-Router-SPA-Mode": "yes" }, 200],
+  ] as const)(
+    "with build-time environment=%s and headers=%j returns %s",
+    async (isBuildTime, headers, status) => {
+      let previous = process.env.IS_RR_BUILD_REQUEST;
+      try {
+        if (isBuildTime) {
+          process.env.IS_RR_BUILD_REQUEST = "yes";
+        } else {
+          delete process.env.IS_RR_BUILD_REQUEST;
+        }
+        let build = {
+          ...mockServerBuild({ root: { path: "", default: {} } }),
+          ssr: true,
+          unstable_apiOnly: true,
+          prerender: ["/"],
+        };
+        let response = await createRequestHandler(
+          build,
+          ServerMode.Production,
+        )(new Request("http://localhost/", { headers }));
+        expect(response.status).toBe(status);
+      } finally {
+        if (previous === undefined) {
+          delete process.env.IS_RR_BUILD_REQUEST;
+        } else {
+          process.env.IS_RR_BUILD_REQUEST = previous;
+        }
+      }
+    },
+  );
+
+  it.each([[[]], [["/"]]])(
+    "serves data requests with a malformed percent-encoding (prerender: %j)",
+    async (prerender: string[]) => {
+      let build = {
+        ...mockServerBuild({
+          root: { path: "", default: {} },
+          item: {
+            parentId: "root",
+            path: ":id",
+            default: {},
+            loader: ({ params }) => params.id,
+          },
+        }),
+        ssr: true,
+        unstable_apiOnly: true,
+        prerender,
+      };
+      let response = await createRequestHandler(
+        build,
+        ServerMode.Production,
+      )(new Request("http://localhost/%E0%A4%A.data"));
+      expect(response.status).toBe(200);
+      expect(await response.text()).toContain('"%E0%A4%A"');
+    },
+  );
+});
 
 describe("server", () => {
   let routeId = "root";
@@ -94,6 +165,64 @@ describe("server", () => {
       );
 
       expect(await response.text()).toBe("");
+    });
+
+    it("cancels the discarded body for HEAD requests", async () => {
+      let cancel = jest.fn();
+      let build = mockServerBuild({
+        root: {
+          path: "/",
+          loader: () =>
+            new Response(
+              new ReadableStream({
+                pull(controller) {
+                  controller.enqueue(new TextEncoder().encode("chunk"));
+                },
+                cancel,
+              }),
+              { headers: { "Content-Type": "application/octet-stream" } },
+            ),
+        },
+      });
+      let handler = createRequestHandler(build);
+      let response = await handler(
+        new Request("http://localhost:3000/", {
+          method: "HEAD",
+        }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe(
+        "application/octet-stream",
+      );
+      expect(response.body).toBeNull();
+      expect(cancel).toHaveBeenCalledTimes(1);
+    });
+
+    it("handles nested deferred rejections after a HEAD data response", async () => {
+      let outer = new Deferred();
+      let inner = new Deferred();
+      let build = mockServerBuild({
+        root: {
+          path: "/",
+          default: () => null,
+          loader: () => ({ outer: outer.promise }),
+        },
+      });
+      let response = await createRequestHandler(build)(
+        new Request("http://localhost:3000/_.data", { method: "HEAD" }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe("text/x-script");
+      expect(response.body).toBeNull();
+
+      outer.resolve({ inner: inner.promise });
+      await setImmediate();
+      inner.reject(new Error("Nested deferred rejection"));
+      await setImmediate();
+
+      expect(spy.console).not.toHaveBeenCalled();
     });
 
     it("reflects trailing slash in static handler locations", async () => {

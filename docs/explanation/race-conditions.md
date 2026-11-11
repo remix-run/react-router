@@ -6,9 +6,6 @@ title: Race Conditions
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 While impossible to eliminate every possible race condition in your application, React Router automatically handles the most common race conditions found in web user interfaces.
 
 ## Browser Behavior

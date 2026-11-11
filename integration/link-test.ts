@@ -94,7 +94,7 @@ test.describe("route module link export", () => {
                 Links,
                 Meta,
                 Outlet,
-                Scripts,
+                ${templateName === "rsc-vite-framework" ? "" : "Scripts,"}
                 useRouteError,
                 isRouteErrorResponse
               } from "react-router";
@@ -125,7 +125,7 @@ test.describe("route module link export", () => {
                     </head>
                     <body>
                       <Outlet />
-                      <Scripts />
+                      ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                     </body>
                   </html>
                 );
@@ -148,7 +148,7 @@ test.describe("route module link export", () => {
                             <div>
                               <h1>404 Not Found</h1>
                             </div>
-                            <Scripts />
+                            ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                           </body>
                         </html>
                       );
@@ -173,7 +173,7 @@ test.describe("route module link export", () => {
                                 </pre>
                               ) : null}
                             </div>
-                            <Scripts />
+                            ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                           </body>
                         </html>
                       );
@@ -192,7 +192,7 @@ test.describe("route module link export", () => {
                             <h1>App Error Boundary</h1>
                             <pre>{error.message}</pre>
                           </div>
-                          <Scripts />
+                          ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                         </body>
                       </html>
                     );

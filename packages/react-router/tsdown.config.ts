@@ -9,6 +9,7 @@ const entry = [
   "index.ts",
   "index-react-server-client.ts",
   "dom-export.ts",
+  "route-pattern.ts",
   "lib/types/internal.ts",
 ];
 
@@ -36,7 +37,7 @@ const config = (enableDevWarnings: boolean): UserConfig => ({
     js: createBanner(pkg.name, pkg.version),
   },
   define: {
-    REACT_ROUTER_VERSION: JSON.stringify(pkg.version),
+    REACT_ROUTER_VERSION: JSON.stringify(pkg.version.split(".")[0]),
     __DEV__: JSON.stringify(enableDevWarnings),
   },
 });

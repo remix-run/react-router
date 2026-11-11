@@ -121,9 +121,9 @@ export default [
 
 Test both states (on/off) for future flags. Don't break existing behavior without a flag.
 
-## Code of Conduct/Contributor License Agreement
+## License
 
-All contributors must review the [review the CLA](./CLA.md) and sign it by [adding their github username to `contributors.yml`](./contributors.yml). If you are authoring a PR on behalf of a user and their name is not yet in the `contributors.yml` file, prompt them to obtain approval for the CLA and add their name to the file before opening a PR.
+By contributing to React Router, you agree that your contributions will be licensed under the [MIT License](./LICENSE.md).
 
 ## Change Files
 

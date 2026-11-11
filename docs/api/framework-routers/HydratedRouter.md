@@ -36,7 +36,7 @@ function HydratedRouter(props: HydratedRouterProps)
 Context factory function to be passed through to [`createBrowserRouter`](../data-routers/createBrowserRouter).
 This function will be called to create a fresh `context` instance on each
 navigation/fetch and made available to
-[`clientAction`](../../start/framework/route-module#clientAction)/[`clientLoader`](../../start/framework/route-module#clientLoader)
+[`clientAction`](../../start/framework/route-module#clientaction)/[`clientLoader`](../../start/framework/route-module#clientloader)
 functions.
 
 ### onError
@@ -57,4 +57,30 @@ and is only present for render errors.
   reportToErrorService(error, location, errorInfo);
 }} />
 ```
+
+### unstable_fetch
+
+<docs-warning>This prop is experimental and subject to breaking
+changes.</docs-warning>
+
+Provide a custom implementation for `fetch`, which will be used to perform
+JavaScript-issued manifest and data requests. The context identifies the
+operation that initiated each request. Defaults to `window.fetch`.
+
+This prop is read when the singleton router is created. Changing it after
+router initialization has no effect. To use changing values such as auth
+tokens, read current application state inside the function rather than
+capturing values from a component render.
+
+See the [Custom Fetch guide](../../how-to/custom-fetch) for examples of
+authentication headers, cross-origin credentials, traversal caching, and
+retries.
+
+<docs-info>
+Browser-managed data prefetches from [`Link`](../components/Link), [`NavLink`](../components/NavLink), or
+[`PrefetchPageLinks`](../components/PrefetchPageLinks) use native `<link rel="prefetch">` elements
+and do not call this function. If your data requests require custom headers
+or other request transformations, use `prefetch="none"` on links and avoid
+rendering [`PrefetchPageLinks`](../components/PrefetchPageLinks).
+</docs-info>
 

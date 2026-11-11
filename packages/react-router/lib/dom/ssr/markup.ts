@@ -17,3 +17,11 @@ const ESCAPE_REGEX = /[&><\u2028\u2029]/g;
 export function escapeHtml(html: string) {
   return html.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
 }
+
+export function escapeAttribute(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}

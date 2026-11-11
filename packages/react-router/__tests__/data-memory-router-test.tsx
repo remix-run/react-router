@@ -35,6 +35,8 @@ import {
   useSubmit,
   type ErrorResponse,
 } from "../index";
+import { DataRoutes, Router } from "../lib/components";
+import { DataRouterContext, DataRouterStateContext } from "../lib/context";
 import urlDataStrategy from "./router/utils/urlDataStrategy";
 import { createDeferred } from "./router/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
@@ -137,6 +139,63 @@ describe("createMemoryRouter", () => {
       },
     );
     let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Heyooo
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("uses the router matcher when data router matches are empty with a basename", () => {
+    let router = createMemoryRouter(
+      createRoutesFromElements(
+        <Route path="thing" element={<h1>Heyooo</h1>} />,
+      ),
+      {
+        basename: "/my/base/path",
+        initialEntries: ["/my/base/path/thing"],
+      },
+    );
+    let state = {
+      ...router.state,
+      matches: [],
+    };
+    let navigator = {
+      createHref: (to: any) => (typeof to === "string" ? to : to.pathname),
+      go: () => {},
+      push: () => {},
+      replace: () => {},
+    };
+
+    let { container } = render(
+      <DataRouterContext.Provider
+        value={{
+          basename: router.basename,
+          navigator,
+          router,
+          static: false,
+        }}
+      >
+        <DataRouterStateContext.Provider value={state}>
+          <Router
+            basename={router.basename}
+            location={state.location}
+            navigationType={state.historyAction}
+            navigator={navigator}
+          >
+            <DataRoutes
+              manifest={router.manifest}
+              routes={router.routes}
+              state={state}
+              isStatic={false}
+            />
+          </Router>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>,
+    );
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -797,15 +856,7 @@ describe("createMemoryRouter", () => {
 
     spy.mockClear();
     fireEvent.click(screen.getByText("Link to Bar"));
-    expect(spy).toHaveBeenCalledWith("Layout", [
-      {
-        data: undefined,
-        handle: undefined,
-        id: "0",
-        params: {},
-        pathname: "/",
-      },
-    ]);
+    expect(spy).not.toHaveBeenCalled();
 
     spy.mockClear();
     await waitFor(() => screen.getByText("Bar"));
@@ -3059,6 +3110,68 @@ describe("createMemoryRouter", () => {
           <p>
             Route Error:
             oops is not defined
+          </p>
+        </div>"
+      `);
+    });
+
+    it("clears render errors when a new promise is passed to <Await>", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/:id"
+            loader={({ params }) => ({ lazy: Promise.resolve(params.id) })}
+            element={<Item />}
+          />,
+        ),
+        { initialEntries: ["/bad"] },
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Item() {
+        let data = useLoaderData() as { lazy: Promise<string> };
+        return (
+          <React.Suspense fallback={<p>Loading...</p>}>
+            <Await resolve={data.lazy} errorElement={<LazyError />}>
+              <LazyData />
+            </Await>
+          </React.Suspense>
+        );
+      }
+
+      function LazyData() {
+        let id = useAsyncValue() as string;
+        if (id.startsWith("bad")) {
+          throw new Error(`Cannot render ${id}`);
+        }
+        return <p>{id}</p>;
+      }
+
+      function LazyError() {
+        let error = useAsyncError() as Error;
+        return <p>Await Error:{error.message}</p>;
+      }
+
+      await waitFor(() => screen.getByText(/Cannot render bad/));
+
+      // The route element stays mounted, so <Await> gets the new promise
+      router.navigate("/good");
+      await waitFor(() => screen.getByText("good"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            good
+          </p>
+        </div>"
+      `);
+
+      router.navigate("/bad2");
+      await waitFor(() => screen.getByText(/Cannot render bad2/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Await Error:
+            Cannot render bad2
           </p>
         </div>"
       `);

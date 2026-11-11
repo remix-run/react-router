@@ -17,9 +17,6 @@ We highly recommend you make a commit after each step and ship it instead of doi
 
 [MODES: framework, data, declarative]
 
-<br/>
-<br/>
-
 React Router v9 will require the following minimum versions (as of now). You can prepare for the upgrade by updating them while still on v8:
 
 - `node@24+`
@@ -49,9 +46,6 @@ We document some [unstable] flags here as a reference for folks contributing to 
 ### `future.unstable_enableNodeReadableStream`
 
 [MODES: framework]
-
-<br/>
-<br/>
 
 **Background**
 
@@ -83,9 +77,6 @@ No code changes are required. If your app has a custom `entry.server.tsx`, this 
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 **Background**
 
 This flag lets React Router provide Vite's dependency optimizer with the client entry file and route module files. This can improve dependency optimization in development, but the behavior is still experimental.
@@ -105,6 +96,71 @@ export default {
 **Update your Code**
 
 No code changes are required. If you run into dependency optimization issues after enabling this flag, remove the flag and restart the dev server.
+
+### `future.unstable_routePatternMatching`
+
+[MODES: data]
+
+**Background**
+
+This flag opts Data Routers into a new (and vastly more efficient) route matcher
+powered by [`@remix-run/route-pattern`](https://github.com/remix-run/remix/tree/main/packages/route-pattern).
+It supports the existing React Router path syntax and matching behavior, but may
+rank _slightly_ differently in some cases - please read the section below on
+potential ranking differences.
+
+👉 **Preload the Matcher and Enable the Flag**
+
+```ts
+import { createBrowserRouter } from "react-router";
+import { unstable_preloadRoutePattern } from "react-router/route-pattern";
+
+unstable_preloadRoutePattern();
+
+const router = createBrowserRouter(routes, {
+  future: {
+    unstable_routePatternMatching: true,
+  },
+});
+```
+
+The `react-router/route-pattern` sub-export statically imports the new matcher
+implementation. Tree-shaking bundlers remove it from applications that do not
+use the preload function. You must call the function before creating a router
+with the flag enabled - router creation will throw if the matcher has not been
+initialized. Initialization is synchronous, and repeated calls are safe.
+
+**Update your Code**
+
+No route configuration changes are required, but you should review any routes with
+overlapping patterns to ensure the new ranking behavior selects the intended route.
+The new implementation matches by positional specificity instead of aggregate
+segment scores. This means a route with a longer static prefix can rank above a
+route with more dynamic segments.
+
+For example, both of these routes match `/products/one/two/three`:
+
+```ts
+const routes = [
+  { path: "/products/*", id: "products" },
+  {
+    path: "/:first/:second/:third/:fourth",
+    id: "segments",
+  },
+];
+```
+
+The legacy matcher selects `segments` based on its aggregate segment score. The
+new matcher selects `products` because its static `products` segment is more
+specific than the dynamic `:first` segment in the same position.
+
+Once you enable this flag, use the `router.match()` when you need to match a
+location (this is currently marked private and will become stable at the same
+time this flag stabilizes). Standalone matching APIs such as `matchRoutes`,
+`matchPath`, and `useMatch` continue to use the legacy matcher and may return
+different matches than the router.
+
+Case-sensitive routes are not currently supported with this flag.
 
 [api-development-strategy]: ../community/api-development-strategy
 [governance]: https://github.com/remix-run/react-router/blob/main/GOVERNANCE.md#design-goals

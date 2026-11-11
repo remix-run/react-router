@@ -25,10 +25,7 @@ export function getBuildTimeHeader(request: Request, headerName: string) {
       ) {
         return request.headers.get(headerName);
       }
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {}
+    } catch {}
   }
   return null;
 }

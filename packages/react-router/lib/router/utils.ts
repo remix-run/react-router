@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { Equal, Expect } from "../types/utils";
-import type { Location, Path, To } from "./history";
+import type { Action as NavigationType, Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 import {
   ABSOLUTE_URL_REGEX,
@@ -283,6 +283,13 @@ interface DataFunctionArgs<Context> {
    * In Framework mode, this is a normalized URL with React-Router-specific
    * implementation details removed (`.data` suffixes, `index`/`_routes` search
    * params). For the raw incoming URL, use `request.url`.
+   *
+   * This normalization preserves standard URL pathname encoding and casing.
+   * For example, a request to `/%61dmin.data` produces a `url.pathname` of
+   * `/%61dmin`. This is not a canonical representation of the matched route.
+   * For authorization, attach {@link https://reactrouter.com/how-to/middleware#authentication server middleware}
+   * to the protected route or a common ancestor instead of relying on literal
+   * pathname-prefix comparisons.
    */
   url: URL;
   /**
@@ -514,6 +521,17 @@ export interface DataStrategyMatch extends RouteMatch<string, DataRouteObject> {
   ) => Promise<DataStrategyResult>;
 }
 
+/**
+ * The operation that initiated a data strategy execution. Static handler
+ * executions use `"static"`.
+ */
+export type DataStrategyInitiator =
+  | "initialization"
+  | "navigation"
+  | "fetcher"
+  | "revalidation"
+  | "static";
+
 export interface DataStrategyFunctionArgs<
   Context = DefaultContext,
 > extends DataFunctionArgs<Context> {
@@ -525,8 +543,23 @@ export interface DataStrategyFunctionArgs<
     cb: DataStrategyFunction<Context>,
   ) => Promise<Record<string, DataStrategyResult>>;
   /**
-   * The key of the fetcher we are calling `dataStrategy` for, otherwise `null`
-   * for navigational executions
+   * The operation that initiated this data strategy execution
+   *
+   * This field is experimental and subject to breaking changes.
+   */
+  unstable_initiator: DataStrategyInitiator;
+  /**
+   * The history action (`"PUSH"`, `"REPLACE"`, or `"POP"`) for a navigation-
+   * initiated execution, including fetchers reloaded by that navigation.
+   * `null` for initialization, fetcher, revalidation, and static executions.
+   *
+   * This field is experimental and subject to breaking changes.
+   */
+  unstable_navigationType: NavigationType | null;
+  /**
+   * The key of the fetcher targeted by this data strategy execution, otherwise
+   * `null`. Fetchers reloaded during a navigation or revalidation retain that
+   * `unstable_initiator` while providing their key here.
    */
   fetcherKey: string | null;
 }
@@ -544,6 +577,9 @@ export interface DataStrategyFunction<Context = DefaultContext> {
     args: DataStrategyFunctionArgs<Context>,
   ): Promise<Record<string, DataStrategyResult>>;
 }
+
+// Internal control flow for application-owned Framework discovery recovery.
+export class DiscoveryCancelledError extends Error {}
 
 export type PatchRoutesOnNavigationFunctionArgs = {
   signal: AbortSignal;
@@ -575,7 +611,8 @@ type UnsupportedLazyRouteObjectKey =
   | "path"
   | "id"
   | "index"
-  | "children";
+  | "children"
+  | "unstable_validateParams";
 const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "lazy",
   "caseSensitive",
@@ -583,6 +620,7 @@ const unsupportedLazyRouteObjectKeys = new Set<UnsupportedLazyRouteObjectKey>([
   "id",
   "index",
   "children",
+  "unstable_validateParams",
 ]);
 export function isUnsupportedLazyRouteObjectKey(
   key: string,
@@ -609,6 +647,7 @@ const unsupportedLazyRouteFunctionKeys =
     "index",
     "middleware",
     "children",
+    "unstable_validateParams",
   ]);
 export function isUnsupportedLazyRouteFunctionKey(
   key: string,
@@ -678,9 +717,14 @@ export type BaseRouteObject = {
   action?: ActionFunction | boolean;
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
    */
   shouldRevalidate?: ShouldRevalidateFunction;
+  /**
+   * A map of route param names to regular expressions used to validate params
+   * after a route-pattern match.
+   */
+  unstable_validateParams?: Record<string, RegExp>;
   /**
    * The route handle.
    */
@@ -1145,7 +1189,7 @@ export function convertRouteMatchToUiMatch(
   };
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+export interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
@@ -1295,7 +1339,7 @@ function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
  * - `/one/three/:four/:five`
  * - `/one/:two/three/:four/:five`
  */
-function explodeOptionalSegments(path: string): string[] {
+export function explodeOptionalSegments(path: string): string[] {
   let segments = path.split("/");
   if (segments.length === 0) return [];
 
@@ -1646,7 +1690,7 @@ export interface PathMatch<ParamKey extends string = string> {
   pattern: PathPattern;
 }
 
-type Mutable<T> = {
+export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
@@ -1691,7 +1735,7 @@ function matchPathImpl<Path extends string>(
   if (!match) return null;
 
   let matchedPathname = match[0];
-  let pathnameBase = matchedPathname.replace(/(.)\/+$/, "$1");
+  let pathnameBase = removeTrailingSlash(matchedPathname, 1);
   let captureGroups = match.slice(1);
   let params: Params = compiledParams.reduce<Mutable<Params>>(
     (memo, { paramName, isOptional }, index) => {
@@ -1699,9 +1743,10 @@ function matchPathImpl<Path extends string>(
       // instead of using params["*"] later because it will be decoded then
       if (paramName === "*") {
         let splatValue = captureGroups[index] || "";
-        pathnameBase = matchedPathname
-          .slice(0, matchedPathname.length - splatValue.length)
-          .replace(/(.)\/+$/, "$1");
+        pathnameBase = removeTrailingSlash(
+          matchedPathname.slice(0, matchedPathname.length - splatValue.length),
+          1,
+        );
       }
 
       const value = captureGroups[index];
@@ -1768,7 +1813,7 @@ export function compilePath(
           return "/([^\\/]+)";
         },
       ) // Dynamic segment
-      .replace(/\/([\w-]+)\?(?=\/|$|\()/g, "(?:/$1)?"); // Optional static segment (non-capturing)
+      .replace(/\/((?:[^/?()[\]*^\\]|\\.)+)\?(?=\/|$|\()/g, "(?:/$1)?"); // Optional static segment (non-capturing)
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });
@@ -1874,7 +1919,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
   let pathname: string;
   if (toPathname) {
     toPathname = removeDoubleSlashes(toPathname);
-    if (toPathname.startsWith("/")) {
+    if (toPathname.startsWith("/") || toPathname.startsWith("\\")) {
       pathname = resolvePathname(toPathname.substring(1), "/");
     } else {
       pathname = resolvePathname(toPathname, fromPathname);
@@ -2051,8 +2096,14 @@ export const removeDoubleSlashes = (path: string): string =>
 export const joinPaths = (paths: string[]): string =>
   removeDoubleSlashes(paths.join("/"));
 
-export const removeTrailingSlash = (path: string): string =>
-  path.replace(/\/+$/, "");
+// Scan from the end to avoid repeated RegExp work on long paths.
+export function removeTrailingSlash(path: string, minLength = 0): string {
+  let end = path.length;
+  while (end > minLength && path.charCodeAt(end - 1) === 47) {
+    end--;
+  }
+  return end === path.length ? path : path.slice(0, end);
+}
 
 export const normalizePathname = (pathname: string): string =>
   removeTrailingSlash(pathname).replace(/^\/*/, "/");
@@ -2425,10 +2476,7 @@ export function parseToInfo<T extends To | string>(
       } else {
         isExternal = true;
       }
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {
+    } catch {
       // We can't do external URL detection without a valid URL
       warning(
         false,

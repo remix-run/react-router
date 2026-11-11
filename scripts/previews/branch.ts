@@ -55,7 +55,7 @@ async function main() {
   );
 
   // Switch to new branch and reset to current commit on base branch
-  logAndExec(`git checkout -B ${installableBranch}`);
+  logAndExec(["git", "checkout", "-B", installableBranch]);
 
   // Build dist/ folders
   logAndExec("pnpm build");

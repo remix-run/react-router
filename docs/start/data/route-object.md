@@ -188,7 +188,7 @@ export default function Items() {
 
 Loader data is automatically revalidated after certain events like navigations and form submissions.
 
-This hook enables you to opt in or out of the default revalidation behavior. The default behavior is nuanced to avoid calling loaders unnecessarily.
+This function lets you opt in or out of the default revalidation behavior **for this route's loader**. It does not skip parent or sibling loaders. The default behavior is nuanced to avoid calling loaders unnecessarily.
 
 A route loader is revalidated when:
 
@@ -201,20 +201,33 @@ By defining this function, you opt out of the default behavior completely and ca
 ```tsx
 import type { ShouldRevalidateFunctionArgs } from "react-router";
 
-function shouldRevalidate(
-  arg: ShouldRevalidateFunctionArgs,
-) {
-  return true; // false
+function shouldRevalidate({
+  formMethod,
+  formAction,
+  defaultShouldRevalidate,
+}: ShouldRevalidateFunctionArgs) {
+  if (
+    formMethod === "POST" &&
+    formAction?.endsWith("/analytics")
+  ) {
+    return false;
+  }
+
+  return defaultShouldRevalidate;
 }
 
 createBrowserRouter([
   {
     path: "/",
-    shouldRevalidate: shouldRevalidate,
+    shouldRevalidate,
     Component: MyRoute,
   },
 ]);
 ```
+
+To skip revalidation for a single `<Form>`, `<Link>`, `useSubmit`, or `fetcher.submit`, pass [`defaultShouldRevalidate={false}`][form-default-should-revalidate] at the call site. Routes without `shouldRevalidate` use that value directly.
+
+See [Revalidation Optimization][optimize-revalidation] for call-site opt-out, parent/child behavior, and more examples.
 
 [`ShouldRevalidateFunctionArgs` Reference Documentation ↗](https://api.reactrouter.com/v8/interfaces/react-router.ShouldRevalidateFunctionArgs.html)
 
@@ -263,6 +276,8 @@ See also:
 
 Next: [Data Loading](./data-loading)
 
+[form-default-should-revalidate]: ../../api/components/Form#defaultshouldrevalidate
 [loader-params]: https://api.reactrouter.com/v8/interfaces/react-router.LoaderFunctionArgs
 [middleware]: ../../how-to/middleware
+[optimize-revalidation]: ../../how-to/optimize-revalidation
 [use-matches]: ../../api/hooks/useMatches

@@ -538,10 +538,7 @@ export function warning(cond: any, message: string) {
       // find the source for a warning that appears in the console by
       // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {}
+    } catch {}
   }
 }
 
