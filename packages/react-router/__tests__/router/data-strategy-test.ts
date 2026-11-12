@@ -2194,5 +2194,43 @@ describe("router dataStrategy", () => {
         expect(t.router.state.location.pathname).toBe("/page");
       },
     );
+
+    it("reports PUSH to loaders after an action error on a submission to the current location", async () => {
+      let seen: Array<string | null> = [];
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+            children: [
+              { id: "page", path: "page", loader: true, action: true },
+            ],
+          },
+        ],
+        initialEntries: ["/page"],
+        hydrationData: { loaderData: { root: "ROOT", page: "PAGE" } },
+        dataStrategy: async ({ matches, unstable_navigationType, request }) => {
+          if (request.method === "GET") seen.push(unstable_navigationType);
+          return Object.fromEntries(
+            matches
+              .filter((m) => m.shouldCallHandler())
+              .map((m) =>
+                request.method === "POST"
+                  ? [m.route.id, { type: "error", result: new Error("nope") }]
+                  : [m.route.id, { type: "data", result: m.route.id }],
+              ),
+          );
+        },
+      });
+
+      await t.router.navigate("/page", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      expect(t.router.state.historyAction).toBe("PUSH");
+      expect(seen).toEqual(["PUSH"]);
+    });
   });
 });
