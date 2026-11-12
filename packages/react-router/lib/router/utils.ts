@@ -2216,7 +2216,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   if (typeof responseInit === "number") {
     responseInit = { status: responseInit };
   } else if (typeof responseInit.status === "undefined") {
-    responseInit.status = 302;
+    responseInit = { ...responseInit, status: 302 };
   }
 
   let headers = new Headers(responseInit.headers);
