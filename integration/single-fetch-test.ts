@@ -4659,4 +4659,71 @@ test.describe("single-fetch", () => {
     expect(requests).toEqual(["/_.data"]);
     requests = [];
   });
+
+  test("does not leave unhandled rejections when a navigation aborts a streaming revalidation", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/stream.tsx": js`
+          import { Suspense } from "react";
+          import { Await, Link, useLoaderData, useRevalidator } from "react-router";
+
+          export function loader() {
+            return {
+              fast: "fast",
+              slow: new Promise((r) => setTimeout(() => r("slow"), 2000)),
+            };
+          }
+
+          // Keep the revalidation in flight after its response streamed in
+          export async function clientLoader({ serverLoader }) {
+            let data = await serverLoader();
+            await new Promise((r) => setTimeout(r, 1000));
+            return data;
+          }
+
+          export default function Stream() {
+            let data = useLoaderData();
+            let { revalidate } = useRevalidator();
+            return (
+              <div>
+                <h1 id="stream">Stream {data.fast}</h1>
+                <Suspense fallback={<p>Loading...</p>}>
+                  <Await resolve={data.slow}>{(v) => <p id="slow">{v}</p>}</Await>
+                </Suspense>
+                <button id="revalidate" onClick={() => revalidate()}>
+                  Revalidate
+                </button>
+                <Link to="/stream-target">Go</Link>
+              </div>
+            );
+          }
+        `,
+        "app/routes/stream-target.tsx": js`
+          export default function Target() {
+            return <h1 id="target">Target</h1>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(`${e.name}: ${e.message}`));
+
+    await app.goto("/stream", true);
+    await page.waitForSelector("#slow");
+    await page.click("#revalidate");
+    // The revalidation's critical data has arrived, but its deferred value
+    // is still streaming when we navigate away and abort it
+    await page.waitForTimeout(300);
+    await app.clickLink("/stream-target");
+    await page.waitForSelector("#target");
+    await page.waitForTimeout(2500);
+
+    expect(errors).toEqual([]);
+  });
 });
