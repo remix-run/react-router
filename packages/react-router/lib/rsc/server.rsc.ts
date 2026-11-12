@@ -46,7 +46,8 @@ import {
   getPathsWithAncestors,
   shouldUseInitialRouteDiscovery,
 } from "../dom/ssr/fog-of-war";
-import { throwIfPotentialCSRFAttack } from "../actions";
+import { validateActionOrigin } from "../actions";
+import type { ValidateActionOriginFunction } from "../actions";
 import invariant from "../server-runtime/invariant";
 
 import {
@@ -411,12 +412,15 @@ export type RouteDiscovery =
  * [`loader`](../../start/data/route-object#loader)s and [middleware](../../how-to/middleware).
  * @param opts.routeDiscovery The route discovery configuration, used to determine how the router should discover new routes during navigations.
  * @param opts.routes Your {@link unstable_RSCRouteConfigEntry | route definitions}.
+ * @param opts.unstable_validateActionOrigin An optional {@link unstable_ValidateActionOriginFunction}
+ * that decides whether an action submission may run.
  * @returns A [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  * that contains the [RSC](https://react.dev/reference/rsc/server-components)
  * data for hydration.
  */
 export async function matchRSCServerRequest({
   allowedActionOrigins,
+  unstable_validateActionOrigin,
   createTemporaryReferenceSet,
   basename,
   decodeReply,
@@ -432,6 +436,7 @@ export async function matchRSCServerRequest({
   generateResponse: encodeResponse,
 }: {
   allowedActionOrigins?: string[];
+  unstable_validateActionOrigin?: ValidateActionOriginFunction;
   createTemporaryReferenceSet: () => unknown;
   basename?: string;
   decodeReply?: DecodeReplyFunction;
@@ -552,6 +557,7 @@ export async function matchRSCServerRequest({
     generateResponse,
     temporaryReferences,
     allowedActionOrigins,
+    unstable_validateActionOrigin,
     routeDiscovery,
     clientVersion,
   );
@@ -875,6 +881,7 @@ async function generateRenderResponse(
   ) => Response,
   temporaryReferences: unknown,
   allowedActionOrigins: string[] | undefined,
+  validate: ValidateActionOriginFunction | undefined,
   routeDiscovery: RouteDiscovery | undefined,
   clientVersion: string | undefined,
 ): Promise<Response> {
@@ -914,7 +921,7 @@ async function generateRenderResponse(
         let potentialCSRFAttackError: unknown | undefined;
         if (isMutationMethod(request.method)) {
           try {
-            throwIfPotentialCSRFAttack(request, allowedActionOrigins);
+            await validateActionOrigin(request, allowedActionOrigins, validate);
           } catch (error) {
             onError?.(error);
             potentialCSRFAttackError = error;

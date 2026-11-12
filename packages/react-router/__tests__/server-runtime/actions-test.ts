@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 
-import { throwIfPotentialCSRFAttack } from "../../lib/actions";
+import {
+  throwIfPotentialCSRFAttack,
+  validateActionOrigin,
+} from "../../lib/actions";
 
 describe("throwIfPotentialCSRFAttack", () => {
   describe("when origin matches host", () => {
@@ -282,5 +285,110 @@ describe("throwIfPotentialCSRFAttack", () => {
       });
       expect(() => throwIfPotentialCSRFAttack(request, ["**"])).not.toThrow();
     });
+  });
+});
+
+describe("validateActionOrigin", () => {
+  // TLS ends at a proxy, so the server sees http:// while the browser sent https://
+  let proxiedRequest = () =>
+    new Request("http://example.com/action", {
+      method: "POST",
+      headers: {
+        origin: "https://example.com",
+        "x-forwarded-proto": "https",
+      },
+    });
+
+  it("applies the built-in check when no function is provided", async () => {
+    await expect(
+      validateActionOrigin(proxiedRequest(), undefined, undefined),
+    ).rejects.toThrow(
+      "`request.url` origin does not match `origin` header from a forwarded action request",
+    );
+  });
+
+  it("allows a request the built-in check rejects when the function returns true", async () => {
+    let validate = jest.fn(
+      ({ request, origin }: { request: Request; origin: string | null }) =>
+        `${request.headers.get("x-forwarded-proto")}:` ===
+        new URL(origin!).protocol,
+    );
+
+    await expect(
+      validateActionOrigin(proxiedRequest(), undefined, validate),
+    ).resolves.toBeUndefined();
+    expect(validate).toHaveBeenCalledWith({
+      request: expect.any(Request),
+      origin: "https://example.com",
+      allowed: false,
+    });
+  });
+
+  it("rejects a request the built-in check accepts when the function returns false", async () => {
+    let request = new Request("https://example.com/action", {
+      method: "POST",
+      headers: { origin: "https://example.com" },
+    });
+    let validate = jest.fn(() => false);
+
+    await expect(
+      validateActionOrigin(request, undefined, validate),
+    ).rejects.toThrow("rejected by `unstable_validateActionOrigin`");
+    expect(validate).toHaveBeenCalledWith(
+      expect.objectContaining({ allowed: true }),
+    );
+  });
+
+  it("rejects unless the function returns exactly true", async () => {
+    let validate = jest.fn(() => "yes" as unknown as boolean);
+
+    await expect(
+      validateActionOrigin(proxiedRequest(), undefined, validate),
+    ).rejects.toThrow("rejected by `unstable_validateActionOrigin`");
+  });
+
+  it("awaits an async function", async () => {
+    let validate = jest.fn(async () => true);
+
+    await expect(
+      validateActionOrigin(proxiedRequest(), undefined, validate),
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects when the function throws", async () => {
+    let validate = jest.fn(() => {
+      throw new Error("lookup failed");
+    });
+
+    await expect(
+      validateActionOrigin(proxiedRequest(), undefined, validate),
+    ).rejects.toThrow("lookup failed");
+  });
+
+  it("passes a null origin when the header is absent", async () => {
+    let request = new Request("https://example.com/action", {
+      method: "POST",
+    });
+    let validate = jest.fn(() => true);
+
+    await validateActionOrigin(request, undefined, validate);
+    expect(validate).toHaveBeenCalledWith({
+      request,
+      origin: null,
+      allowed: true,
+    });
+  });
+
+  it("rejects a malformed origin without calling the function", async () => {
+    let request = new Request("https://example.com/action", {
+      method: "POST",
+      headers: { origin: "not a url" },
+    });
+    let validate = jest.fn(() => true);
+
+    await expect(
+      validateActionOrigin(request, undefined, validate),
+    ).rejects.toThrow("`origin` header is not a valid URL");
+    expect(validate).not.toHaveBeenCalled();
   });
 });
