@@ -1,6 +1,7 @@
 // RSC APIs
 export {
   getRequest as unstable_getRequest,
+  headers as unstable_headers,
   matchRSCServerRequest as unstable_matchRSCServerRequest,
 } from "./lib/rsc/server.rsc";
 
