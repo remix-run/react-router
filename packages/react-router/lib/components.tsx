@@ -445,6 +445,7 @@ export function RouterProvider({
       newState: RouterState,
       { deletedFetchers, newErrors, flushSync, viewTransitionOpts },
     ) => {
+      let previousState = lastState.current;
       lastState.current = newState;
 
       if (newErrors && newState.errors && clientErrors.has(newState.errors)) {
@@ -500,7 +501,14 @@ export function RouterProvider({
       // If this isn't a view transition or it's not available in this browser,
       // just update and be done with it
       if (!viewTransitionOpts || !isViewTransitionAvailable) {
-        if (reactDomFlushSyncImpl && flushSync) {
+        let isLoadingNavigation =
+          previousState.navigation !== newState.navigation &&
+          newState.navigation.state === "loading" &&
+          previousState.location.key === newState.location.key;
+
+        if (reactDomFlushSyncImpl && isLoadingNavigation) {
+          reactDomFlushSyncImpl(() => setStateImpl(newState));
+        } else if (reactDomFlushSyncImpl && flushSync) {
           reactDomFlushSyncImpl(() => setStateImpl(newState));
         } else if (useTransitions === false) {
           setStateImpl(newState);
