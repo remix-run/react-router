@@ -78,7 +78,14 @@ export class RouteDiscoveryRuntime {
   private fullLoadErrorListeners = new Set<(error: unknown) => void>();
   private fullLoad?: Promise<void>;
   private loadedManifest?: AssetsManifest;
-  private mismatch?: Promise<void>;
+  private mismatch?: {
+    promise: Promise<void>;
+    requests: {
+      reloadUrl: string | null;
+      signal?: AbortSignal;
+      getReloadPath: () => string | null;
+    }[];
+  };
   private fetchImplementation: RouterFetch;
   private loadManifest: () => Promise<AssetsManifest>;
   onError?: ClientOnErrorFunction;
@@ -207,6 +214,7 @@ export class RouteDiscoveryRuntime {
   private async dispatchMismatch(
     source: ManifestMismatchEvent["source"],
     reloadUrl: string | null,
+    getReloadPath: () => string | null,
   ) {
     let { version } = this.ssrInfo.manifest;
     let stopped = false;
@@ -222,7 +230,13 @@ export class RouteDiscoveryRuntime {
       defaultBehavior: () => {
         defaultBehavior ??= Promise.resolve().then(async () => {
           if (source !== "imperative" && !this.isComplete()) {
-            await handleClientVersionMismatch(true, version, reloadUrl);
+            await handleClientVersionMismatch(
+              true,
+              version,
+              reloadUrl,
+              undefined,
+              () => (this.isComplete() ? null : getReloadPath()),
+            );
           }
         });
         return defaultBehavior;
@@ -298,6 +312,10 @@ export class RouteDiscoveryRuntime {
     patch = this.router.patchRoutes,
   ): Promise<DiscoveryResult> {
     let { manifest, routeModules, context } = this.ssrInfo;
+    // Fetchers survive navigation, so resolve their recovery destination when
+    // reloading rather than returning to the page where discovery started.
+    let getReloadPath = () =>
+      source === "fetcher" && reloadUrl ? window.location.href : reloadUrl;
     if (signal?.aborted) return { type: "aborted" };
     if (this.isComplete()) return { type: "success" };
     let pending = getPathsWithAncestors(
@@ -359,25 +377,54 @@ export class RouteDiscoveryRuntime {
             [...this.registrations].some((r) => r.current.onManifestMismatch)
           ) {
             if (!this.mismatch) {
-              this.mismatch = Promise.resolve()
-                .then(() => this.dispatchMismatch(source, reloadUrl))
+              let requests = [{ reloadUrl, signal, getReloadPath }];
+              let promise = Promise.resolve()
+                .then(() =>
+                  this.dispatchMismatch(
+                    source,
+                    reloadUrl,
+                    () =>
+                      requests
+                        .find(
+                          (request) =>
+                            request.reloadUrl && !request.signal?.aborted,
+                        )
+                        ?.getReloadPath() ?? null,
+                  ),
+                )
                 .finally(() => {
                   this.mismatch = undefined;
                 });
+              this.mismatch = { promise, requests };
+            } else {
+              this.mismatch.requests.push({ reloadUrl, signal, getReloadPath });
             }
-            await waitForDiscovery(this.mismatch, signal);
+            await waitForDiscovery(this.mismatch.promise, signal);
           } else {
             // Defaults recover each operation independently: an eager warning
             // must not suppress a concurrent navigation's document reload.
             await waitForDiscovery(
-              this.dispatchMismatch(source, reloadUrl),
+              this.dispatchMismatch(source, reloadUrl, () =>
+                signal?.aborted ? null : getReloadPath(),
+              ),
               signal,
             );
           }
           if (signal?.aborted) return { type: "aborted" };
           return { type: this.isComplete() ? "success" : "version-mismatch" };
         }
-        await handleClientVersionMismatch(false, manifest.version, reloadUrl);
+        await waitForDiscovery(
+          handleClientVersionMismatch(
+            false,
+            manifest.version,
+            reloadUrl,
+            signal,
+            () => (this.isComplete() ? null : getReloadPath()),
+          ),
+          signal,
+        );
+        if (signal?.aborted) return { type: "aborted" };
+        if (this.isComplete()) return { type: "success" };
         let patches: AssetsManifest["routes"];
         try {
           patches = await response.json();
@@ -406,6 +453,9 @@ export class RouteDiscoveryRuntime {
         });
       } catch (error) {
         if (signal?.aborted) return { type: "aborted" };
+        if (error instanceof DiscoveryCancelledError && this.isComplete()) {
+          return { type: "success" };
+        }
         throw error;
       }
     }

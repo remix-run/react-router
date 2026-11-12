@@ -4,7 +4,7 @@ import type {
   PatchRoutesOnNavigationFunction,
   RouteManifest,
 } from "../../router/utils";
-import { joinPaths } from "../../router/utils";
+import { DiscoveryCancelledError, joinPaths } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import type { EntryRoute } from "./routes";
@@ -155,6 +155,7 @@ export function getPatchRoutesOnNavigationFunction(
       fetchImplementation,
       serverOrigin,
       isApiOnly,
+      fetcherKey ? () => window.location.href : undefined,
     );
   };
 }
@@ -235,7 +236,9 @@ export function useFogOFWarDiscovery(
           isApiOnly,
         );
       } catch (e) {
-        console.error("Failed to fetch manifest patches", e);
+        if (!(e instanceof DiscoveryCancelledError)) {
+          console.error("Failed to fetch manifest patches", e);
+        }
       }
     }
 
@@ -287,25 +290,45 @@ export function getManifestPath(
   return basename == null ? manifestPath : joinPaths([basename, manifestPath]);
 }
 
-const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
+const MANIFEST_RECOVERY_STORAGE_KEY = "react-router-manifest-recovery";
+const MANIFEST_RECOVERY_WINDOW = 30_000;
+const MANIFEST_RELOAD_DELAYS = [0, 1000, 2000];
 const MANIFEST_RELOAD_TIMEOUT = 5000;
-let pendingManifestReload: Promise<never> | undefined;
+let pendingManifestReload:
+  | {
+      promise: Promise<never>;
+      requests: {
+        path: string;
+        signal?: AbortSignal;
+        getReloadPath?: () => string | null;
+      }[];
+    }
+  | undefined;
 
 export async function handleClientVersionMismatch(
   needsReload: boolean,
-  version: string,
+  _version: string,
   errorReloadPath: string | null,
+  signal?: AbortSignal,
+  getReloadPath?: () => string | null,
 ): Promise<boolean> {
   // A sibling request already started a document navigation. Keep this request
   // pending too, without clearing the loop guard or continuing on the stale tree.
   if (pendingManifestReload) {
-    return pendingManifestReload;
+    if (errorReloadPath) {
+      pendingManifestReload.requests.push({
+        path: errorReloadPath,
+        signal,
+        getReloadPath,
+      });
+    }
+    return pendingManifestReload.promise;
   }
 
   if (!needsReload) {
     // Reset loop-detection on a successful response
     try {
-      sessionStorage.removeItem(MANIFEST_VERSION_STORAGE_KEY);
+      sessionStorage.removeItem(MANIFEST_RECOVERY_STORAGE_KEY);
     } catch {
       // Session storage unavailable
     }
@@ -327,23 +350,41 @@ export async function handleClientVersionMismatch(
     return true;
   }
 
-  let alreadyReloaded = false;
+  if (signal?.aborted) throw new DiscoveryCancelledError();
+
+  // A document reload may land on another server running the same build. Keep
+  // a bounded budget across documents AND client versions so a rolling deploy
+  // cannot reset recovery by alternating between builds.
+  let mismatchError = new Error(
+    "Unable to discover routes due to manifest version mismatch.",
+  );
+  let now = Date.now();
+  let recovery = { attempts: 0, expiresAt: now + MANIFEST_RECOVERY_WINDOW };
   try {
-    alreadyReloaded =
-      sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) === version;
-    if (!alreadyReloaded) {
-      sessionStorage.setItem(MANIFEST_VERSION_STORAGE_KEY, version);
+    let serialized = sessionStorage.getItem(MANIFEST_RECOVERY_STORAGE_KEY);
+    let stored;
+    try {
+      stored = JSON.parse(serialized || "null");
+    } catch {
+      // Replace an invalid record so it cannot disable recovery indefinitely.
+    }
+    if (
+      stored &&
+      Number.isInteger(stored.attempts) &&
+      stored.attempts >= 0 &&
+      Number.isFinite(stored.expiresAt) &&
+      stored.expiresAt > now &&
+      stored.expiresAt <= recovery.expiresAt
+    ) {
+      recovery = stored;
+    }
+    if (recovery.attempts >= MANIFEST_RELOAD_DELAYS.length) {
+      throw mismatchError;
     }
   } catch {
-    // Session storage unavailable
-  }
-
-  // A previous document already attempted recovery for this version. Fail
-  // discovery instead of matching a fallback route in the unchanged route tree.
-  if (alreadyReloaded) {
-    throw new Error(
-      "Unable to discover routes due to manifest version mismatch.",
-    );
+    // Without persistent storage we cannot bound reloads across documents.
+    // Fail rather than continue on the stale tree or risk a reload loop.
+    throw mismatchError;
   }
 
   // Share the pending promise before starting navigation so concurrent requests
@@ -352,21 +393,18 @@ export async function handleClientVersionMismatch(
   let reloadPromise = new Promise<never>((_, reject) => {
     rejectReload = reject;
   });
-  pendingManifestReload = reloadPromise;
+  let requests = [{ path: errorReloadPath, signal, getReloadPath }];
+  pendingManifestReload = { promise: reloadPromise, requests };
 
-  let failReload = () => {
+  let timeout: ReturnType<typeof setTimeout>;
+  let failReload = (error = mismatchError) => {
     clearTimeout(timeout);
     window.removeEventListener("pageshow", onPageShow);
     pendingManifestReload = undefined;
-    // Preserve the stored version to prevent another reload loop. Reject rather
-    // than resume discovery against the stale route tree.
-    rejectReload(
-      new Error("Unable to discover routes due to manifest version mismatch."),
-    );
+    // Keep the budget and fail discovery instead of allowing operations to
+    // resume on the stale route tree.
+    rejectReload(error);
   };
-  // A beforeunload prompt can cancel this navigation without notifying us. Give
-  // the reload time to finish, then fail any requests left in this document.
-  let timeout = setTimeout(failReload, MANIFEST_RELOAD_TIMEOUT);
   let onPageShow = (event: PageTransitionEvent) => {
     if (event.persisted) {
       // BFCache restores pending requests as well as module state.
@@ -375,12 +413,45 @@ export async function handleClientVersionMismatch(
   };
   window.addEventListener("pageshow", onPageShow);
 
-  // Reload the destination on navigations, or the current page on fetcher calls.
-  try {
-    window.location.href = errorReloadPath;
-    console.warn("Detected manifest version mismatch, reloading...");
-  } catch {
-    failReload();
+  let startReload = () => {
+    // Backoff gives a newer navigation time to supersede the initiating one.
+    // A surviving sibling can still use the shared recovery attempt.
+    let path: string | null = null;
+    for (let request of requests) {
+      if (request.signal?.aborted) continue;
+      path = request.getReloadPath ? request.getReloadPath() : request.path;
+      if (path) break;
+    }
+    if (!path) {
+      failReload(new DiscoveryCancelledError());
+      return;
+    }
+    // A beforeunload prompt can cancel navigation without notifying us.
+    timeout = setTimeout(failReload, MANIFEST_RELOAD_TIMEOUT);
+    try {
+      // Charge only an actual document-navigation attempt, after cancellation
+      // and full-manifest loading have had a chance to supersede recovery.
+      // Persist before navigating so an unavailable store cannot cause a loop.
+      sessionStorage.setItem(
+        MANIFEST_RECOVERY_STORAGE_KEY,
+        JSON.stringify({ ...recovery, attempts: recovery.attempts + 1 }),
+      );
+      if (new URL(path, window.location.href).href === window.location.href) {
+        // Assigning the current URL with a hash can stay in the same document.
+        window.location.reload();
+      } else {
+        window.location.href = path;
+      }
+      console.warn("Detected manifest version mismatch, reloading...");
+    } catch {
+      failReload();
+    }
+  };
+  let delay = MANIFEST_RELOAD_DELAYS[recovery.attempts];
+  if (delay) {
+    timeout = setTimeout(startReload, delay);
+  } else {
+    startReload();
   }
   return reloadPromise;
 }
@@ -399,6 +470,7 @@ export async function fetchAndApplyManifestPatches(
   fetchImplementation: RouterFetch = (request) => fetch(request),
   serverOrigin?: string,
   isApiOnly: boolean = false,
+  getReloadPath?: () => string | null,
 ): Promise<void> {
   paths = getPathsWithAncestors(paths);
 
@@ -437,6 +509,8 @@ export async function fetchAndApplyManifestPatches(
         res.status === 204 && res.headers.has("X-Remix-Reload-Document"),
         manifest.version,
         errorReloadPath,
+        signal,
+        getReloadPath,
       )
     ) {
       return;
