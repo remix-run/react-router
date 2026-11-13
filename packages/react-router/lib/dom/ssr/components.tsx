@@ -275,6 +275,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
         <style
           {...{ [CRITICAL_CSS_DATA_ATTRIBUTE]: "" }}
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: criticalCss }}
         />
       ) : null}
@@ -284,6 +285,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
           rel="stylesheet"
           href={criticalCss.href}
           nonce={nonce}
+          suppressHydrationWarning
           crossOrigin={crossOrigin}
         />
       ) : null}
@@ -299,6 +301,7 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
           <link
             key={key}
             nonce={nonce}
+            suppressHydrationWarning
             {...link}
             crossOrigin={link.crossOrigin ?? crossOrigin}
           />

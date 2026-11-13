@@ -1,6 +1,8 @@
 import { createStaticHandler } from "react-router";
 import { act, fireEvent, render } from "@testing-library/react";
 import * as React from "react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server.node";
 
 import {
   createMemoryRouter,
@@ -528,6 +530,101 @@ describe("<Links />", () => {
 
     let link = container.querySelector("link[href='/style.css']");
     expect(link).toHaveAttribute("nonce", "server-nonce");
+  });
+
+  it("does not warn about a nonce mismatch when hydrating without a nonce", async () => {
+    let manifest = {
+      routes: {
+        root: {
+          id: "root",
+          module: "root.js",
+          hasLoader: false,
+          hasAction: false,
+          hasErrorBoundary: false,
+          hasClientAction: false,
+          hasClientLoader: false,
+          hasClientMiddleware: false,
+          clientActionModule: undefined,
+          clientLoaderModule: undefined,
+          clientMiddlewareModule: undefined,
+          hydrateFallbackModule: undefined,
+        },
+      },
+      entry: { imports: [], module: "" },
+      url: "",
+      version: "",
+    };
+    let routeModules = {
+      root: {
+        default: () => null,
+        links: () => [{ rel: "stylesheet", href: "/style.css" }],
+      },
+    };
+
+    let serverContext = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+      nonce: "server-nonce",
+      routeModules,
+      manifest,
+    });
+
+    let clientContext = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+      routeModules,
+      manifest,
+    });
+
+    function getTree(context: any) {
+      return (
+        <DataRouterStateContext.Provider
+          value={
+            {
+              matches: [
+                {
+                  route: { id: "root" },
+                },
+              ],
+            } as any
+          }
+        >
+          <DataRouterNavigationContext.Provider
+            value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+          >
+            <DataRouterDataContext.Provider
+              value={{ loaderData: {}, actionData: null, errors: null }}
+            >
+              <FrameworkContext.Provider value={context}>
+                <Links />
+              </FrameworkContext.Provider>
+            </DataRouterDataContext.Provider>
+          </DataRouterNavigationContext.Provider>
+        </DataRouterStateContext.Provider>
+      );
+    }
+
+    let html = renderToString(getTree(serverContext));
+    let container = document.createElement("div");
+    document.body.appendChild(container);
+    container.innerHTML = html;
+
+    let consoleErrorSpy = jest.spyOn(console, "error");
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+
+    try {
+      await act(async () => {
+        root = hydrateRoot(container, getTree(clientContext));
+      });
+
+      expect(console.error).not.toHaveBeenCalled();
+    } finally {
+      if (root) {
+        await act(async () => {
+          root.unmount();
+        });
+      }
+      container.remove();
+      consoleErrorSpy.mockRestore();
+    }
   });
 });
 

@@ -1,0 +1,1 @@
+Suppress the hydration warning for `nonce` on elements rendered by `<Links>`, the default root error boundary, and the default root hydrate fallback when the nonce comes from `<ServerRouter nonce>`, matching `<Scripts>` and `<ScrollRestoration>`.
