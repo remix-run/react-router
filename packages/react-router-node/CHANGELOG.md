@@ -1,5 +1,14 @@
 # `@react-router/node`
 
+## v8.5.2
+
+### Patch Changes
+
+- Keep handling errors from a cancelled Node stream until it closes, so a `HEAD` request for a file that fails to open no longer crashes the process ([#15634](https://github.com/remix-run/react-router/pull/15634))
+- Release the reader acquired by `readableStreamToString` when consumption finishes or fails, allowing callers to acquire a reader again afterward. ([#15592](https://github.com/remix-run/react-router/pull/15592))
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+
 ## v8.5.1
 
 ### Patch Changes

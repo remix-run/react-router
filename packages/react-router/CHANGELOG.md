@@ -1,5 +1,17 @@
 # `react-router`
 
+## v8.5.2
+
+### Patch Changes
+
+- Cancel the discarded response body for `HEAD` requests, so a resource route streaming a file no longer leaks its file descriptor ([#15634](https://github.com/remix-run/react-router/pull/15634))
+  - Keep observing nested deferred promise rejections after cancelling a data response so they cannot crash the server
+- Preserve streamed `Suspense` boundaries during hydration in development by wrapping the critical CSS reset in `React.startTransition`. Previously, this update could cause React 19 to silently discard the server HTML and render the boundary on the client. ([#15382](https://github.com/remix-run/react-router/pull/15382))
+- Fix submissions to root form actions containing search parameters or a hash when a `basename` is configured ([#15725](https://github.com/remix-run/react-router/pull/15725))
+- Fix generated `MetaArgs.matches` types to stop at the current route instead of appending an unknown, possibly undefined tail. ([#15697](https://github.com/remix-run/react-router/pull/15697))
+- Clear an `<Await>` render error when it receives a new `resolve` value, so the error element no longer stays on screen after navigating to a route whose data renders fine ([#15695](https://github.com/remix-run/react-router/pull/15695))
+- Fix `useBlocker` leaving behind a stale blocker that keeps blocking navigation after its component is hidden and shown again with `<Activity>`, or after the router is recreated ([#15710](https://github.com/remix-run/react-router/pull/15710))
+
 ## v8.5.1
 
 ### Patch Changes
