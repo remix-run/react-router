@@ -331,6 +331,52 @@ describe("react transitions", () => {
       await waitFor(() => screen.getByText("Increment:3"));
       expect(screen.getByText("Navigation:idle")).toBeDefined();
     });
+
+    it("fetcher.data effects run when a no-op update renders before the transition", async () => {
+      let loaderDfd = createDeferred();
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          Component() {
+            let fetcher = useFetcher();
+            let [effectData, setEffectData] = React.useState();
+            let [, setCount] = React.useState(0);
+            React.useEffect(() => setEffectData(fetcher.data), [fetcher.data]);
+            React.useEffect(
+              () =>
+                router.subscribe(() => {
+                  setCount(1);
+                  setCount(0);
+                }),
+              [],
+            );
+            return (
+              <>
+                <p>{`Fetcher:${fetcher.state}:${fetcher.data}`}</p>
+                <p>{`Effect:${effectData}`}</p>
+                <button id="fetch" onClick={() => fetcher.load("/fetch")}>
+                  Fetch
+                </button>
+              </>
+            );
+          },
+        },
+        {
+          path: "fetch",
+          loader: () => loaderDfd.promise,
+        },
+      ]);
+
+      let { container } = render(<RouterProvider router={router} />);
+
+      await waitFor(() => screen.getByText("Fetch"));
+      await fireEvent.click(container.querySelector("#fetch")!);
+      await waitFor(() => screen.getByText("Fetcher:loading:undefined"));
+
+      loaderDfd.resolve("data");
+      await waitFor(() => screen.getByText("Effect:data"));
+      expect(screen.getByText("Fetcher:idle:data")).toBeDefined();
+    });
   });
 
   describe("<RouterProvider useTransitions={false} />", () => {
