@@ -790,7 +790,7 @@ implementations.forEach((implementation) => {
             "src/routes/get-context/root.tsx": js`
               "use client";
 
-              import { Outlet } from "react-router";
+              import { Link, Outlet } from "react-router";
               import type { ClientMiddlewareFunction } from "react-router";
               import { testContext } from "../../config/get-context";
 
@@ -809,6 +809,7 @@ implementations.forEach((implementation) => {
                 return (
                   <div>
                     <h1>Root Route</h1>
+                    <Link to="/">Home</Link>
                     <Outlet />
                   </div>
                 );
@@ -1784,6 +1785,14 @@ implementations.forEach((implementation) => {
 
         test("Supports client context using getContext", async ({ page }) => {
           await page.goto(`http://localhost:${port}/get-context`);
+          await page.waitForSelector("[data-client-context]");
+          expect(
+            await page.locator("[data-client-context]").textContent(),
+          ).toBe("Client context value: client-context-value");
+
+          // Verify clientMiddleware also runs during client navigations.
+          await page.click('a[href="/"]');
+          await page.goBack();
           await page.waitForSelector("[data-client-context]");
           expect(
             await page.locator("[data-client-context]").textContent(),

@@ -314,6 +314,7 @@ function createRouterFromPayload({
         invariant(match, "Route not found in payload");
         return {
           clientLoader: match.clientLoader,
+          clientMiddleware: match.clientMiddleware,
           hasLoader: match.hasLoader,
           hasHydrateFallback: match.hydrateFallbackElement != null,
         };
@@ -982,6 +983,7 @@ function createRouteFromServerManifest(
             throw noActionDefinedError("action", match.id);
           },
     path: match.path,
+    middleware: match.clientMiddleware,
     shouldRevalidate: match.shouldRevalidate,
     // We always have a "loader" in this RSC world since even if we don't
     // have a `loader` we may need to get the `element` implementation
