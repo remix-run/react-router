@@ -2825,6 +2825,53 @@ describe("fetchers", () => {
       });
     });
 
+    it("preserves current loader data when a fetcher revalidation completes during a redirected navigation", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+            children: [
+              {
+                id: "layout",
+                path: "layout",
+                loader: true,
+                shouldRevalidate: () => false,
+                children: [{ id: "child", path: ":id", loader: true }],
+              },
+              { id: "save", path: "save", action: true },
+              { id: "mutate", path: "mutate", action: true },
+            ],
+          },
+        ],
+        initialEntries: ["/layout/start"],
+        hydrationData: {
+          loaderData: { root: "ROOT", layout: "LAYOUT", child: "START" },
+        },
+      });
+
+      let A = await t.fetch("/mutate", "key", "layout", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      let B = await t.navigate("/save", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await A.actions.mutate.resolve("MUTATE");
+      let C = await B.actions.save.redirectReturn("/layout/next");
+      await A.loaders.root.resolve("ROOT*");
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.child.resolve("NEXT");
+
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        location: { pathname: "/layout/next" },
+        loaderData: { root: "ROOT**", layout: "LAYOUT", child: "NEXT" },
+      });
+    });
+
     it("does not revalidate fetchers initiated from removed routes", async () => {
       let t = setup({
         routes: TASK_ROUTES,
