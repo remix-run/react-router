@@ -3084,6 +3084,8 @@ export function createRouter(init: RouterInit): Router {
     // Start the data load for current matches, or the next location if we're
     // in the middle of a navigation
     let nextLocation = state.navigation.location || state.location;
+    // POP and revalidation may reuse a location key for a new navigation.
+    let revalidationNavigationController = pendingNavigationController;
     let revalidationRequest = createClientSideRequest(
       init.history,
       nextLocation,
@@ -3190,14 +3192,44 @@ export function createRouter(init: RouterInit): Router {
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
+
+    let fetcherIsMounted = state.fetchers.has(key);
+
+    // Discard reloads for an abandoned navigation, but allow current-page updates.
+    if (
+      (nextLocation.key !== state.navigation.location?.key ||
+        revalidationNavigationController !== pendingNavigationController) &&
+      (nextLocation.pathname !== state.location.pathname ||
+        nextLocation.search !== state.location.search)
+    ) {
+      let finalFetchers = new Map(state.fetchers);
+      if (fetcherIsMounted) {
+        finalFetchers.set(key, getDoneFetcher(actionResult.data));
+      }
+      let doneKeys = [];
+      for (let rf of revalidatingFetchers) {
+        let fetcher = finalFetchers.get(rf.key);
+        let controller = fetchControllers.get(rf.key);
+        let ownsReload = controller
+          ? controller === rf.controller
+          : fetcher === workingFetchers.get(rf.key);
+        if (!ownsReload || fetcher?.state !== "loading") {
+          continue;
+        }
+        fetchControllers.delete(rf.key);
+        doneKeys.push(rf.key);
+      }
+      markFetchersDone(doneKeys, finalFetchers);
+      updateState({ fetchers: finalFetchers });
+      return;
+    }
+
     revalidatingFetchers.forEach((r) => {
       // A newer request may have replaced this controller while we were loading.
       if (fetchControllers.get(r.key) === r.controller) {
         fetchControllers.delete(r.key);
       }
     });
-
-    let fetcherIsMounted = state.fetchers.has(key);
 
     // Generate a new local copy of `state` for the redirect navigation to read
     // from and eventually commit.  This avoids mutating the existing state.fetchers
