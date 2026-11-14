@@ -777,6 +777,29 @@ export function RSCHydratedRouter({
     [router.subscribe, routes, router],
   );
 
+  React.useLayoutEffect(() => {
+    if (state.initialized) return;
+
+    // Initial hydration can be delayed while clientLoaders run. Keep the
+    // wrapper's state in sync when that first initialization completes so
+    // RouterProvider doesn't recover back to the pre-initialized snapshot.
+    let unsubscribe = () => {};
+    unsubscribe = router.subscribe((newState) => {
+      if (newState.initialized) {
+        unsubscribe();
+        React.startTransition(() => {
+          setState((current) =>
+            current.state.initialized
+              ? current
+              : { ...current, state: newState },
+          );
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [router.subscribe, router, state.initialized]);
+
   const transitionEnabledRouter = React.useMemo(
     () =>
       ({
