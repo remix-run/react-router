@@ -345,6 +345,27 @@ describe("express createRemixRequest", () => {
     expect(remixRequest.url).toBe("http://example.com:8443/foo/bar");
   });
 
+  it("does not use the Host port when x-forwarded-host has no port and trust proxy is enabled", async () => {
+    let app = express();
+    app.set("trust proxy", true);
+    let expressRequest = createRequest({
+      app,
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "example.com",
+      headers: {
+        Host: "localhost:3000",
+        "x-forwarded-host": "example.com",
+      },
+    });
+    let expressResponse = createResponse();
+
+    let remixRequest = createRemixRequest(expressRequest, expressResponse);
+
+    expect(remixRequest.url).toBe("http://example.com/foo/bar");
+  });
+
   it.each(["[::1]", "[fd00:1234::1]"])(
     "reads the port after the IPv6 host %s",
     async (hostname) => {
