@@ -1,0 +1,1 @@
+Fix `href()` dropping the `/` of an omitted optional param that is followed by static text in the same segment, so `href("/sitemap/:lang?.xml")` returns `/sitemap/.xml` (which matches the route) instead of `/sitemap.xml`
