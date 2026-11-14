@@ -185,6 +185,22 @@ describe("cookies", () => {
     expect(setCookie2).toContain("Priority=High");
   });
 
+  it("lets an `expires` passed to serialize() replace the default `maxAge`", async () => {
+    let cookie = createCookie("my-cookie", { maxAge: 60 });
+
+    let setCookie = await cookie.serialize("hello world", {
+      expires: new Date("2100-01-01T00:00:00.000Z"),
+    });
+    expect(setCookie).toContain("Expires=Fri, 01 Jan 2100 00:00:00 GMT");
+    expect(setCookie).not.toContain("Max-Age");
+
+    let setCookie2 = await cookie.serialize("hello world");
+    expect(setCookie2).toContain("Max-Age=60");
+
+    let setCookie3 = await cookie.serialize("hello world", { maxAge: 120 });
+    expect(setCookie3).toContain("Max-Age=120");
+  });
+
   describe("warnings when providing options you may not want to", () => {
     let spy = spyConsole();
 

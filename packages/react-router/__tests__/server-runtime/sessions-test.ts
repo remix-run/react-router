@@ -89,6 +89,23 @@ describe("createSessionStorage", () => {
 
     expect(deleteData).toHaveBeenCalledWith("session-id");
   });
+
+  it("expires the cookie when the data it stores expires", async () => {
+    let createData = jest.fn(async (_data: unknown, _expires?: Date) => "id");
+    let { getSession, commitSession } = createSessionStorage({
+      cookie: { maxAge: 60, secrets: ["secret1"] },
+      createData,
+      readData: async () => null,
+      updateData: async () => {},
+      deleteData: async () => {},
+    });
+    let expires = new Date("2100-01-01T00:00:00.000Z");
+    let setCookie = await commitSession(await getSession(), { expires });
+
+    expect(createData).toHaveBeenCalledWith({}, expires);
+    expect(setCookie).toContain("Expires=Fri, 01 Jan 2100 00:00:00 GMT");
+    expect(setCookie).not.toContain("Max-Age");
+  });
 });
 
 describe("In-memory session storage", () => {
