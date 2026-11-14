@@ -15,7 +15,7 @@ import { createMemoryHistory } from "../../lib/router/history";
 import { type Router, createRouter } from "../../lib/router/router";
 import { type DataRouteObject } from "../../lib/router/utils";
 import { getFetcherData } from "./utils/data-router-setup";
-import { createDeferred, tick } from "./utils/utils";
+import { createDeferred, createFormData, tick } from "./utils/utils";
 
 let router: Router;
 
@@ -110,6 +110,83 @@ function testDiscoveryRace(unstable_customRouteDiscovery: boolean) {
     expect(apiLoaderCalls.length).toBe(1);
     expect(apiLoaderCalls[0]).toContain("/api/foo");
     expect(fetcherData.get(key)).toBe("API");
+  });
+
+  it("does not complete a navigation awaiting discovery with a fetcher action revalidation", async () => {
+    const manifestDfd = createDeferred();
+    const revalidationDfd = createDeferred();
+    let detailLoads = 0;
+    let editLoaderRan = false;
+
+    router = createRouter({
+      future: { unstable_customRouteDiscovery },
+      history: createMemoryHistory({ initialEntries: ["/detail"] }),
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          children: [
+            {
+              id: "detail",
+              path: "detail",
+              loader: () =>
+                ++detailLoads === 2 ? revalidationDfd.promise : null,
+            },
+            { id: "api", path: "api", action: () => null },
+          ],
+        },
+      ],
+      async patchRoutesOnNavigation({ path, patch }) {
+        if (path === "/detail/edit") {
+          await manifestDfd.promise;
+          patch("root", [
+            {
+              id: "edit",
+              path: "detail/edit",
+              loader: () => {
+                editLoaderRan = true;
+                return null;
+              },
+            },
+          ]);
+        }
+      },
+    }).initialize();
+    await tick();
+
+    // A fetcher action completes and its revalidation of /detail stays pending
+    const key = "my-fetcher";
+    router.fetch(key, "root", "/api", {
+      formMethod: "post",
+      formData: createFormData({}),
+    });
+    await tick();
+    expect(router.state.fetchers.get(key)?.state).toBe("loading");
+
+    // Navigate to a route that is not discovered yet
+    router.navigate("/detail/edit");
+    await tick();
+    expect(router.state.navigation.state).toBe("loading");
+
+    // The revalidation settles while the navigation awaits discovery. It must
+    // not commit the navigation with the current page's matches.
+    revalidationDfd.resolve(null);
+    await tick();
+    expect(router.state.navigation.state).toBe("loading");
+    expect(router.state.location.pathname).toBe("/detail");
+
+    manifestDfd.resolve(null);
+    await tick();
+    await tick();
+
+    expect(router.state.navigation.state).toBe("idle");
+    expect(router.state.location.pathname).toBe("/detail/edit");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "root",
+      "edit",
+    ]);
+    expect(editLoaderRan).toBe(true);
+    expect(router.state.fetchers.get(key)?.state).toBe("idle");
   });
 
   it("does not revalidate a fetcher during discovery without a splat route", async () => {
