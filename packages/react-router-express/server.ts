@@ -93,20 +93,19 @@ export function createRemixRequest(
   // `X-Forwarded-Host` or `Host`, skipping any bracketed IPv6 address
   // (e.g., `[::1]:3000`) so its colons aren't mistaken for the port
   let ipv6 = /^\[.*?\]/;
-  let [, hostnamePortStr] = req.app?.enabled("trust proxy")
-    ? (req
-        .get("X-Forwarded-Host")
-        ?.split(",")[0]
-        .trimEnd()
-        .replace(ipv6, "")
-        .split(":") ?? [])
+  let forwardedHost = req.app?.enabled("trust proxy")
+    ? req.get("X-Forwarded-Host")
+    : undefined;
+  let [, hostnamePortStr] = forwardedHost
+    ? forwardedHost.split(",")[0].trimEnd().replace(ipv6, "").split(":")
     : [];
   let [, hostPortStr] = req.get("host")?.replace(ipv6, "").split(":") ?? [];
   let hostnamePort = Number.parseInt(hostnamePortStr, 10);
   let hostPort = Number.parseInt(hostPortStr, 10);
   let port = Number.isSafeInteger(hostnamePort)
     ? hostnamePort
-    : Number.isSafeInteger(hostPort)
+    : // the Host port belongs to the proxy's upstream, not the forwarded host
+      !forwardedHost && Number.isSafeInteger(hostPort)
       ? hostPort
       : "";
   // Use req.hostname here as it respects the "trust proxy" setting
