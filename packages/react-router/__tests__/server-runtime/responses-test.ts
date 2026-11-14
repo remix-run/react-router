@@ -87,4 +87,20 @@ describe("redirect", () => {
     let response = redirect("/profile", 301);
     expect(response.status).toEqual(301);
   });
+
+  it("does not modify the given init", () => {
+    let init = { headers: { "X-Remix": "is awesome" } };
+    let response = redirect("/login", init);
+    expect(response.status).toEqual(302);
+    expect(init).toEqual({ headers: { "X-Remix": "is awesome" } });
+  });
+
+  it("accepts a frozen init", () => {
+    let response = redirect(
+      "/login",
+      Object.freeze({ headers: { "X-Remix": "is awesome" } }),
+    );
+    expect(response.status).toEqual(302);
+    expect(response.headers.get("X-Remix")).toEqual("is awesome");
+  });
 });
