@@ -14,6 +14,7 @@ import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 import { mockServerBuild } from "./utils";
+import type { ValidateActionOriginFunction } from "../../lib/actions";
 import { Deferred } from "../../vendor/turbo-stream-v2/utils";
 
 function spyConsole() {
@@ -2399,4 +2400,89 @@ describe("shared server runtime", () => {
     let result = await handler(request, loadContext);
     expect(await result.text()).toBe("load-value");
   });
+});
+
+describe("unstable_validateActionOrigin", () => {
+  spyConsole();
+
+  let buildWithAction = (
+    action: () => string,
+    unstable_validateActionOrigin: ValidateActionOriginFunction,
+  ) =>
+    mockServerBuild(
+      { root: { path: "", action, default: () => "COMPONENT" } },
+      { unstable_validateActionOrigin },
+    );
+
+  it.each(["/", "/_.data"])(
+    "lets the entry module's function allow a POST to %s that the built-in check rejects",
+    async (path) => {
+      let action = jest.fn(() => "ACTION");
+      let build = buildWithAction(
+        action,
+        ({ request, allowed }) =>
+          allowed || request.headers.get("x-forwarded-proto") === "https",
+      );
+
+      let response = await createRequestHandler(build)(
+        new Request(`http://localhost:3000${path}`, {
+          method: "POST",
+          headers: {
+            origin: "https://localhost:3000",
+            "x-forwarded-proto": "https",
+          },
+        }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(action).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(["/", "/_.data"])(
+    "reports an error thrown by the entry module's function on a POST to %s",
+    async (path) => {
+      let error = new Error("lookup failed");
+      let handleError = jest.fn();
+      let action = jest.fn(() => "ACTION");
+      let build = mockServerBuild(
+        { root: { path: "", action, default: () => "COMPONENT" } },
+        {
+          handleError,
+          unstable_validateActionOrigin: () => {
+            throw error;
+          },
+        },
+      );
+
+      let response = await createRequestHandler(build)(
+        new Request(`http://localhost:3000${path}`, {
+          method: "POST",
+          headers: { origin: "http://localhost:3000" },
+        }),
+      );
+
+      expect(response.status).toBe(400);
+      expect(action).not.toHaveBeenCalled();
+      expect(handleError).toHaveBeenCalledWith(error, expect.anything());
+    },
+  );
+
+  it.each(["/", "/_.data"])(
+    "rejects a POST to %s when the entry module's function returns false",
+    async (path) => {
+      let action = jest.fn(() => "ACTION");
+      let build = buildWithAction(action, () => false);
+
+      let response = await createRequestHandler(build)(
+        new Request(`http://localhost:3000${path}`, {
+          method: "POST",
+          headers: { origin: "http://localhost:3000" },
+        }),
+      );
+
+      expect(response.status).toBe(400);
+      expect(action).not.toHaveBeenCalled();
+    },
+  );
 });

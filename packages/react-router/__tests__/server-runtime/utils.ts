@@ -16,6 +16,7 @@ import type {
   MiddlewareFunction,
 } from "../../lib/router/utils";
 import type { ServerInstrumentation } from "../../lib/router/instrumentation";
+import type { ValidateActionOriginFunction } from "../../lib/actions";
 
 export function mockServerBuild(
   routes: Record<
@@ -38,6 +39,7 @@ export function mockServerBuild(
     handleDocumentRequest?: HandleDocumentRequestFunction;
     instrumentations?: ServerInstrumentation[];
     routeDiscovery?: ServerBuild["routeDiscovery"];
+    unstable_validateActionOrigin?: ValidateActionOriginFunction;
   } = {},
 ): ServerBuild {
   return {
@@ -98,6 +100,7 @@ export function mockServerBuild(
         handleDataRequest: jest.fn(async (response) => response),
         handleError: opts.handleError,
         instrumentations: opts.instrumentations,
+        unstable_validateActionOrigin: opts.unstable_validateActionOrigin,
       },
     },
     routes: Object.entries(routes).reduce<ServerRouteManifest>(

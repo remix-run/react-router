@@ -18,6 +18,10 @@ export type {
   RSCRouteConfigEntry as unstable_RSCRouteConfigEntry,
   RSCRouteConfig as unstable_RSCRouteConfig,
 } from "./lib/rsc/server.rsc";
+export type {
+  ValidateActionOriginArgs as unstable_ValidateActionOriginArgs,
+  ValidateActionOriginFunction as unstable_ValidateActionOriginFunction,
+} from "./lib/actions";
 
 // RSC implementation of agnostic APIs
 export {

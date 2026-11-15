@@ -48,7 +48,7 @@ import {
   instrumentHandler,
 } from "../router/instrumentation";
 import { createDataFunctionUrl, getRoutePattern } from "../router/utils";
-import { throwIfPotentialCSRFAttack } from "../actions";
+import { validateActionOrigin } from "../actions";
 import { getNormalizedPath } from "./urls";
 
 export type RequestHandler = (
@@ -482,11 +482,10 @@ async function handleDocumentRequest(
   try {
     if (isMutationMethod(request.method)) {
       try {
-        throwIfPotentialCSRFAttack(
+        await validateActionOrigin(
           request,
-          Array.isArray(build.allowedActionOrigins)
-            ? build.allowedActionOrigins
-            : [],
+          build.allowedActionOrigins,
+          build.entry.module.unstable_validateActionOrigin,
         );
       } catch (e) {
         handleError(e);

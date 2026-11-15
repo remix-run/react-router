@@ -22,7 +22,7 @@ import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
-import { throwIfPotentialCSRFAttack } from "../actions";
+import { validateActionOrigin } from "../actions";
 import { getNormalizedPath } from "./urls";
 
 // Add 304 for server side - that is not included in the client side logic
@@ -43,14 +43,19 @@ export async function singleFetchAction(
 ): Promise<Response> {
   try {
     try {
-      throwIfPotentialCSRFAttack(
+      await validateActionOrigin(
         request,
-        Array.isArray(build.allowedActionOrigins)
-          ? build.allowedActionOrigins
-          : [],
+        build.allowedActionOrigins,
+        build.entry.module.unstable_validateActionOrigin,
       );
-    } catch {
-      return handleQueryError(new Error("Bad Request"), 400);
+    } catch (error) {
+      // Report the real cause, but keep it out of the response
+      handleError(error);
+      return generateSingleFetchResponse(request, build, serverMode, {
+        result: { error: new Error("Bad Request") },
+        headers: new Headers(),
+        status: 400,
+      });
     }
 
     let result = await staticHandler.query(request, {

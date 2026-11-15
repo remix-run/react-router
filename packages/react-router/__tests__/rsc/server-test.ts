@@ -522,6 +522,54 @@ describe("RSC server", () => {
     });
   });
 
+  describe("unstable_validateActionOrigin", () => {
+    let submit = async (
+      request: Request,
+      unstable_validateActionOrigin: () => boolean,
+    ) => {
+      let action = jest.fn(() => "ACTION");
+      let statusCode: number | undefined;
+      await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request,
+        routes: [{ id: "root", path: "/", action, Component: () => null }],
+        unstable_validateActionOrigin,
+        onError: () => {},
+        generateResponse(match) {
+          statusCode = match.statusCode;
+          return new Response(null, { status: match.statusCode });
+        },
+      });
+      return { action, statusCode };
+    };
+
+    test("runs an action the built-in check rejects when the function returns true", async () => {
+      let { action, statusCode } = await submit(
+        new Request("http://remix.run/", {
+          method: "POST",
+          headers: { origin: "https://remix.run" },
+        }),
+        () => true,
+      );
+
+      expect(action).toHaveBeenCalledTimes(1);
+      expect(statusCode).toBe(200);
+    });
+
+    test("rejects an action the built-in check accepts when the function returns false", async () => {
+      let { action, statusCode } = await submit(
+        new Request("https://remix.run/", {
+          method: "POST",
+          headers: { origin: "https://remix.run" },
+        }),
+        () => false,
+      );
+
+      expect(action).not.toHaveBeenCalled();
+      expect(statusCode).toBe(400);
+    });
+  });
+
   test("switches to initial discovery above the pathname work limit", async () => {
     let routeDiscovery = Object.freeze({ mode: "lazy" } as const);
     let routes: RSCRouteConfigEntry[] = [

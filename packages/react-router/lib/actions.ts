@@ -1,7 +1,75 @@
+/**
+ * Arguments passed to {@link ValidateActionOriginFunction}.
+ */
+export interface ValidateActionOriginArgs {
+  /**
+   * The incoming action [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request).
+   * Don't read its body, the action still needs it. For single fetch
+   * submissions, its URL is the `.data` URL.
+   */
+  request: Request;
+  /**
+   * The raw `Origin` header of the request, or `null` when it is absent.
+   */
+  origin: string | null;
+  /**
+   * Whether React Router's built-in check accepts the request: the `Origin`
+   * header is absent, matches the origin of `request.url`, or its host is
+   * listed in `allowedActionOrigins`.
+   */
+  allowed: boolean;
+}
+
+/**
+ * Decides whether an action submission may run. Return `true` to run the
+ * action, anything else rejects it with a `400 Bad Request`.
+ */
+export interface ValidateActionOriginFunction {
+  (args: ValidateActionOriginArgs): boolean | Promise<boolean>;
+}
+
 export function throwIfPotentialCSRFAttack(
   request: Request,
   allowedActionOrigins: string[] | undefined,
 ) {
+  if (!isActionOriginAllowed(request, allowedActionOrigins)) {
+    // This seems to be an CSRF attack. We should not proceed with the action.
+    throw new Error(
+      "The `request.url` origin does not match `origin` header from a forwarded " +
+        "action request. Aborting the action.",
+    );
+  }
+}
+
+export async function validateActionOrigin(
+  request: Request,
+  allowedActionOrigins: string[] | false | undefined,
+  validate: ValidateActionOriginFunction | undefined,
+) {
+  let origins = Array.isArray(allowedActionOrigins)
+    ? allowedActionOrigins
+    : undefined;
+  if (!validate) {
+    throwIfPotentialCSRFAttack(request, origins);
+    return;
+  }
+
+  // A malformed `Origin` header throws here, before the app's function sees it
+  let allowed = isActionOriginAllowed(request, origins);
+  let origin = request.headers.get("origin");
+
+  if ((await validate({ request, origin, allowed })) !== true) {
+    throw new Error(
+      "The action origin was rejected by `unstable_validateActionOrigin`. " +
+        "Aborting the action.",
+    );
+  }
+}
+
+function isActionOriginAllowed(
+  request: Request,
+  allowedActionOrigins: string[] | undefined,
+): boolean {
   let originHeader = request.headers.get("origin");
   let originDomain: string | null = null;
   let originUrl: URL | null = null;
@@ -23,15 +91,11 @@ export function throwIfPotentialCSRFAttack(
     ? originUrl.origin === requestUrl.origin
     : originDomain === requestUrl.host;
 
-  if (originDomain && !originMatchesRequest) {
-    if (!isAllowedOrigin(originDomain, allowedActionOrigins)) {
-      // This seems to be an CSRF attack. We should not proceed with the action.
-      throw new Error(
-        "The `request.url` origin does not match `origin` header from a forwarded " +
-          "action request. Aborting the action.",
-      );
-    }
-  }
+  return (
+    !originDomain ||
+    originMatchesRequest ||
+    isAllowedOrigin(originDomain, allowedActionOrigins)
+  );
 }
 
 // Implementation of micromatch by Next.js https://github.com/vercel/next.js/blob/ea927b583d24f42e538001bf13370e38c91d17bf/packages/next/src/server/app-render/csrf-protection.ts#L6
