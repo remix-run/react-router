@@ -1792,6 +1792,7 @@ implementations.forEach((implementation) => {
 
           // Verify clientMiddleware also runs during client navigations.
           await page.click('a[href="/"]');
+          await page.waitForURL(`http://localhost:${port}/`);
           await page.goBack();
           await page.waitForSelector("[data-client-context]");
           expect(
