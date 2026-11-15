@@ -23,6 +23,7 @@ export async function decode(
   const { plugins } = options ?? {};
 
   const done = new Deferred<void>();
+  done.promise.catch(() => {});
   const reader = readable
     .pipeThrough(createLineSplittingTransform())
     .getReader();
@@ -52,8 +53,11 @@ export async function decode(
       });
   }
 
+  const finished = donePromise.then(() => reader.closed);
+  finished.catch(() => {});
+
   return {
-    done: donePromise.then(() => reader.closed),
+    done: finished,
     value: decoded.value,
   };
 }

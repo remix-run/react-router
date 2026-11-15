@@ -779,6 +779,58 @@ test("should encode and decode large payload and yield the event loop", async ()
   await decoded.done;
 });
 
+test("does not emit unhandledRejection when stream errors after initial chunk and done is not awaited", async () => {
+  const unhandled: unknown[] = [];
+  const onUnhandled = (reason: unknown) => {
+    unhandled.push(reason);
+  };
+  process.on("unhandledRejection", onUnhandled);
+
+  try {
+    let pulls = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (++pulls === 1) {
+          controller.enqueue(
+            new TextEncoder().encode(
+              '[{"_1":2},"root",{"_3":4},"data","ok"]\n',
+            ),
+          );
+        } else {
+          controller.error(new TypeError("network error"));
+        }
+      },
+    });
+
+    const decoded = await decode(body);
+    expect(decoded.value).toEqual({ root: { data: "ok" } });
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(unhandled).toEqual([]);
+  } finally {
+    process.off("unhandledRejection", onUnhandled);
+  }
+});
+
+test("still rejects decoded.done when stream errors after initial chunk", async () => {
+  let pulls = 0;
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (++pulls === 1) {
+        controller.enqueue(
+          new TextEncoder().encode('[{"_1":2},"root",{"_3":4},"data","ok"]\n'),
+        );
+      } else {
+        controller.error(new TypeError("network error"));
+      }
+    },
+  });
+
+  const decoded = await decode(body);
+  expect(decoded.value).toEqual({ root: { data: "ok" } });
+  await expect(decoded.done).rejects.toThrow("network error");
+});
+
 type Nested = { value: number; next: Nested | null };
 function createDeeplyNestedObject(): Nested {
   const depth = 100000;
