@@ -255,6 +255,15 @@ const normalizeRelativeFilePath = (
   return vite.normalizePath(relativePath).split("?")[0];
 };
 
+// Remove Vite's HMR timestamp query (e.g. `?t=1720000000000`) so a module ID
+// can be matched against its route file.
+const removeHmrTimestampQuery = (id: string): string => {
+  let [file, query] = id.split("?");
+  if (query === undefined) return id;
+  let params = query.split("&").filter((param) => !/^t=\d{13}$/.test(param));
+  return params.length > 0 ? `${file}?${params.join("&")}` : file;
+};
+
 let virtual = {
   serverBuild: VirtualModule.create("server-build"),
   serverManifest: VirtualModule.create("server-manifest"),
@@ -659,6 +668,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   let viteCommand: Vite.ResolvedConfig["command"];
   let viteUserConfig: Vite.UserConfig;
   let viteConfig: Vite.ResolvedConfig | undefined;
+  let devServer: Vite.ViteDevServer | undefined;
+  let devRouteExports = new Map<string, Promise<string[]>>();
   let cssModulesManifest: Record<string, string> = {};
   let viteChildCompiler: Vite.ViteDevServer | null = null;
   let cache: Cache = new Map();
@@ -1121,13 +1132,44 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
   };
 
   // In dev, the server and browser manifests are the same
-  let currentReactRouterManifestForDev: ReactRouterManifest | null = null;
   let getReactRouterManifestForDev = async (): Promise<ReactRouterManifest> => {
     let routes: ReactRouterManifest["routes"] = {};
 
-    let routeManifestExports = await getRouteManifestModuleExports(
-      viteChildCompiler,
-      ctx,
+    // Mirror Vite's dev HTML transform, which appends the last HMR timestamp to
+    // module URLs so that browsers re-fetch updated modules after a reload
+    // instead of serving a cached copy without revalidating.
+    let getDevModulePath = (absoluteFilePath: string): string => {
+      let url = resolveFileUrl(ctx, absoluteFilePath);
+      let mod =
+        devServer?.environments?.client?.moduleGraph.getModuleById(
+          absoluteFilePath,
+        );
+      if (mod && mod.lastHMRTimestamp > 0) {
+        url += `${url.includes("?") ? "&" : "?"}t=${mod.lastHMRTimestamp}`;
+      }
+      return combineURLs(ctx.publicPath, url);
+    };
+
+    let routeManifestExports = Object.fromEntries(
+      await Promise.all(
+        Object.entries(ctx.reactRouterConfig.routes).map(
+          async ([key, route]) => {
+            let exports = devRouteExports.get(route.file);
+            if (!exports) {
+              exports = getRouteModuleExports(
+                viteChildCompiler,
+                ctx,
+                route.file,
+              ).catch((error) => {
+                devRouteExports.delete(route.file);
+                throw error;
+              });
+              devRouteExports.set(route.file, exports);
+            }
+            return [key, await exports] as const;
+          },
+        ),
+      ),
     );
 
     let enforceSplitRouteModules =
@@ -1140,12 +1182,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let hasClientLoader = sourceExports.includes("clientLoader");
       let hasClientMiddleware = sourceExports.includes("clientMiddleware");
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
-      let routeModulePath = combineURLs(
-        ctx.publicPath,
-        `${resolveFileUrl(
-          ctx,
-          resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
-        )}`,
+      let routeModulePath = getDevModulePath(
+        resolveRelativeRouteFilePath(route, ctx.reactRouterConfig),
       );
 
       if (enforceSplitRouteModules) {
@@ -1205,17 +1243,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         runtime: combineURLs(ctx.publicPath, virtualInjectHmrRuntime.url),
       },
       entry: {
-        module: combineURLs(
-          ctx.publicPath,
-          resolveFileUrl(ctx, ctx.entryClientFilePath),
-        ),
+        module: getDevModulePath(ctx.entryClientFilePath),
         imports: [],
       },
       sri,
       routes,
     };
-
-    currentReactRouterManifestForDev = reactRouterManifestForDev;
 
     return reactRouterManifestForDev;
   };
@@ -1566,6 +1599,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         }
       },
       async configureServer(viteDevServer) {
+        devServer = viteDevServer;
         setDevServerHooks({
           // Give the request handler access to the critical CSS in dev to avoid a
           // flash of unstyled content since Vite injects CSS file contents via JS
@@ -1626,6 +1660,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             await updatePluginContext();
 
             if (configChanged || routeConfigChanged) {
+              devRouteExports.clear();
               invalidateVirtualModules(viteDevServer);
             }
           },
@@ -1679,6 +1714,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     req,
                     await reactRouterDevLoadContext(req),
                   );
+                  // Dev responses must not be cached so reloads pick up the
+                  // latest HTML (and the latest module URLs in it).
+                  if (!res.headers.has("Cache-Control")) {
+                    res.headers.set("Cache-Control", "no-cache");
+                  }
                   await sendResponse(nodeRes, res);
                 };
                 await nodeHandler(req, res);
@@ -2512,9 +2552,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let hmrEventData: HmrEventData = { route: null };
 
         if (route) {
-          // invalidate manifest on route exports change
-          let oldRouteMetadata =
-            currentReactRouterManifestForDev?.routes[route.id];
+          devRouteExports.delete(route.file);
           let newRouteMetadata = await getRouteMetadata(
             cache,
             ctx,
@@ -2525,25 +2563,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
 
           hmrEventData.route = newRouteMetadata;
 
-          if (
-            !oldRouteMetadata ||
-            (
-              [
-                "hasLoader",
-                "hasClientLoader",
-                "clientLoaderModule",
-                "hasAction",
-                "hasClientAction",
-                "clientActionModule",
-                "hasClientMiddleware",
-                "clientMiddlewareModule",
-                "hasErrorBoundary",
-                "hydrateFallbackModule",
-              ] as const
-            ).some((key) => oldRouteMetadata[key] !== newRouteMetadata[key])
-          ) {
-            invalidateVirtualModules(server);
-          }
+          // Always invalidate the manifest so its module URLs pick up the
+          // latest HMR timestamps, which keep browsers from serving stale
+          // route modules from cache after a reload.
+          invalidateVirtualModules(server);
+        } else {
+          // A dependency can change exports generated by a route transform.
+          devRouteExports.clear();
         }
 
         server.hot.send({
@@ -2983,7 +3009,7 @@ function getRoute(
 ): RouteManifestEntry | undefined {
   let vite = getVite();
   let routePath = vite.normalizePath(
-    path.relative(pluginConfig.appDirectory, file),
+    path.relative(pluginConfig.appDirectory, removeHmrTimestampQuery(file)),
   );
   let route = Object.values(pluginConfig.routes).find(
     (r) => vite.normalizePath(r.file) === routePath,
