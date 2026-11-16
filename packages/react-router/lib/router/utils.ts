@@ -2215,12 +2215,14 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   let responseInit = init;
   if (typeof responseInit === "number") {
     responseInit = { status: responseInit };
-  } else if (typeof responseInit.status === "undefined") {
-    responseInit.status = 302;
   }
 
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
+
+  if (typeof responseInit.status === "undefined") {
+    responseInit = { ...responseInit, status: 302 };
+  }
 
   return new Response(null, { ...responseInit, headers });
 };
