@@ -6,9 +6,6 @@ title: Single Page App (SPA)
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 <docs-info>This guide focuses on how to build Single Page Apps with React Router Framework mode. If you're using React Router in declarative or data mode, you can design your own SPA architecture.</docs-info>
 
 When using React Router as a framework, you can enable "SPA Mode" by setting `ssr:false` in your `react-router.config.ts` file. This will disable runtime server rendering and generate an `index.html` at build time that you can serve and hydrate as a SPA.
@@ -21,6 +18,8 @@ Typical Single Page apps send a mostly blank `index.html` template with little m
 - Re-enable server rendering later without changing anything about your UI
 
 <docs-info>SPA Mode is a special form of "Pre-Rendering" that allows you to serve all paths in your application from the same HTML file. Please refer to the [Pre-Rendering](./pre-rendering) guide if you want to do more extensive pre-rendering.</docs-info>
+
+<docs-info>If you want a SPA frontend backed by React Router server loaders and actions, see experimental [API-only Mode](../start/framework/rendering#api-only-mode-unstable).</docs-info>
 
 ## 1. Disable Runtime Server Rendering
 

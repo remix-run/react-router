@@ -22,6 +22,7 @@ on:
       - "build.utils.d.ts"
       - "!**/*.md"
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "packages/**"
       - "integration/**"

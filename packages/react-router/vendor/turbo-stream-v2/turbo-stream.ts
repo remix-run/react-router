@@ -156,18 +156,20 @@ export function encode(
   };
   const textEncoder = new TextEncoder();
   let lastSentIndex = 0;
+  let cancelled = false;
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
+      const enqueue = (chunk: Uint8Array) => {
+        if (!cancelled) controller.enqueue(chunk);
+      };
       const id = await flatten.call(encoder, input);
       if (Array.isArray(id)) {
         throw new Error("This should never happen");
       }
       if (id < 0) {
-        controller.enqueue(textEncoder.encode(`${id}\n`));
+        enqueue(textEncoder.encode(`${id}\n`));
       } else {
-        controller.enqueue(
-          textEncoder.encode(`[${encoder.stringified.join(",")}]\n`),
-        );
+        enqueue(textEncoder.encode(`[${encoder.stringified.join(",")}]\n`));
         lastSentIndex = encoder.stringified.length - 1;
       }
 
@@ -206,7 +208,7 @@ export function encode(
                     processingChain = processingChain.then(async () => {
                       const id = await flatten.call(encoder, resolved);
                       if (Array.isArray(id)) {
-                        controller.enqueue(
+                        enqueue(
                           textEncoder.encode(
                             `${TYPE_PROMISE}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`,
                           ),
@@ -214,7 +216,7 @@ export function encode(
                         encoder.index++;
                         lastSentIndex++;
                       } else if (id < 0) {
-                        controller.enqueue(
+                        enqueue(
                           textEncoder.encode(
                             `${TYPE_PROMISE}${deferredId}:${id}\n`,
                           ),
@@ -223,7 +225,7 @@ export function encode(
                         const values = encoder.stringified
                           .slice(lastSentIndex + 1)
                           .join(",");
-                        controller.enqueue(
+                        enqueue(
                           textEncoder.encode(
                             `${TYPE_PROMISE}${deferredId}:[${values}]\n`,
                           ),
@@ -245,7 +247,7 @@ export function encode(
 
                       const id = await flatten.call(encoder, reason);
                       if (Array.isArray(id)) {
-                        controller.enqueue(
+                        enqueue(
                           textEncoder.encode(
                             `${TYPE_ERROR}${deferredId}:[["${TYPE_PREVIOUS_RESOLVED}",${id[0]}]]\n`,
                           ),
@@ -253,7 +255,7 @@ export function encode(
                         encoder.index++;
                         lastSentIndex++;
                       } else if (id < 0) {
-                        controller.enqueue(
+                        enqueue(
                           textEncoder.encode(
                             `${TYPE_ERROR}${deferredId}:${id}\n`,
                           ),
@@ -262,7 +264,7 @@ export function encode(
                         const values = encoder.stringified
                           .slice(lastSentIndex + 1)
                           .join(",");
-                        controller.enqueue(
+                        enqueue(
                           textEncoder.encode(
                             `${TYPE_ERROR}${deferredId}:[${values}]\n`,
                           ),
@@ -286,9 +288,14 @@ export function encode(
       await Promise.all(Object.values(encoder.deferred));
       await processingChain;
 
-      controller.close();
+      if (!cancelled) controller.close();
 
       onComplete?.();
+    },
+    cancel() {
+      // Keep observing deferred values after cancellation so promises nested in
+      // their resolved values still get rejection handlers. Only stop writing.
+      cancelled = true;
     },
   });
 

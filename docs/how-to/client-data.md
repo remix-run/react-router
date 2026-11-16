@@ -6,9 +6,6 @@ title: Client Data
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 You can fetch and mutate data directly in the browser using `clientLoader` and `clientAction` functions.
 
 These functions are the primary mechanism for data handling when using [SPA mode][spa]. This guide demonstrates common use cases for leveraging client data in Server-Side Rendering (SSR).
