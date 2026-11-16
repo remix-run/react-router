@@ -2212,18 +2212,19 @@ export type RedirectFunction = (
  * header.
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
-  let responseInit =
-    typeof init === "number"
-      ? { status: init, headers: new Headers() }
-      : {
-          ...init,
-          status: init.status ?? 302,
-          headers: new Headers(init.headers),
-        };
+  let responseInit = init;
+  if (typeof responseInit === "number") {
+    responseInit = { status: responseInit };
+  }
 
-  responseInit.headers.set("Location", url);
+  let headers = new Headers(responseInit.headers);
+  headers.set("Location", url);
 
-  return new Response(null, responseInit);
+  if (typeof responseInit.status === "undefined") {
+    responseInit = { ...responseInit, status: 302 };
+  }
+
+  return new Response(null, { ...responseInit, headers });
 };
 
 /**
