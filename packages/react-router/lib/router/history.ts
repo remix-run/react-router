@@ -469,12 +469,14 @@ export function createHashHistory(
       pathname = "/" + pathname;
     }
 
+    let maskedLocation = (globalHistory.state as HistoryState)?.masked;
     return createLocation(
       "",
-      { pathname, search, hash },
+      maskedLocation || { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
       (globalHistory.state && globalHistory.state.usr) || null,
       (globalHistory.state && globalHistory.state.key) || "default",
+      maskedLocation ? { pathname, search, hash } : undefined,
     );
   }
 
