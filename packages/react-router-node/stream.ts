@@ -235,17 +235,21 @@ export async function readableStreamToString(
   let reader = stream.getReader();
   let chunks: Uint8Array[] = [];
 
-  while (true) {
-    let { done, value } = await reader.read();
-    if (done) {
-      break;
+  try {
+    while (true) {
+      let { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      if (value) {
+        chunks.push(value);
+      }
     }
-    if (value) {
-      chunks.push(value);
-    }
-  }
 
-  return Buffer.concat(chunks).toString(encoding);
+    return Buffer.concat(chunks).toString(encoding);
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 export const createReadableStreamFromReadable = (
@@ -312,6 +316,12 @@ class StreamPump {
     this.stream.off("error", this.error);
     this.stream.off("end", this.close);
     this.stream.off("close", this.close);
+
+    // The destroyed stream can still emit an error (e.g. a file that fails to
+    // open after the cancel), so keep handling it until the stream closes
+    let ignoreError = () => {};
+    this.stream.on("error", ignoreError);
+    this.stream.once("close", () => this.stream.off("error", ignoreError));
   }
 
   enqueue(chunk: Uint8Array | string) {

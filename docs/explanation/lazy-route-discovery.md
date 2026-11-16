@@ -6,9 +6,6 @@ title: Lazy Route Discovery
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 Lazy Route Discovery is a performance optimization that loads route information progressively as users navigate through your application, rather than loading the complete route manifest upfront.
 
 With Lazy Route Discovery enabled (the default), React Router sends only the routes needed for the initial server-side render in the manifest. As users navigate to new parts of your application, additional route information is fetched dynamically and added to the client-side manifest.

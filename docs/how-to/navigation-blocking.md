@@ -6,9 +6,6 @@ title: Navigation Blocking
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 When users are in the middle of a workflow, like filling out an important form, you may want to prevent them from navigating away from the page.
 
 This example will show:
