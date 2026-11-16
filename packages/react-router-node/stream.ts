@@ -235,17 +235,21 @@ export async function readableStreamToString(
   let reader = stream.getReader();
   let chunks: Uint8Array[] = [];
 
-  while (true) {
-    let { done, value } = await reader.read();
-    if (done) {
-      break;
+  try {
+    while (true) {
+      let { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      if (value) {
+        chunks.push(value);
+      }
     }
-    if (value) {
-      chunks.push(value);
-    }
-  }
 
-  return Buffer.concat(chunks).toString(encoding);
+    return Buffer.concat(chunks).toString(encoding);
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 export const createReadableStreamFromReadable = (
