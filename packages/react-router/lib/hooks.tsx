@@ -2050,6 +2050,25 @@ type UseRoute<RouteId extends keyof RouteModules | unknown> = {
     unknown;
 };
 
+/**
+ * A typed shortcut for reading the current route's `handle`, `loaderData`,
+ * and `actionData` in one call — the same data you would otherwise get
+ * from `useRouteLoaderData` plus the route's `handle` export.
+ *
+ * @name unstable_useRoute
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @example
+ * import { unstable_useRoute as useRoute } from "react-router";
+ *
+ * let { handle, loaderData } = useRoute();
+ * // With a route id, the result is `... | undefined` when the route is not matched:
+ * let dashboard = useRoute("dashboard");
+ * @param routeId The id of the route to read data for. Defaults to the current route.
+ * @returns The route's `handle`, `loaderData`, and `actionData`.
+ */
 export function useRoute<Args extends UseRouteArgs>(
   ...args: Args
 ): UseRouteResult<Args> {
