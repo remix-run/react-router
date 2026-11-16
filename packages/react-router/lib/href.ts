@@ -54,7 +54,7 @@ export function href<Path extends keyof Args>(
       (_: string, param: string, questionMark: string | undefined) => {
         const isRequired = questionMark === undefined;
         const value = params?.[param];
-        if (isRequired && value === undefined) {
+        if (isRequired && value == null) {
           throw new Error(
             `Path '${path}' requires param '${param}' but it was not provided`,
           );
@@ -68,7 +68,7 @@ export function href<Path extends keyof Args>(
     // `react-router typegen` will not generate the params for a malformed splat,
     // causing a type error, but we can still do the correct thing here.
     const value = params?.["*"];
-    if (value !== undefined) {
+    if (value != null) {
       result +=
         "/" + stringify(value).split("/").map(encodePathParam).join("/");
     }

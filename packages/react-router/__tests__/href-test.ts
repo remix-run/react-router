@@ -24,6 +24,7 @@ describe("href", () => {
   it("works with splats", () => {
     expect(href("/a/*", { "*": "b/c" })).toBe("/a/b/c");
     expect(href("/a/*", {})).toBe("/a");
+    expect(href("/a/*", { "*": null as any })).toBe("/a");
   });
 
   it("works with malformed splats", () => {
@@ -34,6 +35,9 @@ describe("href", () => {
 
   it("throws when required params are missing", () => {
     expect(() => href("/a/:b")).toThrow(
+      `Path '/a/:b' requires param 'b' but it was not provided`,
+    );
+    expect(() => href("/a/:b", { b: null as any })).toThrow(
       `Path '/a/:b' requires param 'b' but it was not provided`,
     );
   });
