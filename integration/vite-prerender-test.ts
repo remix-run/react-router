@@ -243,6 +243,35 @@ test.describe(`Prerendering`, () => {
       expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
     });
 
+    test("Skips static child routes of dynamic routes when true is specified", async () => {
+      fixture = await createFixture({
+        prerender: true,
+        files: {
+          ...files,
+          "app/routes/$lang.tsx": js`
+            import { Outlet } from 'react-router'
+            export default function Component() {
+              return <Outlet/>
+            }
+          `,
+          "app/routes/$lang.about.tsx": js`
+            export default function Component() {
+              return <h2>Lang About</h2>
+            }
+          `,
+        },
+      });
+
+      let clientDir = path.join(fixture.projectDir, "build", "client");
+      expect(listAllFiles(clientDir).sort()).toEqual([
+        "_.data",
+        "about.data",
+        "about/index.html",
+        "favicon.ico",
+        "index.html",
+      ]);
+    });
+
     test("Prerenders a static array of routes", async () => {
       fixture = await createFixture({
         prerender: true,
@@ -1247,6 +1276,53 @@ test.describe(`Prerendering`, () => {
       );
       // Only logs once
       expect(buildOutput.match(/with dynamic\/splat params/g)?.length).toBe(1);
+    });
+
+    test("Warns on static child routes of parameterized routes with prerender:true + ssr:false", async () => {
+      let buildStdio = new PassThrough();
+      fixture = await createFixture({
+        buildStdio,
+        prerender: true,
+        files: {
+          "react-router.config.ts": reactRouterConfig({
+            ssr: false,
+            prerender: true,
+          }),
+          "vite.config.ts": files["vite.config.ts"],
+          "app/root.tsx": files["app/root.tsx"],
+          "app/routes/_index.tsx": files["app/routes/_index.tsx"],
+          "app/routes/$lang.tsx": js`
+            import { Outlet } from 'react-router'
+            export default function Component() {
+              return <Outlet/>
+            }
+          `,
+          "app/routes/$lang.about.tsx": js`
+            export default function Component() {
+              return <h2>Lang About</h2>
+            }
+          `,
+        },
+      });
+
+      let buildOutput: string;
+      let chunks: Buffer[] = [];
+      buildOutput = await new Promise<string>((resolve, reject) => {
+        buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        buildStdio.on("error", (err) => reject(err));
+        buildStdio.on("end", () =>
+          resolve(Buffer.concat(chunks).toString("utf8")),
+        );
+      });
+
+      expect(buildOutput).toContain(
+        [
+          "⚠️ Paths with dynamic/splat params cannot be prerendered when using `prerender: true`. " +
+            "You may want to use the `prerender()` API to prerender the following paths:",
+          "  - :lang",
+          "  - :lang/about",
+        ].join("\n"),
+      );
     });
 
     test("Prerenders a spa fallback with prerender:['/'] + ssr:false", async () => {
