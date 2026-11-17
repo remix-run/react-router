@@ -1,6 +1,7 @@
 import {
   getRequest,
   responseHeaders,
+  responseStatus,
   matchRSCServerRequest,
   redirect,
   type RSCMatch,
@@ -57,17 +58,20 @@ let rootRoute: RSCRouteConfigEntry = {
   Component: () => null,
 };
 
-describe("unstable_responseHeaders", () => {
+describe("unstable_responseHeaders and unstable_responseStatus", () => {
   test("throws outside of a request", () => {
     expect(() => responseHeaders()).toThrow(
       "responseHeaders must be called from within a React Server render context",
+    );
+    expect(() => responseStatus(400)).toThrow(
+      "responseStatus must be called from within a React Server render context",
     );
   });
 
   describe.each(["enhanced", "form"] as const)(
     "%s server function requests",
     (requestType) => {
-      test("adds headers without a redirect", async () => {
+      test("adds headers and status without a redirect", async () => {
         let { response, match } = await handleRequest(
           serverFunctionRequest(requestType),
           [rootRoute],
@@ -75,6 +79,7 @@ describe("unstable_responseHeaders", () => {
             serverFunction: async () => {
               responseHeaders().append("Set-Cookie", "a=b");
               responseHeaders().set("X-Test", "test");
+              responseStatus(400);
             },
           },
         );
@@ -84,9 +89,10 @@ describe("unstable_responseHeaders", () => {
         );
         expect(response.headers.getSetCookie()).toEqual(["a=b"]);
         expect(response.headers.get("X-Test")).toBe("test");
+        expect(response.status).toBe(400);
       });
 
-      test("adds headers to a redirect", async () => {
+      test("adds headers but not status to a redirect", async () => {
         let { response, match } = await handleRequest(
           serverFunctionRequest(requestType),
           [rootRoute],
@@ -94,6 +100,7 @@ describe("unstable_responseHeaders", () => {
             serverFunction: async () => {
               responseHeaders().append("Set-Cookie", "a=b");
               responseHeaders().set("X-Test", "headers");
+              responseStatus(400);
               throw redirect("/target", {
                 headers: { "Set-Cookie": "c=d", "X-Test": "redirect" },
               });
@@ -104,14 +111,16 @@ describe("unstable_responseHeaders", () => {
         expect(match?.payload).toMatchObject({
           type: "redirect",
           location: "/target",
+          status: 302,
         });
+        expect(response.status).toBe(202);
         expect(response.headers.getSetCookie()).toEqual(["c=d", "a=b"]);
         expect(response.headers.get("X-Test")).toBe("headers");
       });
     },
   );
 
-  test("adds headers from middleware, loaders, and actions", async () => {
+  test("adds headers and status from middleware, loaders, and actions", async () => {
     let routes: RSCRouteConfigEntry[] = [
       {
         id: "root",
@@ -128,6 +137,7 @@ describe("unstable_responseHeaders", () => {
         },
         loader() {
           responseHeaders().append("Set-Cookie", "loader=1");
+          responseStatus(404);
           return null;
         },
         Component: () => null,
@@ -138,6 +148,7 @@ describe("unstable_responseHeaders", () => {
       new Request("https://remix.run/"),
       routes,
     );
+    expect(document.response.status).toBe(404);
     expect(document.response.headers.getSetCookie()).toEqual([
       "middleware=1",
       "loader=1",
@@ -182,7 +193,7 @@ describe("unstable_responseHeaders", () => {
     expect(response.headers.has("X-Remove")).toBe(false);
   });
 
-  test("adds headers to resource routes", async () => {
+  test("adds headers and status to resource routes", async () => {
     let routes: RSCRouteConfigEntry[] = [
       {
         id: "root",
@@ -198,7 +209,10 @@ describe("unstable_responseHeaders", () => {
           {
             id: "api",
             path: "api",
-            loader: () => Response.json({ method: getRequest().method }),
+            loader() {
+              responseStatus(201);
+              return Response.json({ method: getRequest().method });
+            },
           },
           {
             id: "api-error",
@@ -216,6 +230,7 @@ describe("unstable_responseHeaders", () => {
       new Request("https://remix.run/api"),
       routes,
     );
+    expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ method: "GET" });
     expect(response.headers.getSetCookie()).toEqual(["middleware=1"]);
 
@@ -259,7 +274,7 @@ describe("unstable_responseHeaders", () => {
     },
   );
 
-  test("rejects headers React Router manages", async () => {
+  test("rejects headers and statuses React Router manages", async () => {
     let errors: string[] = [];
     await handleRequest(new Request("https://remix.run/"), [
       {
@@ -269,6 +284,13 @@ describe("unstable_responseHeaders", () => {
           for (let name of ["Content-Length", "location", "X-Remix-Response"]) {
             try {
               responseHeaders().set(name, "1");
+            } catch (error) {
+              errors.push(String(error));
+            }
+          }
+          for (let status of [302, 99, 600, 200.5]) {
+            try {
+              responseStatus(status);
             } catch (error) {
               errors.push(String(error));
             }
@@ -283,6 +305,10 @@ describe("unstable_responseHeaders", () => {
       expect.stringContaining(`The "Content-Length" header is managed`),
       expect.stringContaining(`The "location" header is managed`),
       expect.stringContaining(`The "X-Remix-Response" header is managed`),
+      expect.stringContaining("Invalid response status 302"),
+      expect.stringContaining("Invalid response status 99"),
+      expect.stringContaining("Invalid response status 600"),
+      expect.stringContaining("Invalid response status 200.5"),
     ]);
   });
 
@@ -299,10 +325,15 @@ describe("unstable_responseHeaders", () => {
           middleware: [
             async (_, next) => {
               let response = await next();
-              try {
-                responseHeaders();
-              } catch (error) {
-                errors.push(error);
+              for (let fn of [
+                () => responseHeaders(),
+                () => responseStatus(500),
+              ]) {
+                try {
+                  fn();
+                } catch (error) {
+                  errors.push(error);
+                }
               }
               return response;
             },
@@ -332,9 +363,9 @@ describe("unstable_responseHeaders", () => {
     await lateWrite?.catch((error) => errors.push(error));
 
     expect(errors.map(String)).toEqual(
-      Array(3).fill(
+      Array(4).fill(
         expect.stringContaining(
-          "responseHeaders can't be used after the response has been created",
+          "can't be changed after the response has been created",
         ),
       ),
     );

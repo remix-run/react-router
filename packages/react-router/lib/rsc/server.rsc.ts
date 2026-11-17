@@ -17,6 +17,7 @@ import {
   isMutationMethod,
   isResponse,
   isRedirectResponse,
+  isRedirectStatusCode,
   type StaticHandler,
   type StaticHandlerContext,
 } from "../router/router";
@@ -144,15 +145,16 @@ class ResponseHeaders extends Headers {
 }
 
 const responseCreatedMessage =
-  "responseHeaders can't be used after the response has been created. Set response " +
-  "headers in a server function, loader, action, or middleware (before " +
-  "calling next()), not while rendering server components.";
+  "The response headers and status can't be changed after the response has " +
+  "been created. Set them in a server function, loader, action, or " +
+  "middleware (before calling next()), not while rendering server components.";
 
 type ServerContext = {
   headers: ResponseHeaders;
   redirect?: Response;
   request: Request;
   runningAction: boolean;
+  status?: number;
 };
 
 const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
@@ -203,21 +205,72 @@ export function getRequest() {
  * @returns The outgoing response {@link Headers} for the current request.
  */
 export function responseHeaders(): Headers {
+  return getWritableContext("responseHeaders").headers;
+}
+
+/**
+ * Sets the status of the response for the current request. Use it from server
+ * functions, loaders, actions, resource routes, and middleware (before calling
+ * `next()`), for example to return a 4xx status when a form submission fails
+ * validation.
+ *
+ * The status replaces the one React Router would use, including statuses from
+ * errors. It doesn't apply to redirects. Use `redirect()` to redirect.
+ *
+ * Throws once the response has been created, which includes while server
+ * components render.
+ *
+ * @example
+ * "use server";
+ * import { unstable_responseStatus } from "react-router";
+ *
+ * export async function subscribe(formData: FormData) {
+ *   if (!formData.get("email")) {
+ *     unstable_responseStatus(400);
+ *     return { error: "Email is required" };
+ *   }
+ *   // ...
+ * }
+ *
+ * @name unstable_responseStatus
+ * @public
+ * @category RSC
+ * @mode data
+ * @mode framework
+ * @param status The HTTP status code, from 200 to 599 excluding redirects.
+ */
+export function responseStatus(status: number): void {
+  let ctx = getWritableContext("responseStatus");
+  if (
+    !Number.isInteger(status) ||
+    status < 200 ||
+    status > 599 ||
+    (status >= 300 && status < 400)
+  ) {
+    throw new Error(
+      `Invalid response status ${status}. Use a status from 200 to 599, ` +
+        "and redirect() for redirects.",
+    );
+  }
+  ctx.status = status;
+}
+
+function getWritableContext(name: string) {
   const ctx = ServerStorage.getStore();
 
   if (!ctx)
     throw new Error(
-      "responseHeaders must be called from within a React Server render context",
+      `${name} must be called from within a React Server render context`,
     );
   // The storage is shared through `globalThis`, so the request may be handled
-  // by another copy of React Router that doesn't support `responseHeaders()`
+  // by another copy of React Router that doesn't support this API
   if (!(ctx.headers instanceof ResponseHeaders))
     throw new Error(
-      "responseHeaders isn't supported by the copy of React Router handling this " +
+      `${name} isn't supported by the copy of React Router handling this ` +
         "request. Make sure only one copy of react-router is installed.",
     );
   if (ctx.headers.locked) throw new Error(responseCreatedMessage);
-  return ctx.headers;
+  return ctx;
 }
 
 function applyContextHeaders(ctx: ServerContext, target: Headers) {
@@ -673,6 +726,12 @@ export async function matchRSCServerRequest({
       ),
     );
     applyContextHeaders(ctx, response.headers);
+    if (ctx.status !== undefined && !isRedirectStatusCode(response.status)) {
+      response = new Response(response.body, {
+        status: ctx.status,
+        headers: response.headers,
+      });
+    }
     return response;
   }
 
@@ -1036,6 +1095,9 @@ async function generateRenderResponse(
   let encodeResponse = generateResponse;
   generateResponse = (match, options) => {
     ctx.headers.locked = true;
+    if (ctx.status !== undefined && match.payload.type !== "redirect") {
+      match = { ...match, statusCode: ctx.status };
+    }
     return encodeResponse(match, options);
   };
 

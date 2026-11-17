@@ -1636,18 +1636,21 @@ implementations.forEach((implementation) => {
 
             "src/routes/headers/home.actions.ts": js`
               "use server";
-              import { unstable_responseHeaders } from "react-router";
+              import { unstable_responseHeaders, unstable_responseStatus } from "react-router";
 
               export async function setCookie() {
                 unstable_responseHeaders().append("Set-Cookie", "from-server-function=1; Path=/");
+                unstable_responseStatus(400);
               }
             `,
             "src/routes/headers/home.tsx": js`
-              import { unstable_responseHeaders } from "react-router";
+              import { unstable_responseHeaders, unstable_responseStatus } from "react-router";
               import { setCookie } from "./home.actions";
 
-              export function loader() {
+              export function loader({ request }) {
                 unstable_responseHeaders().set("X-Loader", "loader");
+                let status = new URL(request.url).searchParams.get("status");
+                if (status) unstable_responseStatus(Number(status));
                 return null;
               }
 
@@ -2062,21 +2065,29 @@ implementations.forEach((implementation) => {
           expect(body).toContain("<p>POST</p>");
         });
 
-        test("Supports unstable_responseHeaders in loaders and server functions", async ({
+        test("Supports unstable_responseHeaders and unstable_responseStatus in loaders and server functions", async ({
           page,
         }) => {
+          let notFoundResponse = await page.request.get(
+            `http://localhost:${port}/headers?status=404`,
+          );
+          expect(notFoundResponse.status()).toBe(404);
+          expect(await notFoundResponse.text()).toContain("data-render-error");
+
           let documentResponse = await page.goto(
             `http://localhost:${port}/headers`,
           );
+          expect(documentResponse?.status()).toBe(200);
           expect(documentResponse?.headers()["x-loader"]).toBe("loader");
           await expect(page.locator("[data-render-error]")).toContainText(
-            "responseHeaders can't be used after the response has been created",
+            "can't be changed after the response has been created",
           );
 
           let actionResponse = page.waitForResponse(
             (response) => response.request().method() === "POST",
           );
           await page.click("[data-submit]");
+          expect((await actionResponse).status()).toBe(400);
           expect(
             (await (await actionResponse).allHeaders())["set-cookie"],
           ).toContain("from-server-function=1");

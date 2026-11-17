@@ -556,7 +556,7 @@ export async function AddToFavoritesForm({
 
 Note that after server functions are called, React Router will automatically revalidate the route and update the UI with the new server content. You don't have to mess around with any cache invalidation.
 
-#### Setting Response Headers
+#### Setting Response Headers and Status
 
 Server functions don't return a `Response`, so use `unstable_responseHeaders()` to set response headers such as cookies. The headers are sent with the response that includes the revalidated UI, so no redirect is needed.
 
@@ -576,6 +576,22 @@ export async function setTheme(formData: FormData) {
 ```
 
 `unstable_responseHeaders()` also works in loaders, actions, resource routes, and middleware (before calling `next()`). Its calls are applied to the final response, and `Set-Cookie` headers are always appended. Headers React Router manages, such as `Content-Type` and `Location`, can't be set, and writes throw once the response has been created, including while server components render.
+
+Use `unstable_responseStatus()` the same way to set the response status, for example when a form submission fails validation. It replaces the status React Router would use, but doesn't apply to redirects.
+
+```tsx
+"use server";
+
+import { unstable_responseStatus } from "react-router";
+
+export async function subscribe(formData: FormData) {
+  if (!formData.get("email")) {
+    unstable_responseStatus(400);
+    return { error: "Email is required" };
+  }
+  // ...
+}
+```
 
 ### Client Properties
 
