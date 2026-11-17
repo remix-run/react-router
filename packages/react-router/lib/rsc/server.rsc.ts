@@ -17,6 +17,7 @@ import {
   isMutationMethod,
   isResponse,
   isRedirectResponse,
+  isRedirectStatusCode,
   type StaticHandler,
   type StaticHandlerContext,
 } from "../router/router";
@@ -84,10 +85,76 @@ const WithErrorBoundaryProps: typeof WithErrorBoundaryPropsType =
 const WithHydrateFallbackProps: typeof WithHydrateFallbackPropsType =
   UNSAFE_WithHydrateFallbackProps;
 
+// Headers React Router manages on RSC responses. Letting apps set these could
+// break the protocol (e.g. a stale Content-Length truncates the HTML document).
+const RESERVED_RESPONSE_HEADERS = new Set([
+  "content-length",
+  "content-type",
+  "location",
+  "react-router-resource",
+]);
+
+type HeaderOperation =
+  | { type: "set" | "append"; name: string; value: string }
+  | { type: "delete"; name: string };
+
+class ResponseHeaders extends Headers {
+  locked = false;
+  operations: HeaderOperation[] = [];
+
+  append(name: string, value: string) {
+    this.assertWritable(name);
+    super.append(name, value);
+    this.record({ type: "append", name, value });
+  }
+
+  set(name: string, value: string) {
+    this.assertWritable(name);
+    super.set(name, value);
+    this.record({ type: "set", name, value });
+  }
+
+  delete(name: string) {
+    this.assertWritable(name);
+    super.delete(name);
+    this.record({ type: "delete", name });
+  }
+
+  private record(operation: HeaderOperation) {
+    // Cookies are applied from the final Set-Cookie values instead
+    if (operation.name.toLowerCase() !== "set-cookie") {
+      this.operations.push(operation);
+    }
+  }
+
+  private assertWritable(name: string) {
+    if (this.locked) {
+      throw new Error(responseCreatedMessage);
+    }
+    let lowerName = name.toLowerCase();
+    if (
+      RESERVED_RESPONSE_HEADERS.has(lowerName) ||
+      lowerName.startsWith("x-remix-")
+    ) {
+      throw new Error(
+        `The "${name}" header is managed by React Router and can't be set ` +
+          "with responseHeaders().",
+      );
+    }
+  }
+}
+
+const responseCreatedMessage =
+  "The response headers and status can't be changed after the response has " +
+  "been created. Set them in a server function, loader, action, or " +
+  "middleware (before calling next()), not while rendering server components.";
+
 type ServerContext = {
+  headers: ResponseHeaders;
   redirect?: Response;
   request: Request;
   runningAction: boolean;
+  status?: number;
 };
 
 const globalVar = (typeof globalThis !== "undefined" ? globalThis : global) as {
@@ -105,6 +172,121 @@ export function getRequest() {
       "getRequest must be called from within a React Server render context",
     );
   return ctx.request;
+}
+
+/**
+ * Returns the outgoing response headers for the current request. Use it to
+ * set headers, such as `Set-Cookie`, from server functions, loaders, actions,
+ * resource routes, and middleware (before calling `next()`). It doesn't
+ * contain the incoming request headers. Use `unstable_getRequest()` for those.
+ *
+ * `set`, `append`, and `delete` calls are applied in order to the final
+ * response, on top of its other headers. `Set-Cookie` headers are always
+ * appended.
+ *
+ * Headers React Router manages, such as `Content-Type`, `Content-Length`, and
+ * `Location`, can't be set. Writes throw once the response has been created,
+ * which includes while server components render.
+ *
+ * @example
+ * "use server";
+ * import { unstable_responseHeaders } from "react-router";
+ *
+ * export async function setTheme(formData: FormData) {
+ *   let theme = String(formData.get("theme"));
+ *   unstable_responseHeaders().append("Set-Cookie", `theme=${theme}; Path=/`);
+ * }
+ *
+ * @name unstable_responseHeaders
+ * @public
+ * @category RSC
+ * @mode data
+ * @mode framework
+ * @returns The outgoing response {@link Headers} for the current request.
+ */
+export function responseHeaders(): Headers {
+  return getWritableContext("responseHeaders").headers;
+}
+
+/**
+ * Sets the status of the response for the current request. Use it from server
+ * functions, loaders, actions, resource routes, and middleware (before calling
+ * `next()`), for example to return a 4xx status when a form submission fails
+ * validation.
+ *
+ * The status replaces the one React Router would use, including statuses from
+ * errors. It doesn't apply to redirects. Use `redirect()` to redirect.
+ *
+ * Throws once the response has been created, which includes while server
+ * components render.
+ *
+ * @example
+ * "use server";
+ * import { unstable_responseStatus } from "react-router";
+ *
+ * export async function subscribe(formData: FormData) {
+ *   if (!formData.get("email")) {
+ *     unstable_responseStatus(400);
+ *     return { error: "Email is required" };
+ *   }
+ *   // ...
+ * }
+ *
+ * @name unstable_responseStatus
+ * @public
+ * @category RSC
+ * @mode data
+ * @mode framework
+ * @param status The HTTP status code, from 200 to 599 excluding redirects.
+ */
+export function responseStatus(status: number): void {
+  let ctx = getWritableContext("responseStatus");
+  if (
+    !Number.isInteger(status) ||
+    status < 200 ||
+    status > 599 ||
+    (status >= 300 && status < 400)
+  ) {
+    throw new Error(
+      `Invalid response status ${status}. Use a status from 200 to 599, ` +
+        "and redirect() for redirects.",
+    );
+  }
+  ctx.status = status;
+}
+
+function getWritableContext(name: string) {
+  const ctx = ServerStorage.getStore();
+
+  if (!ctx)
+    throw new Error(
+      `${name} must be called from within a React Server render context`,
+    );
+  // The storage is shared through `globalThis`, so the request may be handled
+  // by another copy of React Router that doesn't support this API
+  if (!(ctx.headers instanceof ResponseHeaders))
+    throw new Error(
+      `${name} isn't supported by the copy of React Router handling this ` +
+        "request. Make sure only one copy of react-router is installed.",
+    );
+  if (ctx.headers.locked) throw new Error(responseCreatedMessage);
+  return ctx;
+}
+
+function applyContextHeaders(ctx: ServerContext, target: Headers) {
+  ctx.headers.locked = true;
+  for (let cookie of ctx.headers.getSetCookie()) {
+    target.append("Set-Cookie", cookie);
+  }
+  for (let operation of ctx.headers.operations) {
+    if (operation.type === "delete") {
+      target.delete(operation.name);
+    } else if (operation.type === "append") {
+      target.append(operation.name, operation.value);
+    } else {
+      target.set(operation.name, operation.value);
+    }
+  }
 }
 
 export const redirect: typeof baseRedirect = (...args) => {
@@ -524,6 +706,11 @@ export async function matchRSCServerRequest({
     await Promise.all(matches.map((m) => explodeLazyRoute(m.route)));
   }
 
+  const ctx: ServerContext = {
+    headers: new ResponseHeaders(),
+    request: routerRequest,
+    runningAction: false,
+  };
   const leafMatch = matches?.[matches.length - 1];
   if (
     !isDataRequest &&
@@ -531,16 +718,27 @@ export async function matchRSCServerRequest({
     !leafMatch.route.Component &&
     !leafMatch.route.ErrorBoundary
   ) {
-    return generateResourceResponse(
-      routerRequest,
-      staticHandler,
-      leafMatch.route.id,
-      requestContext,
-      onError,
+    let response = await ServerStorage.run(ctx, () =>
+      generateResourceResponse(
+        routerRequest,
+        staticHandler,
+        leafMatch.route.id,
+        requestContext,
+        onError,
+      ),
     );
+    applyContextHeaders(ctx, response.headers);
+    if (ctx.status !== undefined && !isRedirectStatusCode(response.status)) {
+      response = new Response(response.body, {
+        status: ctx.status,
+        headers: response.headers,
+      });
+    }
+    return response;
   }
 
   let response = await generateRenderResponse(
+    ctx,
     routerRequest,
     staticHandler,
     basename,
@@ -557,6 +755,7 @@ export async function matchRSCServerRequest({
     routeDiscovery,
     clientVersion,
   );
+  applyContextHeaders(ctx, response.headers);
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
   response.headers.set("X-Remix-Response", "yes");
@@ -858,6 +1057,7 @@ function tagResourceResponse(response: Response) {
 }
 
 async function generateRenderResponse(
+  ctx: ServerContext,
   request: Request,
   staticHandler: StaticHandler,
   basename: string | undefined,
@@ -892,9 +1092,15 @@ async function generateRenderResponse(
       : null;
 
   let actionResult: Promise<unknown> | undefined;
-  const ctx: ServerContext = {
-    request,
-    runningAction: false,
+  // Server components render after the response is created, so `responseHeaders()`
+  // can't affect it from there
+  let encodeResponse = generateResponse;
+  generateResponse = (match, options) => {
+    ctx.headers.locked = true;
+    if (ctx.status !== undefined && match.payload.type !== "redirect") {
+      match = { ...match, statusCode: ctx.status };
+    }
+    return encodeResponse(match, options);
   };
 
   const result = await ServerStorage.run(ctx, () =>

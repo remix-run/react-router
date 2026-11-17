@@ -556,6 +556,11 @@ implementations.forEach((implementation) => {
                       path: "/get-request",
                       lazy: () => import("./routes/get-request/get-request"),
                     },
+                    {
+                      id: "headers",
+                      path: "/headers",
+                      lazy: () => import("./routes/headers/home"),
+                    },
                   ],
                 },
               ] satisfies RSCRouteConfig;
@@ -1629,6 +1634,44 @@ implementations.forEach((implementation) => {
                 return <p>{request.method}</p>;
               }
             `,
+
+            "src/routes/headers/home.actions.ts": js`
+              "use server";
+              import { unstable_responseHeaders, unstable_responseStatus } from "react-router";
+
+              export async function setCookie() {
+                unstable_responseHeaders().append("Set-Cookie", "from-server-function=1; Path=/");
+                unstable_responseStatus(400);
+              }
+            `,
+            "src/routes/headers/home.tsx": js`
+              import { unstable_responseHeaders, unstable_responseStatus } from "react-router";
+              import { setCookie } from "./home.actions";
+
+              export function loader({ request }) {
+                unstable_responseHeaders().set("X-Loader", "loader");
+                let status = new URL(request.url).searchParams.get("status");
+                if (status) unstable_responseStatus(Number(status));
+                return null;
+              }
+
+              export default function HeadersRoute() {
+                let renderError = "none";
+                try {
+                  unstable_responseHeaders();
+                } catch (error) {
+                  renderError = error.message;
+                }
+                return (
+                  <div>
+                    <p data-render-error>{renderError}</p>
+                    <form action={setCookie}>
+                      <button type="submit" data-submit>Set cookie</button>
+                    </form>
+                  </div>
+                );
+              }
+            `,
           },
         });
       });
@@ -2030,6 +2073,37 @@ implementations.forEach((implementation) => {
           );
           const body = await response.text();
           expect(body).toContain("<p>POST</p>");
+        });
+
+        test("Supports unstable_responseHeaders and unstable_responseStatus in loaders and server functions", async ({
+          page,
+        }) => {
+          let notFoundResponse = await page.request.get(
+            `http://localhost:${port}/headers?status=404`,
+          );
+          expect(notFoundResponse.status()).toBe(404);
+          expect(await notFoundResponse.text()).toContain("data-render-error");
+
+          let documentResponse = await page.goto(
+            `http://localhost:${port}/headers`,
+          );
+          expect(documentResponse?.status()).toBe(200);
+          expect(documentResponse?.headers()["x-loader"]).toBe("loader");
+          await expect(page.locator("[data-render-error]")).toContainText(
+            "can't be changed after the response has been created",
+          );
+
+          let actionResponse = page.waitForResponse(
+            (response) => response.request().method() === "POST",
+          );
+          await page.click("[data-submit]");
+          expect((await actionResponse).status()).toBe(400);
+          expect(
+            (await (await actionResponse).allHeaders())["set-cookie"],
+          ).toContain("from-server-function=1");
+          await expect
+            .poll(() => page.evaluate(() => document.cookie))
+            .toContain("from-server-function=1");
         });
       });
 
