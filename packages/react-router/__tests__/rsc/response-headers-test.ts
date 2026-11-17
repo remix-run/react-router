@@ -1,6 +1,6 @@
 import {
   getRequest,
-  headers,
+  responseHeaders,
   matchRSCServerRequest,
   redirect,
   type RSCMatch,
@@ -57,10 +57,10 @@ let rootRoute: RSCRouteConfigEntry = {
   Component: () => null,
 };
 
-describe("unstable_headers", () => {
+describe("unstable_responseHeaders", () => {
   test("throws outside of a request", () => {
-    expect(() => headers()).toThrow(
-      "headers must be called from within a React Server render context",
+    expect(() => responseHeaders()).toThrow(
+      "responseHeaders must be called from within a React Server render context",
     );
   });
 
@@ -73,8 +73,8 @@ describe("unstable_headers", () => {
           [rootRoute],
           {
             serverFunction: async () => {
-              headers().append("Set-Cookie", "a=b");
-              headers().set("X-Test", "test");
+              responseHeaders().append("Set-Cookie", "a=b");
+              responseHeaders().set("X-Test", "test");
             },
           },
         );
@@ -92,8 +92,8 @@ describe("unstable_headers", () => {
           [rootRoute],
           {
             serverFunction: async () => {
-              headers().append("Set-Cookie", "a=b");
-              headers().set("X-Test", "headers");
+              responseHeaders().append("Set-Cookie", "a=b");
+              responseHeaders().set("X-Test", "headers");
               throw redirect("/target", {
                 headers: { "Set-Cookie": "c=d", "X-Test": "redirect" },
               });
@@ -118,16 +118,16 @@ describe("unstable_headers", () => {
         path: "/",
         middleware: [
           async (_, next) => {
-            headers().append("Set-Cookie", "middleware=1");
+            responseHeaders().append("Set-Cookie", "middleware=1");
             return next();
           },
         ],
         action() {
-          headers().append("Set-Cookie", "action=1");
+          responseHeaders().append("Set-Cookie", "action=1");
           return null;
         },
         loader() {
-          headers().append("Set-Cookie", "loader=1");
+          responseHeaders().append("Set-Cookie", "loader=1");
           return null;
         },
         Component: () => null,
@@ -166,10 +166,10 @@ describe("unstable_headers", () => {
           "X-Remove": "route",
         },
         loader() {
-          headers().append("Set-Cookie", "loader=1");
-          headers().append("Vary", "Cookie");
-          headers().set("Cache-Control", "no-store");
-          headers().delete("X-Remove");
+          responseHeaders().append("Set-Cookie", "loader=1");
+          responseHeaders().append("Vary", "Cookie");
+          responseHeaders().set("Cache-Control", "no-store");
+          responseHeaders().delete("X-Remove");
           return null;
         },
         Component: () => null,
@@ -189,7 +189,7 @@ describe("unstable_headers", () => {
         path: "/",
         middleware: [
           async (_, next) => {
-            headers().append("Set-Cookie", "middleware=1");
+            responseHeaders().append("Set-Cookie", "middleware=1");
             return next();
           },
         ],
@@ -204,7 +204,7 @@ describe("unstable_headers", () => {
             id: "api-error",
             path: "api-error",
             loader() {
-              headers().append("Set-Cookie", "loader=1");
+              responseHeaders().append("Set-Cookie", "loader=1");
               throw new Response("Not found", { status: 404 });
             },
           },
@@ -241,7 +241,7 @@ describe("unstable_headers", () => {
             path: "/",
             middleware: [
               async (_, next) => {
-                headers().append("Set-Cookie", "a=b");
+                responseHeaders().append("Set-Cookie", "a=b");
                 return next();
               },
               async () =>
@@ -268,7 +268,7 @@ describe("unstable_headers", () => {
         loader() {
           for (let name of ["Content-Length", "location", "X-Remix-Response"]) {
             try {
-              headers().set(name, "1");
+              responseHeaders().set(name, "1");
             } catch (error) {
               errors.push(String(error));
             }
@@ -300,7 +300,7 @@ describe("unstable_headers", () => {
             async (_, next) => {
               let response = await next();
               try {
-                headers();
+                responseHeaders();
               } catch (error) {
                 errors.push(error);
               }
@@ -308,9 +308,9 @@ describe("unstable_headers", () => {
             },
           ],
           loader() {
-            let responseHeaders = headers();
+            let savedHeaders = responseHeaders();
             lateWrite = new Promise((resolve) => setTimeout(resolve, 5)).then(
-              () => responseHeaders.set("X-Late", "1"),
+              () => savedHeaders.set("X-Late", "1"),
             );
             lateWrite.catch(() => {});
             return null;
@@ -322,7 +322,7 @@ describe("unstable_headers", () => {
         // Server components render while the response body streams
         onGenerateResponse() {
           try {
-            headers();
+            responseHeaders();
           } catch (error) {
             errors.push(error);
           }
@@ -334,7 +334,7 @@ describe("unstable_headers", () => {
     expect(errors.map(String)).toEqual(
       Array(3).fill(
         expect.stringContaining(
-          "headers can't be used after the response has been created",
+          "responseHeaders can't be used after the response has been created",
         ),
       ),
     );

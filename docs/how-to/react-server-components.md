@@ -558,24 +558,24 @@ Note that after server functions are called, React Router will automatically rev
 
 #### Setting Response Headers
 
-Server functions don't return a `Response`, so use `unstable_headers()` to set response headers such as cookies. The headers are sent with the response that includes the revalidated UI, so no redirect is needed.
+Server functions don't return a `Response`, so use `unstable_responseHeaders()` to set response headers such as cookies. The headers are sent with the response that includes the revalidated UI, so no redirect is needed.
 
 ```tsx
 "use server";
 
-import { unstable_headers } from "react-router";
+import { unstable_responseHeaders } from "react-router";
 import { themeCookie } from "./cookies.server.ts";
 
 export async function setTheme(formData: FormData) {
   let theme = String(formData.get("theme"));
-  unstable_headers().append(
+  unstable_responseHeaders().append(
     "Set-Cookie",
     await themeCookie.serialize(theme),
   );
 }
 ```
 
-`unstable_headers()` also works in loaders, actions, resource routes, and middleware (before calling `next()`). Its calls are applied to the final response, and `Set-Cookie` headers are always appended. Headers React Router manages, such as `Content-Type` and `Location`, can't be set, and writes throw once the response has been created, including while server components render.
+`unstable_responseHeaders()` also works in loaders, actions, resource routes, and middleware (before calling `next()`). Its calls are applied to the final response, and `Set-Cookie` headers are always appended. Headers React Router manages, such as `Content-Type` and `Location`, can't be set, and writes throw once the response has been created, including while server components render.
 
 ### Client Properties
 

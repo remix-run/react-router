@@ -1636,25 +1636,25 @@ implementations.forEach((implementation) => {
 
             "src/routes/headers/home.actions.ts": js`
               "use server";
-              import { unstable_headers } from "react-router";
+              import { unstable_responseHeaders } from "react-router";
 
               export async function setCookie() {
-                unstable_headers().append("Set-Cookie", "from-server-function=1; Path=/");
+                unstable_responseHeaders().append("Set-Cookie", "from-server-function=1; Path=/");
               }
             `,
             "src/routes/headers/home.tsx": js`
-              import { unstable_headers } from "react-router";
+              import { unstable_responseHeaders } from "react-router";
               import { setCookie } from "./home.actions";
 
               export function loader() {
-                unstable_headers().set("X-Loader", "loader");
+                unstable_responseHeaders().set("X-Loader", "loader");
                 return null;
               }
 
               export default function HeadersRoute() {
                 let renderError = "none";
                 try {
-                  unstable_headers();
+                  unstable_responseHeaders();
                 } catch (error) {
                   renderError = error.message;
                 }
@@ -2062,7 +2062,7 @@ implementations.forEach((implementation) => {
           expect(body).toContain("<p>POST</p>");
         });
 
-        test("Supports unstable_headers in loaders and server functions", async ({
+        test("Supports unstable_responseHeaders in loaders and server functions", async ({
           page,
         }) => {
           let documentResponse = await page.goto(
@@ -2070,7 +2070,7 @@ implementations.forEach((implementation) => {
           );
           expect(documentResponse?.headers()["x-loader"]).toBe("loader");
           await expect(page.locator("[data-render-error]")).toContainText(
-            "headers can't be used after the response has been created",
+            "responseHeaders can't be used after the response has been created",
           );
 
           let actionResponse = page.waitForResponse(

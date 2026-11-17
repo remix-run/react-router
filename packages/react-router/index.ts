@@ -320,11 +320,11 @@ export { RSCDefaultRootErrorBoundary as UNSAFE_RSCDefaultRootErrorBoundary } fro
 // Re-export of RSC types
 import type {
   getRequest,
-  headers,
   matchRSCServerRequest,
+  responseHeaders,
 } from "./lib/rsc/server.rsc";
 export declare const unstable_getRequest: typeof getRequest;
-export declare const unstable_headers: typeof headers;
+export declare const unstable_responseHeaders: typeof responseHeaders;
 export declare const unstable_matchRSCServerRequest: typeof matchRSCServerRequest;
 
 export type {

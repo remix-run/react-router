@@ -137,14 +137,14 @@ class ResponseHeaders extends Headers {
     ) {
       throw new Error(
         `The "${name}" header is managed by React Router and can't be set ` +
-          "with headers().",
+          "with responseHeaders().",
       );
     }
   }
 }
 
 const responseCreatedMessage =
-  "headers can't be used after the response has been created. Set response " +
+  "responseHeaders can't be used after the response has been created. Set response " +
   "headers in a server function, loader, action, or middleware (before " +
   "calling next()), not while rendering server components.";
 
@@ -188,32 +188,32 @@ export function getRequest() {
  *
  * @example
  * "use server";
- * import { unstable_headers } from "react-router";
+ * import { unstable_responseHeaders } from "react-router";
  *
  * export async function setTheme(formData: FormData) {
  *   let theme = String(formData.get("theme"));
- *   unstable_headers().append("Set-Cookie", `theme=${theme}; Path=/`);
+ *   unstable_responseHeaders().append("Set-Cookie", `theme=${theme}; Path=/`);
  * }
  *
- * @name unstable_headers
+ * @name unstable_responseHeaders
  * @public
  * @category RSC
  * @mode data
  * @mode framework
  * @returns The outgoing response {@link Headers} for the current request.
  */
-export function headers(): Headers {
+export function responseHeaders(): Headers {
   const ctx = ServerStorage.getStore();
 
   if (!ctx)
     throw new Error(
-      "headers must be called from within a React Server render context",
+      "responseHeaders must be called from within a React Server render context",
     );
   // The storage is shared through `globalThis`, so the request may be handled
-  // by another copy of React Router that doesn't support `headers()`
+  // by another copy of React Router that doesn't support `responseHeaders()`
   if (!(ctx.headers instanceof ResponseHeaders))
     throw new Error(
-      "headers isn't supported by the copy of React Router handling this " +
+      "responseHeaders isn't supported by the copy of React Router handling this " +
         "request. Make sure only one copy of react-router is installed.",
     );
   if (ctx.headers.locked) throw new Error(responseCreatedMessage);
@@ -1031,7 +1031,7 @@ async function generateRenderResponse(
       : null;
 
   let actionResult: Promise<unknown> | undefined;
-  // Server components render after the response is created, so `headers()`
+  // Server components render after the response is created, so `responseHeaders()`
   // can't affect it from there
   let encodeResponse = generateResponse;
   generateResponse = (match, options) => {
