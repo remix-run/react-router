@@ -21,7 +21,9 @@ import {
   Form,
   Link,
   Outlet,
+  Route,
   RouterProvider,
+  Routes,
   createBrowserRouter,
   createHashRouter,
   isRouteErrorResponse,
@@ -9706,6 +9708,113 @@ function testDomRouter(
             await expect(handledReady).rejects.toBe(reason);
           },
         );
+      });
+    });
+
+    describe("descendant <Routes> NavigateOptions", () => {
+      it("forwards defaultShouldRevalidate, mask, flushSync, and viewTransition through RouterProvider navigator", async () => {
+        let loaderCalls = 0;
+        let testWindow = getWindow("/gallery");
+        let startViewTransition = jest.fn((cb: () => void) => {
+          cb();
+          return {
+            ready: Promise.resolve(),
+            finished: Promise.resolve(),
+            updateCallbackDone: Promise.resolve(),
+            skipTransition: jest.fn(),
+          };
+        });
+        testWindow.document.startViewTransition =
+          startViewTransition as unknown as Document["startViewTransition"];
+
+        let flushSync = jest.fn(<R,>(fn: () => R): R => fn());
+
+        function GalleryShell() {
+          return (
+            <Routes>
+              <Route index element={<GallerySubRoute />} />
+              <Route path="details" element={<h1>Details</h1>} />
+            </Routes>
+          );
+        }
+
+        function GallerySubRoute() {
+          let navigate = useNavigate();
+          let location = useLocation();
+          return (
+            <div>
+              <p id="search">{location.search || "none"}</p>
+              <Link
+                to="/gallery?photo=1"
+                mask="/images/1"
+                defaultShouldRevalidate={false}
+              >
+                Open Photo 1
+              </Link>
+              <button
+                onClick={() =>
+                  navigate("/gallery?photo=2", {
+                    replace: true,
+                    mask: "/images/2",
+                    defaultShouldRevalidate: false,
+                    flushSync: true,
+                  })
+                }
+              >
+                Replace Photo 2
+              </button>
+              <Link to="details" viewTransition>
+                View Details
+              </Link>
+            </div>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            {
+              id: "gallery",
+              path: "/gallery/*",
+              loader() {
+                loaderCalls += 1;
+                return { count: loaderCalls };
+              },
+              Component: GalleryShell,
+            },
+          ],
+          {
+            window: testWindow,
+            hydrationData: { loaderData: { gallery: { count: 0 } } },
+          },
+        );
+
+        render(<RouterProvider router={router} flushSync={flushSync} />);
+
+        fireEvent.click(screen.getByText("Open Photo 1"));
+        await waitFor(() => expect(screen.getByText("?photo=1")).toBeDefined());
+        expect(loaderCalls).toBe(0);
+        expect(router.state.location.mask).toEqual({
+          pathname: "/images/1",
+          search: "",
+          hash: "",
+        });
+        assertLocation(testWindow, "/images/1");
+
+        fireEvent.click(screen.getByText("Replace Photo 2"));
+        await waitFor(() => expect(screen.getByText("?photo=2")).toBeDefined());
+        expect(loaderCalls).toBe(0);
+        expect(flushSync).toHaveBeenCalled();
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.mask).toEqual({
+          pathname: "/images/2",
+          search: "",
+          hash: "",
+        });
+        assertLocation(testWindow, "/images/2");
+
+        fireEvent.click(screen.getByText("View Details"));
+        await waitFor(() => expect(screen.getByText("Details")).toBeDefined());
+        expect(startViewTransition).toHaveBeenCalledTimes(1);
       });
     });
 
