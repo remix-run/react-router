@@ -61,6 +61,53 @@ templates.forEach((template) => {
       await workflow({ isRsc, page, edit, url });
     });
 
+    test("vite dev reload after HMR", async ({ page, edit, $ }) => {
+      const port = await getPort();
+      const url = `http://localhost:${port}`;
+
+      const dev = $(`pnpm dev --port ${port}`);
+      await Stream.match(dev.stdout, url);
+
+      await page.goto(url, { waitUntil: "networkidle" });
+      let hmrStatus = page.locator("#index [data-hmr]");
+      await expect(hmrStatus).toHaveText("HMR updated: 0");
+      await page.evaluate(() => sessionStorage.setItem("hmr-loads", "0"));
+      await page.evaluate(() => {
+        window.addEventListener("beforeunload", () => {
+          sessionStorage.setItem("hmr-loads", "1");
+        });
+      });
+
+      await edit({
+        "app/routes/_index.tsx": (contents) =>
+          contents.replace("HMR updated: 0", "HMR updated: 1"),
+      });
+      await page.waitForLoadState("networkidle");
+      await expect(hmrStatus).toHaveText("HMR updated: 1");
+      expect(
+        await page.evaluate(() => sessionStorage.getItem("hmr-loads")),
+      ).toBe("0");
+
+      // Reloading after an HMR update must serve the latest route module
+      // instead of a stale cached copy (Safari caches dev modules)
+      await page.reload({ waitUntil: "networkidle" });
+      await expect(hmrStatus).toHaveText("HMR updated: 1");
+      expect(page.errors).toEqual([]);
+
+      // HMR must keep working after a reload, when module URLs include the
+      // previous HMR timestamp
+      await edit({
+        "app/routes/_index.tsx": (contents) =>
+          contents.replace("HMR updated: 1", "HMR updated: 2"),
+      });
+      await page.waitForLoadState("networkidle");
+      await expect(hmrStatus).toHaveText("HMR updated: 2");
+
+      await page.reload({ waitUntil: "networkidle" });
+      await expect(hmrStatus).toHaveText("HMR updated: 2");
+      expect(page.errors).toEqual([]);
+    });
+
     test("express", async ({ page, edit, $ }) => {
       await edit({
         "server.mjs": isRsc ? Express.rsc() : Express.server(),
