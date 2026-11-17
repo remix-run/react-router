@@ -2,7 +2,10 @@ import { test, expect } from "@playwright/test";
 
 import { createFixture, createAppFixture } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
-import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import {
+  isFirefoxMicrotaskWarning,
+  PlaywrightFixture,
+} from "./helpers/playwright-fixture.js";
 import { type TemplateName, viteConfig } from "./helpers/vite.js";
 
 const templateNames = [
@@ -197,7 +200,9 @@ test.describe("Deduped route modules", () => {
 
       test.beforeEach(({ page }) => {
         page.on("console", (msg) => {
-          logs.push(msg.text());
+          if (!isFirefoxMicrotaskWarning(msg.text())) {
+            logs.push(msg.text());
+          }
         });
       });
 

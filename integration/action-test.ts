@@ -6,7 +6,11 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
-import { PlaywrightFixture, selectHtml } from "./helpers/playwright-fixture.js";
+import {
+  isFirefoxMicrotaskWarning,
+  PlaywrightFixture,
+  selectHtml,
+} from "./helpers/playwright-fixture.js";
 import { type TemplateName } from "./helpers/vite.js";
 
 const templateNames = [
@@ -129,7 +133,9 @@ test.describe("actions", () => {
 
       test.beforeEach(({ page }) => {
         page.on("console", (msg) => {
-          logs.push(msg.text());
+          if (!isFirefoxMicrotaskWarning(msg.text())) {
+            logs.push(msg.text());
+          }
         });
       });
 
