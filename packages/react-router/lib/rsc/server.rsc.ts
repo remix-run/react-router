@@ -531,13 +531,14 @@ export async function matchRSCServerRequest({
     !leafMatch.route.Component &&
     !leafMatch.route.ErrorBoundary
   ) {
-    return generateResourceResponse(
+    let response = await generateResourceResponse(
       routerRequest,
       staticHandler,
       leafMatch.route.id,
       requestContext,
       onError,
     );
+    return normalizeResourceResponse(request, response);
   }
 
   let response = await generateRenderResponse(
@@ -560,6 +561,26 @@ export async function matchRSCServerRequest({
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
   response.headers.set("X-Remix-Response", "yes");
+  return normalizeResourceResponse(request, response);
+}
+
+function normalizeResourceResponse(
+  request: Request,
+  response: Response,
+): Response {
+  if (
+    request.method === "HEAD" &&
+    response.headers.get("React-Router-Resource") === "true"
+  ) {
+    // Release a discarded resource stream after middleware has finished, without
+    // waiting for cleanup or letting a cancellation error change the response.
+    response.body?.cancel().catch(() => {});
+    return new Response(null, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+  }
   return response;
 }
 
