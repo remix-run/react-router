@@ -999,7 +999,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       let hasHydrateFallback = sourceExports.includes("HydrateFallback");
 
       let hasRouteChunkByExportName =
-        buildChunkDetection.get(route.file) ??
+        buildChunkDetection.get(
+          normalizeRelativeFilePath(route.file, ctx.reactRouterConfig),
+        ) ??
         (
           await detectRouteChunksIfEnabled(cache, ctx, routeFile, {
             routeFile,
@@ -1580,9 +1582,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             {
               name: "react-router:child-compiler-disable-dep-optimization",
               enforce: "post",
-              configEnvironment: () => ({
-                optimizeDeps: { noDiscovery: true, include: [] },
-              }),
+              configEnvironment(_name, options) {
+                // Returning an empty include array would merge in existing entries.
+                options.optimizeDeps = {
+                  ...options.optimizeDeps,
+                  noDiscovery: true,
+                  include: [],
+                };
+              },
             },
           ],
         });
