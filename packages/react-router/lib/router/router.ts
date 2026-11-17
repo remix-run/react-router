@@ -2646,6 +2646,12 @@ export function createRouter(init: RouterInit): Router {
       routeId,
       opts?.relative,
     );
+    validateNavigationTarget(
+      null,
+      normalizedPath,
+      init.history.createURL("/"),
+      "reject",
+    );
     let matches = matchRoutesImpl(
       routesToUse,
       normalizedPath,
@@ -6858,6 +6864,12 @@ function normalizeRelativeRoutingRedirectResponse(
   invariant(
     location,
     "Redirects returned/thrown from loaders/actions must have a Location header",
+  );
+  validateNavigationTarget(
+    location,
+    location,
+    new URL(request.url),
+    "allow-explicit",
   );
 
   if (!isAbsoluteUrl(location)) {

@@ -1,3 +1,4 @@
+import { validateDocumentNavigationTarget } from "./router/navigation";
 import type { Pages } from "./types/register";
 import type { Equal } from "./types/utils";
 
@@ -51,7 +52,10 @@ export function href<Path extends keyof Args>(
     }
   }
 
-  return result || "/";
+  // Leading separators must not produce a protocol-relative URL.
+  result = result.replace(/^[\\/]{2,}/, "/") || "/";
+  validateDocumentNavigationTarget(result);
+  return result;
 }
 
 /**

@@ -3,6 +3,7 @@ import type { MiddlewareEnabled } from "../types/future";
 import type { Equal, Expect } from "../types/utils";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
+import { validateDocumentNavigationTarget } from "./navigation";
 import {
   ABSOLUTE_URL_REGEX,
   normalizeProtocolRelativeUrl,
@@ -1493,7 +1494,14 @@ export function generatePath<Path extends string>(
     // Remove empty segments
     .filter((segment) => !!segment);
 
-  return prefix + segments.join("/");
+  // Leading separators must not produce a protocol-relative URL.
+  let result = (prefix + segments.join("/")).replace(/^[\\/]{2,}/, "/");
+  if (!prefix && (path.startsWith(":") || path === "*")) {
+    // Escape a leading URL scheme introduced by a relative pattern's params.
+    result = result.replace(/^([a-z][a-z0-9+.-]*):/i, "$1%3A");
+  }
+  validateDocumentNavigationTarget(result);
+  return result;
 }
 
 /**
@@ -2061,6 +2069,7 @@ export type RedirectFunction = (
  * header.
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
+  validateDocumentNavigationTarget(url);
   let responseInit = init;
   if (typeof responseInit === "number") {
     responseInit = { status: responseInit };
