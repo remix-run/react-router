@@ -499,6 +499,22 @@ describe("navigation blocking", () => {
         expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
       });
     });
+
+    it("restores the history location when a blocked pop is clamped", async () => {
+      let history = createMemoryHistory({ initialEntries, initialIndex });
+      router = createRouter({ history, routes });
+      router.initialize();
+      let fn = () => true;
+      router.getBlocker("KEY", fn);
+
+      // Only one entry exists before "/about", so the history stops at "/"
+      await router.navigate(-3);
+      router.getBlocker("KEY", fn).reset?.();
+
+      expect(router.state.location.pathname).toBe("/about");
+      expect(history.location.pathname).toBe("/about");
+      expect(history.index).toBe(initialIndex);
+    });
   });
 });
 
