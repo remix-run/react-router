@@ -97,6 +97,7 @@ import { validatePluginOrder } from "./plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 import type { PrerenderRequest } from "./plugins/prerender";
 import { prerender } from "./plugins/prerender";
+import { getPrerenderRedirectHtml } from "./prerender-redirect";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -2819,24 +2820,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // approach used by Astro as well, so there's some precedent.
           // https://github.com/withastro/roadmap/issues/466
           // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
-          let location = response.headers.get("Location");
-          // A short delay causes Google to interpret the redirect as temporary.
-          // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
-          let delay = response.status === 302 ? 2 : 0;
-          let escapedLocation = escapeHtml(location ?? "");
-          let escapedPathname = escapeHtml(pathname);
-          html = `<!doctype html>
-<head>
-<title>Redirecting to: ${escapedLocation}</title>
-<meta http-equiv="refresh" content="${delay};url=${escapedLocation}">
-<meta name="robots" content="noindex">
-</head>
-<body>
-	<a href="${escapedLocation}">
-    Redirecting from <code>${escapedPathname}</code> to <code>${escapedLocation}</code>
-  </a>
-</body>
-</html>`;
+          html = getPrerenderRedirectHtml(response, pathname);
         } else if (response.status !== 200) {
           throw new Error(
             `Prerender (html): Received a ${response.status} status code from ` +
@@ -4077,19 +4061,4 @@ function createSpaModeRequest(
     }),
     metadata: { type: "spa", path: "/" },
   };
-}
-
-// Note: Duplicated from react-router/lib/dom/ssr/markup
-// Must be kept in sync with the original implementation.
-const ESCAPE_REGEX = /[&><\u2028\u2029]/g;
-const ESCAPE_LOOKUP: { [match: string]: string } = {
-  "&": "\\u0026",
-  ">": "\\u003e",
-  "<": "\\u003c",
-  "\u2028": "\\u2028",
-  "\u2029": "\\u2029",
-};
-
-function escapeHtml(html: string) {
-  return html.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
 }
