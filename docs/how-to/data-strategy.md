@@ -6,9 +6,6 @@ title: Data Strategy
 
 [MODES: data]
 
-<br />
-<br />
-
 <docs-warning>This is a low-level API intended for advanced use-cases. This overrides React Router's internal handling of `action`/`loader` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.</docs-warning>
 
 ## Overview

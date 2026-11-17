@@ -1,0 +1,1 @@
+Serialize concurrent type generation to prevent filesystem races between `react-router dev` and `react-router typegen`. Report a timeout with cleanup instructions if the typegen lock cannot be acquired within 30 seconds.

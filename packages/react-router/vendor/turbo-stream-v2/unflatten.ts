@@ -84,6 +84,8 @@ function hydrate(this: ThisDecode, index: number): any {
         continue;
     }
 
+    validateIndex(index, values.length);
+
     if (hydrated[index]) {
       set(hydrated[index]);
       continue;
@@ -174,12 +176,33 @@ function hydrate(this: ThisDecode, index: number): any {
             set(obj);
             continue;
           case TYPE_PROMISE:
+            validateIndex(b, values.length);
             if (hydrated[b]) {
               set((hydrated[index] = hydrated[b]));
             } else {
               const d = new Deferred();
+              const promise = d.promise as Promise<unknown> & {
+                status: "pending" | "fulfilled" | "rejected";
+                value?: unknown;
+                reason?: unknown;
+              };
+              // Observe actual settlement, including adoption of another promise,
+              // before consumers attach callbacks. React.use can then read an
+              // available result without suspending for another microtask.
+              // https://react.dev/reference/react/use#how-to-implement-a-promise-cache
+              promise.status = "pending";
+              promise.then(
+                (value) => {
+                  promise.status = "fulfilled";
+                  promise.value = value;
+                },
+                (reason) => {
+                  promise.status = "rejected";
+                  promise.reason = reason;
+                },
+              );
               deferred[b] = d;
-              set((hydrated[index] = d.promise));
+              set((hydrated[index] = promise));
             }
             continue;
           case TYPE_ERROR:
@@ -196,6 +219,7 @@ function hydrate(this: ThisDecode, index: number): any {
             set(error);
             continue;
           case TYPE_PREVIOUS_RESOLVED:
+            validateIndex(b, values.length);
             set((hydrated[index] = hydrated[b]));
             continue;
           default:
@@ -264,7 +288,12 @@ function hydrate(this: ThisDecode, index: number): any {
           },
         ]);
         postRun.push(() => {
-          object[r[0]] = r[1];
+          Object.defineProperty(object, r[0], {
+            value: r[1],
+            enumerable: true,
+            configurable: true,
+            writable: true,
+          });
         });
       }
       set(object);
@@ -277,4 +306,10 @@ function hydrate(this: ThisDecode, index: number): any {
   }
 
   return result;
+}
+
+function validateIndex(index: number, length: number) {
+  if (!Number.isSafeInteger(index) || index < 0 || index >= length) {
+    throw new SyntaxError();
+  }
 }

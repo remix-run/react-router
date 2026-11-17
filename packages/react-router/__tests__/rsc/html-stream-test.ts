@@ -59,6 +59,14 @@ function tick() {
   return new Promise((resolve) => setTimeout(resolve, 20));
 }
 
+// Runs the pending promise jobs of the streams (write, close, then `flush()`). It uses
+// no timer, so a pending `setTimeout(..., 0)` does not fire.
+async function settleMicrotasks() {
+  for (let i = 0; i < 20; i++) {
+    await Promise.resolve();
+  }
+}
+
 async function withTimeout<T>(promise: Promise<T>, message: string) {
   let timeout: ReturnType<typeof setTimeout>;
   try {
@@ -187,6 +195,107 @@ describe("injectRSCPayload", () => {
     expect(unhandledRejections).toEqual([]);
     expect(rsc.isCancelled()).toBe(true);
     expect(rsc.cancelReason()).toBe(reason);
+  });
+
+  it("does not crash when the readable side is cancelled while flush waits for the RSC payload", async () => {
+    let rsc = createRSCStream({ keepOpen: true });
+    let transform = injectRSCPayload(rsc.stream);
+    let writer = transform.writable.getWriter();
+    let reader = transform.readable.getReader();
+    let cancelHookSkipped = false;
+
+    let unhandledRejections = await withUnhandledRejections(async () => {
+      // A pending read removes the backpressure, as on a server. The document is written
+      // and closed before the flush timer fires. `flush()` then waits for the RSC
+      // payload, and only the timer starts it.
+      let read = reader.read().catch(() => {});
+      writer
+        .write(encoder.encode("<html><body>hi</body></html>"))
+        .catch(() => {});
+      writer.close().catch(() => {});
+      await settleMicrotasks();
+
+      // While `flush()` runs, the Streams spec does not call the transformer's
+      // `cancel()`. The flush timer stays pending.
+      let cancelled = reader
+        .cancel(new Error("client aborted"))
+        .catch(() => {});
+      await settleMicrotasks();
+      cancelHookSkipped = !rsc.isCancelled();
+      await tick();
+      await withTimeout(cancelled, "Timed out cancelling the readable side");
+      await read;
+    });
+
+    // The RSC stream stays open after the cancel only if `flush()` was in progress.
+    expect(cancelHookSkipped).toBe(true);
+    expect(unhandledRejections).toEqual([]);
+    expect(rsc.isCancelled()).toBe(true);
+  });
+
+  it("cancels the RSC stream when the readable side is cancelled during flush while the RSC payload is still streaming", async () => {
+    let rscController!: ReadableStreamDefaultController<Uint8Array>;
+    let rscCancelled = false;
+    let rscStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        rscController = controller;
+        controller.enqueue(encoder.encode('S1:"hello"'));
+      },
+      cancel() {
+        rscCancelled = true;
+      },
+    });
+    let transform = injectRSCPayload(rscStream);
+    let writer = transform.writable.getWriter();
+    let reader = transform.readable.getReader();
+
+    let unhandledRejections = await withUnhandledRejections(async () => {
+      let read = reader.read().catch(() => {});
+      writer
+        .write(encoder.encode("<html><body>hi</body></html>"))
+        .catch(() => {});
+      await tick();
+
+      writer.close().catch(() => {});
+      await settleMicrotasks();
+      let cancelled = reader
+        .cancel(new Error("client aborted"))
+        .catch(() => {});
+      rscController.enqueue(encoder.encode('S2:"world"'));
+      await tick();
+      await withTimeout(cancelled, "Timed out cancelling the readable side");
+      await read;
+    });
+
+    expect(unhandledRejections).toEqual([]);
+    expect(rscCancelled).toBe(true);
+  });
+
+  it("does not wait for the RSC payload to finish when the readable side is cancelled during flush", async () => {
+    // In production, the RSC stream is a tee branch. The cancel of one branch settles
+    // only after the other branch is cancelled or the source closes.
+    let [rscBranch] = createRSCStream({ keepOpen: true }).stream.tee();
+    let transform = injectRSCPayload(rscBranch);
+    let writer = transform.writable.getWriter();
+    let reader = transform.readable.getReader();
+
+    let unhandledRejections = await withUnhandledRejections(async () => {
+      let read = reader.read().catch(() => {});
+      writer
+        .write(encoder.encode("<html><body>hi</body></html>"))
+        .catch(() => {});
+      writer.close().catch(() => {});
+      await settleMicrotasks();
+
+      let cancelled = reader
+        .cancel(new Error("client aborted"))
+        .catch(() => {});
+      await tick();
+      await withTimeout(cancelled, "Timed out cancelling the readable side");
+      await read;
+    });
+
+    expect(unhandledRejections).toEqual([]);
   });
 });
 

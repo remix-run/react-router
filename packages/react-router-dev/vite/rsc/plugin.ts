@@ -1,4 +1,5 @@
 import type * as Vite from "vite";
+import type { ReactRouterBuildContext } from "../build";
 import { createHash } from "node:crypto";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
@@ -219,6 +220,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
 
         return {
+          __reactRouterBuildContext: {
+            close: () => configLoader.close(),
+          } satisfies ReactRouterBuildContext,
           resolve: {
             dedupe: [
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
@@ -412,7 +416,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
       },
       configurePreviewServer(previewServer) {
-        const clientBuildDirectory = getClientBuildDirectory(config);
+        const clientBuildDirectory =
+          getClientBuildDirectory(resolvedViteConfig);
         if (
           (config.prerender || config.ssr === false) &&
           process.env.IS_RR_BUILD_REQUEST !== "yes"
@@ -470,11 +475,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           };
         }
       },
-      buildApp: {
-        order: "post",
-        async handler() {
+      async buildEnd(error) {
+        if (error) {
           await configLoader.close();
-        },
+        }
       },
     },
     (() => {
@@ -622,6 +626,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     {
       name: "react-router/rsc/virtual-client-version",
+      // Run after the Vite RSC plugin, including its post-ordered
+      // `generateBundle` hook in 0.5.36 and later.
+      enforce: "post",
       resolveId(id) {
         if (id === virtual.clientVersion.id) {
           return virtual.clientVersion.resolvedId;
@@ -637,6 +644,7 @@ export default assetsManifest.clientVersion;
             : `export default "development";`;
         }
       },
+      // Use `generateBundle` so builds with `write: false` also get a version.
       generateBundle: {
         order: "post",
         async handler() {
@@ -724,11 +732,11 @@ export default assetsManifest.clientVersion;
     prerender({
       config() {
         return {
-          buildDirectory: getClientBuildDirectory(config),
           concurrency: getPrerenderConcurrencyConfig(config),
         };
       },
       logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
+      cleanup: () => configLoader.close(),
       async requests() {
         const prerenderPaths = new Set(
           await getPrerenderPaths(
@@ -870,6 +878,17 @@ export default assetsManifest.clientVersion;
         return files;
       },
     }),
+    {
+      name: "react-router/rsc/build-end",
+      enforce: "post",
+      sharedDuringBuild: true,
+      buildApp: {
+        order: "post",
+        async handler() {
+          await configLoader.close();
+        },
+      },
+    },
   ];
 }
 
@@ -948,9 +967,8 @@ function createRSCOptimizeDepsRouteModulesPlugin({
   };
 }
 
-const getClientBuildDirectory = (
-  reactRouterConfig: ResolvedReactRouterConfig,
-) => path.join(reactRouterConfig.buildDirectory, "client");
+const getClientBuildDirectory = (viteConfig: Vite.ResolvedConfig) =>
+  path.resolve(viteConfig.root, viteConfig.environments.client.build.outDir);
 
 function getPrerenderConcurrencyConfig(
   reactRouterConfig: ResolvedReactRouterConfig,
