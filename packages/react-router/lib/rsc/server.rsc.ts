@@ -189,6 +189,7 @@ type RSCRouteConfigEntryBase = {
   action?: ActionFunction;
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: MiddlewareFunction<any>[];
   ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
   headers?: HeadersFunction;
@@ -236,6 +237,7 @@ type RSCRouteDataMatch = Omit<RouteMatch, "route"> & {
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: MiddlewareFunction<any>[];
   element?: React.ReactElement | false;
   errorElement?: React.ReactElement;
   handle?: any;
@@ -1415,6 +1417,7 @@ async function getRSCRouteMatch({
   return {
     clientAction: route.clientAction,
     clientLoader: route.clientLoader,
+    clientMiddleware: route.clientMiddleware,
     element,
     errorElement,
     handle: route.handle,
@@ -1462,6 +1465,7 @@ async function getManifestRoute(
   return {
     clientAction: route.clientAction,
     clientLoader: route.clientLoader,
+    clientMiddleware: route.clientMiddleware,
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!route.Component,
