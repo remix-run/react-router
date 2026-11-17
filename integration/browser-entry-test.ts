@@ -5,7 +5,10 @@ import {
   js,
   createAppFixture,
 } from "./helpers/create-fixture.js";
-import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import {
+  isFirefoxMicrotaskWarning,
+  PlaywrightFixture,
+} from "./helpers/playwright-fixture.js";
 
 test(
   "expect to be able to browse backward out of a remix app, then forward " +
@@ -173,7 +176,11 @@ test("allows users to pass an onError function to HydratedRouter", async ({
   });
 
   let logs: string[] = [];
-  page.on("console", (msg) => logs.push(msg.text()));
+  page.on("console", (msg) => {
+    if (!isFirefoxMicrotaskWarning(msg.text())) {
+      logs.push(msg.text());
+    }
+  });
 
   let appFixture = await createAppFixture(fixture);
   let app = new PlaywrightFixture(appFixture, page);
@@ -284,7 +291,11 @@ test("allows users to instrument the client side router via HydratedRouter", asy
   });
 
   let logs: string[] = [];
-  page.on("console", (msg) => logs.push(msg.text()));
+  page.on("console", (msg) => {
+    if (!isFirefoxMicrotaskWarning(msg.text())) {
+      logs.push(msg.text());
+    }
+  });
 
   let appFixture = await createAppFixture(fixture);
   let app = new PlaywrightFixture(appFixture, page);

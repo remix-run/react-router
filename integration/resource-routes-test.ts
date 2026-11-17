@@ -7,7 +7,10 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import type { AppFixture, Fixture } from "./helpers/create-fixture.js";
-import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import {
+  isFirefoxMicrotaskWarning,
+  PlaywrightFixture,
+} from "./helpers/playwright-fixture.js";
 
 test.describe("loader in an app", async () => {
   let appFixture: AppFixture;
@@ -323,7 +326,11 @@ test.describe("loader in an app", async () => {
     page,
   }) => {
     let logs: string[] = [];
-    page.on("console", (msg) => logs.push(msg.text()));
+    page.on("console", (msg) => {
+      if (!isFirefoxMicrotaskWarning(msg.text())) {
+        logs.push(msg.text());
+      }
+    });
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton("/no-action");

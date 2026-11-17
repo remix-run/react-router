@@ -8,6 +8,13 @@ let cheerio = load("");
 
 import type { AppFixture } from "./create-fixture.js";
 
+// Firefox emits this native scheduling diagnostic during hydration.
+export function isFirefoxMicrotaskWarning(message: string) {
+  return /^\[JavaScript Warning: "The execution of microtasks on this page was reordered to avoid unsafe execution\." \{file: "[^"]*" line: 0\}\]$/.test(
+    message,
+  );
+}
+
 export class PlaywrightFixture {
   readonly page: Page;
   readonly app: AppFixture;

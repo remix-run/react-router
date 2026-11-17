@@ -9,7 +9,10 @@ import {
   createFixture,
   js,
 } from "./helpers/create-fixture.js";
-import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import {
+  isFirefoxMicrotaskWarning,
+  PlaywrightFixture,
+} from "./helpers/playwright-fixture.js";
 import {
   EXPRESS_SERVER,
   createProject,
@@ -3837,7 +3840,11 @@ test.describe("single-fetch", () => {
 
       // Capture console logs and uncaught errors
       let msgs: string[] = [];
-      page.on("console", (msg) => msgs.push(msg.text()));
+      page.on("console", (msg) => {
+        if (!isFirefoxMicrotaskWarning(msg.text())) {
+          msgs.push(msg.text());
+        }
+      });
       page.on("pageerror", (error) => msgs.push(error.message));
 
       await app.goto("/", true);
