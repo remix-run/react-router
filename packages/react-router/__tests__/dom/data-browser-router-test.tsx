@@ -5098,6 +5098,58 @@ function testDomRouter(
           `);
       });
 
+      it("reads the <Form encType> value case-insensitively", async () => {
+        let actionSpy = jest.fn();
+        let router = createTestRouter(
+          [{ path: "/", action: actionSpy, Component: FormPage }],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+
+        function FormPage() {
+          return (
+            <Form method="post" encType="Multipart/Form-Data">
+              <input name="a" defaultValue="1" />
+              <button type="submit">Submit</button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => expect(actionSpy).toHaveBeenCalled());
+        let { request } = actionSpy.mock.calls[0][0];
+        expect(request.headers.get("Content-Type")).toMatch(
+          /^multipart\/form-data; boundary=/,
+        );
+      });
+
+      it("reads the submit button formEncType value case-insensitively", async () => {
+        let actionSpy = jest.fn();
+        let router = createTestRouter(
+          [{ path: "/", action: actionSpy, Component: FormPage }],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+
+        function FormPage() {
+          return (
+            <Form method="post">
+              <input name="a" defaultValue="1" />
+              <button type="submit" formEncType="Text/Plain">
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => expect(actionSpy).toHaveBeenCalled());
+        let { request } = actionSpy.mock.calls[0][0];
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8",
+        );
+      });
+
       it("includes submit button name/value on form submission", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
