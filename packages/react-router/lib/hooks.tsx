@@ -75,6 +75,20 @@ import {
   validateNavigationTarget,
 } from "./router/navigation";
 
+// Every hook below a route reads the same `matches` array from `RouteContext`,
+// so serialize its route pathnames once per array instead of once per call
+// (a page with many `<Link>`s otherwise does this for every link).
+const routePathnamesJsonCache = new WeakMap<RouteMatch[], string>();
+
+function getRoutePathnamesJson(matches: RouteMatch[]): string {
+  let json = routePathnamesJsonCache.get(matches);
+  if (json === undefined) {
+    json = JSON.stringify(getResolveToMatches(matches));
+    routePathnamesJsonCache.set(matches, json);
+  }
+  return json;
+}
+
 /**
  * Resolves a URL against the current {@link Location}.
  *
@@ -392,7 +406,7 @@ function useNavigateUnstable(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
+  let routePathnamesJson = getRoutePathnamesJson(matches);
 
   let activeRef = React.useRef(false);
   React.useLayoutEffect(() => {
@@ -706,7 +720,7 @@ export function useResolvedPath(
 ): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
-  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
+  let routePathnamesJson = getRoutePathnamesJson(matches);
 
   return React.useMemo(
     () =>
