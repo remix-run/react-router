@@ -401,6 +401,7 @@ function createRouterFromPayload({
         hasAction: boolean;
         hasComponent: boolean;
         hasLoader: boolean;
+        hasClientMiddleware: boolean;
       }
     >,
   ) => {
@@ -416,11 +417,20 @@ function createRouterFromPayload({
         const routeUpdate = routeUpdateByRouteId.get(route.id);
 
         if (routeUpdate) {
-          const { routeModule, hasAction, hasComponent, hasLoader } =
-            routeUpdate;
+          const {
+            routeModule,
+            hasAction,
+            hasComponent,
+            hasLoader,
+            hasClientMiddleware,
+          } = routeUpdate;
           const newRoute = createRouteFromServerManifest({
             clientAction: routeModule.clientAction,
             clientLoader: routeModule.clientLoader,
+            // A component chunk doesn't include separately chunked middleware.
+            clientMiddleware: hasClientMiddleware
+              ? (routeModule.clientMiddleware ?? route.middleware)
+              : undefined,
             element: route.element as React.ReactElement,
             errorElement: route.errorElement as React.ReactElement,
             handle: route.handle,

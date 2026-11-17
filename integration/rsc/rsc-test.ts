@@ -796,7 +796,7 @@ implementations.forEach((implementation) => {
 
               export const clientMiddleware = [
                 async ({ context }, next) => {
-                  context.set(testContext, "client-context-value");
+                  context.set(testContext, "middleware-context-value");
                   return await next();
                 },
               ];
@@ -1788,7 +1788,7 @@ implementations.forEach((implementation) => {
           await page.waitForSelector("[data-client-context]");
           expect(
             await page.locator("[data-client-context]").textContent(),
-          ).toBe("Client context value: client-context-value");
+          ).toBe("Client context value: middleware-context-value");
 
           // Verify clientMiddleware also runs during client navigations.
           await page.click('a[href="/"]');
@@ -1797,7 +1797,7 @@ implementations.forEach((implementation) => {
           await page.waitForSelector("[data-client-context]");
           expect(
             await page.locator("[data-client-context]").textContent(),
-          ).toBe("Client context value: client-context-value");
+          ).toBe("Client context value: middleware-context-value");
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());

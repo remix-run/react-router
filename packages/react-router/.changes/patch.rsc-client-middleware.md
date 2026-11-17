@@ -1,1 +1,1 @@
-RSC routes now run `clientMiddleware` during client navigations.
+Run `clientMiddleware` during RSC client navigations and preserve it when route components update via HMR.
