@@ -2,12 +2,15 @@
  * @jest-environment node
  */
 
+import { setImmediate } from "node:timers/promises";
+
 import { createContext, type StaticHandlerContext } from "react-router";
 
 import { createRequestHandler } from "../../lib/server-runtime/server";
 import { ServerMode } from "../../lib/server-runtime/mode";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 import { mockServerBuild } from "./utils";
+import { Deferred } from "../../vendor/turbo-stream-v2/utils";
 
 function spyConsole() {
   // https://github.com/facebook/react/issues/7047
@@ -81,15 +84,67 @@ describe("server", () => {
       },
     );
 
-    it("strips body for HEAD requests", async () => {
-      let handler = createRequestHandler(build);
-      let response = await handler(
-        new Request("http://localhost:3000/", {
-          method: "HEAD",
-        }),
+    it.each(["GET", "HEAD"])("handles %s response bodies", async (method) => {
+      let cancel = jest.fn(() => Promise.reject(new Error("Stream closed")));
+      let body = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode("Hello"));
+        },
+        pull(controller) {
+          controller.close();
+        },
+        cancel,
+      });
+      let build = mockServerBuild(
+        {
+          root: { path: "/", default: () => null },
+        },
+        {
+          handleDocumentRequest: () =>
+            new Response(body, {
+              status: 201,
+              statusText: "Created",
+              headers: { "Content-Type": "text/plain" },
+            }),
+        },
+      );
+      let response = await createRequestHandler(build)(
+        new Request("http://localhost:3000/", { method }),
       );
 
-      expect(await response.text()).toBe("");
+      expect(response.status).toBe(201);
+      expect(response.statusText).toBe("Created");
+      expect(response.headers.get("Content-Type")).toBe("text/plain");
+      expect(response.body === null).toBe(method === "HEAD");
+      expect(await response.text()).toBe(method === "HEAD" ? "" : "Hello");
+      expect(cancel).toHaveBeenCalledTimes(method === "HEAD" ? 1 : 0);
+      await setImmediate();
+    });
+
+    it("handles nested deferred rejections after a HEAD data response", async () => {
+      let outer = new Deferred();
+      let inner = new Deferred();
+      let build = mockServerBuild({
+        root: {
+          path: "/",
+          default: () => null,
+          loader: () => ({ outer: outer.promise }),
+        },
+      });
+      let response = await createRequestHandler(build)(
+        new Request("http://localhost:3000/_root.data", { method: "HEAD" }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe("text/x-script");
+      expect(response.body).toBeNull();
+
+      outer.resolve({ inner: inner.promise });
+      await setImmediate();
+      inner.reject(new Error("Nested deferred rejection"));
+      await setImmediate();
+
+      expect(spy.console).not.toHaveBeenCalled();
     });
 
     it("accepts proper values from getLoadContext (without middleware)", async () => {
