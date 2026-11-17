@@ -218,3 +218,11 @@ describe("writeAsyncIterableToWritable", () => {
     );
   });
 });
+
+describe("createReadableStreamFromReadable", () => {
+  it("does not crash when cancelling a file that fails to open", () => {
+    expect(runFixtureProcess("stream-cancelled-missing-file.mjs")).toEqual(
+      survivedProcess,
+    );
+  });
+});

@@ -3,6 +3,7 @@ import {
   type RSCMatch,
   type RSCRouteConfigEntry,
 } from "../../lib/rsc/server.rsc";
+import { routeRSCServerRequest } from "../../lib/rsc/server.ssr";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
@@ -58,6 +59,143 @@ describe("RSC server", () => {
     expect((await payload.patches).map((patch) => patch.id)).toEqual(["other"]);
     expect(routeDiscovery.mode).toBe("lazy");
   });
+
+  describe("request methods", () => {
+    test.each(["GET", "HEAD"])(
+      "handles %s resource responses",
+      async (method) => {
+        let finishCancellation = () => {};
+        let cancel = jest.fn(
+          () =>
+            new Promise<void>((_, reject) => {
+              finishCancellation = () => reject(new Error("Stream closed"));
+            }),
+        );
+        let body = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode("Hello"));
+          },
+          pull(controller) {
+            controller.close();
+          },
+          cancel,
+        });
+        let middlewareHasBody = false;
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/resource", { method }),
+          routes: [
+            {
+              id: "resource",
+              path: "/resource",
+              middleware: [
+                async (_, next) => {
+                  let response = await next();
+                  middlewareHasBody = response.body !== null;
+                  response.headers.set("X-Middleware", "yes");
+                  return response;
+                },
+              ],
+              loader: () =>
+                new Response(body, {
+                  status: 201,
+                  statusText: "Created",
+                  headers: {
+                    "Content-Type": "text/plain",
+                    "Content-Length": "5",
+                  },
+                }),
+            },
+          ],
+          generateResponse() {
+            throw new Error(
+              "Resource response should not be encoded as Flight",
+            );
+          },
+        });
+
+        expect(middlewareHasBody).toBe(true);
+        expect(response.status).toBe(201);
+        expect(response.statusText).toBe("Created");
+        expect(response.headers.get("Content-Type")).toBe("text/plain");
+        expect(response.headers.get("Content-Length")).toBe("5");
+        expect(response.headers.get("X-Middleware")).toBe("yes");
+        expect(response.body === null).toBe(method === "HEAD");
+        expect(await response.text()).toBe(method === "HEAD" ? "" : "Hello");
+        expect(cancel).toHaveBeenCalledTimes(method === "HEAD" ? 1 : 0);
+        finishCancellation();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+    );
+
+    test("preserves HEAD Flight bodies for SSR rendering", async () => {
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/", { method: "HEAD" }),
+        routes: [{ id: "root", path: "/", Component: () => null }],
+        generateResponse: () => new Response("Encoded Flight"),
+      });
+
+      expect(response.headers.get("React-Router-Resource")).toBeNull();
+      expect(await response.text()).toBe("Encoded Flight");
+    });
+  });
+
+  test.each(["return", "throw"])(
+    "handles HEAD resource middleware responses (%s)",
+    async (behavior) => {
+      let cancel = jest.fn();
+      let resourceResponse = new Response(new ReadableStream({ cancel }), {
+        status: 403,
+        headers: { "Content-Type": "text/plain" },
+      });
+      let request = new Request("https://remix.run/resource", {
+        method: "HEAD",
+      });
+      let serverResponse = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request,
+        routes: [
+          {
+            id: "resource",
+            path: "/resource",
+            middleware: [
+              () => {
+                if (behavior === "throw") throw resourceResponse;
+                return resourceResponse;
+              },
+            ],
+            loader() {
+              throw new Error("Resource loader should not be called");
+            },
+          },
+        ],
+        generateResponse() {
+          throw new Error("Resource response should not be encoded as Flight");
+        },
+      });
+
+      expect(serverResponse.status).toBe(403);
+      expect(serverResponse.headers.get("Content-Type")).toBe("text/plain");
+      expect(serverResponse.headers.get("React-Router-Resource")).toBe("true");
+      expect(serverResponse.body).toBeNull();
+      expect(cancel).toHaveBeenCalledTimes(1);
+      expect(
+        await routeRSCServerRequest({
+          request,
+          serverResponse,
+          createFromReadableStream() {
+            throw new Error(
+              "Resource response should not be decoded as Flight",
+            );
+          },
+          renderHTML() {
+            throw new Error("Resource response should not be rendered as HTML");
+          },
+        }),
+      ).toBe(serverResponse);
+    },
+  );
 
   describe("manifest requests", () => {
     test("rejects manifest requests over the URL limit", async () => {

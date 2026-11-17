@@ -491,7 +491,7 @@ export async function matchRSCServerRequest({
     !leafMatch.route.Component &&
     !leafMatch.route.ErrorBoundary
   ) {
-    return generateResourceResponse(
+    let response = await generateResourceResponse(
       routerRequest,
       routes,
       basename,
@@ -499,6 +499,7 @@ export async function matchRSCServerRequest({
       requestContext,
       onError,
     );
+    return normalizeResourceResponse(request, response);
   }
 
   let response = await generateRenderResponse(
@@ -520,6 +521,24 @@ export async function matchRSCServerRequest({
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
   response.headers.set("X-Remix-Response", "yes");
+  return response;
+}
+
+function normalizeResourceResponse(
+  request: Request,
+  response: Response,
+): Response {
+  if (request.method === "HEAD") {
+    response.body?.cancel().catch(() => {});
+    let headers = new Headers(response.headers);
+    // Resource middleware can return before the response is tagged for SSR.
+    headers.set("React-Router-Resource", "true");
+    return new Response(null, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
   return response;
 }
 
