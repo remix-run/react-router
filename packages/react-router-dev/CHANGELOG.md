@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## v7.18.6
+
+### Patch Changes
+
+- Improve handling of prerendered redirect destinations in Framework Mode and unstable RSC Framework Mode ([#15788](https://github.com/remix-run/react-router/pull/15788))
+- Updated dependencies:
+  - [`react-router@7.18.6`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.6)
+  - [`@react-router/node@7.18.6`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.6)
+  - [`@react-router/serve@7.18.6`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@7.18.6)
+
 ## v7.18.5
 
 ### Patch Changes

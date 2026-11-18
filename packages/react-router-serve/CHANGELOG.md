@@ -1,5 +1,15 @@
 # `@react-router/serve`
 
+## v7.18.6
+
+### Patch Changes
+
+- Improve request-listener error handling when serving RSC applications ([#15744](https://github.com/remix-run/react-router/pull/15744))
+- Updated dependencies:
+  - [`react-router@7.18.6`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.6)
+  - [`@react-router/express@7.18.6`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.18.6)
+  - [`@react-router/node@7.18.6`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.6)
+
 ## v7.18.5
 
 ### Patch Changes

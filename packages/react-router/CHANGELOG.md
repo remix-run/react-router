@@ -1,5 +1,19 @@
 # `react-router`
 
+## v7.18.6
+
+### Patch Changes
+
+- Fix hydration of streamed `Suspense` boundaries in development with `future.v8_viteEnvironmentApi` ([#15747](https://github.com/remix-run/react-router/pull/15747))
+
+  - Preserve server-rendered content while lazy client code loads by clearing critical CSS in a transition
+
+- Handle `HEAD` response bodies consistently in Framework, RSC Framework, and RSC Data modes, preserving response metadata and deferred data handling ([#15784](https://github.com/remix-run/react-router/pull/15784))
+
+- Improve path generation and URL validation across `href()`, `generatePath()`, links, forms, fetchers, and redirects ([#15787](https://github.com/remix-run/react-router/pull/15787))
+
+- Preserve route parameters ending in `.data` in Single Fetch loader and action requests when `future.v8_passThroughRequests` is disabled ([#15734](https://github.com/remix-run/react-router/pull/15734))
+
 ## v7.18.5
 
 ### Patch Changes
