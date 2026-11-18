@@ -116,6 +116,7 @@ test("loader request on CSR GET requests", async ({ page }) => {
   expect(loaderData.body).toEqual(null);
 
   await app.clickElement("#submit-get-csr");
+  await expect(page.locator("#loader-data")).toContainText("?type=csr");
 
   loaderData = JSON.parse(await page.locator("#loader-data").innerHTML());
   expect(loaderData.method).toEqual("GET");

@@ -185,45 +185,37 @@ test.describe("pass through requests", () => {
 
     // Document load
     await app.goto("/");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe("/");
-    expect(await page.locator("[data-loader-path]").textContent()).toBe("/");
+    await expect(page.locator("[data-loader-url]")).toHaveText("/");
+    await expect(page.locator("[data-loader-path]")).toHaveText("/");
 
     // Client-side navigation with query params
     await app.clickLink("/?a=1");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe(
+    await expect(page.locator("[data-loader-url]")).toHaveText(
       "/_root.data?a=1",
     );
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/?a=1",
-    );
+    await expect(page.locator("[data-loader-path]")).toHaveText("/?a=1");
     expect(requests).toEqual(["/_root.data?a=1"]);
     requests = [];
 
     // Client-side form submission with query params
     await app.clickElement('button[type="submit"]');
-    expect(await page.locator("[data-action-url]").textContent()).toBe(
+    await expect(page.locator("[data-action-url]")).toHaveText(
       "/_root.data?index&a=1",
     );
-    expect(await page.locator("[data-action-path]").textContent()).toBe(
-      "/?a=1",
-    );
-    expect(await page.locator("[data-loader-url]").textContent()).toBe(
+    await expect(page.locator("[data-action-path]")).toHaveText("/?a=1");
+    await expect(page.locator("[data-loader-url]")).toHaveText(
       "/_root.data?a=1",
     );
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/?a=1",
-    );
+    await expect(page.locator("[data-loader-path]")).toHaveText("/?a=1");
     expect(requests).toEqual(["/_root.data?index&a=1", "/_root.data?a=1"]);
     requests = [];
 
     // Navigate to new page
     await app.clickLink("/page?b=2");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe(
+    await expect(page.locator("[data-loader-url]")).toHaveText(
       "/page.data?b=2&_routes=routes%2Fpage",
     );
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/page?b=2",
-    );
+    await expect(page.locator("[data-loader-path]")).toHaveText("/page?b=2");
     expect(requests).toEqual(["/page.data?b=2&_routes=routes%2Fpage"]);
     requests = [];
   });

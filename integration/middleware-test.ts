@@ -1898,27 +1898,27 @@ test.describe("Middleware", () => {
       let app = new PlaywrightFixture(appFixture, page);
 
       await app.goto("/revalidate/parent/1");
-      expect(await page.locator("#parent-loader-data").textContent()).toBe(
+      await expect(page.locator("#parent-loader-data")).toHaveText(
         "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
       );
-      expect(await page.locator("#child-loader-data").textContent()).toBe(
+      await expect(page.locator("#child-loader-data")).toHaveText(
         "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
       );
 
       await app.clickLink("/revalidate/parent/2");
-      expect(await page.locator("#parent-loader-data").textContent()).toBe(
-        "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
-      );
-      expect(await page.locator("#child-loader-data").textContent()).toBe(
+      await expect(page.locator("#child-loader-data")).toHaveText(
         "parent middleware 2,child middleware 2,child loader 2",
+      );
+      await expect(page.locator("#parent-loader-data")).toHaveText(
+        "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
       );
 
       await app.clickLink("/revalidate/parent/3");
-      expect(await page.locator("#parent-loader-data").textContent()).toBe(
-        "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
-      );
-      expect(await page.locator("#child-loader-data").textContent()).toBe(
+      await expect(page.locator("#child-loader-data")).toHaveText(
         "parent middleware 3,child middleware 3,child loader 3",
+      );
+      await expect(page.locator("#parent-loader-data")).toHaveText(
+        "parent middleware 1,child middleware 1,parent loader 1,child loader 1",
       );
     });
 
