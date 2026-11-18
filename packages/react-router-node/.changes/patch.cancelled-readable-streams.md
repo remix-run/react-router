@@ -1,1 +1,1 @@
-Handle errors emitted while a cancelled Node readable stream is closing.
+Handle errors emitted while a cancelled Node readable stream is closing
