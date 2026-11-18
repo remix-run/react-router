@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.18.6](#v7186)
   - [v7.18.5](#v7185)
   - [v7.18.4](#v7184)
   - [v7.18.3](#v7183)
@@ -183,6 +184,34 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.18.6
+
+Date: 2026-11-18
+
+### Patch Changes
+
+- `react-router` - Fix hydration of streamed `Suspense` boundaries in development with `future.v8_viteEnvironmentApi` ([#15747](https://github.com/remix-run/react-router/pull/15747))
+
+  - Preserve server-rendered content while lazy client code loads by clearing critical CSS in a transition
+
+- `react-router` - Handle `HEAD` response bodies consistently in Framework, RSC Framework, and RSC Data modes, preserving response metadata and deferred data handling ([#15784](https://github.com/remix-run/react-router/pull/15784))
+
+- `react-router` - Improve path generation and URL validation across `href()`, `generatePath()`, links, forms, fetchers, and redirects ([#15787](https://github.com/remix-run/react-router/pull/15787))
+
+- `react-router` - Preserve route parameters ending in `.data` in Single Fetch loader and action requests when `future.v8_passThroughRequests` is disabled ([#15734](https://github.com/remix-run/react-router/pull/15734))
+
+- `@react-router/cloudflare` - Improve handling of invalid sessions in Workers KV session storage ([#15773](https://github.com/remix-run/react-router/pull/15773))
+
+- `@react-router/dev` - Improve handling of prerendered redirect destinations in Framework Mode and unstable RSC Framework Mode ([#15788](https://github.com/remix-run/react-router/pull/15788))
+
+- `@react-router/node` - Handle errors emitted while a cancelled Node readable stream is closing ([#15784](https://github.com/remix-run/react-router/pull/15784))
+
+- `@react-router/node` - Improve error handling in `createRequestListener` ([#15744](https://github.com/remix-run/react-router/pull/15744))
+
+- `@react-router/serve` - Improve request-listener error handling when serving RSC applications ([#15744](https://github.com/remix-run/react-router/pull/15744))
+
+**Full Changelog**: [`v7.18.5...v7.18.6`](https://github.com/remix-run/react-router/compare/react-router@7.18.5...react-router@7.18.6)
 
 ## v7.18.5
 

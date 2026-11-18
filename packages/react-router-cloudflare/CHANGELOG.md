@@ -1,5 +1,13 @@
 # `@react-router/cloudflare`
 
+## v7.18.6
+
+### Patch Changes
+
+- Improve handling of invalid sessions in Workers KV session storage ([#15773](https://github.com/remix-run/react-router/pull/15773))
+- Updated dependencies:
+  - [`react-router@7.18.6`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.6)
+
 ## v7.18.5
 
 ### Patch Changes
