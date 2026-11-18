@@ -8,6 +8,84 @@ import { test, createEditor, viteConfig } from "./helpers/vite.js";
 const templateName = "rsc-vite-framework" as const satisfies TemplateName;
 
 test.describe("Vite HMR & HDR (RSC)", () => {
+  test("preserves client middleware during route HMR", async ({
+    page,
+    dev,
+  }) => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.js": await viteConfig.basic({ port, templateName }),
+      "app/routes.ts": `
+        import { route } from "@react-router/dev/routes";
+        export default [
+          route("parent", "routes/parent.tsx", [
+            route(":child", "routes/child.tsx"),
+          ]),
+        ];
+      `,
+      "app/context.ts": `
+        import { createContext } from "react-router";
+        export const testContext = createContext("unset");
+      `,
+      "app/middleware.ts": `
+        import { testContext } from "./context";
+        export const clientMiddleware = [
+          ({ context }) => {
+            context.set(testContext, "middleware: 0");
+          },
+        ];
+      `,
+      "app/routes/parent.tsx": `
+        import { Link, Outlet } from "react-router";
+        export { clientMiddleware } from "../middleware";
+
+        export default function Parent() {
+          return (
+            <>
+              <h1>Parent: 0</h1>
+              <Link to="/parent/a">A</Link>
+              <Link to="/parent/b">B</Link>
+              <Outlet />
+            </>
+          );
+        }
+      `,
+      "app/routes/child.tsx": `
+        import { useLoaderData } from "react-router";
+        import { testContext } from "../context";
+
+        export function clientLoader({ context, params }) {
+          return params.child + ": " + context.get(testContext);
+        }
+
+        export default function Child() {
+          return <p data-context>{useLoaderData()}</p>;
+        }
+      `,
+    });
+    let { cwd, port } = await dev(files, templateName);
+    let edit = createEditor(cwd);
+    let documentRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.resourceType() === "document") {
+        documentRequests.push(request.url());
+      }
+    });
+
+    await page.goto(`http://localhost:${port}/parent/a`, {
+      waitUntil: "networkidle",
+    });
+    await expect(page.locator("[data-context]")).toHaveText("a: middleware: 0");
+
+    await edit("app/routes/parent.tsx", (contents) =>
+      contents.replace("Parent: 0", "Parent: 1"),
+    );
+    await expect(page.getByRole("heading")).toHaveText("Parent: 1");
+    expect(documentRequests).toHaveLength(1);
+    await page.getByRole("link", { name: "B", exact: true }).click();
+    await expect(page.locator("[data-context]")).toHaveText("b: middleware: 0");
+    expect(page.errors).toEqual([]);
+  });
+
   test("vite dev", async ({ page, dev }) => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port, templateName }),

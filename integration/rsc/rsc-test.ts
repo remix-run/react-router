@@ -790,13 +790,13 @@ implementations.forEach((implementation) => {
             "src/routes/get-context/root.tsx": js`
               "use client";
 
-              import { Outlet } from "react-router";
+              import { Link, Outlet } from "react-router";
               import type { ClientMiddlewareFunction } from "react-router";
               import { testContext } from "../../config/get-context";
 
               export const clientMiddleware = [
                 async ({ context }, next) => {
-                  context.set(testContext, "client-context-value");
+                  context.set(testContext, "middleware-context-value");
                   return await next();
                 },
               ];
@@ -809,6 +809,7 @@ implementations.forEach((implementation) => {
                 return (
                   <div>
                     <h1>Root Route</h1>
+                    <Link to="/">Home</Link>
                     <Outlet />
                   </div>
                 );
@@ -1787,7 +1788,16 @@ implementations.forEach((implementation) => {
           await page.waitForSelector("[data-client-context]");
           expect(
             await page.locator("[data-client-context]").textContent(),
-          ).toBe("Client context value: client-context-value");
+          ).toBe("Client context value: middleware-context-value");
+
+          // Verify clientMiddleware also runs during client navigations.
+          await page.click('a[href="/"]');
+          await page.waitForURL(`http://localhost:${port}/`);
+          await page.goBack();
+          await page.waitForSelector("[data-client-context]");
+          expect(
+            await page.locator("[data-client-context]").textContent(),
+          ).toBe("Client context value: middleware-context-value");
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());
