@@ -1607,7 +1607,7 @@ function testFogOfWar(unstable_customRouteDiscovery: boolean) {
   });
 
   for (let operation of ["navigation", "fetcher"] as const) {
-    test(`manifest version mismatch fails ${operation} instead of loading a stale splat after a previous reload`, async ({
+    test(`manifest version mismatch fails ${operation} instead of loading a stale splat after exhausting recovery`, async ({
       page,
     }) => {
       let fixture = await createFixture({
@@ -1681,8 +1681,8 @@ function testFogOfWar(unstable_customRouteDiscovery: boolean) {
         ).toBeVisible();
         await page.evaluate(() => {
           sessionStorage.setItem(
-            "react-router-manifest-version",
-            (window as any).__reactRouterManifest.version,
+            "react-router-manifest-recovery",
+            JSON.stringify({ attempts: 3, expiresAt: Date.now() + 30_000 }),
           );
         });
         if (operation === "navigation") {
