@@ -1,1 +1,1 @@
-Preserve RSC client middleware when route components update via HMR.
+Preserve RSC client middleware when route components update via HMR
