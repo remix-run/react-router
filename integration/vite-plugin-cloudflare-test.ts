@@ -18,7 +18,8 @@ function defineFiles({
     export default defineConfig({
       ${await viteConfig.server({ port })}
       plugins: [
-        cloudflare({ viteEnvironment: { name: "ssr" } }),
+        // Parallel fixtures don't need the Workers debugger or its shared port.
+        cloudflare({ viteEnvironment: { name: "ssr" }, inspectorPort: false }),
         reactRouter(),
       ]${reversePlugins ? ".reverse()" : ""},
     });
