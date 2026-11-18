@@ -1,12 +1,13 @@
 name: Branch
 
-# The main branch gets the full run across
+# The main and v7 branches get the full run across
 # all OS/browsers for multiple node versions
 
 on:
   push:
     branches:
       - main
+      - v7
     paths-ignore:
       - "packages/*/.changes/**"
       - "decisions/**"

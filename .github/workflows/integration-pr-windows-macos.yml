@@ -6,6 +6,9 @@ name: PR (Full)
 on:
   pull_request:
     paths:
+      - ".github/workflows/integration-full.yml"
+      - ".github/workflows/integration-pr-windows-macos.yml"
+      - ".github/workflows/shared-integration.yml"
       - "pnpm-lock.yaml"
       - "integration/**"
       - "packages/react-router-dev/**"
