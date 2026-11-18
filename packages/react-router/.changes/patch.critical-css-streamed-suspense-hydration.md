@@ -1,1 +1,3 @@
-Preserve streamed `Suspense` boundaries during hydration in development by wrapping the critical CSS reset in `React.startTransition`. Previously, this update could cause React 19 to silently discard the server HTML and render the boundary on the client.
+Preserve streamed `<Suspense>` boundaries during hydration in development
+
+- Wrap the critical CSS reset in `React.startTransition` to prevent React 19 from silently discarding the server HTML and rendering the boundary on the client

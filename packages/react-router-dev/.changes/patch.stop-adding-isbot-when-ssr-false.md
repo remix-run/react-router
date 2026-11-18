@@ -1,1 +1,1 @@
-Do not add `isbot` to dependencies in `ssr: false` mode.
+Avoid adding `isbot` to dependencies when `ssr: false`

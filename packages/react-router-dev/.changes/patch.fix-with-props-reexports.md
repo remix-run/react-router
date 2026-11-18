@@ -1,1 +1,4 @@
-Pass route component props (`loaderData`, `params`, etc.) to `default`, `ErrorBoundary`, and `HydrateFallback` exports declared with export specifiers, including re-exports (e.g., `export { default } from "./component"`) and local aliases (`export { Page as default }`)
+Pass route component props to exports declared with export specifiers
+
+- Pass props such as `loaderData` and `params` to `default`, `ErrorBoundary`, and `HydrateFallback` exports
+- Support re-exports such as `export { default } from "./component"` and local aliases such as `export { Page as default }`

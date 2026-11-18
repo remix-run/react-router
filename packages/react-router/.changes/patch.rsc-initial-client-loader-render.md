@@ -1,1 +1,1 @@
-RSC routes with a `clientLoader` now render correctly on the initial request when no `HydrateFallback` is provided.
+Fix initial rendering of RSC routes with a `clientLoader` and no `HydrateFallback`
