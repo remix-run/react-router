@@ -20,6 +20,7 @@ const EXPLICIT_EXTERNAL_URLS = [
   "//example.com/path",
   "mailto:test@example.com",
   "tel:5551234567",
+  "myapp://open/path",
 ];
 
 const IMPLICIT_EXTERNAL_URLS = [
@@ -49,6 +50,42 @@ const VALID_INTERNAL_URLS = [
 ];
 
 describe("external navigation support", () => {
+  it.each(["\t", "\n", "\r"])(
+    "validates fetcher load and submission paths containing %j",
+    async (control) => {
+      let loader = jest.fn(() => null);
+      let action = jest.fn(() => null);
+      let discover = jest.fn();
+      let router = createRouter({
+        history: createBrowserHistory(),
+        routes: [{ id: "root", path: "*", loader, action }],
+        hydrationData: { loaderData: { root: null } },
+        patchRoutesOnNavigation: discover,
+      }).initialize();
+      try {
+        for (let opts of [
+          undefined,
+          { formMethod: "post" as const, formData: new FormData() },
+        ]) {
+          await expect(
+            router.fetch(
+              "fetcher",
+              "root",
+              `/${control}/example.com/path`,
+              opts,
+            ),
+          ).rejects.toThrow("External navigation is not allowed");
+        }
+        expect(loader).not.toHaveBeenCalled();
+        expect(action).not.toHaveBeenCalled();
+        expect(discover).not.toHaveBeenCalled();
+        expect(router.state.location.pathname).toBe("/");
+      } finally {
+        router.dispose();
+      }
+    },
+  );
+
   it.each(EXTERNAL_URLS)(
     "router.navigate throws for external navigation to %s",
     async (to) => {
@@ -274,7 +311,11 @@ describe("external navigation support", () => {
           { path: "/" },
           {
             path: "/start",
-            loader: () => redirect(location),
+            loader: () =>
+              new Response(null, {
+                status: 302,
+                headers: { Location: location },
+              }),
           },
         ],
         window: testWindow,

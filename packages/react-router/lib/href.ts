@@ -74,7 +74,8 @@ export function href<Path extends keyof Args>(
     }
   }
 
-  return result || "/";
+  // Empty leading params and splats must not produce a protocol-relative URL.
+  return result.replace(/^\/{2,}/, "/") || "/";
 }
 
 /**
