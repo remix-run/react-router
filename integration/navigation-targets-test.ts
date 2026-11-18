@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 import {
   createFixture,
@@ -7,13 +8,48 @@ import {
 import type { AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
+// These fixtures deliberately exercise server errors, including their sanitized forms.
+const expectedErrors = [
+  "External navigation is not allowed",
+  "Unexpected Server Error",
+  "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.",
+];
+
 for (let templateName of ["vite-7-template", "rsc-vite-framework"] as const) {
   test.describe(`navigation targets: ${templateName}`, () => {
     let app: AppFixture;
+    let originalConsoleError: typeof console.error;
     test.beforeAll(async () => {
+      originalConsoleError = console.error;
+      console.error = (error, ...args) => {
+        if (!expectedErrors.includes(error?.message)) {
+          originalConsoleError(error, ...args);
+        }
+      };
       let fixture = await createFixture({
         templateName,
         files: {
+          // RSC serves requests in a child process, so install the same spy there.
+          ...(templateName === "rsc-vite-framework"
+            ? {
+                "start.js": js`
+                  const originalConsoleError = console.error;
+                  const expectedErrors = ${JSON.stringify(expectedErrors)};
+                  console.error = (error, ...args) => {
+                    if (!expectedErrors.includes(error?.message)) {
+                      originalConsoleError(error, ...args);
+                    }
+                  };
+                  ${await readFile(
+                    new URL(
+                      "./helpers/rsc-vite-framework/start.js",
+                      import.meta.url,
+                    ),
+                    "utf8",
+                  )}
+                `,
+              }
+            : {}),
           "app/routes/_index.tsx": js`
             "use client";
             import * as React from "react";
@@ -94,7 +130,10 @@ for (let templateName of ["vite-7-template", "rsc-vite-framework"] as const) {
       });
       app = await createAppFixture(fixture);
     });
-    test.afterAll(() => app.close());
+    test.afterAll(() => {
+      console.error = originalConsoleError;
+      app?.close();
+    });
 
     test("resolves generated link and form paths without JavaScript", async ({
       browser,
