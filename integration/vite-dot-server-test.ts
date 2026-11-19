@@ -268,3 +268,68 @@ test.describe("Vite / server-only escape hatch", async () => {
     expect(page.errors).toEqual([]);
   });
 });
+
+// Re-exporting route exports from a shared module should behave the same as
+// defining them in the route file, see
+// https://github.com/remix-run/react-router/issues/14516
+test.describe("Vite / route re-exports from shared module", async () => {
+  let files: Files = async ({ port }) => ({
+    "vite.config.ts": dedent`
+      import { reactRouter } from "@react-router/dev/vite";
+
+      export default {
+        ${await viteConfig.server({ port })}
+        plugins: [reactRouter()],
+      }
+    `,
+    "app/utils.server.ts": serverOnlyModule,
+    "app/shared-route.tsx": `
+      import { useLoaderData } from "react-router";
+      import { serverOnly } from "./utils.server";
+
+      export const loader = () => ({ data: serverOnly });
+
+      export default function SharedRoute() {
+        let { data } = useLoaderData<typeof loader>();
+        return <h1 data-title>{data}</h1>;
+      }
+    `,
+    "app/routes/_index.tsx": `
+      export * from "../shared-route";
+      export { default } from "../shared-route";
+    `,
+    "app/routes/named.tsx": `
+      export { loader, default } from "../shared-route";
+    `,
+  });
+
+  test("vite dev", async ({ page, dev }) => {
+    let { port } = await dev(files);
+
+    for (let pathname of ["/", "/named"]) {
+      await page.goto(`http://localhost:${port}${pathname}`, {
+        waitUntil: "networkidle",
+      });
+      await expect(page.locator("[data-title]")).toHaveText("SERVER_ONLY");
+      expect(page.errors).toEqual([]);
+    }
+  });
+
+  test("vite build + react-router-serve", async ({
+    page,
+    reactRouterServe,
+  }) => {
+    let { port, cwd } = await reactRouterServe(files);
+
+    let lines = grep(path.join(cwd, "build/client"), /SERVER_ONLY/);
+    expect(lines).toHaveLength(0);
+
+    for (let pathname of ["/", "/named"]) {
+      await page.goto(`http://localhost:${port}${pathname}`, {
+        waitUntil: "networkidle",
+      });
+      await expect(page.locator("[data-title]")).toHaveText("SERVER_ONLY");
+      expect(page.errors).toEqual([]);
+    }
+  });
+});

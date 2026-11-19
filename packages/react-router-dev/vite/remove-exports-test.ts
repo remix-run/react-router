@@ -1,5 +1,5 @@
 import { generate, parse } from "./babel";
-import { removeExports } from "./remove-exports";
+import { removeExports, rewriteReExportSources } from "./remove-exports";
 
 function transform(code: string, exportsToRemove: string[]) {
   let ast = parse(code, { sourceType: "module" });
@@ -929,5 +929,40 @@ describe("transform", () => {
       export const keptExport_2 = () => {};"
     `);
     expect(result.code).not.toMatch(/removed/i);
+  });
+});
+
+describe("rewriteReExportSources", () => {
+  function rewrite(code: string) {
+    let ast = parse(code, { sourceType: "module" });
+    rewriteReExportSources(ast, (source) => source + "?tagged");
+    return generate(ast).code;
+  }
+
+  test("star re-export", () => {
+    expect(rewrite(`export * from "./module";`)).toMatchInlineSnapshot(
+      `"export * from "./module?tagged";"`,
+    );
+  });
+
+  test("named re-export", () => {
+    expect(
+      rewrite(`export { default, keepMe } from "./module";`),
+    ).toMatchInlineSnapshot(`"export { default, keepMe } from "./module?tagged";"`);
+  });
+
+  test("namespace re-export is left alone", () => {
+    expect(rewrite(`export * as ns from "./module";`)).toMatchInlineSnapshot(
+      `"export * as ns from "./module";"`,
+    );
+  });
+
+  test("plain imports and exports are left alone", () => {
+    expect(
+      rewrite(`import { x } from "./module";\nexport const y = x;`),
+    ).toMatchInlineSnapshot(`
+      "import { x } from "./module";
+      export const y = x;"
+    `);
   });
 });
