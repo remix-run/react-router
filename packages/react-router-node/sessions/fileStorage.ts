@@ -5,7 +5,7 @@ import type {
   SessionIdStorageStrategy,
   SessionData,
 } from "react-router";
-import { createSessionStorage } from "react-router";
+import { createSession, createSessionStorage } from "react-router";
 
 interface FileSessionStorageOptions {
   /**
@@ -32,7 +32,7 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
   cookie,
   dir,
 }: FileSessionStorageOptions): SessionStorage<Data, FlashData> {
-  return createSessionStorage({
+  let storage = createSessionStorage<Data, FlashData>({
     cookie,
     async createData(data, expires) {
       let content = JSON.stringify({ data, expires });
@@ -132,10 +132,26 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
       }
     },
   });
+
+  return {
+    ...storage,
+    async getSession(cookieHeader, options) {
+      let session = await storage.getSession(cookieHeader, options);
+      return isValidSessionId(session.id)
+        ? session
+        : createSession<Data, FlashData>();
+    },
+    async commitSession(session, options) {
+      return storage.commitSession(
+        isValidSessionId(session.id) ? session : { ...session, id: "" },
+        options,
+      );
+    },
+  };
 }
 
 export function getFile(dir: string, id: string): string | null {
-  if (!/^[0-9a-f]{16}$/i.test(id)) {
+  if (!isValidSessionId(id)) {
     return null;
   }
 
@@ -144,4 +160,10 @@ export function getFile(dir: string, id: string): string | null {
   // which should speed up file access. This is a maximum of 2^16 directories,
   // each with 2^48 files.
   return path.join(dir, id.slice(0, 4), id.slice(4));
+}
+
+function isValidSessionId(id: unknown): id is string {
+  return (
+    typeof id === "string" && id.length === 16 && /^[0-9a-f]{16}$/i.test(id)
+  );
 }
