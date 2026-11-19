@@ -24,13 +24,14 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 
 Returns a path with params interpolated.
 
-Param values are percent-encoded for use in a path segment: characters that
-would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
+Named param values are percent-encoded for use in a path segment: characters
+that would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
 are escaped, while characters that RFC 3986 allows literally in a path
 segment (`$ & + , ; = : @`) are kept as-is. Note this differs from query-string
 encoding (`encodeURIComponent`/`URLSearchParams`), where those characters are
-delimiters and must be escaped. Splat (`*`) values are encoded per segment,
-preserving `/` separators.
+delimiters and must be escaped. Splat (`*`) values are interpolated without
+per-segment encoding. Leading URL separators and schemes are handled so
+interpolated values remain paths.
 
 See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3)
 

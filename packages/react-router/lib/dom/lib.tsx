@@ -45,6 +45,7 @@ import {
   stripBasename,
 } from "../router/utils";
 import { ABSOLUTE_URL_REGEX } from "../router/url";
+import { validateDocumentNavigationTarget } from "../router/navigation";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "./global";
@@ -1401,14 +1402,15 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     }
 
     let isSpaLink = !(parsed.isExternal || reloadDocument);
+    let renderedHref =
+      (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href;
+    validateDocumentNavigationTarget(renderedHref);
     let link = (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
         {...prefetchHandlers}
-        href={
-          (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href
-        }
+        href={renderedHref}
         onClick={isSpaLink ? handleClick : onClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
@@ -2128,7 +2130,9 @@ export function ScrollRestoration({
       }
     } catch (error: unknown) {
       console.error(error);
-      sessionStorage.removeItem(storageKey);
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {}
     }
   }).toString();
 
@@ -2705,7 +2709,9 @@ export function useFormAction(
       path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
   }
 
-  return createPath(path);
+  let formAction = createPath(path);
+  validateDocumentNavigationTarget(formAction);
+  return formAction;
 }
 
 /**
