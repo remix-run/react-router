@@ -18,6 +18,7 @@ import type {
 import {
   Await,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_NavigationContext as NavigationContext,
   Form,
   Link,
   Outlet,
@@ -9712,7 +9713,128 @@ function testDomRouter(
     });
 
     describe("descendant <Routes> NavigateOptions", () => {
-      it("forwards defaultShouldRevalidate, mask, flushSync, and viewTransition through RouterProvider navigator", async () => {
+      it("navigator.push preserves explicit state and push intent", async () => {
+        function Navigate() {
+          let { navigator } = React.useContext(NavigationContext);
+          return (
+            <button
+              onClick={() =>
+                navigator.push("/target", "explicit", {
+                  replace: true,
+                  state: "fallback",
+                })
+              }
+            >
+              Navigate
+            </button>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Navigate },
+            { path: "/target", element: <h1>Target</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Navigate"));
+        await screen.findByText("Target");
+        expect(router.state.historyAction).toBe("PUSH");
+        expect(router.state.location.state).toBe("explicit");
+      });
+
+      it("navigator.push falls back to options state with replace false", async () => {
+        function Navigate() {
+          let { navigator } = React.useContext(NavigationContext);
+          return (
+            <button
+              onClick={() =>
+                navigator.push("/target", undefined, {
+                  replace: false,
+                  state: "fallback",
+                })
+              }
+            >
+              Navigate
+            </button>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Navigate },
+            { path: "/target", element: <h1>Target</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Navigate"));
+        await screen.findByText("Target");
+        expect(router.state.historyAction).toBe("PUSH");
+        expect(router.state.location.state).toBe("fallback");
+      });
+
+      it("navigator.replace preserves explicit null state and replace intent", async () => {
+        function Navigate() {
+          let { navigator } = React.useContext(NavigationContext);
+          return (
+            <button
+              onClick={() =>
+                navigator.replace("/target", null, {
+                  replace: false,
+                  state: "fallback",
+                })
+              }
+            >
+              Navigate
+            </button>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Navigate },
+            { path: "/target", element: <h1>Target</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Navigate"));
+        await screen.findByText("Target");
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.state).toBe(null);
+      });
+
+      it("navigator.replace falls back to options state", async () => {
+        function Navigate() {
+          let { navigator } = React.useContext(NavigationContext);
+          return (
+            <button
+              onClick={() =>
+                navigator.replace("/target", undefined, { state: "fallback" })
+              }
+            >
+              Navigate
+            </button>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Navigate },
+            { path: "/target", element: <h1>Target</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Navigate"));
+        await screen.findByText("Target");
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.state).toBe("fallback");
+      });
+
+      it("forwards navigation options from descendant Link, useNavigate, and useSearchParams", async () => {
         let loaderCalls = 0;
         let testWindow = getWindow("/gallery");
         let startViewTransition = jest.fn((cb: () => void) => {
@@ -9741,6 +9863,7 @@ function testDomRouter(
         function GallerySubRoute() {
           let navigate = useNavigate();
           let location = useLocation();
+          let [, setSearchParams] = useSearchParams();
           return (
             <div>
               <p id="search">{location.search || "none"}</p>
@@ -9755,6 +9878,7 @@ function testDomRouter(
                 onClick={() =>
                   navigate("/gallery?photo=2", {
                     replace: true,
+                    state: { source: "navigate" },
                     mask: "/images/2",
                     defaultShouldRevalidate: false,
                     flushSync: true,
@@ -9762,6 +9886,21 @@ function testDomRouter(
                 }
               >
                 Replace Photo 2
+              </button>
+              <button
+                onClick={() =>
+                  setSearchParams(
+                    { photo: "3" },
+                    {
+                      replace: false,
+                      state: { source: "search" },
+                      mask: "/images/3",
+                      defaultShouldRevalidate: false,
+                    },
+                  )
+                }
+              >
+                Search Photo 3
               </button>
               <Link to="details" viewTransition>
                 View Details
@@ -9805,12 +9944,20 @@ function testDomRouter(
         expect(loaderCalls).toBe(0);
         expect(flushSync).toHaveBeenCalled();
         expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.state).toEqual({ source: "navigate" });
         expect(router.state.location.mask).toEqual({
           pathname: "/images/2",
           search: "",
           hash: "",
         });
         assertLocation(testWindow, "/images/2");
+
+        fireEvent.click(screen.getByText("Search Photo 3"));
+        await screen.findByText("?photo=3");
+        expect(loaderCalls).toBe(0);
+        expect(router.state.historyAction).toBe("PUSH");
+        expect(router.state.location.state).toEqual({ source: "search" });
+        assertLocation(testWindow, "/images/3");
 
         fireEvent.click(screen.getByText("View Details"));
         await waitFor(() => expect(screen.getByText("Details")).toBeDefined());
