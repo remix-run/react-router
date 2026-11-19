@@ -127,18 +127,13 @@ describe("prerender HTTP requests", () => {
         {} as Vite.MinimalPluginContextWithoutEnvironment,
         { configFile: undefined } as Vite.ResolvedConfig,
       );
-      let configHook = plugin.config!;
-      let config = await (
-        typeof configHook === "function" ? configHook : configHook.handler
+      let buildAppHook = plugin.buildApp!;
+      await (
+        typeof buildAppHook === "function" ? buildAppHook : buildAppHook.handler
       ).call(
-        {} as Vite.ConfigPluginContext,
-        {},
-        {
-          command: "build",
-          mode: "production",
-        },
+        {} as Vite.MinimalPluginContextWithoutEnvironment,
+        {} as Vite.ViteBuilder,
       );
-      await config!.builder!.buildApp!({} as Vite.ViteBuilder);
 
       expect(receivedPaths).toEqual([
         "/products.data?_routes=routes%2Fproducts",

@@ -790,13 +790,13 @@ implementations.forEach((implementation) => {
             "src/routes/get-context/root.tsx": js`
               "use client";
 
-              import { Outlet } from "react-router";
+              import { Link, Outlet } from "react-router";
               import type { ClientMiddlewareFunction } from "react-router";
               import { testContext } from "../../config/get-context";
 
               export const clientMiddleware = [
                 async ({ context }, next) => {
-                  context.set(testContext, "client-context-value");
+                  context.set(testContext, "middleware-context-value");
                   return await next();
                 },
               ];
@@ -809,6 +809,7 @@ implementations.forEach((implementation) => {
                 return (
                   <div>
                     <h1>Root Route</h1>
+                    <Link to="/">Home</Link>
                     <Outlet />
                   </div>
                 );
@@ -1405,7 +1406,7 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/await-component/home.tsx": js`
               import { Suspense } from "react";
-              import { Await } from "react-router";
+              import { Await, unstable_getRequest } from "react-router";
 
               import { ClientValue } from "./client";
               import { events } from "./events";
@@ -1416,11 +1417,14 @@ implementations.forEach((implementation) => {
                     resolve("Async Data");
                   });
                 });
+                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "unstable_promise"
+                  ? { unstable_promise: promise }
+                  : { resolve: promise };
 
                 return (
                   <>
                     <Suspense fallback={<p data-fallback>Loading...</p>}>
-                      <Await resolve={promise}>
+                      <Await {...props}>
                         <ClientValue />
                       </Await>
                     </Suspense>
@@ -1433,7 +1437,7 @@ implementations.forEach((implementation) => {
             `,
             "src/routes/await-component/reject.tsx": js`
               import { Suspense } from "react";
-              import { Await } from "react-router";
+              import { Await, unstable_getRequest } from "react-router";
 
               import { ClientError } from "./client";
               import { events } from "./events";
@@ -1444,11 +1448,14 @@ implementations.forEach((implementation) => {
                     reject(new Error("Async Error"));
                   });
                 });
+                const props = new URL(unstable_getRequest().url).searchParams.get("prop") === "unstable_promise"
+                  ? { unstable_promise: promise }
+                  : { resolve: promise };
 
                 return (
                   <>
                     <Suspense fallback={<p data-fallback>Loading...</p>}>
-                      <Await resolve={promise} errorElement={<ClientError />}>
+                      <Await {...props} errorElement={<ClientError />}>
                         {(data) => (<p data-resolved>{data}</p>)}
                       </Await>
                     </Suspense>
@@ -1781,7 +1788,16 @@ implementations.forEach((implementation) => {
           await page.waitForSelector("[data-client-context]");
           expect(
             await page.locator("[data-client-context]").textContent(),
-          ).toBe("Client context value: client-context-value");
+          ).toBe("Client context value: middleware-context-value");
+
+          // Verify clientMiddleware also runs during client navigations.
+          await page.click('a[href="/"]');
+          await page.waitForURL(`http://localhost:${port}/`);
+          await page.goBack();
+          await page.waitForSelector("[data-client-context]");
+          expect(
+            await page.locator("[data-client-context]").textContent(),
+          ).toBe("Client context value: middleware-context-value");
 
           // Ensure this is using RSC
           validateRSCHtml(await page.content());
@@ -1866,34 +1882,48 @@ implementations.forEach((implementation) => {
           validateRSCHtml(await page.content());
         });
 
-        test("Supports Await component resolve", async ({ page }) => {
-          await page.goto(`http://localhost:${port}/await-component`, {
-            waitUntil: "commit",
+        ["resolve", "unstable_promise"].forEach((prop) => {
+          test(`Supports Await component ${prop} fulfillment`, async ({
+            page,
+          }) => {
+            await page.goto(
+              `http://localhost:${port}/await-component?prop=${prop}`,
+              {
+                waitUntil: "commit",
+              },
+            );
+            await page.waitForSelector("[data-fallback]");
+            await fetch(`http://localhost:${port}/await-component/api`, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain" },
+              body: "resolve",
+            });
+            const resolved = await page.waitForSelector("[data-resolved]");
+            expect(await resolved.innerText()).toContain("Async Data");
+            validateRSCHtml(await page.content());
           });
-          await page.waitForSelector("[data-fallback]");
-          await fetch(`http://localhost:${port}/await-component/api`, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: "resolve",
-          });
-          const resolved = await page.waitForSelector("[data-resolved]");
-          expect(await resolved.innerText()).toContain("Async Data");
-        });
 
-        test("Supports Await component rejection", async ({ page }) => {
-          await page.goto(`http://localhost:${port}/await-component/reject`, {
-            waitUntil: "commit",
+          test(`Supports Await component ${prop} rejection`, async ({
+            page,
+          }) => {
+            await page.goto(
+              `http://localhost:${port}/await-component/reject?prop=${prop}`,
+              {
+                waitUntil: "commit",
+              },
+            );
+            await page.waitForSelector("[data-fallback]");
+            await fetch(`http://localhost:${port}/await-component/api`, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain" },
+              body: "reject",
+            });
+            const rejected = await page.waitForSelector("[data-rejected]");
+            expect(await rejected.innerText()).toContain(
+              "An error occurred in the Server Components render.",
+            );
+            validateRSCHtml(await page.content());
           });
-          await page.waitForSelector("[data-fallback]");
-          await fetch(`http://localhost:${port}/await-component/api`, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: "reject",
-          });
-          const rejected = await page.waitForSelector("[data-rejected]");
-          expect(await rejected.innerText()).toContain(
-            "An error occurred in the Server Components render.",
-          );
         });
 
         test("Suppport throwing redirect Response from render", async ({

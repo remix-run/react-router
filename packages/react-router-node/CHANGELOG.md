@@ -1,5 +1,31 @@
 # `@react-router/node`
 
+## v8.5.2
+
+### Patch Changes
+
+- Keep handling errors from a cancelled Node stream until it closes, so a `HEAD` request for a file that fails to open no longer crashes the process ([#15634](https://github.com/remix-run/react-router/pull/15634))
+- Release the reader acquired by `readableStreamToString` when consumption finishes or fails ([#15592](https://github.com/remix-run/react-router/pull/15592))
+  - Allow callers to acquire a reader again afterward
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+
+## v8.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+
+## v8.5.0
+
+### Patch Changes
+
+- Write file session data to a temporary file and rename it into place so concurrent commits of the same session can no longer corrupt its file ([#15620](https://github.com/remix-run/react-router/pull/15620))
+  - Preserve existing session file permissions when replacing the file
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+
 ## v8.4.0
 
 ### Patch Changes

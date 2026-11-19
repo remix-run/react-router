@@ -1107,7 +1107,7 @@ export async function resolveEntryFiles({
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
 
-    if (!deps["isbot"]) {
+    if (reactRouterConfig.ssr && !deps["isbot"]) {
       console.log(
         "adding `isbot@5` to your package.json, you should commit this change",
       );
