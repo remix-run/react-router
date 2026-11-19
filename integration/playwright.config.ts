@@ -53,10 +53,7 @@ const config: PlaywrightTestConfig = {
     },
     {
       name: "firefox",
-      use: {
-        ...devices["Desktop Firefox"],
-        trace: process.env.CI ? "retain-on-failure" : "off",
-      },
+      use: devices["Desktop Firefox"],
     },
   ],
 };
