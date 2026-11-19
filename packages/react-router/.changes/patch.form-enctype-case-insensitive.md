@@ -1,0 +1,1 @@
+Fix `<Form>` and `useSubmit` to read `encType`/`formEncType` values case-insensitively, so a value like `Multipart/Form-Data` submits as multipart instead of falling back to `application/x-www-form-urlencoded`
