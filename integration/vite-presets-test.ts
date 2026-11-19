@@ -249,6 +249,7 @@ test.describe("Vite / presets", async () => {
       expect(buildEndArgsMeta.futureFlags).toEqual({
         unstable_customRouteDiscovery: false,
         unstable_enableNodeReadableStream: false,
+        unstable_externalReactPlugin: false,
         unstable_optimizeDeps: true,
       });
       expect(buildEndArgsMeta.splitRouteModules).toBe(true);

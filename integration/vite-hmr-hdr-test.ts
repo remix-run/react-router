@@ -11,17 +11,29 @@ import { viteMajorTemplates } from "./helpers/templates";
 const tsx = dedent;
 const mdx = dedent;
 
-const templates = [...viteMajorTemplates];
+const templates = viteMajorTemplates.flatMap((template) =>
+  [false, true].map((externalReactPlugin) => ({
+    ...template,
+    externalReactPlugin,
+  })),
+);
 
 // RSC Framework HMR/HDR behavior is covered in integration/vite-hmr-hdr-rsc-test.ts.
 
 templates.forEach((template) => {
+  const { externalReactPlugin } = template;
   const isRsc = template.name.startsWith("rsc-");
 
-  test.describe(`${template.displayName} - HMR & HDR`, () => {
+  test.describe(`${template.displayName} - ${externalReactPlugin ? "consumer React plugin" : "built-in React plugin"} - HMR & HDR`, () => {
     test.use({
       template: template.name,
       files: {
+        ...(externalReactPlugin
+          ? {
+              "vite.config.ts": `import { reactRouter } from "@react-router/dev/vite"; import react from "@vitejs/plugin-react"; export default { plugins: [reactRouter(), react({ include: /\\.(mdx?|[jt]sx?)$/ })] };`,
+              "react-router.config.ts": `export default { future: { unstable_externalReactPlugin: true } };`,
+            }
+          : {}),
         "app/routes/_index.tsx": tsx`
           // imports
           import { useState, useEffect } from "react";
@@ -82,6 +94,145 @@ templates.forEach((template) => {
       await workflow({ isRsc, page, edit, url });
     });
 
+    test("rapid edits during HDR finish with the latest code and data", async ({
+      page,
+      edit,
+      $,
+    }) => {
+      const source = tsx`
+        import { useState } from "react";
+        if (typeof window !== "undefined") window.__routeVersion = "module 0";
+        export const loader = () => ({ message: "server 0" });
+        export const clientLoader = async ({ serverLoader }) => {
+          const data = await serverLoader();
+          if (window.__holdHdr) {
+            await new Promise(resolve => window.__hdrReleases.push(resolve));
+          }
+          return data;
+        };
+        clientLoader.hydrate = true;
+        export function HydrateFallback() { return <p>Loading...</p>; }
+        export default function Route({ loaderData }) {
+          const [count, setCount] = useState(0);
+          return <>
+            <h1>Component 0</h1>
+            <p data-loader>{loaderData.message}</p>
+            <button onClick={() => setCount(count + 1)}>Count {count}</button>
+            <input defaultValue="initial" />
+          </>;
+        }
+      `;
+      await edit({ "app/routes/_index.tsx": source });
+      const port = await getPort();
+      const url = `http://localhost:${port}`;
+      const dev = $(`pnpm dev --port ${port}`);
+      await Stream.match(dev.stdout, url);
+      await page.goto(url, { waitUntil: "networkidle" });
+      await page.locator("button").click();
+      await page.locator("input").fill("unsaved input");
+      await page.evaluate(() => {
+        Object.assign(window, { __holdHdr: true, __hdrReleases: [] });
+      });
+      await edit({
+        "app/routes/_index.tsx": source
+          .replace("server 0", "server 1")
+          .replace("Component 0", "Component 1")
+          .replace("module 0", "module 1"),
+      });
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              (window as unknown as { __hdrReleases: unknown[] }).__hdrReleases
+                .length,
+          ),
+        )
+        .toBeGreaterThan(0);
+      await edit({
+        "app/routes/_index.tsx": source
+          .replace("server 0", "server 2")
+          .replace("Component 0", "Component 2")
+          .replace("module 0", "module 2"),
+      });
+      // Wait for the second route module to be evaluated while the first HDR
+      // operation is still blocked, rather than relying on a timing delay.
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              (window as unknown as { __routeVersion: string }).__routeVersion,
+          ),
+        )
+        .toBe("module 2");
+      await page.evaluate(() => {
+        const state = window as unknown as {
+          __holdHdr: boolean;
+          __hdrReleases: Array<() => void>;
+        };
+        state.__holdHdr = false;
+        for (const release of state.__hdrReleases) release();
+      });
+      await expect(page.locator("h1")).toHaveText("Component 2");
+      await expect(page.locator("[data-loader]")).toHaveText("server 2");
+      await expect(page.locator("button")).toHaveText("Count 1");
+      await expect(page.locator("input")).toHaveValue("unsaved input");
+      expect(page.errors).toEqual([]);
+    });
+
+    test("HDR errors support boundary edits and recovery", async ({
+      page,
+      edit,
+      $,
+    }) => {
+      const source = tsx`
+        import { useState } from "react";
+        export const loader = () => ({ message: "loaded" });
+        export default function Route({ loaderData }) {
+          return <h1>{loaderData.message}</h1>;
+        }
+        export function ErrorBoundary({ error }) {
+          const [count, setCount] = useState(0);
+          return <>
+            <h1>Boundary 0: {error.message}</h1>
+            <button onClick={() => setCount(count + 1)}>Count {count}</button>
+          </>;
+        }
+      `;
+      await edit({ "app/routes/_index.tsx": source });
+      const port = await getPort();
+      const url = `http://localhost:${port}`;
+      const dev = $(`pnpm dev --port ${port}`);
+      await Stream.match(dev.stdout, url);
+      await page.goto(url, { waitUntil: "networkidle" });
+      await expect(page.locator("h1")).toHaveText("loaded");
+      await page.evaluate(() => {
+        Object.assign(window, { __didNotReload: true });
+      });
+      const failing = source.replace(
+        '() => ({ message: "loaded" })',
+        '() => { throw new Error("loader failed"); }',
+      );
+      await edit({ "app/routes/_index.tsx": failing });
+      await expect(page.locator("h1")).toHaveText("Boundary 0: loader failed");
+      await page.locator("button").click();
+      await edit({
+        "app/routes/_index.tsx": failing.replace("Boundary 0", "Boundary 1"),
+      });
+      await expect(page.locator("h1")).toHaveText("Boundary 1: loader failed");
+      await expect(page.locator("button")).toHaveText("Count 1");
+      await edit({
+        "app/routes/_index.tsx": source.replace("loaded", "recovered"),
+      });
+      await expect(page.locator("h1")).toHaveText("recovered");
+      expect(
+        await page.evaluate(
+          () =>
+            (window as unknown as { __didNotReload: boolean }).__didNotReload,
+        ),
+      ).toBe(true);
+      expect(page.errors).toEqual([]);
+    });
+
     test("mdx", async ({ page, edit, $ }) => {
       test.skip(template.name.includes("rsc"), "RSC is not supported");
 
@@ -90,11 +241,13 @@ templates.forEach((template) => {
           import { defineConfig } from "vite";
           import { reactRouter } from "@react-router/dev/vite";
           import mdx from "@mdx-js/rollup";
+          ${externalReactPlugin ? 'import react from "@vitejs/plugin-react";' : ""}
 
           export default defineConfig({
             plugins: [
-              mdx(),
+              ${externalReactPlugin ? '{ enforce: "pre", ...mdx() }' : "mdx()"},
               reactRouter(),
+              ${externalReactPlugin ? "react({include: /\\.(mdx?|[jt]sx?)$/})," : ""}
             ],
           });
         `,

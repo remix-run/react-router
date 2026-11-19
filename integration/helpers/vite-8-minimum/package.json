@@ -1,0 +1,10 @@
+{
+  "name": "integration-vite-8-minimum",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vitejs/plugin-react": "6.3.0",
+    "vite": "8.0.0"
+  }
+}
