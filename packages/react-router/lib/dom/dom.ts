@@ -254,6 +254,8 @@ const supportedFormEncTypes: Set<FormEncType> = new Set([
 ]);
 
 function getFormEncType(encType: string | null) {
+  // `enctype` and `formenctype` keywords are ASCII case-insensitive in HTML
+  encType = encType?.toLowerCase() ?? null;
   if (encType != null && !supportedFormEncTypes.has(encType as FormEncType)) {
     warning(
       false,

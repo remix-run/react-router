@@ -35,6 +35,7 @@ import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 import { prerender } from "../plugins/prerender";
+import { getPrerenderRedirectHtml } from "../prerender-redirect";
 import { getPrerenderPaths } from "../plugin";
 
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
@@ -805,23 +806,8 @@ export default assetsManifest.clientVersion;
         // approach used by Astro as well, so there's some precedent.
         // https://github.com/withastro/roadmap/issues/466
         // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
-        let location = response.headers.get("Location");
-        // A short delay causes Google to interpret the redirect as temporary.
-        // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
-        let delay = response.status === 302 ? 2 : 0;
         let redirectBody = isRedirect
-          ? `<!doctype html>
-<head>
-<title>Redirecting to: ${location}</title>
-<meta http-equiv="refresh" content="${delay};url=${location}">
-<meta name="robots" content="noindex">
-</head>
-<body>
-	<a href="${location}">
-  Redirecting from <code>${url.pathname}</code> to <code>${location}</code>
-</a>
-</body>
-</html>`
+          ? getPrerenderRedirectHtml(response, url.pathname)
           : "";
 
         let files: { path: string; contents: Uint8Array | string }[] = [

@@ -5101,6 +5101,116 @@ function testDomRouter(
           `);
       });
 
+      it.each([
+        ["Multipart/Form-Data", "multipart/form-data", false],
+        ["Text/Plain", "text/plain", false],
+        [
+          "APPLICATION/X-WWW-FORM-URLENCODED",
+          "application/x-www-form-urlencoded",
+          false,
+        ],
+        [undefined, "application/x-www-form-urlencoded", false],
+        ["Application/JSON", "application/x-www-form-urlencoded", true],
+      ])(
+        "reads <Form encType=%s> encoding attributes",
+        async (encType, expectedEncType, warns) => {
+          let actionSpy = jest.fn();
+          let router = createTestRouter(
+            [{ path: "/", action: actionSpy, Component: FormPage }],
+            { window: getWindow("/") },
+          );
+          render(<RouterProvider router={router} />);
+
+          function FormPage() {
+            return (
+              <Form method="post">
+                <input name="a" defaultValue="1" />
+                <button type="submit">Submit</button>
+              </Form>
+            );
+          }
+
+          // Submitting without a submitter exercises the form-element path.
+          let form = screen.getByText("Submit").closest("form")!;
+          if (encType !== undefined) {
+            form.setAttribute("enctype", encType);
+          }
+          fireEvent.submit(form);
+          await waitFor(() => expect(actionSpy).toHaveBeenCalled());
+          let { request } = actionSpy.mock.calls[0][0];
+          expect(request.headers.get("Content-Type")).toMatch(
+            new RegExp(`^${expectedEncType};`),
+          );
+          let body =
+            expectedEncType === "text/plain"
+              ? await request.text()
+              : Object.fromEntries(await request.formData());
+          let expectedBody =
+            expectedEncType === "text/plain" ? "a=1\n" : { a: "1" };
+          expect(body).toEqual(expectedBody);
+          expect(consoleWarn).toHaveBeenCalledTimes(warns ? 1 : 0);
+        },
+      );
+
+      it.each([
+        ["Text/Plain", "text/plain", false],
+        ["MULTIPART/FORM-DATA", "multipart/form-data", false],
+        [
+          "Application/X-Www-Form-Urlencoded",
+          "application/x-www-form-urlencoded",
+          false,
+        ],
+        [undefined, "multipart/form-data", false],
+        ["Application/JSON", "multipart/form-data", true],
+      ])(
+        "reads submitter formEncType=%s encoding attributes",
+        async (formEncType, expectedEncType, warns) => {
+          let actionSpy = jest.fn();
+          let router = createTestRouter(
+            [{ path: "/", action: actionSpy, Component: FormPage }],
+            { window: getWindow("/") },
+          );
+          render(<RouterProvider router={router} />);
+
+          function FormPage() {
+            return (
+              <Form method="post" encType="multipart/form-data">
+                <input name="a" defaultValue="1" />
+                <button
+                  type="submit"
+                  name="b"
+                  value="2"
+                  formEncType={formEncType}
+                >
+                  Submit
+                </button>
+              </Form>
+            );
+          }
+
+          let submitter = screen.getByText("Submit");
+          submitter
+            .closest("form")!
+            .setAttribute("enctype", "Multipart/Form-Data");
+          fireEvent.click(submitter);
+          await waitFor(() => expect(actionSpy).toHaveBeenCalled());
+          let { request } = actionSpy.mock.calls[0][0];
+          expect(request.headers.get("Content-Type")).toMatch(
+            new RegExp(`^${expectedEncType};`),
+          );
+          let body =
+            expectedEncType === "text/plain"
+              ? await request.text()
+              : Object.fromEntries(await request.formData());
+          let expectedBody =
+            expectedEncType === "text/plain"
+              ? "a=1\nb=2\n"
+              : { a: "1", b: "2" };
+          expect(body).toEqual(expectedBody);
+          expect(consoleWarn).toHaveBeenCalledTimes(warns ? 1 : 0);
+        },
+      );
+
       it("includes submit button name/value on form submission", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(

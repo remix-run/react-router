@@ -342,9 +342,10 @@ export function createMemoryHistory(
       action = Action.Pop;
       let nextIndex = clampIndex(index + delta);
       let nextLocation = entries[nextIndex];
+      let actualDelta = nextIndex - index;
       index = nextIndex;
       if (listener) {
-        listener({ action, location: nextLocation, delta });
+        listener({ action, location: nextLocation, delta: actualDelta });
       }
     },
     listen(fn: Listener) {
