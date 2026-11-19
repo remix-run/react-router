@@ -2051,9 +2051,12 @@ type UseRoute<RouteId extends keyof RouteModules | unknown> = {
 };
 
 /**
- * A typed shortcut for reading the current route's `handle`, `loaderData`,
- * and `actionData` in one call — the same data you would otherwise get
- * from `useRouteLoaderData` plus the route's `handle` export.
+ * Returns the current route's `handle`, `loaderData`, and `actionData`, or
+ * those of a matched route identified by `routeId`.
+ *
+ * Omit `routeId` to read the current route. Pass a route ID to infer the
+ * fields from registered route module types. Without an ID, the fields
+ * are typed as `unknown`.
  *
  * @name unstable_useRoute
  * @public
@@ -2063,11 +2066,17 @@ type UseRoute<RouteId extends keyof RouteModules | unknown> = {
  * @example
  * import { unstable_useRoute as useRoute } from "react-router";
  *
- * let { handle, loaderData } = useRoute();
- * // With a route id, the result is `... | undefined` when the route is not matched:
- * let dashboard = useRoute("dashboard");
- * @param routeId The id of the route to read data for. Defaults to the current route.
- * @returns The route's `handle`, `loaderData`, and `actionData`.
+ * let currentRoute = useRoute();
+ * let rootRoute = useRoute("root");
+ *
+ * // A registered non-root route may not currently be matched:
+ * let dashboard = useRoute("routes/dashboard");
+ * if (dashboard) {
+ *   console.log(dashboard.handle, dashboard.loaderData);
+ * }
+ * @returns An object with the route's `handle`, `loaderData`, and
+ * `actionData`, or `undefined` if the specified route is not matched.
+ * Individual fields can be `undefined` when the handle or data is unavailable.
  */
 export function useRoute<Args extends UseRouteArgs>(
   ...args: Args
