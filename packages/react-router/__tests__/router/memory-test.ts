@@ -150,9 +150,14 @@ describe("a memory history with some initial entries", () => {
 
     history.go(-3);
     expect(history.index).toBe(0);
+    history.go(-3);
+    expect(history.index).toBe(0);
     history.go(5);
     expect(history.index).toBe(2);
-    expect(deltas).toEqual([-1, 2]);
+    history.go(5);
+    expect(history.index).toBe(2);
+    history.go(0);
+    expect(deltas).toEqual([-1, 0, 2, 0, 0]);
   });
 
   it("clamps the initial index to a valid value", () => {

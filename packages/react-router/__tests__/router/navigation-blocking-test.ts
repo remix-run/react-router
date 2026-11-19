@@ -500,21 +500,59 @@ describe("navigation blocking", () => {
       });
     });
 
-    it("restores the history location when a blocked pop is clamped", async () => {
-      let history = createMemoryHistory({ initialEntries, initialIndex });
-      router = createRouter({ history, routes });
-      router.initialize();
-      let fn = () => true;
-      router.getBlocker("KEY", fn);
+    it.each([-3, 5])(
+      "restores the history location when a blocked pop by %i is clamped and reset",
+      async (delta) => {
+        let history = createMemoryHistory({ initialEntries, initialIndex });
+        router = createRouter({ history, routes });
+        router.initialize();
+        let fn = () => true;
+        router.getBlocker("KEY", fn);
 
-      // Only one entry exists before "/about", so the history stops at "/"
-      await router.navigate(-3);
-      router.getBlocker("KEY", fn).reset?.();
+        await router.navigate(delta);
+        let blocker = router.getBlocker("KEY", fn);
+        expect(blocker.state).toBe("blocked");
+        expect(blocker.location?.pathname).toBe(delta < 0 ? "/" : "/help");
+        expect(history.index).toBe(initialIndex);
+        blocker.reset?.();
 
-      expect(router.state.location.pathname).toBe("/about");
-      expect(history.location.pathname).toBe("/about");
-      expect(history.index).toBe(initialIndex);
-    });
+        expect(router.state.location.pathname).toBe("/about");
+        expect(history.location.pathname).toBe("/about");
+        expect(history.index).toBe(initialIndex);
+        expect(router.getBlocker("KEY", fn).state).toBe("unblocked");
+        router.dispose();
+      },
+    );
+
+    it.each([-3, 5])(
+      "replays the clamped pop by %i after proceeding",
+      async (delta) => {
+        let history = createMemoryHistory({ initialEntries, initialIndex });
+        router = createRouter({ history, routes }).initialize();
+        let fn = () => true;
+        router.getBlocker("KEY", fn);
+
+        await router.navigate(delta);
+        expect(history.index).toBe(initialIndex);
+        let targetPath = delta < 0 ? "/" : "/help";
+        let navigationCompleted = new Promise<void>((resolve) => {
+          let unsubscribe = router.subscribe((state) => {
+            if (state.location.pathname === targetPath) {
+              unsubscribe();
+              resolve();
+            }
+          });
+        });
+        router.getBlocker("KEY", fn).proceed?.();
+        await navigationCompleted;
+
+        expect(router.state.location.pathname).toBe(targetPath);
+        expect(history.location.pathname).toBe(targetPath);
+        expect(history.index).toBe(delta < 0 ? 0 : initialEntries.length - 1);
+        expect(router.getBlocker("KEY", fn).state).toBe("unblocked");
+        router.dispose();
+      },
+    );
   });
 });
 
