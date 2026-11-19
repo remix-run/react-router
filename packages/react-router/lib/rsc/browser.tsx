@@ -1084,6 +1084,9 @@ async function fetchAndApplyManifestPatches(
     throw new Error("Failed to patch routes");
   }
 
+  // Track discovered paths so we don't have to fetch them again
+  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
+
   let patches = await payload.patches;
 
   // Without the `allowElementMutations` flag, this will no-op if the route
@@ -1096,9 +1099,6 @@ async function fetchAndApplyManifestPatches(
       );
     });
   });
-
-  // Navigation can only skip discovery once the streamed routes are installed.
-  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
 }
 
 function addToFifoQueue(path: string, queue: Set<string>) {

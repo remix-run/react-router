@@ -319,9 +319,6 @@ for (let previewServerPrerendering of [false, true]) {
             "react-router.config.ts": js`
             let counter = 1;
             export default {
-              future: {
-                unstable_previewServerPrerendering: ${previewServerPrerendering},
-              },
               serverBundles: () => "server" + counter++,
               async prerender() {
                 await new Promise(r => setTimeout(r, 1));
