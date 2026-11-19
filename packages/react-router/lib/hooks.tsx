@@ -2058,11 +2058,6 @@ type UseRoute<RouteId extends keyof RouteModules | unknown> = {
  * fields from registered route module types. Without an ID, the fields
  * are typed as `unknown`.
  *
- * @name unstable_useRoute
- * @public
- * @category Hooks
- * @mode framework
- * @mode data
  * @example
  * import { unstable_useRoute as useRoute } from "react-router";
  *
@@ -2074,6 +2069,13 @@ type UseRoute<RouteId extends keyof RouteModules | unknown> = {
  * if (dashboard) {
  *   console.log(dashboard.handle, dashboard.loaderData);
  * }
+ *
+ * @name unstable_useRoute
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @param args An optional route ID. Omit it to read the current route.
  * @returns An object with the route's `handle`, `loaderData`, and
  * `actionData`, or `undefined` if the specified route is not matched.
  * Individual fields can be `undefined` when the handle or data is unavailable.
