@@ -1570,11 +1570,8 @@ export function createRouter(init: RouterInit): Router {
         // Empty actionData -> clear prior actionData due to an action error
         actionData = null;
       }
-    } else if (isActionReload) {
-      // Keep the current data if we're wrapping up the action reload
-      actionData = state.actionData;
     } else {
-      // Clear actionData on any other completed navigations
+      // Clear actionData when this navigation has no action result to commit.
       actionData = null;
     }
 

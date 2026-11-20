@@ -186,6 +186,42 @@ describe("submissions", () => {
       },
     );
 
+    it("clears action data when a loaderless navigation interrupts an action reload", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            action: true,
+            children: [{ id: "bar", path: "bar", action: true, loader: true }],
+          },
+        ],
+      });
+
+      let A = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await A.actions.root.resolve("ROOT ACTION");
+      expect(t.router.state.actionData).toEqual({ root: "ROOT ACTION" });
+
+      let B = await t.navigate("/bar", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await B.actions.bar.resolve("BAR ACTION");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.actionData).toEqual({
+        root: "ROOT ACTION",
+        bar: "BAR ACTION",
+      });
+
+      await t.navigate("/");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.actionData).toBeNull();
+    });
+
     it("reloads all routes after the action", async () => {
       let t = initializeTest();
       let A = await t.navigate("/foo", {
