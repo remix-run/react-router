@@ -1,5 +1,127 @@
 # `@react-router/serve`
 
+## v8.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+  - [`@react-router/express@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.5.2)
+  - [`@react-router/node@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.2)
+
+## v8.5.1
+
+### Patch Changes
+
+- Avoid writing a blank line to stderr when the server shuts down successfully ([#15641](https://github.com/remix-run/react-router/pull/15641))
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/express@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+
+## v8.5.0
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Support API-only builds in `react-router-serve` by serving client documents and forwarding data and route discovery requests to the React Router runtime ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Serve prerendered documents when available and use the generated SPA fallback for non-prerendered paths
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/express@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+
+## v8.4.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.4.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.4.0)
+  - [`@react-router/express@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.4.0)
+  - [`@react-router/node@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.4.0)
+
+## v8.3.1
+
+### Patch Changes
+
+- Bump `@remix-run/node-fetch-server` dependency ([#15447](https://github.com/remix-run/react-router/pull/15447))
+- Serve `/.well-known/*` files from the client build directory. Express 5's static middleware ignores every dot-segment path by default, so RFC 8615 well-known URIs — ACME challenges, Android's `assetlinks.json`, Apple's `apple-app-site-association` — fell through to the request handler and came back as app-rendered HTML instead of the static file. Other dotfiles remain hidden. ([#15340](https://github.com/remix-run/react-router/pull/15340))
+- Updated dependencies:
+  - [`react-router@8.3.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.1)
+  - [`@react-router/express@8.3.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.3.1)
+  - [`@react-router/node@8.3.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.1)
+
+## v8.3.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.3.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.0)
+  - [`@react-router/express@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.3.0)
+  - [`@react-router/node@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.0)
+
+## v8.2.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.2.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.2.0)
+  - [`@react-router/express@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.2.0)
+  - [`@react-router/node@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.2.0)
+
+## v8.1.0
+
+### Patch Changes
+
+- Use Node's built-in networking APIs to find an available port and remove the `get-port` dependency ([#15239](https://github.com/remix-run/react-router/pull/15239))
+- Updated dependencies:
+  - [`react-router@8.1.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.1.0)
+  - [`@react-router/express@8.1.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.1.0)
+  - [`@react-router/node@8.1.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.1.0)
+
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.1)
+  - [`@react-router/express@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.0.1)
+  - [`@react-router/node@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Switch from `@mjackson/node-fetch-server` to `@remix-run/node-fetch-server` now that we can directly use ESM-only packages ([#14930](https://github.com/remix-run/react-router/pull/14930))
+- Update minimum Node version to 22.22.0 ([#14928](https://github.com/remix-run/react-router/pull/14928))
+
+### Minor Changes
+
+- Bump `express` from `4.21.2` to `5.2.1`
+
+### Patch Changes
+
+- Bump dependencies ([#15091](https://github.com/remix-run/react-router/pull/15091))
+  - Bumped `@remix-run/node-fetch-server` from `^0.13.0` to `^0.13.3`
+  - Bumped `get-port` from `5.1.1` to `7.2.0`
+- Updated dependencies:
+  - [`react-router@8.0.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.0)
+  - [`@react-router/express@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@8.0.0)
+  - [`@react-router/node@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.0)
+
+## v7.18.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
+  - [`@react-router/express@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/express@7.18.0)
+  - [`@react-router/node@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.0)
+
 ## v7.17.0
 
 ### Patch Changes

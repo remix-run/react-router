@@ -12,7 +12,7 @@ function initializeTest(init?: {
       {
         path: "",
         id: "root",
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         loader: true,
         children: [
           {
@@ -348,13 +348,13 @@ describe("submissions", () => {
               {
                 path: "/child",
                 id: "child",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 action: true,
                 children: [
                   {
                     index: true,
                     id: "childIndex",
-                    hasErrorBoundary: true,
+                    ErrorBoundary: () => null,
                     action: true,
                   },
                 ],
@@ -391,7 +391,7 @@ describe("submissions", () => {
             action: true,
             children: [
               {
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 children: [
                   {
                     id: "index",
@@ -603,7 +603,7 @@ describe("submissions", () => {
                 {
                   path: "/child",
                   id: "child",
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                   action: true,
                 },
               ],
@@ -631,7 +631,7 @@ describe("submissions", () => {
                 {
                   path: "/child",
                   id: "child",
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                   loader: true,
                   action: true,
                 },
@@ -666,7 +666,7 @@ describe("submissions", () => {
             {
               path: "/",
               id: "parent",
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               children: [
                 {
                   path: "/child",
@@ -695,7 +695,7 @@ describe("submissions", () => {
             {
               path: "/",
               id: "root",
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               children: [
                 {
                   path: "/parent",
@@ -706,7 +706,7 @@ describe("submissions", () => {
                       path: "/parent/child",
                       id: "child",
                       action: true,
-                      hasErrorBoundary: true,
+                      ErrorBoundary: () => null,
                     },
                   ],
                 },
@@ -742,7 +742,7 @@ describe("submissions", () => {
                 {
                   path: "/child",
                   id: "child",
-                  hasErrorBoundary: true,
+                  ErrorBoundary: () => null,
                 },
               ],
             },
@@ -785,7 +785,7 @@ describe("submissions", () => {
                       id: "grandchild",
                       loader: true,
                       // no action to post to
-                      hasErrorBoundary: true,
+                      ErrorBoundary: () => null,
                     },
                   ],
                 },
@@ -839,7 +839,7 @@ describe("submissions", () => {
               {
                 path: "/child",
                 id: "child",
-                hasErrorBoundary: true,
+                ErrorBoundary: () => null,
                 action: true,
                 loader: true,
               },
@@ -885,7 +885,7 @@ describe("submissions", () => {
             path: "/",
             id: "parent",
             loader: true,
-            hasErrorBoundary: true,
+            ErrorBoundary: () => null,
             children: [
               {
                 path: "/child",

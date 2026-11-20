@@ -2,11 +2,16 @@
  * Opens or updates the release PR.
  *
  * Usage:
- *   node scripts/pr.ts [--preview]
+ *   node scripts/changes/pr.ts [--preview]
  *
  * Environment:
  *   GITHUB_TOKEN - Required (unless --preview)
  */
+import { parseArgs } from "node:util";
+
+import * as semver from "semver";
+
+import { readJson } from "../utils/fs.ts";
 import {
   addPrLabels,
   closePr,
@@ -14,6 +19,7 @@ import {
   findOpenPr,
   updatePr,
 } from "../utils/github.ts";
+import { getPackageFile } from "../utils/packages.ts";
 import { logAndExec } from "../utils/process.ts";
 import type { PackageRelease } from "./changes.ts";
 import {
@@ -22,15 +28,23 @@ import {
   parseAllChangeFiles,
 } from "./changes.ts";
 
-let args = process.argv.slice(2);
-let preview = args.includes("--preview");
+let { values } = parseArgs({
+  options: {
+    preview: {
+      type: "boolean",
+    },
+  },
+});
+let preview = values.preview === true;
 
 let baseBranch = logAndExec("git rev-parse --abbrev-ref HEAD", true).trim();
-if (!preview && !["main", "hotfix"].includes(baseBranch)) {
-  throw new Error("Error: script must be run from the main or hotfix branch");
+let releaseBranches = ["main", "hotfix", "v7"];
+if (!preview && !releaseBranches.includes(baseBranch)) {
+  throw new Error(
+    `Error: script must be run from one of these release branches: ${releaseBranches.join(", ")}`,
+  );
 }
 
-let prBranch = baseBranch === "hotfix" ? "hotfix-pr" : "release-pr";
 let prLabels = ["pkg:react-router"];
 
 // GitHub has a 65,536 character limit for PR body. We use 60,000 to be safe.
@@ -52,6 +66,11 @@ async function main() {
   }
 
   let { releases } = result;
+
+  let pkgJson = readJson(getPackageFile("react-router", "package.json"));
+  let majorVersion = semver.major(releases[0]?.nextVersion ?? pkgJson.version);
+  let prBranchPrefix = baseBranch === "hotfix" ? "hotfix" : "release";
+  let prBranch = `${prBranchPrefix}-v${majorVersion}-pr`;
 
   if (releases.length === 0) {
     console.log("No pending changes to release.");
@@ -109,8 +128,8 @@ async function main() {
 
   // Configure git
   console.log("Configuring git...");
-  logAndExec('git config user.name "Remix Run Bot"');
-  logAndExec('git config user.email "hello@remix.run"');
+  logAndExec('git config --local user.email "hello@remix.run"');
+  logAndExec('git config --local user.name "Remix Run Bot"');
 
   // Create or switch to PR branch
   console.log(`\nSwitching to branch: ${prBranch}`);
@@ -196,13 +215,23 @@ function generateReleasesTable(releases: PackageRelease[]): string {
   let lines = [
     "# Releases",
     "",
-    "| Package | Version |",
-    "|---------|---------|",
+    "| Package | Version | Change files |",
+    "|---------|---------|--------------|",
   ];
 
   for (let release of releases) {
+    let changes = release.changes.filter(
+      (change) => change.file !== "no-changes--lockstep.md",
+    );
+    let changeFileCounts =
+      ["major", "minor", "patch", "unstable"]
+        .flatMap((bump) => {
+          let count = changes.filter((change) => change.bump === bump).length;
+          return count > 0 ? [`${count} ${bump}`] : [];
+        })
+        .join(", ") || "n/a";
     lines.push(
-      `| ${release.packageName} | \`${release.currentVersion}\` → \`${release.nextVersion}\` |`,
+      `| ${release.packageName} | \`${release.currentVersion}\` → \`${release.nextVersion}\` | ${changeFileCounts} |`,
     );
   }
 

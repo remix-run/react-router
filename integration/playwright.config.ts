@@ -3,7 +3,7 @@ import * as os from "node:os";
 import type { PlaywrightTestConfig } from "@playwright/test";
 import { devices } from "@playwright/test";
 
-// silence expected warnings in Node 22.12 about `require(esm)`
+// silence expected warnings in Node 22.22 about `require(esm)`
 // when it implicitly uses `react-router`'s `module-sync` export condition
 process.env.NODE_OPTIONS =
   (process.env.NODE_OPTIONS ?? "") + ` --no-warnings=ExperimentalWarning`;
@@ -30,7 +30,9 @@ const config: PlaywrightTestConfig = {
   },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 3 : 0,
-  reporter: process.env.CI ? "dot" : [["html", { open: "never" }]],
+  reporter: process.env.CI
+    ? [["./reporters/progress.ts"]]
+    : [["html", { open: "never" }]],
   use: { actionTimeout: 0 },
 
   projects: [

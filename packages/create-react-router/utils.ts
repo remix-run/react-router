@@ -85,8 +85,8 @@ export function isInteractive() {
   // Adapted from https://github.com/sindresorhus/is-interactive
   return Boolean(
     process.stdout.isTTY &&
-      process.env.TERM !== "dumb" &&
-      !("CI" in process.env),
+    process.env.TERM !== "dumb" &&
+    !("CI" in process.env),
   );
 }
 
@@ -226,10 +226,7 @@ export function isUrl(value: string | URL) {
   try {
     new URL(value);
     return true;
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    e
-  ) {
+  } catch {
     return false;
   }
 }

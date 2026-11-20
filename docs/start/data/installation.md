@@ -47,6 +47,10 @@ ReactDOM.createRoot(root).render(
 );
 ```
 
+<docs-info>Data Routers should not be held in React state. You should create your router
+once outside of the React tree and pass it to `<RouterProvider>`. You can use
+`patchRoutesOnNavigation` to add additional routes programmatically.</docs-info>
+
 ---
 
 Next: [Routing](./routing)

@@ -1,6 +1,12 @@
 import type { Route } from "./+types/root";
 
-import { Meta, Link, Outlet, isRouteErrorResponse, type MiddlewareFunction } from "react-router";
+import {
+  Meta,
+  Link,
+  Outlet,
+  isRouteErrorResponse,
+  type MiddlewareFunction,
+} from "react-router";
 import "./root.css";
 
 export const middleware: MiddlewareFunction[] = [
@@ -19,7 +25,7 @@ export const middleware: MiddlewareFunction[] = [
       return cachedResponse;
     }
     return response;
-  }
+  },
 ];
 
 export const meta = () => [{ title: "React Router Vite" }];
@@ -44,7 +50,9 @@ export function ServerLayout({ children }: { children: React.ReactNode }) {
                 <Link to="/">Home</Link>
               </li>
               <li>
-                <Link to="/server-loader" prefetch="intent">Server loader</Link>
+                <Link to="/server-loader" prefetch="intent">
+                  Server loader
+                </Link>
               </li>
               <li>
                 <Link to="/client-loader">Client loader</Link>

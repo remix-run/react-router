@@ -7,9 +7,6 @@ order: 1
 
 [MODES: framework]
 
-<br />
-<br />
-
 This guide will familiarize you with the basic plumbing required to run a React Router app as quickly as possible. While there are many starter templates with different runtimes, deploy targets, and databases, we're going to create a bare-bones project from scratch.
 
 ## Installation
@@ -289,12 +286,12 @@ What's next?
 
 [templates]: ../start/framework/deploying#templates
 [spa]: ../how-to/spa
-[inspect]: https://nodejs.org/en/docs/guides/debugging-getting-started/
+[inspect]: https://nodejs.org/en/learn/getting-started/debugging
 [vite-config]: https://vite.dev/config
 [routing]: ../start/framework/routing
 [http-localhost-3000]: http://localhost:3000
 [vite]: https://vitejs.dev
-[react-router-config]: https://api.reactrouter.com/v7/types/_react-router_dev.config.Config.html
+[react-router-config]: https://api.reactrouter.com/v8/types/_react-router_dev.config.Config.html
 [vite-middleware]: https://vitejs.dev/guide/ssr#setting-up-the-dev-server
 [cross-env]: https://www.npmjs.com/package/cross-env
 [address-book-tutorial]: ./address-book

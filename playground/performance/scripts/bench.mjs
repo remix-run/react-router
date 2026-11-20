@@ -87,7 +87,7 @@ async function runBatch(batchSize, baseUrl, routeOffset) {
         })
         .catch(() => {
           latencies.push(performance.now() - start);
-        })
+        }),
     );
   }
 
@@ -100,9 +100,9 @@ async function warmup(baseUrl, count = 50) {
   const promises = [];
   for (let i = 0; i < count; i++) {
     promises.push(
-      fetch(baseUrl + pickRoute(i), { signal: AbortSignal.timeout(5000) }).catch(
-        () => {}
-      )
+      fetch(baseUrl + pickRoute(i), {
+        signal: AbortSignal.timeout(5000),
+      }).catch(() => {}),
     );
   }
   await Promise.all(promises);
@@ -146,7 +146,7 @@ async function main() {
   console.log(`  Total requests : ${completed}`);
   console.log(`  Wall time      : ${(wallElapsed / 1000).toFixed(2)}s`);
   console.log(
-    `  Throughput     : ${((completed / wallElapsed) * 1000).toFixed(1)} req/s`
+    `  Throughput     : ${((completed / wallElapsed) * 1000).toFixed(1)} req/s`,
   );
   console.log(`  Latency mean   : ${formatMs(mean)}`);
   console.log(`  Latency p50    : ${formatMs(percentile(sorted, 50))}`);

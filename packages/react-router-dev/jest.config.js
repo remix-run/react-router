@@ -1,7 +1,8 @@
+import sharedConfig from "../../jest/jest.config.shared.js";
+
 /** @type {import('jest').Config} */
-module.exports = {
-  ...require("../../jest/jest.config.shared"),
+export default {
+  ...sharedConfig,
   displayName: "dev",
   setupFilesAfterEnv: ["<rootDir>/__tests__/setupAfterEnv.ts"],
-  setupFiles: [],
 };

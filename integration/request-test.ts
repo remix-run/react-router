@@ -117,9 +117,10 @@ test("loader request on CSR GET requests", async ({ page }) => {
 
   await app.clickElement("#submit-get-csr");
 
+  await expect(page.locator("#loader-data")).toContainText("/_.data?type=csr");
   loaderData = JSON.parse(await page.locator("#loader-data").innerHTML());
   expect(loaderData.method).toEqual("GET");
-  expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/\?type=csr$/);
+  expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/_.data\?type=csr$/);
   expect(loaderData.headers.cookie).toEqual("cookie=nomnom");
   expect(loaderData.body).toEqual(null);
 });
@@ -139,13 +140,13 @@ test("action + loader requests SSR POST requests", async ({ page }) => {
 
   let actionData = JSON.parse(await page.locator("#action-data").innerHTML());
   expect(actionData.method).toEqual("POST");
-  expect(actionData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
+  expect(actionData.url).toMatch(/^http:\/\/localhost:\d+\/\?index$/);
   expect(actionData.headers.cookie).toEqual("cookie=nomnom");
   expect(actionData.body).toEqual({ type: "ssr" });
 
   loaderData = JSON.parse(await page.locator("#loader-data").innerHTML());
   expect(loaderData.method).toEqual("GET");
-  expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
+  expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/\?index$/);
   expect(loaderData.headers.cookie).toEqual("cookie=nomnom");
   expect(loaderData.body).toEqual(null);
 });
@@ -163,15 +164,17 @@ test("action + loader requests on CSR POST requests", async ({ page }) => {
 
   await app.clickElement("#submit-post-csr");
 
+  await expect(page.locator("#action-data")).toContainText("/_.data?index");
   let actionData = JSON.parse(await page.locator("#action-data").innerHTML());
   expect(actionData.method).toEqual("POST");
-  expect(actionData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
+  expect(actionData.url).toMatch(/^http:\/\/localhost:\d+\/_.data\?index$/);
   expect(actionData.headers.cookie).toEqual("cookie=nomnom");
   expect(actionData.body).toEqual({ type: "csr" });
 
+  await expect(page.locator("#loader-data")).toContainText("/_.data");
   loaderData = JSON.parse(await page.locator("#loader-data").innerHTML());
   expect(loaderData.method).toEqual("GET");
-  expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
+  expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/_.data$/);
   expect(loaderData.headers.cookie).toEqual("cookie=nomnom");
   expect(loaderData.body).toEqual(null);
 });

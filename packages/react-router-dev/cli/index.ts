@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { run } from "./run";
 
-run().then(
+run(undefined, { isMain: true }).then(
   () => {
     process.exit(0);
   },

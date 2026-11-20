@@ -16,9 +16,14 @@ import {
   FrameworkContext,
   usePrefetchBehavior,
 } from "../../../lib/dom/ssr/components";
-import { DataRouterStateContext } from "../../../lib/context";
+import {
+  DataRouterDataContext,
+  DataRouterNavigationContext,
+  DataRouterStateContext,
+} from "../../../lib/context";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
+import { IDLE_NAVIGATION } from "../../../lib/router/router";
 import "@testing-library/jest-dom";
 import { mockEntryContext, mockFrameworkContext } from "../../utils/framework";
 
@@ -158,9 +163,13 @@ describe("<NavLink />", () => {
 
 describe("<ServerRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/"),
-    );
+    let staticHandlerContext = await createStaticHandler([
+      {
+        id: "root",
+        path: "/",
+        children: [{ id: "empty", index: true }],
+      },
+    ]).query(new Request("http://localhost/"));
 
     invariant(
       !(staticHandlerContext instanceof Response),
@@ -168,6 +177,7 @@ describe("<ServerRouter>", () => {
     );
 
     let context = mockEntryContext({
+      staticHandlerContext,
       manifest: {
         routes: {
           root: {
@@ -291,18 +301,76 @@ describe("<HydratedRouter>", () => {
 });
 
 describe("<Links />", () => {
+  it("uses the FrameworkContext nonce when one is not provided", () => {
+    let context = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+      nonce: "server-nonce",
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let style = container.querySelector("style");
+    expect(style).toHaveAttribute("nonce", "server-nonce");
+  });
+
+  it("prefers an explicit nonce over the FrameworkContext nonce", () => {
+    let context = mockFrameworkContext({
+      criticalCss: ".critical { color: red; }",
+      nonce: "server-nonce",
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="explicit-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let style = container.querySelector("style");
+    expect(style).toHaveAttribute("nonce", "explicit-nonce");
+  });
+
   it("renders critical css with nonce", () => {
     let context = mockFrameworkContext({
       criticalCss: ".critical { color: red; }",
     });
 
     let { container } = render(
-      <DataRouterStateContext.Provider
-        value={{ matches: [], errors: null } as any}
-      >
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
@@ -318,12 +386,18 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterStateContext.Provider
-        value={{ matches: [], errors: null } as any}
-      >
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
@@ -376,22 +450,92 @@ describe("<Links />", () => {
           } as any
         }
       >
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
     let link = container.querySelector("link[href='/style.css']");
     expect(link).toHaveAttribute("nonce", "test-nonce");
   });
+
+  it("propagates the FrameworkContext nonce to route links", () => {
+    let context = mockFrameworkContext({
+      nonce: "server-nonce",
+      routeModules: {
+        root: {
+          default: () => null,
+          links: () => [{ rel: "stylesheet", href: "/style.css" }],
+        },
+      },
+      manifest: {
+        routes: {
+          root: {
+            id: "root",
+            module: "root.js",
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            hasClientAction: false,
+            hasClientLoader: false,
+            hasClientMiddleware: false,
+            clientActionModule: undefined,
+            clientLoaderModule: undefined,
+            clientMiddlewareModule: undefined,
+            hydrateFallbackModule: undefined,
+          },
+        },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
+      },
+    });
+
+    let { container } = render(
+      <DataRouterStateContext.Provider
+        value={
+          {
+            matches: [
+              {
+                route: { id: "root" },
+              },
+            ],
+          } as any
+        }
+      >
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
+      </DataRouterStateContext.Provider>,
+    );
+
+    let link = container.querySelector("link[href='/style.css']");
+    expect(link).toHaveAttribute("nonce", "server-nonce");
+  });
 });
 
 describe("<Scripts />", () => {
   it("propagates nonce to modulepreload links", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/"),
-    );
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/" },
+    ]).query(new Request("http://localhost/"));
 
     invariant(
       !(staticHandlerContext instanceof Response),
@@ -399,6 +543,7 @@ describe("<Scripts />", () => {
     );
 
     let context = mockEntryContext({
+      staticHandlerContext,
       manifest: {
         routes: {
           root: {
@@ -462,6 +607,63 @@ describe("<Scripts />", () => {
         'link[rel="modulepreload"][href="preload-b.js"]',
       ),
     ).toHaveAttribute("nonce", "test-nonce");
+  });
+
+  it("propagates the ServerRouter nonce to default HydrateFallback scripts when a route has a clientLoader without a HydrateFallback", async () => {
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/" },
+    ]).query(new Request("http://localhost/"));
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      staticHandlerContext,
+      manifest: {
+        routes: {
+          root: {
+            // No server loader and a hydrating clientLoader with no
+            // HydrateFallback => the default HydrateFallback is rendered on the
+            // server, emitting `<Scripts>` (and a dev console script) inline.
+            hasLoader: false,
+            hasClientLoader: true,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: [],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeModules: {
+        root: {
+          default: () => <h1>Root</h1>,
+          clientLoader: Object.assign(() => null, { hydrate: true as const }),
+        },
+      },
+    });
+
+    let { container } = render(
+      <ServerRouter
+        context={context}
+        url="http://localhost/"
+        nonce="test-nonce"
+      />,
+    );
+
+    let scripts = container.ownerDocument.querySelectorAll("script");
+    expect(scripts.length).toBeGreaterThan(0);
+    scripts.forEach((script) => {
+      expect(script).toHaveAttribute("nonce", "test-nonce");
+    });
   });
 });
 

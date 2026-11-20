@@ -1,5 +1,92 @@
 # `create-react-router`
 
+## v8.5.2
+
+### Patch Changes
+
+- Allow project scaffolding to complete when `git add` or the initial `git commit` fails ([#15737](https://github.com/remix-run/react-router/pull/15737))
+- Derive the generated package name from the project directory basename ([#15698](https://github.com/remix-run/react-router/pull/15698))
+  - Handle absolute paths, trailing separators, and paths entered at the directory prompt
+
+## v8.5.1
+
+### Patch Changes
+
+- Fix package manager command execution on Windows by handling `.cmd` shims properly ([#15565](https://github.com/remix-run/react-router/pull/15565))
+
+## v8.5.0
+
+### Patch Changes
+
+- _No changes_
+
+## v8.4.0
+
+### Patch Changes
+
+- _No changes_
+
+## v8.3.1
+
+### Patch Changes
+
+- _No changes_
+
+## v8.3.0
+
+### Patch Changes
+
+- _No changes_
+
+## v8.2.0
+
+### Minor Changes
+
+- Detect `nub` as a supported package manager when creating new projects ([#15276](https://github.com/remix-run/react-router/pull/15276))
+
+## v8.1.0
+
+### Minor Changes
+
+- Add a default-on CLI option to include the official React Router agent skill in generated projects ([#15213](https://github.com/remix-run/react-router/pull/15213))
+  - New projects include `.agents/skills/react-router` by default when running with `--yes` or in non-interactive shells
+  - Interactive runs prompt to include the skill, defaulting to yes
+  - Use `--no-agent-skills` to skip copying the skill
+
+### Patch Changes
+
+- Use Node's built-in utilities for CLI argument parsing, ANSI-stripping, and child process execution to remove the `arg`, `strip-ansi`, and `execa` dependencies ([#15231](https://github.com/remix-run/react-router/pull/15231))
+
+## v8.0.1
+
+### Patch Changes
+
+- _No changes_
+
+## v8.0.0
+
+### Major Changes
+
+- Switch from `@remix-run/web-fetch` to native `fetch` internally. ([#14929](https://github.com/remix-run/react-router/pull/14929))
+  - This removes the underlying `HTTPS_PROXY` support that `node-fetch` and subsequently `@remix-run/web-fetch` supported
+- Update minimum Node version to 22.22.0 ([#15143](https://github.com/remix-run/react-router/pull/15143))
+
+### Minor Changes
+
+- Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `execa` from `5.1.1` to `9.6.1`
+  - Bumped `log-update` from `^5.0.1` to `^8.0.0`
+  - Bumped `semver` from `^7.3.7` to `^7.8.1`
+  - Bumped `sort-package-json` from `^1.55.0` to `^3.6.1`
+  - Bumped `strip-ansi` from `^6.0.1` to `^7.2.0`
+  - Bumped `tar-fs` from `^2.1.3` to `^3.1.2`
+
+## v7.18.0
+
+### Patch Changes
+
+- _No changes_
+
 ## v7.17.0
 
 ### Patch Changes

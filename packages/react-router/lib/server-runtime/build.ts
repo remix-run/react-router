@@ -10,8 +10,6 @@ import type {
   FutureConfig,
 } from "../dom/ssr/entry";
 import type { ServerRouteManifest } from "./routes";
-import type { AppLoadContext } from "./data";
-import type { MiddlewareEnabled } from "../types/future";
 import type { ServerInstrumentation } from "../router/instrumentation";
 
 type OptionalCriticalCss = CriticalCss | undefined;
@@ -29,7 +27,21 @@ export interface ServerBuild {
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
+  /**
+   * Whether runtime server requests are supported, including API-only builds.
+   */
   ssr: boolean;
+  /**
+   * The origin to use for server requests in API-only mode.
+   * @internal
+   */
+  unstable_apiServerOrigin?: string;
+  /**
+   * Whether production document rendering is disabled while data and route
+   * discovery requests remain supported.
+   * @internal
+   */
+  unstable_apiOnly?: boolean;
   unstable_getCriticalCss?: (args: {
     pathname: string;
   }) => OptionalCriticalCss | Promise<OptionalCriticalCss>;
@@ -51,9 +63,7 @@ export interface HandleDocumentRequestFunction {
     responseStatusCode: number,
     responseHeaders: Headers,
     context: EntryContext,
-    loadContext: MiddlewareEnabled extends true
-      ? RouterContextProvider
-      : AppLoadContext,
+    loadContext: RouterContextProvider,
   ): Promise<Response> | Response;
 }
 

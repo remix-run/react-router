@@ -1,3 +1,5 @@
+import { PROTOCOL_RELATIVE_URL_REGEX } from "./url";
+
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +51,7 @@ export interface Path {
   hash: string;
 }
 
-// TODO: (v7) Change the Location generic default from `any` to `unknown` and
+// TODO: (v9) Change the Location generic default from `any` to `unknown` and
 // remove Remix `useLocation` wrapper.
 
 /**
@@ -340,9 +342,10 @@ export function createMemoryHistory(
       action = Action.Pop;
       let nextIndex = clampIndex(index + delta);
       let nextLocation = entries[nextIndex];
+      let actualDelta = nextIndex - index;
       index = nextIndex;
       if (listener) {
-        listener({ action, location: nextLocation, delta });
+        listener({ action, location: nextLocation, delta: actualDelta });
       }
     },
     listen(fn: Listener) {
@@ -536,10 +539,7 @@ export function warning(cond: any, message: string) {
       // find the source for a warning that appears in the console by
       // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {}
+    } catch {}
   }
 }
 
@@ -594,7 +594,10 @@ export function createLocation(
 /**
  * Creates a string URL path from the given pathname, search, and hash components.
  *
+ * @public
  * @category Utils
+ * @param path The pathname, search, and hash components to combine.
+ * @returns The combined URL path.
  */
 export function createPath({
   pathname = "/",
@@ -611,7 +614,10 @@ export function createPath({
 /**
  * Parses a string URL path into its separate pathname, search, and hash components.
  *
+ * @public
  * @category Utils
+ * @param path The URL path to parse.
+ * @returns The parsed pathname, search, and hash components.
  */
 export function parsePath(path: string): Partial<Path> {
   let parsedPath: Partial<Path> = {};
@@ -803,7 +809,7 @@ export function createBrowserURLImpl(
   // then we need to avoid the URL constructor treating a leading double slash
   // as a protocol-less URL. By prepending the base, it forces the double slash
   // to be parsed correctly as part of the pathname.
-  if (!isAbsolute && href.startsWith("//")) {
+  if (!isAbsolute && PROTOCOL_RELATIVE_URL_REGEX.test(href)) {
     // new URL('//', 'https://localhost') -> error!
     // new URL('https://localhost//', 'https://localhost') -> no error!
     href = base + href;

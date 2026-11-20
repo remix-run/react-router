@@ -1,5 +1,323 @@
 # `react-router`
 
+## v8.5.2
+
+### Patch Changes
+
+- Keep navigation metadata consistent after a submission action throws an error ([#15621](https://github.com/remix-run/react-router/pull/15621))
+  - Use the committed history action for loader `dataStrategy` navigation types and loading navigation history actions
+- Cancel the discarded response body for `HEAD` requests, so a resource route streaming a file no longer leaks its file descriptor ([#15634](https://github.com/remix-run/react-router/pull/15634))
+  - Keep observing nested deferred promise rejections after cancelling a data response so they cannot crash the server
+- Preserve streamed `<Suspense>` boundaries during hydration in development ([#15382](https://github.com/remix-run/react-router/pull/15382))
+  - Wrap the critical CSS reset in `React.startTransition` to prevent React 19 from silently discarding the server HTML and rendering the boundary on the client
+- Fix submissions to root form actions containing search parameters or a hash when a `basename` is configured ([#15725](https://github.com/remix-run/react-router/pull/15725))
+- Fix `href()` to throw for `null` required parameters and omit `null` splat parameters without a trailing slash, matching the behavior for `undefined` and the defined types ([#15754](https://github.com/remix-run/react-router/pull/15754))
+- Fix generated `MetaArgs.matches` types to stop at the current route instead of appending an unknown, possibly undefined tail ([#15697](https://github.com/remix-run/react-router/pull/15697))
+- Improve path generation and URL validation across `href()`, `generatePath()`, links, forms, fetchers, and redirects ([#15785](https://github.com/remix-run/react-router/pull/15785))
+- Stop `redirect()`, `redirectDocument()` and `replace()` from setting `status: 302` on the `ResponseInit` passed to them ([#15753](https://github.com/remix-run/react-router/pull/15753))
+  - Later responses created from the same init object no longer get status 302, and a frozen init no longer throws
+- Clear an `<Await>` render error when it receives a new `resolve` value, so the error element no longer stays on screen after navigating to a route whose data renders fine ([#15695](https://github.com/remix-run/react-router/pull/15695))
+- Run `clientMiddleware` during RSC client navigations and preserve it when route components update via HMR ([#15763](https://github.com/remix-run/react-router/pull/15763))
+- Handle `HEAD` resource responses consistently in RSC Framework and RSC Data modes ([#15783](https://github.com/remix-run/react-router/pull/15783))
+- Fix initial rendering of RSC routes with a `clientLoader` and no `HydrateFallback` ([#15763](https://github.com/remix-run/react-router/pull/15763))
+- Fix `<ScrollRestoration>` throwing an uncaught error before hydration when `sessionStorage` is unavailable ([#15566](https://github.com/remix-run/react-router/pull/15566))
+  - The inline restore script already logged the storage error, but its cleanup call accessed `sessionStorage` again and threw (e.g. Chrome with "Block all cookies", sandboxed cross-origin iframes)
+  - The error is still logged with `console.error`; only the second, uncaught throw is removed
+- Fix `useBlocker` leaving behind a stale blocker that keeps blocking navigation after its component is hidden and shown again with `<Activity>`, or after the router is recreated ([#15710](https://github.com/remix-run/react-router/pull/15710))
+
+## v8.5.1
+
+### Patch Changes
+
+- Fix `URIError: URI malformed` when an `ssr: false` dev server receives a URL path with a malformed percent-encoding ([#15649](https://github.com/remix-run/react-router/pull/15649))
+- Bound server route manifest processing for paths with expensive route expansion ([#15703](https://github.com/remix-run/react-router/pull/15703))
+  - Fall back to initial route discovery during server rendering and RSC document/data requests
+  - Account for the number and depth of candidate branches when using regex matching
+- Encode commas within paths sent to the lazy route discovery manifest endpoint so routes with commas in their paths are discovered correctly ([#15640](https://github.com/remix-run/react-router/pull/15640))
+- Fix fetcher revalidation errors bubbling to the root error boundary instead of the nearest boundary above the route that owns the fetcher ([#15676](https://github.com/remix-run/react-router/pull/15676))
+- Avoid duplicate history entries when posting a `<Form>` to the current URL with an encoded `action` ([#15679](https://github.com/remix-run/react-router/pull/15679))
+  - Replace the current history entry when the `action` contains characters that get percent-encoded, such as spaces or non-ASCII characters
+- Fix an unhandled promise rejection when the browser skips a `viewTransition` navigation, for example in a hidden tab ([#15582](https://github.com/remix-run/react-router/pull/15582))
+- Bubble rejected `lazy.Component` imports on loader-less routes to the nearest error boundary ([#15658](https://github.com/remix-run/react-router/pull/15658))
+  - Render the error boundary instead of a blank page
+- Preserve pending fetcher mutation revalidation when an older navigation or background reload completes to prevent stale loader data ([#15686](https://github.com/remix-run/react-router/pull/15686))
+  - Keep newer fetcher loads cancellable and preserve them when earlier revalidations finish or abort, preventing older responses from overwriting fresh fetcher data
+- Retry rejected `lazy` route imports instead of caching failures permanently ([#15689](https://github.com/remix-run/react-router/pull/15689))
+- Revalidate loader data when a fetcher action redirect is not followed ([#15557](https://github.com/remix-run/react-router/pull/15557))
+  - Revalidate when an action redirect is ignored because a newer navigation started or the fetcher unmounted while the action was running
+  - Include shared parent loaders when another navigation completed while the action was running
+  - Continue to respect `shouldRevalidate`
+  - Return fetchers to `idle` when a revalidation completes a pending navigation started by another fetcher's redirect
+- Avoid adding an incompatible `document.startViewTransition()` overload to the global `Document` type ([#15680](https://github.com/remix-run/react-router/pull/15680))
+  - Allow transition results to be assigned to the DOM `ViewTransition` type
+- Skip `deleteData` in `destroySession` when the session has no ID ([#15639](https://github.com/remix-run/react-router/pull/15639))
+  - Avoid failures when destroying a session without a cookie on storage that rejects an empty key
+- Surface the host's 404 response when a SPA fallback route has no prerendered data ([#15646](https://github.com/remix-run/react-router/pull/15646))
+  - Request single-fetch `.data` files for hydrating routes with a server `loader` in an `ssr: false` app with a `prerender` config
+  - Avoid the internal "No result found for routeId" error for non-prerendered parameterized paths served via the SPA fallback
+- Improve turbo-stream decoding validation and object property handling ([18e1fbd](https://github.com/remix-run/react-router/commit/18e1fbd))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add an opt-in `<Await unstable_promise={promise}>` implementation based on React's `use()` API ([#15678](https://github.com/remix-run/react-router/pull/15678))
+  - Use `React.use` instead of React Router's internal promise tracking
+  - Accept promise-like values and retain `errorElement`, `useAsyncValue`, and `useAsyncError` support
+  - Handle only promise rejections with `errorElement` when using `unstable_promise`, allowing child render errors to bubble to the nearest React error boundary
+  - Track streamed promises during decoding so settled server content stays visible during hydration updates with either Await API or direct `React.use()`
+- Fix `URIError: URI malformed` when an API-only (`ssr: "unstable_api-only"`) server receives a URL path with a malformed percent-encoding ([#15649](https://github.com/remix-run/react-router/pull/15649))
+- Fix duplicate headers when throwing a redirect from an RSC server function ([#15667](https://github.com/remix-run/react-router/pull/15667))
+
+## v8.5.0
+
+### Minor Changes
+
+- Deprecate React Router's view transition APIs in favor of React's `<ViewTransition>` component, available in React 19.3 and later ([#15493](https://github.com/remix-run/react-router/pull/15493))
+  - Deprecate the `viewTransition` props/options, `useViewTransitionState`, and `NavLink`'s `isTransitioning` render prop and `transitioning` class
+  - Preserve existing behavior, including support for older React versions
+  - See the [migration guide](https://reactrouter.com/how-to/view-transitions) for a navigation example and compatibility considerations
+
+### Patch Changes
+
+- Fix `<Await>` failing to server render promises decoded from an RSC payload, which caused the Suspense boundary to switch to client rendering ([#15597](https://github.com/remix-run/react-router/pull/15597))
+- Declare `@types/react` and `@types/react-dom` as optional peer dependencies so the shipped type definitions resolve React types under strict (non-hoisted) node_modules layouts ([#15528](https://github.com/remix-run/react-router/pull/15528))
+- Fix the `unstable_useRouterState` documentation example to call the imported alias ([#15535](https://github.com/remix-run/react-router/pull/15535))
+- Render the `HydrateFallback` of a route discovered through `patchRoutesOnNavigation` during initial hydration ([#15537](https://github.com/remix-run/react-router/pull/15537))
+  - Routes discovered during initial hydration are now exposed in `state.matches` while their loaders run, so `<RouterProvider>` renders down to the discovered route's `HydrateFallback` instead of rendering nothing
+- Fix router state recovery when updates occur before `RouterProvider` subscribes, including when other subscribers are already attached, and report current client errors once without replaying server errors during hydration ([#15637](https://github.com/remix-run/react-router/pull/15637))
+- Fix `matchPath` not treating a static segment as optional when it contains characters outside `[\w-]` ([#15425](https://github.com/remix-run/react-router/pull/15425))
+- Fix an RSC server crash when a client aborts a document request while the HTML stream waits for the RSC payload ([#15612](https://github.com/remix-run/react-router/pull/15612))
+- Stop revalidating a fetcher after `fetcher.reset()`, so its cleared data no longer comes back on the next revalidation ([#15633](https://github.com/remix-run/react-router/pull/15633))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add an `unstable_fetch` prop to `<HydratedRouter>` to customize JavaScript-issued manifest and server data requests in conventional Framework Mode ([#15586](https://github.com/remix-run/react-router/pull/15586))
+  - The function receives the intended request as well as context identifying the type of request
+  - Data request context includes `navigationType` (`"PUSH"`, `"REPLACE"`, or `"POP"` for navigation-initiated requests, including reloaded fetchers; `null` otherwise)
+    - Data strategies receive equivalent metadata through `unstable_initiator` and `unstable_navigationType`
+  - The custom fetch context is a discriminated union, so narrowing `type` to `"navigation"` guarantees a non-null `navigationType`, while other data requests have a `null` `navigationType`
+    - Fetchers reloaded after an initialization redirect retain the `"initialization"` type and include their fetcher key
+  - Like other router initialization options, the implementation is captured when the singleton router is created and thus subsequent prop changes are ignored
+  - Browser-managed data prefetches from `<Link prefetch>` use native `<link rel="prefetch">` elements and do not call the custom implementation
+  - Use the callback for custom fetch options, custom headers, safe request retries, or response header inspection
+  - Return response bodies unchanged so React Router can decode its manifest and Turbo Stream data protocols
+- Support API-only Framework Mode with runtime server data loading, actions, revalidation, and lazy route discovery ([#15601](https://github.com/remix-run/react-router/pull/15601))
+  - Hydrate prerendered pages from build-time data and fetch server loader data when hydrating a SPA fallback
+  - Preserve normal loader revalidation and server-action support for eagerly loaded and lazily discovered routes, and honor loader opt-outs when making server data requests
+- Add `unstable_useRouteDiscovery` for application-controlled route discovery in conventional Framework Mode ([#15602](https://github.com/remix-run/react-router/pull/15602))
+  - Discover selected destinations or load the running client's full route manifest without loading route modules
+  - Compose manifest-mismatch handlers, with shared recovery and cancellation that preserves application state
+  - Keep full-manifest failures catchable without rendering error boundaries, whether mismatch handlers use the hook or event's `loadAllRoutes()`
+  - Cancel pending revalidation alongside a canceled navigation, retaining existing data and settling interrupted fetchers before restoring Back/Forward history
+  - Enable `future.unstable_customRouteDiscovery` to opt in
+    - Apps without the flag retain existing discovery behavior
+  - Call `event.defaultBehavior()` from a custom mismatch handler to explicitly run built-in recovery
+- Return middleware short-circuit responses as-is for document requests in RSC modes, including resource routes, instead of decoding non-RSC bodies as Flight ([#15628](https://github.com/remix-run/react-router/pull/15628))
+  - Include server middleware in both eager and lazy RSC route configuration types
+  - Preserve HTML rendering for cached Flight responses returned by middleware, and pass through raw responses that replace the result of `next()`
+
+## v8.4.0
+
+### Minor Changes
+
+- Deprecate the `createStaticRouter({ branches })` option ([#15297](https://github.com/remix-run/react-router/pull/15297))
+  - `createStaticRouter` now caches route branches internally, ignores `branches`, and logs a deprecation warning when the option is provided
+  - The deprecated `EntryContext.branches` property remains available for compatibility but is always an empty array
+
+### Patch Changes
+
+- Prevent stale route discovery during manifest version-mismatch recovery ([#15489](https://github.com/remix-run/react-router/pull/15489))
+  - Keep concurrent manifest responses pending while a document reload is in progress
+  - Report a discovery error when a previous reload failed to resolve a version mismatch instead of loading a stale route or reloading repeatedly
+  - Fail pending requests if a document reload does not complete within five seconds or the document is restored from the back-forward cache, allowing subsequent requests to recover
+- Preserve lazy route module import errors during SPA navigations instead of replacing them with a missing `dataStrategy` result error ([#15464](https://github.com/remix-run/react-router/pull/15464))
+- Switch to more granular internal router contexts to avoid unnecessary route component re-renders when unrelated data router state changes ([#15376](https://github.com/remix-run/react-router/pull/15376))
+  - ⚠️ This contains some breaking changes to exported `UNSAFE_` contexts, so please review carefully if you are using those unsafe exports
+- Correctly escape streamed RSC redirect locations in meta tag attributes ([#15491](https://github.com/remix-run/react-router/pull/15491))
+- Avoid unintended `document.startViewTransition` calls during initial hydration and `router.revalidate()` calls ([#15484](https://github.com/remix-run/react-router/pull/15484))
+- Fix `SingleFetchNoResultError` thrown when a fetcher revalidates against a splat route during lazy route discovery ([#15395](https://github.com/remix-run/react-router/pull/15395))
+  - Track discovery per fetcher load so revalidation waits for the current load's discovery, even when the fetcher key is reused, while still restarting interrupted loaders after discovery completes
+- Preserve the underlying decode failure as the `cause` of the `Unable to decode turbo-stream response` error ([#15450](https://github.com/remix-run/react-router/pull/15450))
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Add a Data Mode `future.unstable_routePatternMatching` flag for more efficient route matching powered by `@remix-run/route-pattern` ([#15298](https://github.com/remix-run/react-router/pull/15298))
+  - Add an `unstable_validateParams` route field to reject invalid parameter values and continue matching
+- Document access control requirements for RSC Server Functions ([#15490](https://github.com/remix-run/react-router/pull/15490))
+  - Treat every Server Function as a public endpoint that must perform all of its own access control checks
+  - Recommend route actions when access control should be provided by route middleware
+
+## v8.3.1
+
+### Patch Changes
+
+- Fix `Expected fetcher: <key>` error thrown on navigation when a fetcher is aborted during its post-action revalidation ([#15365](https://github.com/remix-run/react-router/pull/15365))
+- Fix lazy route discovery caching a path as discovered when the triggering navigation was aborted after the manifest response settled but before the route tree was patched, which permanently (for the session) shadowed the real route behind a catch-all or produced 404s on every subsequent visit ([#15399](https://github.com/remix-run/react-router/pull/15399))
+- Improve route matching performance for long paths ([#15417](https://github.com/remix-run/react-router/pull/15417))
+- Improve validation of action request origins ([#15419](https://github.com/remix-run/react-router/pull/15419))
+- Fix `<ScrollRestoration>` leaving `history.scrollRestoration` set to `"auto"` after a bfcache restore, which let the browser restore scroll on subsequent history traversals before the destination route had rendered ([#15397](https://github.com/remix-run/react-router/pull/15397))
+- Properly respect the `relative` option in `useSubmit`/`fetcher.submit` when resolivng the `action` path ([#15400](https://github.com/remix-run/react-router/pull/15400))
+- Add additional URL validation on client side navigations/redirects ([#15445](https://github.com/remix-run/react-router/pull/15445))
+
+## v8.3.0
+
+### Patch Changes
+
+- Encode path params in `href`/`generatePath` per RFC 3986 path-segment rules instead of `encodeURIComponent` ([#15310](https://github.com/remix-run/react-router/pull/15310))
+  - Characters that are valid literally in a path segment (`$ & + , ; = : @` — RFC 3986 `pchar`) are no longer percent-encoded, so values like a semver build `1.0.0+1` interpolate unchanged instead of becoming `1.0.0%2B1`
+  - Structural/unsafe characters (`/ ? # %`, whitespace, non-ASCII) are still escaped exactly as before
+- Use `crypto.randomUUID()` for `createMemorySessionStorage` session ids ([#15302](https://github.com/remix-run/react-router/pull/15302))
+  - `createMemorySessionStorage` is only intended for local development and testing - sessions are lost when the server restarts
+- Fix `NavLink` not applying its `pending` state when `to` has a trailing slash ([#15300](https://github.com/remix-run/react-router/pull/15300))
+- Preserve RSC route component metadata so routes with a `clientLoader` can skip unnecessary server requests once their components have rendered while still fetching missing server-rendered elements ([#15323](https://github.com/remix-run/react-router/pull/15323))
+- Harden RSC CSRF code paths ([#15311](https://github.com/remix-run/react-router/pull/15311))
+- Fix server crash (`TypeError: Invalid state: Unable to enqueue`) when a request is aborted while the RSC HTML stream has a pending flush ([#15286](https://github.com/remix-run/react-router/pull/15286))
+  - Handle cancellation of the `injectRSCPayload` readable side, clear the pending flush, and cancel the underlying RSC payload stream
+
+### Unstable Changes
+
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Detect stale RSC clients during lazy route discovery and reload the destination document ([#15318](https://github.com/remix-run/react-router/pull/15318))
+
+  #### Migration
+
+  Apps using the default RSC Framework entry do not need to make any changes. Apps with a custom `entry.rsc.tsx` should import the generated client version and pass it to `unstable_matchRSCServerRequest`:
+
+  ```tsx
+  import clientVersion from "virtual:react-router/unstable_rsc/client-version";
+
+  return unstable_matchRSCServerRequest({
+    // ...
+    clientVersion,
+  });
+  ```
+
+- Add CSP nonce support to RSC document rendering ([#15320](https://github.com/remix-run/react-router/pull/15320))
+  - Add `nonce` options to `unstable_routeRSCServerRequest` and `unstable_RSCStaticRouter`
+  - Forward the nonce to the HTML renderer and apply it to injected RSC payload scripts and nonce-aware framework components
+
+  To adopt nonce-based CSP, update your `entry.ssr.tsx` (run `react-router reveal entry.ssr` first in RSC Framework Mode) to generate a fresh nonce for each request. Pass it to `routeRSCServerRequest`, spread the `renderHTML` options into React's HTML renderer, pass `options.nonce` to `RSCStaticRouter`, and use the same nonce in the `Content-Security-Policy` response header:
+
+  ```tsx
+  const nonce = crypto.randomUUID();
+  const response = await routeRSCServerRequest({
+    request,
+    serverResponse,
+    createFromReadableStream,
+    nonce,
+    async renderHTML(getPayload, options) {
+      const payload = getPayload();
+      return renderHTMLToReadableStream(
+        <RSCStaticRouter getPayload={getPayload} nonce={options.nonce} />,
+        {
+          ...options,
+          bootstrapScriptContent,
+          formState: await payload.formState,
+          signal: request.signal,
+        },
+      );
+    },
+  });
+  response.headers.set(
+    "Content-Security-Policy",
+    `script-src 'self' 'nonce-${nonce}'`,
+  );
+  ```
+
+## v8.2.0
+
+### Patch Changes
+
+- Fix `href()` to properly stringify and URL-encode param values, matching `generatePath()` ([#15277](https://github.com/remix-run/react-router/pull/15277))
+  - splat params preserve path separators while encoding each segment individually
+- Fix dynamic param extraction for routes with optional static segments ([#15200](https://github.com/remix-run/react-router/pull/15200))
+  - When a route path contains optional static segments (e.g. `/school?/user/:id`), the internal regex's incorrectly shifted parameter indices resulting in incorrect parameter extraction
+  - Consecutive optional static segments (e.g. `/one?/two?`) were only partially handled
+- Preserve navigation blocker state through a revalidation ([#15246](https://github.com/remix-run/react-router/pull/15246))
+- Fix route ranking for dynamic parameters with static extension suffixes ([#15273](https://github.com/remix-run/react-router/pull/15273))
+  - These were not being detected as dynamic param segments and instead got incorrectly scored higher as a static segment
+  - This meant they could potentially tie truly static routes like `/sitemap.xml` and outrank them based on definition order
+  - These are now correctly identified as dynamic parameter segments and scored correctly
+- Use ReactFormState types instead of unknown ([#15263](https://github.com/remix-run/react-router/pull/15263))
+
+## v8.1.0
+
+### Minor Changes
+
+- Return route metadata from server request, client navigation, and client fetcher instrumentations ([#15235](https://github.com/remix-run/react-router/pull/15235))
+  - Adds result metadata after instrumented calls complete, including the URL, matched route pattern, and params
+  - Adds known HTTP status codes to server request handler instrumentation results
+
+## v8.0.1
+
+### Patch Changes
+
+- Remove the obsolete `AppLoadContext` type export accidentally left over from v7 now that middleware is always enabled and server request context is provided through `RouterContextProvider`. ([#15207](https://github.com/remix-run/react-router/pull/15207))
+
+## v8.0.0
+
+### Major Changes
+
+- Remove the `future.v8_trailingSlashAwareDataRequests` flag ([#15100](https://github.com/remix-run/react-router/pull/15100))
+  - Trailing slash-aware data request URLs are now the default behavior.
+- Update `tsconfig.json` `target`/`lib` from `ES2020 -> ES2022` ([591853e](https://github.com/remix-run/react-router/commit/591853e))
+- Switch the published packages in `packages/` to ESM-only. ([#14895](https://github.com/remix-run/react-router/pull/14895)) ([59ebcf1](https://github.com/remix-run/react-router/commit/59ebcf1))
+- Remove deprecated `data` parameter in favor of `loaderData` for `meta` APIs (to align with `Route.ComponentProps`) ([#14931](https://github.com/remix-run/react-router/pull/14931))
+  - `Route.MetaArgs`, `Route.MetaMatch`, `MetaArgs`, `MetaMatch`, `Route.ComponentProps.matches`, `UIMatch`
+- Remove `future.v8_passThroughRequests` flag - the raw incoming `request` is now always passed through to `loader`/`action`. Use `url` for the normalized URL without React Router-specific implementation details (`.data` suffixes, `index`/`_routes` search params). ([#15079](https://github.com/remix-run/react-router/pull/15079))
+- Remove internal `hasErrorBoundary` field added to `router.routes` when using a data router ([#15074](https://github.com/remix-run/react-router/pull/15074))
+  - This should not impact user-facing code since this was an internal prop and was computed based on the presence of `ErrorBoundary` or `errorElement` on your route
+  - `hasErrorBoundary` is no longer accepted on `RouteObject` (`IndexRouteObject`/`NonIndexRouteObject`), `DataRouteObject`, `<Route>` JSX props, or as a key in `lazy` route definitions.
+  - The `MapRoutePropertiesFunction` signature no longer requires returning `hasErrorBoundary`; the router infers it directly.
+- Remove `react-router-dom` package ([#15076](https://github.com/remix-run/react-router/pull/15076))
+  - In v7 everything DOM-specific was collapsed into `react-router/dom`
+    - `react-router-dom` was kept around as a convenience so existing v6 app imports would still work
+  - For v8, you will need to swap `react-router-dom` imports:
+    - `RouterProvider`/`HydratedRouter` should be imported from `react-router/dom`
+    - Everything else should be imported from `react-router`
+- Remove `future.v8_middleware` flag — middleware is always enabled in v8 ([#15078](https://github.com/remix-run/react-router/pull/15078))
+  - The `future.v8_middleware` flag has been removed; middleware is now always enabled
+  - The `context` parameter passed to `loader`, `action`, and `middleware` functions is always a `RouterContextProvider` instance
+  - `getLoadContext` functions in custom servers must return a `RouterContextProvider` — returning a plain object is no longer supported
+  - The `MiddlewareEnabled` type (previously exported as `UNSAFE_MiddlewareEnabled`) has been removed since the conditional it gated is now unconditional
+  - The `Future` module augmentation pattern (`interface Future { v8_middleware: true }`) is no longer needed to type `context` in Data Mode
+- Update minimum Node version to 22.22.0 ([#14928](https://github.com/remix-run/react-router/pull/14928))
+- Update minimum React version to 19.2.7 ([#15062](https://github.com/remix-run/react-router/pull/15062))
+
+### Minor Changes
+
+- Bump dependencies ([#15080](https://github.com/remix-run/react-router/pull/15080))
+  - Bumped `cookie` from `^1.0.1` to `^1.1.1`
+  - Bumped `set-cookie-parser` from `^2.6.0` to `^3.1.0`
+
+### Patch Changes
+
+- Ensure client middleware errors load lazy route error boundaries before bubbling ([#15086](https://github.com/remix-run/react-router/pull/15086))
+- Remove explicit `onSubmit` type override from `SharedFormProps` to fix deprecation warning with `@types/react@19.x` ([#14932](https://github.com/remix-run/react-router/pull/14932)) ([59ebcf1](https://github.com/remix-run/react-router/commit/59ebcf1))
+- Update package builds to preserve individual module files in published artifacts. Public APIs and documented import paths are unchanged. ([#15092](https://github.com/remix-run/react-router/pull/15092))
+  - Updated package TypeScript configs to support modern module syntax used by the build configuration.
+- Migrate package builds from `tsup` to `tsdown`. Published package entry points and public APIs are unchanged. ([#15092](https://github.com/remix-run/react-router/pull/15092))
+- Upgrade React Router's TypeScript tooling to TypeScript 6. Runtime behavior and public APIs are unchanged. ([#15092](https://github.com/remix-run/react-router/pull/15092))
+
+## v7.18.0
+
+### Patch Changes
+
+- Fix server handler prerender responses when using `ssr: false` and `future.v8_trailingSlashAwareDataRequests: true`. Avoids false positive "SPA Mode" detection when serving prerendered paths ([#15173](https://github.com/remix-run/react-router/pull/15173))
+- Use the `ServerRouter` nonce for nonce-aware SSR components when they don't provide their own value so strict CSP pages can load them. ([#15170](https://github.com/remix-run/react-router/pull/15170))
+- Use `turbo-stream` to serialize and deserialize Framework Mode hydration errors ([#15175](https://github.com/remix-run/react-router/pull/15175))
+- Precompute route branch matchers to avoid recompiling route path regexes during matching ([#15186](https://github.com/remix-run/react-router/pull/15186))
+- Use the constructed request URL host when validating action request origins. ([#15185](https://github.com/remix-run/react-router/pull/15185))
+- Remove the un-documented custom error serialization logic from Data Mode SSR built-in hydration flows ([#15175](https://github.com/remix-run/react-router/pull/15175))
+- Validate protocols in RSC render redirects ([#15177](https://github.com/remix-run/react-router/pull/15177))
+- Consolidate url normalization logic and better handle mixed slashes ([#15176](https://github.com/remix-run/react-router/pull/15176))
+
 ## v7.17.0
 
 ### Minor Changes

@@ -2019,7 +2019,7 @@ describe("useNavigate", () => {
               About
             </button>
             <p>
-              count:1
+              count:0
             </p>
           </nav>,
           <h1>
@@ -2049,7 +2049,7 @@ describe("useNavigate", () => {
               About
             </button>
             <p>
-              count:1
+              count:0
             </p>
           </nav>,
           <h1>

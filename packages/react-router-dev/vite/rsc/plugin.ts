@@ -1,4 +1,6 @@
 import type * as Vite from "vite";
+import type { ReactRouterBuildContext } from "../build";
+import { createHash } from "node:crypto";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
 import colors from "picocolors";
@@ -33,6 +35,7 @@ import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 import { prerender } from "../plugins/prerender";
+import { getPrerenderRedirectHtml } from "../prerender-redirect";
 import { getPrerenderPaths } from "../plugin";
 
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
@@ -43,11 +46,11 @@ let typegenWatcherPromise: Promise<Typegen.Watcher> | undefined;
 export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
   let runningWithinTheReactRouterMonoRepo = Boolean(
     arguments &&
-      arguments.length === 1 &&
-      typeof arguments[0] === "object" &&
-      arguments[0] &&
-      "__runningWithinTheReactRouterMonoRepo" in arguments[0] &&
-      arguments[0].__runningWithinTheReactRouterMonoRepo === true,
+    arguments.length === 1 &&
+    typeof arguments[0] === "object" &&
+    arguments[0] &&
+    "__runningWithinTheReactRouterMonoRepo" in arguments[0] &&
+    arguments[0].__runningWithinTheReactRouterMonoRepo === true,
   );
   let configLoader: ConfigLoader;
   let viteCommand: Vite.ConfigEnv["command"];
@@ -106,32 +109,39 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     }
   }
 
-  async function transformToJs(
-    code: string,
-    filename: string,
-  ): Promise<string> {
+  async function transformToJs(code: string, filename: string) {
     await preloadVite();
     let vite = getVite();
     let lang = getTransformLanguage(filename);
 
-    return (
-      "transformWithOxc" in vite && typeof vite.transformWithOxc === "function"
-        ? await vite.transformWithOxc(code, filename, {
-            lang,
-            jsx: {
-              runtime: "automatic",
-              development: viteCommand !== "build",
-              target: "esnext",
-            },
-          })
-        : await vite.transformWithEsbuild(code, filename, {
-            loader: lang,
+    return "transformWithOxc" in vite &&
+      typeof vite.transformWithOxc === "function"
+      ? await vite.transformWithOxc(code, filename, {
+          lang,
+          jsx: {
+            runtime: "automatic",
+            development: viteCommand !== "build",
             target: "esnext",
-            format: "esm",
-            jsx: "automatic",
-            jsxDev: viteCommand !== "build",
-          })
-    ).code;
+          },
+        })
+      : await vite.transformWithEsbuild(code, filename, {
+          loader: lang,
+          target: "esnext",
+          format: "esm",
+          jsx: "automatic",
+          jsxDev: viteCommand !== "build",
+        });
+  }
+
+  async function getClientVersion(source: string) {
+    const digest = await globalThis.crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(source),
+    );
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+      .slice(0, 8);
   }
 
   return [
@@ -161,12 +171,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
             if (userConfig.buildEnd) errors.push("buildEnd");
             if (userConfig.presets?.length) errors.push("presets");
             if (userConfig.serverBundles) errors.push("serverBundles");
-            if (userConfig.future?.v8_middleware === false)
-              errors.push("future.v8_middleware: false");
-            if (userConfig.future?.v8_viteEnvironmentApi === false)
-              errors.push("future.v8_viteEnvironmentApi: false");
-            if (userConfig.subResourceIntegrity)
-              errors.push("subResourceIntegrity");
+            if (userConfig.ssr === "unstable_api-only") {
+              errors.push('ssr: "unstable_api-only"');
+            }
             if (errors.length) {
               return `RSC Framework Mode does not currently support the following React Router config:\n${errors.map((x) => ` - ${x}`).join("\n")}\n`;
             }
@@ -214,6 +221,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
 
         return {
+          __reactRouterBuildContext: {
+            close: () => configLoader.close(),
+          } satisfies ReactRouterBuildContext,
           resolve: {
             dedupe: [
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
@@ -227,9 +237,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               "react-router",
               "react-router/dom",
               "react-router/internal/react-server-client",
-              ...(hasDependency({ name: "react-router-dom", rootDirectory })
-                ? ["react-router-dom"]
-                : []),
               ...(hasDependency({
                 name: "react-server-dom-webpack",
                 rootDirectory,
@@ -279,8 +286,6 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
                     "react-router/dom",
                     "react-router/internal/react-server-client",
                   ]),
-              "react-router > cookie",
-              "react-router > set-cookie-parser",
             ],
           },
           ...defineCompilerOptions({
@@ -412,7 +417,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
       },
       configurePreviewServer(previewServer) {
-        const clientBuildDirectory = getClientBuildDirectory(config);
+        const clientBuildDirectory =
+          getClientBuildDirectory(resolvedViteConfig);
         if (
           (config.prerender || config.ssr === false) &&
           process.env.IS_RR_BUILD_REQUEST !== "yes"
@@ -470,8 +476,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           };
         }
       },
-      async buildEnd() {
-        await configLoader.close();
+      async buildEnd(error) {
+        if (error) {
+          await configLoader.close();
+        }
       },
     },
     (() => {
@@ -518,6 +526,45 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         }
       : null,
 
+    (() => {
+      let sri: Record<string, string> | undefined;
+
+      return {
+        name: "react-router/rsc/subresource-integrity",
+        sharedDuringBuild: true,
+        resolveId(id) {
+          if (id === virtual.subResourceIntegrity.id) {
+            return virtual.subResourceIntegrity.resolvedId;
+          }
+        },
+        load(id) {
+          if (id === virtual.subResourceIntegrity.resolvedId) {
+            return `export default ${JSON.stringify(sri)};`;
+          }
+        },
+        writeBundle(_options, bundle) {
+          if (
+            this.environment.name !== "client" ||
+            !config.subResourceIntegrity
+          ) {
+            return;
+          }
+
+          sri = {};
+          for (let output of Object.values(bundle)) {
+            if (!output.fileName.endsWith(".js")) {
+              continue;
+            }
+
+            let contents =
+              output.type === "chunk" ? output.code : output.source;
+            let hash = createHash("sha384").update(contents).digest("base64");
+            sri[`${resolvedViteConfig.base}${output.fileName}`] =
+              `sha384-${hash}`;
+          }
+        },
+      } satisfies Vite.Plugin;
+    })(),
     {
       name: "react-router/rsc/virtual-route-config",
       resolveId(id) {
@@ -544,8 +591,7 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
       getRouteIdForFile,
       isRootRouteModule,
       transformToJs,
-      enforceSplitRouteModules: () =>
-        config.future.v8_splitRouteModules === "enforce",
+      enforceSplitRouteModules: () => config.splitRouteModules === "enforce",
     }),
     {
       name: "react-router/rsc/virtual-basename",
@@ -577,6 +623,56 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
               : (config.routeDiscovery ?? { mode: "lazy" }),
           )};`;
         }
+      },
+    },
+    {
+      name: "react-router/rsc/virtual-client-version",
+      // Run after the Vite RSC plugin, including its post-ordered
+      // `generateBundle` hook in 0.5.36 and later.
+      enforce: "post",
+      resolveId(id) {
+        if (id === virtual.clientVersion.id) {
+          return virtual.clientVersion.resolvedId;
+        }
+      },
+      load(id) {
+        if (id === virtual.clientVersion.resolvedId) {
+          return viteCommand === "build"
+            ? `
+import assetsManifest from "virtual:vite-rsc/assets-manifest";
+export default assetsManifest.clientVersion;
+`
+            : `export default "development";`;
+        }
+      },
+      // Use `generateBundle` so builds with `write: false` also get a version.
+      generateBundle: {
+        order: "post",
+        async handler() {
+          if (this.environment.name !== "client") return;
+
+          const viteRscPlugin = resolvedViteConfig.plugins.find(
+            (plugin) => plugin.name === "rsc:minimal",
+          ) as
+            | (Vite.Plugin & {
+                api?: {
+                  manager?: {
+                    buildAssetsManifest?: Record<string, unknown>;
+                  };
+                };
+              })
+            | undefined;
+          const assetsManifest =
+            viteRscPlugin?.api?.manager?.buildAssetsManifest;
+          invariant(assetsManifest, "Vite RSC assets manifest not found");
+
+          // Add the version before the Vite RSC plugin serializes this manifest
+          // into the RSC and SSR builds. This lets the virtual module expose a
+          // build-time value without rewriting files after Vite writes them.
+          assetsManifest.clientVersion = await getClientVersion(
+            JSON.stringify(assetsManifest),
+          );
+        },
       },
     },
     {
@@ -637,11 +733,11 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     prerender({
       config() {
         return {
-          buildDirectory: getClientBuildDirectory(config),
           concurrency: getPrerenderConcurrencyConfig(config),
         };
       },
       logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
+      cleanup: () => configLoader.close(),
       async requests() {
         const prerenderPaths = new Set(
           await getPrerenderPaths(
@@ -710,23 +806,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         // approach used by Astro as well, so there's some precedent.
         // https://github.com/withastro/roadmap/issues/466
         // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
-        let location = response.headers.get("Location");
-        // A short delay causes Google to interpret the redirect as temporary.
-        // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
-        let delay = response.status === 302 ? 2 : 0;
         let redirectBody = isRedirect
-          ? `<!doctype html>
-<head>
-<title>Redirecting to: ${location}</title>
-<meta http-equiv="refresh" content="${delay};url=${location}">
-<meta name="robots" content="noindex">
-</head>
-<body>
-	<a href="${location}">
-  Redirecting from <code>${url.pathname}</code> to <code>${location}</code>
-</a>
-</body>
-</html>`
+          ? getPrerenderRedirectHtml(response, url.pathname)
           : "";
 
         let files: { path: string; contents: Uint8Array | string }[] = [
@@ -783,12 +864,25 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         return files;
       },
     }),
+    {
+      name: "react-router/rsc/build-end",
+      enforce: "post",
+      sharedDuringBuild: true,
+      buildApp: {
+        order: "post",
+        async handler() {
+          await configLoader.close();
+        },
+      },
+    },
   ];
 }
 
 const virtual = {
   routeConfig: create("unstable_rsc/routes"),
+  subResourceIntegrity: create("unstable_rsc/subresource-integrity"),
   routeDiscovery: create("unstable_rsc/route-discovery"),
+  clientVersion: create("unstable_rsc/client-version"),
   injectHmrRuntime: create("unstable_rsc/inject-hmr-runtime"),
   basename: create("unstable_rsc/basename"),
   reactRouterServeConfig: create("unstable_rsc/react-router-serve-config"),
@@ -827,7 +921,10 @@ function createRSCOptimizeDepsRouteModulesPlugin({
   transformToJs,
 }: {
   routeFiles: Set<string>;
-  transformToJs: (code: string, filename: string) => Promise<string>;
+  transformToJs: (
+    code: string,
+    filename: string,
+  ) => Promise<{ code: string; map: object | string | null }>;
 }): RSCOptimizeDepsRouteModulesPlugin {
   return {
     name: "react-router:rsc-optimize-deps-route-modules",
@@ -841,8 +938,10 @@ function createRSCOptimizeDepsRouteModulesPlugin({
           return;
         }
 
-        let js = await transformToJs(code, filename);
-        let generated = createClientRouteModuleForOptimizeDepsScan(js);
+        let transformed = await transformToJs(code, filename);
+        let generated = createClientRouteModuleForOptimizeDepsScan(
+          transformed.code,
+        );
 
         return {
           code: generated.code,
@@ -854,9 +953,8 @@ function createRSCOptimizeDepsRouteModulesPlugin({
   };
 }
 
-const getClientBuildDirectory = (
-  reactRouterConfig: ResolvedReactRouterConfig,
-) => path.join(reactRouterConfig.buildDirectory, "client");
+const getClientBuildDirectory = (viteConfig: Vite.ResolvedConfig) =>
+  path.resolve(viteConfig.root, viteConfig.environments.client.build.outDir);
 
 function getPrerenderConcurrencyConfig(
   reactRouterConfig: ResolvedReactRouterConfig,

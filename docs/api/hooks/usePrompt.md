@@ -19,16 +19,13 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [MODES: framework, data]
 
-<br />
-<br />
-
 <docs-warning>This API is experimental and subject to breaking changes in 
 minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.unstable_usePrompt.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.unstable_usePrompt.html)
 
 Wrapper around [`useBlocker`](../hooks/useBlocker) to show a [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm)
 prompt to users instead of building a custom UI with [`useBlocker`](../hooks/useBlocker).

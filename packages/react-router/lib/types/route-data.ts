@@ -7,9 +7,7 @@ import type {
   RouterContextProvider,
 } from "../router/utils";
 import type { Serializable } from "../server-runtime/single-fetch";
-import type { AppLoadContext } from "../server-runtime/data";
 
-import type { MiddlewareEnabled } from "./future";
 import type { RouteModule } from "./route-module";
 import type { unstable_SerializesTo } from "./serializes-to";
 import type { Equal, Expect, Func, IsAny, Pretty } from "./utils";
@@ -79,11 +77,11 @@ export type ClientDataFunctionArgs<Params> = {
   request: Request;
   /**
    * A URL instance representing the application location being navigated to or
-   * fetched. By default, this matches `request.url`.
+   * fetched.
    *
-   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
-   * normalized URL with React-Router-specific implementation details removed
-   * (`.data` suffixes, `index`/`_routes` search params).
+   * In Framework mode, this is a normalized URL with React-Router-specific
+   * implementation details removed (`.data` suffixes, `index`/`_routes` search
+   * params). For the raw incoming URL, use `request.url`.
    */
   url: URL;
   /**
@@ -107,12 +105,9 @@ export type ClientDataFunctionArgs<Params> = {
    */
   pattern: string;
   /**
-   * When `future.v8_middleware` is not enabled, this is undefined.
-   *
-   * When `future.v8_middleware` is enabled, this is an instance of
-   * `RouterContextProvider` and can be used to access context values
-   * from your route middlewares.  You may pass in initial context values in your
-   * `<HydratedRouter getContext>` prop
+   * An instance of `RouterContextProvider` that can be used to access context
+   * values from your route middlewares.  You may pass in initial context values
+   * in your `<HydratedRouter getContext>` prop.
    */
   context: Readonly<RouterContextProvider>;
 };
@@ -122,11 +117,11 @@ export type ServerDataFunctionArgs<Params> = {
   request: Request;
   /**
    * A URL instance representing the application location being navigated to or
-   * fetched. By default, this matches `request.url`.
+   * fetched.
    *
-   * In Framework mode with `future.v8_passThroughRequests` enabled, this is a
-   * normalized URL with React-Router-specific implementation details removed
-   * (`.data` suffixes, `index`/`_routes` search params).
+   * In Framework mode, this is a normalized URL with React-Router-specific
+   * implementation details removed (`.data` suffixes, `index`/`_routes` search
+   * params). For the raw incoming URL, use `request.url`.
    */
   url: URL;
   /**
@@ -150,20 +145,12 @@ export type ServerDataFunctionArgs<Params> = {
    */
   pattern: string;
   /**
-   * Without `future.v8_middleware` enabled, this is the context passed in
-   * to your server adapter's `getLoadContext` function. It's a way to bridge the
-   * gap between the adapter's request/response API with your React Router app.
-   * It is only applicable if you are using a custom server adapter.
-   *
-   * With `future.v8_middleware` enabled, this is an instance of
-   * `RouterContextProvider` and can be used for type-safe access to
-   * context value set in your route middlewares.  If you are using a custom
-   * server adapter, you may provide an initial set of context values from your
-   * `getLoadContext` function.
+   * An instance of `RouterContextProvider` that can be used for type-safe
+   * access to context values set in your route middlewares.  If you are using
+   * a custom server adapter, you may provide an initial set of context values
+   * from your `getLoadContext` function.
    */
-  context: MiddlewareEnabled extends true
-    ? Readonly<RouterContextProvider>
-    : AppLoadContext;
+  context: Readonly<RouterContextProvider>;
 };
 
 export type SerializeFrom<T> = T extends (...args: infer Args) => unknown

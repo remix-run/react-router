@@ -1,5 +1,5 @@
 import type { ServerResponse } from "node:http";
-
+import { createRequest } from "@remix-run/node-fetch-server";
 import type * as Vite from "vite";
 import invariant from "../invariant";
 
@@ -19,8 +19,26 @@ export async function fromNodeRequest(
   );
   nodeReq.url = nodeReq.originalUrl;
 
-  // Async import here to allow ESM only module on Node 20.18.
-  // TODO(v8): Can move to a normal import when Node 20 support
-  const { createRequest } = await import("@remix-run/node-fetch-server");
-  return createRequest(nodeReq, nodeRes);
+  return createRequest(nodeReq, nodeRes, {
+    // Honor the browser-facing protocol behind an HTTPS-terminating proxy so
+    // action origin validation sees the correct origin. Keep using Host:
+    // Vite's allowedHosts checks do not validate X-Forwarded-Host.
+    protocol: getForwardedProtocol(nodeReq),
+  });
+}
+
+function getForwardedProtocol(
+  nodeReq: Vite.Connect.IncomingMessage,
+): string | undefined {
+  let forwardedProto = nodeReq.headers["x-forwarded-proto"];
+  let proto = (
+    Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto
+  )
+    ?.split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (proto?.endsWith(":")) {
+    proto = proto.slice(0, -1);
+  }
+  return proto === "http" || proto === "https" ? `${proto}:` : undefined;
 }

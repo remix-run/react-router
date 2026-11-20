@@ -29,9 +29,7 @@ export function mockFrameworkContext(
       url: "",
       version: "",
     },
-    future: {
-      v8_middleware: false,
-    },
+    future: {},
     ssr: true,
     isSpaMode: false,
     routeDiscovery: {
@@ -47,6 +45,7 @@ export function mockEntryContext(
 ): EntryContext {
   return {
     ...mockFrameworkContext(overrides),
+    branches: [],
     staticHandlerContext: {
       location: {
         pathname: "/",

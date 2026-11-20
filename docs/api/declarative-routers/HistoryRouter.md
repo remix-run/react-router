@@ -19,16 +19,13 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 [MODES: declarative]
 
-<br />
-<br />
-
 <docs-warning>This API is experimental and subject to breaking changes in 
 minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.unstable_HistoryRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.unstable_HistoryRouter.html)
 
 A declarative [`<Router>`](../declarative-routers/Router) that accepts a pre-instantiated
 `history` object.

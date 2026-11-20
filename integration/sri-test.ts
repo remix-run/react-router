@@ -1,4 +1,7 @@
-import { test, expect } from "@playwright/test";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { expect } from "@playwright/test";
 
 import {
   createAppFixture,
@@ -6,10 +9,15 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import type { AppFixture, Fixture } from "./helpers/create-fixture.js";
-import { reactRouterConfig } from "./helpers/vite.js";
+import {
+  type Files,
+  reactRouterConfig,
+  test,
+  viteConfig,
+} from "./helpers/vite.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("CSub-Resource Integrity", () => {
+test.describe("Sub-Resource Integrity", () => {
   test.use({ javaScriptEnabled: false });
 
   let fixture: Fixture;
@@ -83,5 +91,69 @@ test.describe("CSub-Resource Integrity", () => {
         "test-nonce-123",
       );
     }
+  });
+});
+
+test.describe("Sub-Resource Integrity in RSC Framework Mode (production)", () => {
+  test.use({ javaScriptEnabled: false });
+
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.beforeAll(async () => {
+    fixture = await createFixture({
+      templateName: "rsc-vite-framework",
+      files: {
+        "react-router.config.ts": reactRouterConfig({
+          subResourceIntegrity: true,
+        }),
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+  });
+
+  test("includes an importmap with integrity hashes", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    let json = await page.locator('script[type="importmap"]').innerText();
+    let importMap = JSON.parse(json);
+    expect(Object.keys(importMap.integrity).length).toBeGreaterThan(0);
+    for (let [url, value] of Object.entries(importMap.integrity)) {
+      expect(value).toMatch(/^sha384-/);
+
+      let asset = await readFile(
+        path.join(fixture.projectDir, "build/client", url),
+      );
+      let expected = `sha384-${createHash("sha384")
+        .update(asset)
+        .digest("base64")}`;
+      expect(value).toBe(expected);
+    }
+  });
+});
+
+test.describe("Sub-Resource Integrity in RSC Framework Mode (development)", () => {
+  test("accepts the config without emitting production integrity hashes", async ({
+    page,
+    dev,
+  }) => {
+    let files: Files = async ({ port }) => ({
+      "react-router.config.ts": reactRouterConfig({
+        subResourceIntegrity: true,
+      }),
+      "vite.config.ts": await viteConfig.basic({
+        port,
+        templateName: "rsc-vite-framework",
+      }),
+    });
+
+    let { port } = await dev(files, "rsc-vite-framework");
+
+    await page.goto(`http://localhost:${port}/`);
+    await expect(page.getByRole("heading")).toHaveText(
+      "Welcome to React Router",
+    );
+    await expect(page.locator('script[type="importmap"]')).toHaveCount(0);
+    expect(page.errors).toEqual([]);
   });
 });

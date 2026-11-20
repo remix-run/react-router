@@ -259,7 +259,6 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         id: "root",
         pathname: "",
         params: {},
-        data: { data: "ROOT LOADER" },
         loaderData: { data: "ROOT LOADER" },
       },
     ]);

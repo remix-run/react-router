@@ -35,13 +35,17 @@ import type {
   UIMatch,
 } from "../router/utils";
 import {
+  defaultMapRouteProperties,
   ErrorResponseImpl,
+  SUPPORTED_ERROR_TYPES,
   joinPaths,
   matchPath,
   parseToInfo,
   resolveTo,
   stripBasename,
 } from "../router/utils";
+import { ABSOLUTE_URL_REGEX } from "../router/url";
+import { validateDocumentNavigationTarget } from "../router/navigation";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "./global";
@@ -70,29 +74,26 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import {
-  Router,
-  mapRouteProperties,
-  hydrationRouteProperties,
-} from "../components";
+import { Router, hydrationRouteProperties } from "../components";
 import type { NavigateOptions } from "../context";
 import {
-  DataRouterContext,
-  DataRouterStateContext,
-  FetchersContext,
+  DataRouterNavigationContext,
   NavigationContext,
   RouteContext,
   ViewTransitionContext,
 } from "../context";
 import {
   useBlocker,
+  useCurrentRouteId,
+  useDataRouterContext,
+  useDataRouterFetchers,
+  useDataRouterState,
   useHref,
   useLocation,
   useMatches,
   useNavigate,
   useNavigation,
   useResolvedPath,
-  useRouteId,
 } from "../hooks";
 import type { SerializeFrom } from "../types/route-data";
 import type { ClientInstrumentation } from "../router/instrumentation";
@@ -122,10 +123,7 @@ try {
       // @ts-expect-error
       REACT_ROUTER_VERSION;
   }
-} catch (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  e
-) {
+} catch {
   // no-op
 }
 //#endregion
@@ -193,7 +191,7 @@ export interface DOMRouterOpts {
    *
    * You will almost always include a complete set of `loaderData` to hydrate a
    * server-rendered app. But in advanced use-cases (such as Framework Mode's
-   * [`clientLoader`](../../start/framework/route-module#clientLoader)), you may
+   * [`clientLoader`](../../start/framework/route-module#clientloader)), you may
    * want to include `loaderData` for only some routes that were loaded/rendered
    * on the server. This allows you to hydrate _some_ of the routes (such as the
    * app layout/shell) while showing a `HydrateFallback` component and running
@@ -332,7 +330,7 @@ export interface DOMRouterOpts {
    * To combat this, we introduced [`route.lazy`](../../start/data/route-object#lazy)
    * in [v6.9.0](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v690)
    * which lets you lazily load the route _implementation_ ([`loader`](../../start/data/route-object#loader),
-   * [`Component`](../../start/data/route-object#Component), etc.) while still
+   * [`Component`](../../start/data/route-object#component), etc.) while still
    * providing the route _definition_ aspects up front (`path`, `index`, etc.).
    * This is a good middle ground. React Router still knows about your route
    * definitions (the lightweight part) up front and can perform synchronous
@@ -628,6 +626,10 @@ export interface DOMRouterOpts {
  * path via [`history.pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)
  * and [`history.replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState).
  *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+ *
  * @public
  * @category Data Routers
  * @mode data
@@ -654,7 +656,7 @@ export function createBrowserRouter(
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    mapRouteProperties,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
@@ -666,6 +668,10 @@ export function createBrowserRouter(
 /**
  * Create a new {@link DataRouter| data router} that manages the application
  * path via the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
+ *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
  *
  * @public
  * @category Data Routers
@@ -693,7 +699,7 @@ export function createHashRouter(
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    mapRouteProperties,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
@@ -721,7 +727,7 @@ function deserializeErrors(
   let serialized: DataRouter["state"]["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // serializeErrors in react-router-dom/server.tsx :)
+    // serializeErrors in lib/dom/server.tsx :)
     if (val && val.__type === "RouteErrorResponse") {
       serialized[key] = new ErrorResponseImpl(
         val.status,
@@ -731,7 +737,10 @@ function deserializeErrors(
       );
     } else if (val && val.__type === "Error") {
       // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
-      if (val.__subType) {
+      if (
+        typeof val.__subType === "string" &&
+        SUPPORTED_ERROR_TYPES.includes(val.__subType)
+      ) {
         let ErrorConstructor = window[val.__subType];
         if (typeof ErrorConstructor === "function") {
           try {
@@ -741,10 +750,7 @@ function deserializeErrors(
             // because we don't serialize SSR stack traces for security reasons
             error.stack = "";
             serialized[key] = error;
-          } catch (
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            e
-          ) {
+          } catch {
             // no-op - fall through and create a normal Error
           }
         }
@@ -825,7 +831,7 @@ export function BrowserRouter({
   useTransitions,
   window,
 }: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory>();
+  let historyRef = React.useRef<BrowserHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window, v5Compat: true });
   }
@@ -916,7 +922,7 @@ export function HashRouter({
   useTransitions,
   window,
 }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
+  let historyRef = React.useRef<HashHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
   }
@@ -1042,8 +1048,10 @@ HistoryRouter.displayName = "unstable_HistoryRouter";
 /**
  * @category Types
  */
-export interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+export interface LinkProps extends Omit<
+  React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  "href"
+> {
   /**
    * Defines the link [lazy route discovery](../../explanation/lazy-route-discovery) behavior.
    *
@@ -1195,6 +1203,9 @@ export interface LinkProps
   to: To;
 
   /**
+   * **Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+   * component instead. See the [migration guide](../../how-to/view-transitions).
+   *
    * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
    * for this navigation.
    *
@@ -1205,6 +1216,8 @@ export interface LinkProps
    * ```
    *
    * To apply specific styles for the transition, see {@link useViewTransitionState}
+   *
+   * @deprecated Use React's `<ViewTransition>` component instead.
    */
   viewTransition?: boolean;
 
@@ -1274,8 +1287,6 @@ export interface LinkProps
    */
   mask?: To;
 }
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
  * A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
@@ -1391,14 +1402,15 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     }
 
     let isSpaLink = !(parsed.isExternal || reloadDocument);
+    let renderedHref =
+      (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href;
+    validateDocumentNavigationTarget(renderedHref);
     let link = (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
         {...prefetchHandlers}
-        href={
-          (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href
-        }
+        href={renderedHref}
         onClick={isSpaLink ? handleClick : onClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
@@ -1470,6 +1482,10 @@ export type NavLinkRenderProps = {
   /**
    * Indicates if a view transition to the link's URL is in progress.
    * See {@link useViewTransitionState}
+   *
+   * @deprecated Only tracks React Router's deprecated view transitions. Use
+   * React's `<ViewTransition>` component to style transitions instead. See the
+   * [migration guide](https://reactrouter.com/how-to/view-transitions).
    */
   isTransitioning: boolean;
 };
@@ -1477,8 +1493,10 @@ export type NavLinkRenderProps = {
 /**
  * @category Types
  */
-export interface NavLinkProps
-  extends Omit<LinkProps, "className" | "style" | "children"> {
+export interface NavLinkProps extends Omit<
+  LinkProps,
+  "className" | "style" | "children"
+> {
   /**
    *  Can be regular React children or a function that receives an object with the
    * `active` and `pending` states of the link.
@@ -1513,9 +1531,6 @@ export interface NavLinkProps
    * a.pending {
    *   color: blue;
    * }
-   * a.transitioning {
-   *   view-transition-name: my-transition;
-   * }
    * ```
    *
    * Or you can specify a function that receives {@link NavLinkRenderProps} and
@@ -1528,6 +1543,10 @@ export interface NavLinkProps
    *   ""
    * )} />
    * ```
+   *
+   * The `transitioning` class is deprecated and only tracks React Router's
+   * legacy view transitions. Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+   * component instead. See the [migration guide](../../how-to/view-transitions).
    */
   className?: string | ((props: NavLinkRenderProps) => string | undefined);
 
@@ -1627,10 +1646,10 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   ) {
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
-    let routerState = React.useContext(DataRouterStateContext);
+    let routerNavigation = React.useContext(DataRouterNavigationContext);
     let { navigator, basename } = React.useContext(NavigationContext);
     let isTransitioning =
-      routerState != null &&
+      routerNavigation != null &&
       // Conditional usage is OK here because the usage of a data router is static
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useViewTransitionState(path) &&
@@ -1640,10 +1659,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       ? navigator.encodeLocation(path).pathname
       : path.pathname;
     let locationPathname = location.pathname;
-    let nextLocationPathname =
-      routerState && routerState.navigation && routerState.navigation.location
-        ? routerState.navigation.location.pathname
-        : null;
+    let nextLocationPathname = routerNavigation?.navigation.location
+      ? routerNavigation.navigation.location.pathname
+      : null;
 
     if (!caseSensitive) {
       locationPathname = locationPathname.toLowerCase();
@@ -1678,7 +1696,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       (nextLocationPathname === toPathname ||
         (!end &&
           nextLocationPathname.startsWith(toPathname) &&
-          nextLocationPathname.charAt(toPathname.length) === "/"));
+          nextLocationPathname.charAt(endSlashPosition) === "/"));
 
     let renderProps = {
       isActive,
@@ -1777,13 +1795,6 @@ interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   preventScrollReset?: boolean;
 
   /**
-   * A function to call when the form is submitted. If you call
-   * [`event.preventDefault()`](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault)
-   * then this form will not do anything.
-   */
-  onSubmit?: React.FormEventHandler<HTMLFormElement>;
-
-  /**
    * Specify the default revalidation behavior after this submission
    *
    * If no `shouldRevalidate` functions are present on the active routes, then this
@@ -1855,9 +1866,14 @@ export interface FormProps extends SharedFormProps {
   state?: any;
 
   /**
+   * **Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+   * component instead. See the [migration guide](../../how-to/view-transitions).
+   *
    * Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
    * for this navigation. To apply specific styles during the transition, see
    * {@link useViewTransitionState}.
+   *
+   * @deprecated Use React's `<ViewTransition>` component instead.
    */
   viewTransition?: boolean;
 }
@@ -1911,7 +1927,6 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
  * @param {FormProps.fetcherKey} fetcherKey n/a
  * @param {FormProps.method} method n/a
  * @param {FormProps.navigate} navigate n/a
- * @param {FormProps.onSubmit} onSubmit n/a
  * @param {FormProps.preventScrollReset} preventScrollReset n/a
  * @param {FormProps.relative} relative n/a
  * @param {FormProps.reloadDocument} reloadDocument n/a
@@ -1949,7 +1964,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let isAbsolute =
       typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
-    let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
+    let submitHandler: React.SubmitEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
       event.preventDefault();
@@ -1975,7 +1990,6 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         });
 
       if (useTransitions && navigate !== false) {
-        // @ts-expect-error Needs React 19 types
         React.startTransition(() => doSubmit());
       } else {
         doSubmit();
@@ -2044,7 +2058,10 @@ export type ScrollRestorationProps = ScriptsProps & {
  * }
  * ```
  *
- * This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * This component renders an inline `<script>` to prevent scroll flashing. The
+ * `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+ * If not provided in Framework Mode, it will default to any
+ * {@link ServerRouter | `<ServerRouter nonce>`} prop.
  *
  * ```tsx
  * <ScrollRestoration nonce={cspNonce} />
@@ -2113,9 +2130,15 @@ export function ScrollRestoration({
       }
     } catch (error: unknown) {
       console.error(error);
-      sessionStorage.removeItem(storageKey);
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {}
     }
   }).toString();
+
+  if (props.nonce == null && remixContext?.nonce) {
+    props.nonce = remixContext.nonce;
+  }
 
   return (
     <script
@@ -2135,40 +2158,6 @@ ScrollRestoration.displayName = "ScrollRestoration";
 ////////////////////////////////////////////////////////////////////////////////
 //#region Hooks
 ////////////////////////////////////////////////////////////////////////////////
-
-enum DataRouterHook {
-  UseScrollRestoration = "useScrollRestoration",
-  UseSubmit = "useSubmit",
-  UseSubmitFetcher = "useSubmitFetcher",
-  UseFetcher = "useFetcher",
-  useViewTransitionState = "useViewTransitionState",
-}
-
-enum DataRouterStateHook {
-  UseFetcher = "useFetcher",
-  UseFetchers = "useFetchers",
-  UseScrollRestoration = "useScrollRestoration",
-}
-
-// Internal hooks
-
-function getDataRouterConsoleError(
-  hookName: DataRouterHook | DataRouterStateHook,
-) {
-  return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
-}
-
-function useDataRouterContext(hookName: DataRouterHook) {
-  let ctx = React.useContext(DataRouterContext);
-  invariant(ctx, getDataRouterConsoleError(hookName));
-  return ctx;
-}
-
-function useDataRouterState(hookName: DataRouterStateHook) {
-  let state = React.useContext(DataRouterStateContext);
-  invariant(state, getDataRouterConsoleError(hookName));
-  return state;
-}
 
 // External hooks
 
@@ -2191,11 +2180,12 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * @param options.state The state to add to the [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * entry for this navigation. Defaults to `undefined`.
  * @param options.target The target attribute for the link. Defaults to `undefined`.
- * @param options.viewTransition Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
- * for this navigation. To apply specific styles during the transition, see
- * {@link useViewTransitionState}. Defaults to `false`.
+ * @param options.viewTransition **Deprecated.** Use React's
+ * [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) component
+ * instead. See the [migration guide](../../how-to/view-transitions).
  * @param options.defaultShouldRevalidate Specify the default revalidation
- * behavior for the navigation. Defaults to `true`.
+ * behavior for the navigation. When not specified, loaders revalidate
+ * according to the router's standard revalidation behavior.
  * @param options.mask Masked location to display in the browser instead
  * of the router location. Defaults to `undefined`.
  * @param options.useTransitions Wraps the navigation in
@@ -2222,10 +2212,9 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
-    viewTransition?: boolean;
     defaultShouldRevalidate?: boolean;
     useTransitions?: boolean;
-  } = {},
+  } & Pick<NavigateOptions, "viewTransition"> = {},
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
   let location = useLocation();
@@ -2255,7 +2244,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
           });
 
         if (useTransitions) {
-          // @ts-expect-error Needs React 19 types
           React.startTransition(() => doNavigate());
         } else {
           doNavigate();
@@ -2563,6 +2551,10 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
  * The imperative version of {@link Form | `<Form>`} that lets you submit a form
  * from code instead of a user interaction.
  *
+ * The `viewTransition` submission option is deprecated. Use React's
+ * [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) component
+ * instead. See the [migration guide](../../how-to/view-transitions).
+ *
  * @example
  * import { useSubmit } from "react-router";
  *
@@ -2580,9 +2572,9 @@ let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
  * @returns A function that can be called to submit a {@link Form} imperatively.
  */
 export function useSubmit(): SubmitFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
+  let { router } = useDataRouterContext("useSubmit");
   let { basename } = React.useContext(NavigationContext);
-  let currentRouteId = useRouteId();
+  let currentRouteId = useCurrentRouteId("useSubmit");
 
   let routerFetch = router.fetch;
   let routerNavigate = router.navigate;
@@ -2599,6 +2591,7 @@ export function useSubmit(): SubmitFunction {
         await routerFetch(key, currentRouteId, options.action || action, {
           defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
+          relative: options.relative,
           formData,
           body,
           formMethod: options.method || (method as HTMLFormMethod),
@@ -2609,6 +2602,7 @@ export function useSubmit(): SubmitFunction {
         await routerNavigate(options.action || action, {
           defaultShouldRevalidate: options.defaultShouldRevalidate,
           preventScrollReset: options.preventScrollReset,
+          relative: options.relative,
           formData,
           body,
           formMethod: options.method || (method as HTMLFormMethod),
@@ -2715,7 +2709,9 @@ export function useFormAction(
       path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
   }
 
-  return createPath(path);
+  let formAction = createPath(path);
+  validateDocumentNavigationTarget(formAction);
+  return formAction;
 }
 
 /**
@@ -2837,7 +2833,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   submit: FetcherSubmitFunction;
 };
 
-// TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
+// TODO: (v9) Change the useFetcher generic default from `any` to `unknown`
 
 /**
  * Useful for creating complex, dynamic user interfaces that require multiple,
@@ -2906,18 +2902,9 @@ export function useFetcher<T = any>({
 }: {
   key?: string;
 } = {}): FetcherWithComponents<SerializeFrom<T>> {
-  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-  let state = useDataRouterState(DataRouterStateHook.UseFetcher);
-  let fetcherData = React.useContext(FetchersContext);
-  let route = React.useContext(RouteContext);
-  let routeId = route.matches[route.matches.length - 1]?.route.id;
-
-  invariant(fetcherData, `useFetcher must be used inside a FetchersContext`);
-  invariant(route, `useFetcher must be used inside a RouteContext`);
-  invariant(
-    routeId != null,
-    `useFetcher can only be used on routes that contain a unique "id"`,
-  );
+  let { router } = useDataRouterContext("useFetcher");
+  let fetchersContext = useDataRouterFetchers("useFetcher");
+  let routeId = useCurrentRouteId("useFetcher");
 
   // Fetcher key handling
   let defaultKey = React.useId();
@@ -2973,8 +2960,8 @@ export function useFetcher<T = any>({
   }, [fetcherKey]);
 
   // Exposed FetcherWithComponents
-  let fetcher = state.fetchers.get(fetcherKey) || IDLE_FETCHER;
-  let data = fetcherData.get(fetcherKey);
+  let fetcher = fetchersContext.fetchers.get(fetcherKey) || IDLE_FETCHER;
+  let data = fetchersContext.fetcherData.get(fetcherKey);
   let fetcherWithComponents = React.useMemo(
     () => ({
       Form: FetcherForm,
@@ -3013,14 +3000,14 @@ export function useFetcher<T = any>({
  * property.
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
-  let state = useDataRouterState(DataRouterStateHook.UseFetchers);
+  let { fetchers } = useDataRouterFetchers("useFetchers");
   return React.useMemo(
     () =>
-      Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
+      Array.from(fetchers.entries()).map(([key, fetcher]) => ({
         ...fetcher,
         key,
       })),
-    [state.fetchers],
+    [fetchers],
   );
 }
 
@@ -3083,9 +3070,9 @@ export function useScrollRestoration({
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
 } = {}): void {
-  let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
+  let { router } = useDataRouterContext("useScrollRestoration");
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
-    DataRouterStateHook.UseScrollRestoration,
+    "useScrollRestoration",
   );
   let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
@@ -3099,6 +3086,15 @@ export function useScrollRestoration({
       window.history.scrollRestoration = "auto";
     };
   }, []);
+
+  // Re-enable manual scroll restoration on a bfcache restore
+  usePageShow(
+    React.useCallback((event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.history.scrollRestoration = "manual";
+      }
+    }, []),
+  );
 
   // Save positions on pagehide
   usePageHide(
@@ -3133,10 +3129,7 @@ export function useScrollRestoration({
         if (sessionPositions) {
           savedScrollPositions = JSON.parse(sessionPositions);
         }
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {
+      } catch {
         // no-op, use default empty object
       }
     }, [storageKey]);
@@ -3248,6 +3241,24 @@ function usePageHide(
   }, [callback, capture]);
 }
 
+/*
+ * Setup a callback to be fired on the window's `pageshow` event. The event's
+ * `persisted` flag indicates the document was restored from the bfcache.
+ */
+function usePageShow(
+  callback: (event: PageTransitionEvent) => any,
+  options?: { capture?: boolean },
+): void {
+  let { capture } = options || {};
+  React.useEffect(() => {
+    let opts = capture != null ? { capture } : undefined;
+    window.addEventListener("pageshow", callback, opts);
+    return () => {
+      window.removeEventListener("pageshow", callback, opts);
+    };
+  }, [callback, capture]);
+}
+
 /**
  * Wrapper around {@link useBlocker} to show a [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm)
  * prompt to users instead of building a custom UI with {@link useBlocker}.
@@ -3327,6 +3338,11 @@ export function usePrompt({
 }
 
 /**
+ * **Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+ * component to style transitions instead. This hook only tracks React Router's
+ * legacy view transitions, not transitions started by React. See the
+ * [migration guide](../../how-to/view-transitions).
+ *
  * This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * and the specified location matches either side of the navigation (the URL you are
  * navigating **to** or the URL you are navigating **from**). This can be used to apply finer-grained styles to
@@ -3346,6 +3362,8 @@ export function usePrompt({
  * more details.
  * @returns `true` if there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
  * and the resolved path matches the transition's destination or source pathname, otherwise `false`.
+ *
+ * @deprecated Use React's `<ViewTransition>` component instead.
  */
 export function useViewTransitionState(
   to: To,
@@ -3355,13 +3373,11 @@ export function useViewTransitionState(
 
   invariant(
     vtContext != null,
-    "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
+    "`useViewTransitionState` must be used within `react-router/dom`'s `RouterProvider`.  " +
       "Did you accidentally import `RouterProvider` from `react-router`?",
   );
 
-  let { basename } = useDataRouterContext(
-    DataRouterHook.useViewTransitionState,
-  );
+  let { basename } = useDataRouterContext("useViewTransitionState");
   let path = useResolvedPath(to, { relative });
   if (!vtContext.isTransitioning) {
     return false;

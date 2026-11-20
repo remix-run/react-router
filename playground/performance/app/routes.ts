@@ -1,6 +1,6 @@
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
-const r = (path: string) => route(path, "routes/route.tsx" , { id: path });
+const r = (path: string) => route(path, "routes/route.tsx", { id: path });
 
 export default [
   // Root index

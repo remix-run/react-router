@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "types": ["node", "vite/client", "@vitejs/plugin-rsc/types", "jest"],
+    "rootDir": "..",
+    "noEmit": true
+  }
+}

@@ -1,9 +1,9 @@
-name: 🥺 No Response
+name: No Response
 
 on:
   schedule:
-    # Schedule for five minutes after the hour, every hour
-    - cron: "5 * * * *"
+    - cron: "0 8 * * 1-5" # 8am ET Monday-Friday
+      timezone: "America/New_York"
 
 permissions:
   issues: write
@@ -14,8 +14,8 @@ jobs:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     steps:
-      - name: 🥺 Handle Ghosting
-        uses: actions/stale@v10
+      - name: Handle Ghosting
+        uses: actions/stale@v11
         with:
           days-before-close: 10
           close-issue-message: >

@@ -192,6 +192,55 @@ describe(`ScrollRestoration`, () => {
     consoleWarnMock.mockRestore();
   });
 
+  it("re-enables manual scroll restoration when the page is restored from the bfcache", () => {
+    jest.restoreAllMocks();
+
+    let testWindow = getWindow("/base");
+    window.scrollTo = jest.fn();
+
+    let router = createBrowserRouter(
+      [
+        {
+          path: "/",
+          Component() {
+            return (
+              <>
+                <Outlet />
+                <ScrollRestoration />
+              </>
+            );
+          },
+          children: testPages,
+        },
+      ],
+      { basename: "/base", window: testWindow },
+    );
+    let { unmount } = render(<RouterProvider router={router} />);
+
+    // While <ScrollRestoration> is mounted we own scroll restoration
+    expect(window.history.scrollRestoration).toBe("manual");
+
+    // Hand it back to the browser when the page is hidden, so that a
+    // re-created document restores its own scroll position
+    window.dispatchEvent(new Event("pagehide"));
+    expect(window.history.scrollRestoration).toBe("auto");
+
+    // A discarded document goes through mount again, so we leave that case
+    // to the browser
+    window.dispatchEvent(pageShowEvent(false));
+    expect(window.history.scrollRestoration).toBe("auto");
+
+    // A bfcache restore keeps this document (and this component) alive, so we
+    // own scroll restoration again
+    window.dispatchEvent(pageShowEvent(true));
+    expect(window.history.scrollRestoration).toBe("manual");
+
+    // …until we're unmounted, after which the browser keeps control
+    unmount();
+    window.dispatchEvent(pageShowEvent(true));
+    expect(window.history.scrollRestoration).toBe("auto");
+  });
+
   describe("SSR", () => {
     let scrollTo = window.scrollTo;
     beforeAll(() => {
@@ -233,6 +282,32 @@ describe(`ScrollRestoration`, () => {
       expect(script instanceof HTMLScriptElement).toBe(true);
     });
 
+    it("uses the FrameworkContext nonce when one is not provided", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration data-testid="scroll-script" />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+
+      render(
+        <FrameworkContext.Provider
+          value={mockFrameworkContext({ nonce: "server-nonce" })}
+        >
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+      let script = screen.getByTestId("scroll-script");
+      expect(script).toHaveAttribute("nonce", "server-nonce");
+    });
+
     it("should pass props to <script>", () => {
       let router = createMemoryRouter([
         {
@@ -259,6 +334,76 @@ describe(`ScrollRestoration`, () => {
       let script = screen.getByTestId("scroll-script");
       expect(script).toHaveAttribute("nonce", "hello");
       expect(script).toHaveAttribute("crossorigin", "anonymous");
+    });
+
+    it("prefers an explicit nonce over the FrameworkContext nonce", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration
+                data-testid="scroll-script"
+                nonce="explicit-nonce"
+              />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+
+      render(
+        <FrameworkContext.Provider
+          value={mockFrameworkContext({ nonce: "server-nonce" })}
+        >
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+      let script = screen.getByTestId("scroll-script");
+      expect(script).toHaveAttribute("nonce", "explicit-nonce");
+    });
+
+    it("fails gracefully in the inline script if sessionStorage is not available", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration data-testid="scroll-script" />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+      render(
+        <FrameworkContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+      let script = screen.getByTestId("scroll-script");
+
+      let consoleErrorMock = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      // e.g. Chrome with "Block all cookies" or a sandboxed cross-origin iframe
+      let sessionStorageMock = jest
+        .spyOn(window, "sessionStorage", "get")
+        .mockImplementation(() => {
+          throw new DOMException("Access is denied", "SecurityError");
+        });
+
+      // The browser runs this script before hydration, so a throw here is an
+      // uncaught page error
+      // eslint-disable-next-line no-new-func
+      expect(() => new Function(script.innerHTML)()).not.toThrow();
+      expect(consoleErrorMock).toHaveBeenCalled();
+
+      sessionStorageMock.mockRestore();
+      consoleErrorMock.mockRestore();
     });
 
     it("should restore scroll position", () => {
@@ -321,6 +466,12 @@ describe(`ScrollRestoration`, () => {
     });
   });
 });
+
+function pageShowEvent(persisted: boolean) {
+  let event = new Event("pageshow");
+  Object.defineProperty(event, "persisted", { value: persisted });
+  return event;
+}
 
 const testPages = [
   {

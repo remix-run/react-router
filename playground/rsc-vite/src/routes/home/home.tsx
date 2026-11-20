@@ -26,7 +26,7 @@ export default function HomeRoute({
     await new Promise((r) => setTimeout(r, 500));
     console.log("Running action on server!");
     console.log(
-      `  data to prove that scoped vars work: ${message} and it is now ${new Date().toISOString()}`
+      `  data to prove that scoped vars work: ${message} and it is now ${new Date().toISOString()}`,
     );
     return <div>{new Date().toISOString()}</div>;
   };

@@ -1,6 +1,62 @@
 import { generatePath } from "react-router";
 
 describe("generatePath", () => {
+  it.each([
+    ["/*", "/example.com/a//b", "/example.com/a//b"],
+    ["/:lang?/*", "//example.com/path", "/example.com/path"],
+    ["/*", "\\example.com/path", "/example.com/path"],
+    ["*", "\\/example.com/path", "/example.com/path"],
+  ])("normalizes leading separators for %s", (pattern, splat, expected) => {
+    let result = generatePath(pattern, { "*": splat });
+    expect(result).toBe(expected);
+    expect(new URL(result, "https://app.example/").origin).toBe(
+      "https://app.example",
+    );
+  });
+
+  it.each([
+    ["/files/*", "a%20b/%2F", "/files/a%20b/%2F"],
+    ["/files/*", "a?download=1#top", "/files/a?download=1#top"],
+    ["/files/*", "a b/café\\file", "/files/a b/café\\file"],
+    ["/files/*", "a\tb", "/files/a\tb"],
+    ["*", "a?next=https://example.com/#top", "a?next=https://example.com/#top"],
+    ["*", "1:a", "1:a"],
+    ["*", " example/path", " example/path"],
+  ])(
+    "preserves splat interpolation for %s with %j",
+    (pattern, splat, expected) => {
+      expect(generatePath(pattern, { "*": splat })).toBe(expected);
+    },
+  );
+
+  it.each([
+    ["/*", "/\t/example.com/path"],
+    ["/*", "/\n/example.com/path"],
+    ["/*", "/\r/example.com/path"],
+    ["*", "\u0000//example.com/path"],
+    ["*", " //example.com/path"],
+    ["*", "ht\ttps://example.com/path"],
+  ])("validates generated URL prefixes for %s with %j", (pattern, splat) => {
+    expect(() => generatePath(pattern, { "*": splat })).toThrow(
+      "External navigation is not allowed",
+    );
+  });
+
+  it("encodes colons in the first segment of relative patterns", () => {
+    for (let result of [
+      generatePath("*", { "*": "https://example.com/path" }),
+      generatePath(":protocol/*", {
+        protocol: "https:",
+        "*": "/example.com/path",
+      }),
+    ]) {
+      expect(result).toBe("https%3A//example.com/path");
+      expect(new URL(result, "https://app.example/").origin).toBe(
+        "https://app.example",
+      );
+    }
+  });
+
   describe("with no params", () => {
     it("returns the unmodified path", () => {
       expect(generatePath("/")).toBe("/");
@@ -137,6 +193,28 @@ describe("generatePath", () => {
     it("properly encodes the slash", () => {
       expect(generatePath("/courses/:id/grades", { id: "a/b" })).toBe(
         "/courses/a%2Fb/grades",
+      );
+    });
+  });
+
+  describe("param encoding", () => {
+    it("encodes characters that would change the URL structure", () => {
+      expect(generatePath("/courses/:id", { id: "a b?c#d%e" })).toBe(
+        "/courses/a%20b%3Fc%23d%25e",
+      );
+      expect(generatePath("/courses/:id", { id: "café…" })).toBe(
+        "/courses/caf%C3%A9%E2%80%A6",
+      );
+    });
+
+    it("preserves characters RFC 3986 allows literally in a path segment", () => {
+      // pchar sub-delims plus ":" and "@" — see RFC 3986 §3.3
+      expect(generatePath("/courses/:id", { id: "$&+,;=:@" })).toBe(
+        "/courses/$&+,;=:@",
+      );
+      // e.g. a semver build suffix survives untouched
+      expect(generatePath("/releases/:version", { version: "1.0.0+1" })).toBe(
+        "/releases/1.0.0+1",
       );
     });
   });

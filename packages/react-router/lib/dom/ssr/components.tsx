@@ -7,7 +7,6 @@ import * as React from "react";
 
 import type { RouterState } from "../../router/router";
 import type { DataRouteMatch } from "../../router/utils";
-import { matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
 import invariant from "./invariant";
@@ -27,33 +26,16 @@ import type {
   MetaMatches,
 } from "./routeModules";
 import { singleFetchUrl } from "./single-fetch";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-  useIsRSCRouterContext,
-} from "../../context";
+import { useIsRSCRouterContext } from "../../context";
 import { warnOnce } from "../../server-runtime/warnings";
-import { useLocation } from "../../hooks";
+import {
+  useDataRouterContext,
+  useDataRouterData,
+  useDataRouterState,
+  useLocation,
+} from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 import type { PageLinkDescriptor } from "../../router/links";
-
-function useDataRouterContext() {
-  let context = React.useContext(DataRouterContext);
-  invariant(
-    context,
-    "You must render this element inside a <DataRouterContext.Provider> element",
-  );
-  return context;
-}
-
-function useDataRouterStateContext() {
-  let context = React.useContext(DataRouterStateContext);
-  invariant(
-    context,
-    "You must render this element inside a <DataRouterStateContext.Provider> element",
-  );
-  return context;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // FrameworkContext
@@ -105,7 +87,7 @@ interface PrefetchHandlers {
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers,
-): [boolean, React.RefObject<T>, PrefetchHandlers] {
+): [boolean, React.RefObject<T | null>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
@@ -224,7 +206,8 @@ export interface LinksProps {
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<link>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
   /**
@@ -265,9 +248,15 @@ export interface LinksProps {
  * tags
  */
 export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
-  let { isSpaMode, manifest, routeModules, criticalCss } =
-    useFrameworkContext();
-  let { errors, matches: routerMatches } = useDataRouterStateContext();
+  let {
+    isSpaMode,
+    manifest,
+    routeModules,
+    criticalCss,
+    nonce: contextNonce,
+  } = useFrameworkContext();
+  let { matches: routerMatches } = useDataRouterState("Links");
+  let { errors } = useDataRouterData("Links");
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
 
@@ -275,6 +264,10 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
     () => getKeyedLinksForMatches(matches, routeModules, manifest),
     [matches, routeModules, manifest],
   );
+
+  if (nonce == null && contextNonce) {
+    nonce = contextNonce;
+  }
 
   return (
     <>
@@ -344,14 +337,21 @@ export function Links({ nonce, crossOrigin }: LinksProps): React.JSX.Element {
  */
 export function PrefetchPageLinks({ page, ...linkProps }: PageLinkDescriptor) {
   let rsc = useIsRSCRouterContext();
-  let { router } = useDataRouterContext();
+  let { nonce: contextNonce } = useFrameworkContext();
+  let { router } = useDataRouterContext("PrefetchPageLinks");
   let matches = React.useMemo(
-    () => matchRoutes(router.routes, page, router.basename),
-    [router.routes, page, router.basename],
+    () => router.match(page),
+    // Include router.routes to re-match if new routes arrive
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [router, router.routes, page],
   );
 
   if (!matches) {
     return null;
+  }
+
+  if (linkProps.nonce == null && contextNonce) {
+    linkProps = { ...linkProps, nonce: contextNonce };
   }
 
   if (rsc) {
@@ -397,8 +397,7 @@ function RSCPrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { future } = useFrameworkContext();
-  let { basename } = useDataRouterContext();
+  let { unstable_apiServerOrigin } = useFrameworkContext();
 
   let dataHrefs = React.useMemo(() => {
     if (page === location.pathname + location.search + location.hash) {
@@ -406,12 +405,7 @@ function RSCPrefetchPageLinksImpl({
       // since it would always trigger a prefetch of the existing loaders
       return [];
     }
-    let url = singleFetchUrl(
-      page,
-      basename,
-      future.v8_trailingSlashAwareDataRequests,
-      "rsc",
-    );
+    let url = singleFetchUrl(page, "rsc", unstable_apiServerOrigin);
 
     let hasSomeRoutesWithShouldRevalidate = false;
     let targetRoutes: string[] = [];
@@ -427,14 +421,10 @@ function RSCPrefetchPageLinksImpl({
       url.searchParams.set("_routes", targetRoutes.join(","));
     }
 
-    return [url.pathname + url.search];
-  }, [
-    basename,
-    future.v8_trailingSlashAwareDataRequests,
-    page,
-    location,
-    nextMatches,
-  ]);
+    return [
+      unstable_apiServerOrigin ? url.toString() : url.pathname + url.search,
+    ];
+  }, [page, location, nextMatches, unstable_apiServerOrigin]);
 
   return (
     <>
@@ -453,9 +443,10 @@ function PrefetchPageLinksImpl({
   matches: DataRouteMatch[];
 }) {
   let location = useLocation();
-  let { future, manifest, routeModules } = useFrameworkContext();
-  let { basename } = useDataRouterContext();
-  let { loaderData, matches } = useDataRouterStateContext();
+  let { manifest, routeModules, unstable_apiServerOrigin } =
+    useFrameworkContext();
+  let { matches } = useDataRouterState("PrefetchPageLinks");
+  let { loaderData } = useDataRouterData("PrefetchPageLinks");
 
   let newMatchesForData = React.useMemo(
     () =>
@@ -517,12 +508,7 @@ function PrefetchPageLinksImpl({
       return [];
     }
 
-    let url = singleFetchUrl(
-      page,
-      basename,
-      future.v8_trailingSlashAwareDataRequests,
-      "data",
-    );
+    let url = singleFetchUrl(page, "data", unstable_apiServerOrigin);
     // When one or more routes have opted out, we add a _routes param to
     // limit the loaders to those that have a server loader and did not
     // opt out
@@ -536,10 +522,10 @@ function PrefetchPageLinksImpl({
       );
     }
 
-    return [url.pathname + url.search];
+    return [
+      unstable_apiServerOrigin ? url.toString() : url.pathname + url.search,
+    ];
   }, [
-    basename,
-    future.v8_trailingSlashAwareDataRequests,
     loaderData,
     location,
     manifest,
@@ -547,6 +533,7 @@ function PrefetchPageLinksImpl({
     nextMatches,
     page,
     routeModules,
+    unstable_apiServerOrigin,
   ]);
 
   let moduleHrefs = React.useMemo(
@@ -607,11 +594,8 @@ function PrefetchPageLinksImpl({
  */
 export function Meta(): React.JSX.Element {
   let { isSpaMode, routeModules } = useFrameworkContext();
-  let {
-    errors,
-    matches: routerMatches,
-    loaderData,
-  } = useDataRouterStateContext();
+  let { matches: routerMatches } = useDataRouterState("Meta");
+  let { errors, loaderData } = useDataRouterData("Meta");
   let location = useLocation();
 
   let _matches = getActiveMatches(routerMatches, errors, isSpaMode);
@@ -634,7 +618,6 @@ export function Meta(): React.JSX.Element {
 
     let match: MetaMatch = {
       id: routeId,
-      data,
       loaderData: data,
       meta: [],
       params: _match.params,
@@ -648,7 +631,6 @@ export function Meta(): React.JSX.Element {
       routeMeta =
         typeof routeModule.meta === "function"
           ? (routeModule.meta as MetaFunction)({
-              data,
               loaderData: data,
               params,
               location,
@@ -726,10 +708,7 @@ export function Meta(): React.JSX.Element {
                 dangerouslySetInnerHTML={{ __html: escapeHtml(json) }}
               />
             );
-          } catch (
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            e
-          ) {
+          } catch {
             return null;
           }
         }
@@ -785,7 +764,8 @@ export type ScriptsProps = Omit<
   /**
    * A [`nonce`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce)
    * attribute to render on the [`<script>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
-   * element
+   * element. If not provided in Framework Mode, it will default to any
+   * {@link ServerRouter | `<ServerRouter nonce>`} prop.
    */
   nonce?: string | undefined;
 };
@@ -831,11 +811,24 @@ export function Scripts(scriptProps: ScriptsProps): React.JSX.Element | null {
     renderMeta,
     routeDiscovery,
     ssr,
+    nonce: contextNonce,
   } = useFrameworkContext();
-  let { router, static: isStatic, staticContext } = useDataRouterContext();
-  let { matches: routerMatches } = useDataRouterStateContext();
+  let {
+    router,
+    static: isStatic,
+    staticContext,
+  } = useDataRouterContext("Scripts");
+  let { matches: routerMatches } = useDataRouterState("Scripts");
   let isRSCRouterContext = useIsRSCRouterContext();
   let enableFogOfWar = isFogOfWarEnabled(routeDiscovery, ssr);
+
+  // Fall back to the `nonce` provided via `FrameworkContext` (e.g. from
+  // `<ServerRouter nonce>`) when one isn't passed explicitly. This ensures the
+  // inline hydration scripts carry a nonce even when `<Scripts>` is rendered
+  // internally without props (such as in the default `HydrateFallback`).
+  if (scriptProps.nonce == null && contextNonce) {
+    scriptProps = { ...scriptProps, nonce: contextNonce };
+  }
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts

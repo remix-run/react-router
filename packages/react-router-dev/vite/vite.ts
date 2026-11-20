@@ -1,8 +1,16 @@
+import { createRequire } from "node:module";
 import path from "pathe";
-import type { DepOptimizationConfig, ESBuildOptions } from "vite";
+import type {
+  DepOptimizationConfig,
+  ESBuildOptions,
+  EnvironmentOptions,
+  BuildEnvironmentOptions,
+} from "vite";
 
 import invariant from "../invariant";
 import { isReactRouterRepo } from "../config/is-react-router-repo";
+
+const nodeRequire = createRequire(import.meta.url);
 
 type Vite = typeof import("vite");
 let vite: Vite | undefined;
@@ -11,10 +19,10 @@ const viteImportSpecifier = isReactRouterRepo()
   ? // Support testing against different versions of Vite by ensuring that Vite
     // is resolved from the current working directory when running within this
     // repo. If we don't do this, Vite will always be imported relative to this
-    // file, which means that it will always resolve to Vite 6.
+    // file, which means that it will always resolve to the repo's Vite version.
     `file:///${path
       .normalize(
-        require.resolve("vite/package.json", { paths: [process.cwd()] }),
+        nodeRequire.resolve("vite/package.json", { paths: [process.cwd()] }),
       )
       .replace("package.json", "dist/node/index.js")}`
   : "vite";
@@ -69,4 +77,23 @@ export function defineOptimizeDepsCompilerOptions(options: {
   return parseInt(vite.version.split(".")[0], 10) >= 8
     ? { rolldownOptions: options.rolldown }
     : { esbuildOptions: options.esbuild };
+}
+
+/**
+ * Read the user-supplied build options from either `rollupOptions` (Vite <=7)
+ * or `rolldownOptions` (Vite >=8).
+ */
+export function getUserBuildRollupOptions(
+  environment: EnvironmentOptions | undefined,
+): BuildEnvironmentOptions["rollupOptions"] | undefined {
+  if (environment?.build) {
+    if ("rollupOptions" in environment.build) {
+      return environment.build.rollupOptions;
+    }
+    if ("rolldownOptions" in environment.build) {
+      return environment.build
+        .rolldownOptions as BuildEnvironmentOptions["rollupOptions"];
+    }
+  }
+  return undefined;
 }

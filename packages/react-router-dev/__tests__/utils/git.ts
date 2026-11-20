@@ -1,4 +1,4 @@
-import execa from "execa";
+import { execa } from "execa";
 
 export const initialCommit = async (projectDir: string) => {
   let run = (cmd: string, args: string[]) =>

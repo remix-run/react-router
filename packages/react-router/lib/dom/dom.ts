@@ -1,4 +1,4 @@
-import { warning } from "../router/history";
+import { createPath, parsePath, warning } from "../router/history";
 import type { RelativeRoutingType } from "../router/router";
 import type { FormEncType, HTMLFormMethod } from "../router/utils";
 import { stripBasename } from "../router/utils";
@@ -51,38 +51,38 @@ export type URLSearchParamsInit =
   | URLSearchParams;
 
 /**
-  Creates a URLSearchParams object using the given initializer.
-
-  This is identical to `new URLSearchParams(init)` except it also
-  supports arrays as values in the object form of the initializer
-  instead of just strings. This is convenient when you need multiple
-  values for a given key, but don't want to use an array initializer.
-
-  For example, instead of:
-
-  ```tsx
-  let searchParams = new URLSearchParams([
-    ['sort', 'name'],
-    ['sort', 'price']
-  ]);
-  ```
-  you can do:
-
-  ```
-  let searchParams = createSearchParams({
-    sort: ['name', 'price']
-  });
-  ```
-
-  @category Utils
+ * Creates a URLSearchParams object using the given initializer.
+ *
+ * This is identical to `new URLSearchParams(init)` except it also supports
+ * arrays as values in the object form of the initializer instead of just
+ * strings. This is convenient when you need multiple values for a given key,
+ * but don't want to use an array initializer.
+ *
+ * @example
+ * // Instead of:
+ * let searchParams = new URLSearchParams([
+ *   ["sort", "name"],
+ *   ["sort", "price"],
+ * ]);
+ *
+ * // You can do:
+ * let searchParams = createSearchParams({
+ *   sort: ["name", "price"],
+ * });
+ *
+ * @public
+ * @category Utils
+ * @param init The value used to initialize the URL search parameters.
+ * @returns A URLSearchParams object containing the initialized search
+ * parameters.
  */
 export function createSearchParams(
   init: URLSearchParamsInit = "",
 ): URLSearchParams {
   return new URLSearchParams(
     typeof init === "string" ||
-    Array.isArray(init) ||
-    init instanceof URLSearchParams
+      Array.isArray(init) ||
+      init instanceof URLSearchParams
       ? init
       : Object.keys(init).reduce((memo, key) => {
           let value = init[key];
@@ -146,10 +146,7 @@ function isFormDataSubmitterSupported() {
         0,
       );
       _formDataSupportsSubmitter = false;
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {
+    } catch {
       _formDataSupportsSubmitter = true;
     }
   }
@@ -243,6 +240,9 @@ export interface SubmitOptions extends FetcherSubmitOptions {
 
   /**
    * Enable view transitions on this submission navigation
+   *
+   * @deprecated Use React's `<ViewTransition>` component instead. See the
+   * [migration guide](https://reactrouter.com/how-to/view-transitions).
    */
   viewTransition?: boolean;
 }
@@ -254,6 +254,8 @@ const supportedFormEncTypes: Set<FormEncType> = new Set([
 ]);
 
 function getFormEncType(encType: string | null) {
+  // `enctype` and `formenctype` keywords are ASCII case-insensitive in HTML
+  encType = encType?.toLowerCase() ?? null;
   if (encType != null && !supportedFormEncTypes.has(encType as FormEncType)) {
     warning(
       false,
@@ -264,6 +266,16 @@ function getFormEncType(encType: string | null) {
     return null;
   }
   return encType;
+}
+
+function stripBasenameFromAction(action: string, basename: string) {
+  // Without a basename, preserve explicit targets such as "?" and "#".
+  // Turning them into an empty action changes index-route targeting.
+  if (basename === "/") return action;
+
+  let path = parsePath(action);
+  let pathname = stripBasename(path.pathname || "", basename);
+  return pathname == null ? null : createPath({ ...path, pathname });
 }
 
 export function getFormSubmissionInfo(
@@ -287,7 +299,7 @@ export function getFormSubmissionInfo(
     // prefixed to ensure non-JS scenarios work, so strip it since we'll
     // re-prefix in the router
     let attr = target.getAttribute("action");
-    action = attr ? stripBasename(attr, basename) : null;
+    action = attr ? stripBasenameFromAction(attr, basename) : null;
     method = target.getAttribute("method") || defaultMethod;
     encType = getFormEncType(target.getAttribute("enctype")) || defaultEncType;
 
@@ -311,7 +323,7 @@ export function getFormSubmissionInfo(
     // prefixed to ensure non-JS scenarios work, so strip it since we'll
     // re-prefix in the router
     let attr = target.getAttribute("formaction") || form.getAttribute("action");
-    action = attr ? stripBasename(attr, basename) : null;
+    action = attr ? stripBasenameFromAction(attr, basename) : null;
 
     method =
       target.getAttribute("formmethod") ||

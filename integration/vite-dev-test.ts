@@ -5,44 +5,34 @@ import { expect } from "@playwright/test";
 import dedent from "dedent";
 
 import {
-  reactRouterConfig,
   viteConfig,
   test,
   type TemplateName,
   type Files,
+  reactRouterConfig,
+  viteMajorTemplates,
 } from "./helpers/vite.js";
 
 const tsx = dedent;
 
 const fixtures = [
   {
-    templateName: "vite-5-template",
-    v8_viteEnvironmentApi: false,
-  },
-  {
-    templateName: "vite-6-template",
-    v8_viteEnvironmentApi: true,
+    templateName: "vite-7-template",
   },
   {
     templateName: "vite-8-template",
-    v8_viteEnvironmentApi: true,
   },
   {
     templateName: "rsc-vite-framework",
-    v8_viteEnvironmentApi: true,
   },
 ] as const satisfies ReadonlyArray<{
   templateName: TemplateName;
-  v8_viteEnvironmentApi: boolean;
 }>;
 
 test.describe("Vite dev", () => {
-  for (const { templateName, v8_viteEnvironmentApi } of fixtures) {
-    test.describe(`template: ${templateName} viteEnvironmentApi: ${v8_viteEnvironmentApi}`, () => {
+  for (const { templateName } of fixtures) {
+    test.describe(`template: ${templateName}`, () => {
       const files: Files = async ({ port }) => ({
-        "react-router.config.ts": reactRouterConfig({
-          future: { v8_viteEnvironmentApi },
-        }),
         "vite.config.ts": await viteConfig.basic({
           port,
           templateName,
@@ -336,13 +326,6 @@ test.describe("Vite dev", () => {
       });
 
       test("handles multiple set-cookie headers", async ({ dev, page }) => {
-        // TODO(v8): Remove this skip if we no longer support Node 20
-        test.skip(
-          templateName.includes("rsc") &&
-            parseInt(process.versions.node.split(".")[0], 10) === 20,
-          "vite-plugin-rsc dev cookie handling differs on Node 20.",
-        );
-
         const { port } = await dev(files, templateName);
 
         await page.goto(`http://localhost:${port}/set-cookies`, {
@@ -572,4 +555,88 @@ test.describe("Vite dev", () => {
 
     expect(clientDeps).not.toMatch(/rsc[-_]server[-_]only[-_]package/);
   });
+
+  for (let { templateName } of viteMajorTemplates) {
+    test(`${templateName} does not register SSR-only route imports as client dependencies when collecting critical CSS`, async ({
+      page,
+      dev,
+    }) => {
+      let files: Files = async ({ port }) => ({
+        "vite.config.ts": await viteConfig.basic({ port, templateName }),
+        "app/routes/_index.tsx": tsx`
+          import { useLoaderData } from "react-router";
+          import { readServerSecret } from "ssr-only-package";
+          import { label } from "ui-package";
+
+          export function loader() {
+            return { secret: readServerSecret() };
+          }
+
+          export default function IndexRoute() {
+            let { secret } = useLoaderData();
+            return <h1 data-route>{label(secret)}</h1>;
+          }
+        `,
+        "node_modules/ssr-only-package/package.json": JSON.stringify({
+          name: "ssr-only-package",
+          version: "1.0.0",
+          type: "module",
+          main: "index.js",
+        }),
+        "node_modules/ssr-only-package/index.js": tsx`
+          export function readServerSecret() {
+            return "server-only";
+          }
+        `,
+        "node_modules/ui-package/package.json": JSON.stringify({
+          name: "ui-package",
+          version: "1.0.0",
+          type: "module",
+          main: "index.js",
+        }),
+        "node_modules/ui-package/index.js": tsx`
+          export function label(text) {
+            return "Label: " + text;
+          }
+        `,
+      });
+
+      let { cwd, port } = await dev(files, templateName);
+
+      // Collect critical CSS before the browser loads any client module. The
+      // browser then makes the client optimizer discover `ui-package`, so once
+      // that is optimized, anything the CSS collection registered is too.
+      let documentResponse = await fetch(`http://localhost:${port}/`);
+      expect(documentResponse.status).toBe(200);
+      await documentResponse.text();
+      let cssResponse = await fetch(
+        `http://localhost:${port}/@react-router/critical.css?pathname=/`,
+      );
+      expect(cssResponse.status).toBe(200);
+      await cssResponse.text();
+
+      await page.goto(`http://localhost:${port}/`);
+      await expect(page.locator("[data-route]")).toHaveText(
+        "Label: server-only",
+      );
+
+      let depsDirectory = path.join(cwd, "node_modules/.vite/deps");
+      let readClientDeps = async () => {
+        try {
+          return [
+            await fs.readFile(
+              path.join(depsDirectory, "_metadata.json"),
+              "utf8",
+            ),
+            ...(await fs.readdir(depsDirectory)),
+          ].join("\n");
+        } catch {
+          return "";
+        }
+      };
+
+      await expect.poll(readClientDeps).toMatch(/ui[-_]package/);
+      expect(await readClientDeps()).not.toMatch(/ssr[-_]only[-_]package/);
+    });
+  }
 });

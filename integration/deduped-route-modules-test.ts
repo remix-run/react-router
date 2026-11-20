@@ -1,12 +1,13 @@
 import { test, expect } from "@playwright/test";
 
+import { isFirefoxMicrotaskWarning } from "./helpers/console.js";
 import { createFixture, createAppFixture } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { type TemplateName, viteConfig } from "./helpers/vite.js";
 
 const templateNames = [
-  "vite-5-template",
+  "vite-7-template",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
@@ -197,7 +198,9 @@ test.describe("Deduped route modules", () => {
 
       test.beforeEach(({ page }) => {
         page.on("console", (msg) => {
-          logs.push(msg.text());
+          if (!isFirefoxMicrotaskWarning(msg)) {
+            logs.push(msg.text());
+          }
         });
       });
 

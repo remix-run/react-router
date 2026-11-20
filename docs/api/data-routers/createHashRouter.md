@@ -20,10 +20,14 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.createHashRouter.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.createHashRouter.html)
 
-Create a new [data router](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) that manages the application
+Create a new [data router](https://api.reactrouter.com/v8/interfaces/react-router.DataRouter.html) that manages the application
 path via the URL [`hash`](https://developer.mozilla.org/en-US/docs/Web/API/URL/hash).
+
+Data Routers should not be held in React state. You should create your router
+once outside of the React tree and pass it to [`<RouterProvider>`](../data-routers/RouterProvider).
+You can use `patchRoutesOnNavigation` to add additional routes programmatically.
 
 ## Signature
 
@@ -78,7 +82,7 @@ function createBrowserRouter(routes, {
 When Server-Rendering and opting-out of automatic hydration, the
 `hydrationData` option allows you to pass in hydration data from your
 server-render. This will almost always be a subset of data from the
-[`StaticHandlerContext`](https://api.reactrouter.com/v7/interfaces/react-router.StaticHandlerContext.html) value you get back from the [`StaticHandler`](https://api.reactrouter.com/v7/interfaces/react-router.StaticHandler.html)'s
+[`StaticHandlerContext`](https://api.reactrouter.com/v8/interfaces/react-router.StaticHandlerContext.html) value you get back from the [`StaticHandler`](https://api.reactrouter.com/v8/interfaces/react-router.StaticHandler.html)'s
 `query` method:
 
 ```tsx
@@ -96,7 +100,7 @@ const router = createBrowserRouter(routes, {
 
 You will almost always include a complete set of `loaderData` to hydrate a
 server-rendered app. But in advanced use-cases (such as Framework Mode's
-[`clientLoader`](../../start/framework/route-module#clientLoader)), you may
+[`clientLoader`](../../start/framework/route-module#clientloader)), you may
 want to include `loaderData` for only some routes that were loaded/rendered
 on the server. This allows you to hydrate _some_ of the routes (such as the
 app layout/shell) while showing a `HydrateFallback` component and running
@@ -223,7 +227,7 @@ let router = createBrowserRouter(routes, {
 ### opts.patchRoutesOnNavigation
 
 Lazily define portions of the route tree on navigations.
-See [`PatchRoutesOnNavigationFunction`](https://api.reactrouter.com/v7/types/react-router.PatchRoutesOnNavigationFunction.html).
+See [`PatchRoutesOnNavigationFunction`](https://api.reactrouter.com/v8/types/react-router.PatchRoutesOnNavigationFunction.html).
 
 By default, React Router wants you to provide a full route tree up front via
 `createBrowserRouter(routes)`. This allows React Router to perform synchronous
@@ -235,7 +239,7 @@ start-up times as your application grows.
 To combat this, we introduced [`route.lazy`](../../start/data/route-object#lazy)
 in [v6.9.0](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v690)
 which lets you lazily load the route _implementation_ ([`loader`](../../start/data/route-object#loader),
-[`Component`](../../start/data/route-object#Component), etc.) while still
+[`Component`](../../start/data/route-object#component), etc.) while still
 providing the route _definition_ aspects up front (`path`, `index`, etc.).
 This is a good middle ground. React Router still knows about your route
 definitions (the lightweight part) up front and can perform synchronous
@@ -525,5 +529,5 @@ override. Defaults to the global `window` instance.
 
 ## Returns
 
-An initialized [data router](https://api.reactrouter.com/v7/interfaces/react-router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
+An initialized [data router](https://api.reactrouter.com/v8/interfaces/react-router.DataRouter.html) to pass to [`<RouterProvider>`](../data-routers/RouterProvider)
 

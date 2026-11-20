@@ -1,5 +1,107 @@
 # `@react-router/express`
 
+## v8.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+  - [`@react-router/node@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.2)
+
+## v8.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+
+## v8.5.0
+
+### Patch Changes
+
+- Fix the request URL losing its port when the `Host` or `X-Forwarded-Host` header is an IPv6 address (e.g., `[::1]:3000`) ([#15559](https://github.com/remix-run/react-router/pull/15559))
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+
+## v8.4.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.4.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.4.0)
+  - [`@react-router/node@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.4.0)
+
+## v8.3.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.3.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.1)
+  - [`@react-router/node@8.3.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.1)
+
+## v8.3.0
+
+### Patch Changes
+
+- Allow `typescript@7` to be used ([#15317](https://github.com/remix-run/react-router/pull/15317))
+- Updated dependencies:
+  - [`react-router@8.3.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.3.0)
+  - [`@react-router/node@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.3.0)
+
+## v8.2.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.2.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.2.0)
+  - [`@react-router/node@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.2.0)
+
+## v8.1.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.1.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.1.0)
+  - [`@react-router/node@8.1.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.1.0)
+
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.1)
+  - [`@react-router/node@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Bump dependencies ([#15106](https://github.com/remix-run/react-router/pull/15106))
+  - Bumped `express` from `^4.19.2` to `^4.22.2`
+  - Bumped the `express` peer dependency from `^4.17.1 || ^5` to `^4.22.2 || ^5`
+  - Bumped `@types/express` from `^4.17.9` to `^4.17.25`
+- Update minimum Node version to 22.22.0 ([#14928](https://github.com/remix-run/react-router/pull/14928))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.0.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.0.0)
+  - [`@react-router/node@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.0.0)
+
+## v7.18.0
+
+### Patch Changes
+
+- Adjust express adapter host computation ([#15185](https://github.com/remix-run/react-router/pull/15185))
+  - read port from `x-forwarded-host` based on `trust proxy` setting
+  - handle invalid hostname characters
+
+- Updated dependencies:
+  - [`react-router@7.18.0`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0)
+  - [`@react-router/node@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.0)
+
 ## v7.17.0
 
 ### Patch Changes

@@ -103,7 +103,7 @@ describe("ssr", () => {
         {
           id: "errorBoundary",
           path: "error-boundary",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: () => Promise.reject("ERROR BOUNDARY LOADER ERROR"),
           action: () => Promise.reject("ERROR BOUNDARY ACTION ERROR"),
         },
@@ -137,6 +137,26 @@ describe("ssr", () => {
     "mailto:hello@remix.run",
     "web+remix:whatever",
   ];
+
+  describe("match", () => {
+    it("matches against the static handler routes with a basename", () => {
+      let handler = createStaticHandler(SSR_ROUTES, { basename: "/base" });
+
+      expect(handler.match("/base/parent/child")).toMatchObject([
+        {
+          params: {},
+          pathname: "/parent",
+          route: { id: "parent" },
+        },
+        {
+          params: {},
+          pathname: "/parent/child",
+          route: { id: "child" },
+        },
+      ]);
+      expect(handler.match("/parent/child")).toBeNull();
+    });
+  });
 
   describe("document requests", () => {
     it("should support document load navigations", async () => {
@@ -602,13 +622,13 @@ describe("ssr", () => {
           id: "root",
           path: "/",
           loader: () => Promise.reject("ROOT"),
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           children: [
             {
               id: "child",
               path: "child",
               loader: () => Promise.reject("CHILD"),
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
             },
           ],
         },
@@ -630,7 +650,7 @@ describe("ssr", () => {
           id: "root",
           path: "/",
           loader: () => Promise.reject("ROOT"),
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           children: [
             {
               id: "child",
@@ -656,7 +676,7 @@ describe("ssr", () => {
         {
           id: "root",
           path: "/",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           children: [
             {
               id: "child",
@@ -843,7 +863,7 @@ describe("ssr", () => {
         pattern: "/child",
         url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
@@ -856,7 +876,7 @@ describe("ssr", () => {
         pattern: "/child",
         url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
@@ -897,7 +917,7 @@ describe("ssr", () => {
         pattern: "/child",
         url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let actionRequest = actionStub.mock.calls[0][0]?.request;
@@ -914,7 +934,7 @@ describe("ssr", () => {
         pattern: "/child",
         url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
@@ -929,7 +949,7 @@ describe("ssr", () => {
         pattern: "/child",
         url: new URL("http://localhost/child"),
         params: {},
-        context: {},
+        context: expect.anything(),
       });
       // @ts-expect-error
       let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
@@ -954,7 +974,7 @@ describe("ssr", () => {
               path: "child",
               action: actionStub,
               loader: childLoaderStub,
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
             },
           ],
         },

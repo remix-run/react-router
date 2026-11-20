@@ -19,22 +19,26 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/rs
 
 [MODES: data]
 
-<br />
-<br />
-
 <docs-warning>This API is experimental and subject to breaking changes in 
 minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/variables/react-router.unstable_matchRSCServerRequest.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/variables/react-router.unstable_matchRSCServerRequest.html)
 
 Matches the given routes to a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
 and returns an [RSC](https://react.dev/reference/rsc/server-components)
 [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-encoding an [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html) for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
+encoding an [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html) for consumption by an [RSC](https://react.dev/reference/rsc/server-components)
 enabled client router.
+
+Treat every React Server Function as a public endpoint. Server Functions are
+not inherently associated with a route. Any route middleware that runs is
+selected from the URL used to call a Server Function, but the client controls
+both the Server Function identifier and the URL. Perform all access control
+checks within each Server Function, or use a route action for
+middleware-driven access control.
 
 ```tsx
 import {
@@ -79,10 +83,11 @@ async function matchRSCServerRequest({
   loadServerAction,
   decodeAction,
   decodeFormState,
+  clientVersion,
   onError,
   request,
   routes,
-  generateResponse,
+  generateResponse: encodeResponse,
 }: {
   allowedActionOrigins?: string[];
   createTemporaryReferenceSet: () => unknown;
@@ -92,6 +97,7 @@ async function matchRSCServerRequest({
   decodeFormState?: DecodeFormStateFunction;
   requestContext?: RouterContextProvider;
   loadServerAction?: LoadServerActionFunction;
+  clientVersion?: string;
   onError?: (error: unknown) => void;
   request: Request;
   routes: RSCRouteConfigEntry[];
@@ -141,11 +147,15 @@ implementation for invocation by the router.
 ### opts.generateResponse
 
 A function responsible for using your `renderToReadableStream` to generate a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-encoding the [`unstable_RSCPayload`](https://api.reactrouter.com/v7/types/react-router.unstable_RSCPayload.html).
+encoding the [`unstable_RSCPayload`](https://api.reactrouter.com/v8/types/react-router.unstable_RSCPayload.html).
 
 ### opts.loadServerAction
 
 Your `react-server-dom-xyz/server`'s `loadServerAction` function, used to load a server action by ID.
+
+### opts.clientVersion
+
+A version derived from the client build output used to detect stale clients during lazy route discovery.
 
 ### opts.onError
 
@@ -166,7 +176,7 @@ The route discovery configuration, used to determine how the router should disco
 
 ### opts.routes
 
-Your [route definitions](https://api.reactrouter.com/v7/types/react-router.unstable_RSCRouteConfigEntry.html).
+Your [route definitions](https://api.reactrouter.com/v8/types/react-router.unstable_RSCRouteConfigEntry.html).
 
 ## Returns
 

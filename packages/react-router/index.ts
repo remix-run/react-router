@@ -35,6 +35,7 @@ export type {
   DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
+  DataStrategyInitiator as unstable_DataStrategyInitiator,
   DataStrategyMatch,
   DataStrategyResult,
   DataWithResponseInit as UNSAFE_DataWithResponseInit,
@@ -77,8 +78,11 @@ export type {
   InstrumentRouterFunction,
   InstrumentRouteFunction,
   InstrumentationHandlerResult,
+  InstrumentationClientRouterResult,
+  InstrumentationServerHandlerResult,
 } from "./lib/router/instrumentation";
 export {
+  createStaticHandler,
   IDLE_NAVIGATION,
   IDLE_FETCHER,
   IDLE_BLOCKER,
@@ -209,7 +213,6 @@ export type {
   StaticRouterProviderProps,
 } from "./lib/dom/server";
 export {
-  createStaticHandler,
   createStaticRouter,
   StaticRouter,
   StaticRouterProvider,
@@ -277,8 +280,6 @@ export type {
   CookieSignatureOptions,
 } from "./lib/server-runtime/cookies";
 
-export type { AppLoadContext } from "./lib/server-runtime/data";
-
 export type {
   PageLinkDescriptor,
   HtmlLinkDescriptor,
@@ -295,10 +296,7 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
-export type {
-  Future,
-  MiddlewareEnabled as UNSAFE_MiddlewareEnabled,
-} from "./lib/types/future.ts";
+export type { Future } from "./lib/types/future.ts";
 export type { unstable_SerializesTo } from "./lib/types/serializes-to.ts";
 export type { Register } from "./lib/types/register";
 export { href } from "./lib/href";
@@ -364,11 +362,16 @@ export {
 export { createRouter as UNSAFE_createRouter } from "./lib/router/router";
 
 /** @internal */
-export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+export {
+  defaultMapRouteProperties as UNSAFE_defaultMapRouteProperties,
+  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
+} from "./lib/router/utils";
 
 /** @internal */
 export {
   DataRouterContext as UNSAFE_DataRouterContext,
+  DataRouterDataContext as UNSAFE_DataRouterDataContext,
+  DataRouterNavigationContext as UNSAFE_DataRouterNavigationContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   FetchersContext as UNSAFE_FetchersContext,
   LocationContext as UNSAFE_LocationContext,
@@ -380,7 +383,6 @@ export {
 /** @internal */
 export {
   hydrationRouteProperties as UNSAFE_hydrationRouteProperties,
-  mapRouteProperties as UNSAFE_mapRouteProperties,
   WithComponentProps as UNSAFE_WithComponentProps,
   withComponentProps as UNSAFE_withComponentProps,
   WithHydrateFallbackProps as UNSAFE_WithHydrateFallbackProps,
@@ -394,9 +396,6 @@ export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/compo
 
 /** @internal */
 export type { AssetsManifest as UNSAFE_AssetsManifest } from "./lib/dom/ssr/entry";
-
-/** @internal */
-export { deserializeErrors as UNSAFE_deserializeErrors } from "./lib/dom/ssr/errors";
 
 /** @internal */
 export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/errorBoundaries";
@@ -434,3 +433,16 @@ export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 
 /** @internal */
 export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";
+
+export { useRouteDiscovery as unstable_useRouteDiscovery } from "./lib/dom/ssr/route-discovery";
+export type {
+  ManifestMismatchEvent as unstable_ManifestMismatchEvent,
+  DiscoveryResult as unstable_DiscoveryResult,
+  RouteDiscoveryOptions as unstable_RouteDiscoveryOptions,
+} from "./lib/dom/ssr/route-discovery";
+/** @internal */
+export {
+  RouteDiscoveryRuntime as UNSAFE_RouteDiscoveryRuntime,
+  useCustomRouteDiscovery as UNSAFE_useCustomRouteDiscovery,
+  getCustomPatchRoutesOnNavigationFunction as UNSAFE_getCustomPatchRoutesOnNavigationFunction,
+} from "./lib/dom/ssr/route-discovery";

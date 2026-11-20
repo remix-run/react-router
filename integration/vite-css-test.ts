@@ -215,11 +215,7 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
-              "react-router.config.ts": reactRouterConfig({
-                future: {
-                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
-                },
-              }),
+              "react-router.config.ts": reactRouterConfig(),
               "vite.config.ts": await viteConfig.basic({
                 port,
                 templateName,
@@ -260,9 +256,6 @@ test.describe("Vite CSS", () => {
           cwd = await createProject(
             {
               "react-router.config.ts": reactRouterConfig({
-                future: {
-                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
-                },
                 basename: base,
               }),
               "vite.config.ts": await viteConfig.basic({
@@ -304,11 +297,7 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
-              "react-router.config.ts": reactRouterConfig({
-                future: {
-                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
-                },
-              }),
+              "react-router.config.ts": reactRouterConfig(),
               "vite.config.ts": await viteConfig.basic({
                 port,
                 templateName,
@@ -348,11 +337,7 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
-              "react-router.config.ts": reactRouterConfig({
-                future: {
-                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
-                },
-              }),
+              "react-router.config.ts": reactRouterConfig(),
               "vite.config.ts": await viteConfig.basic({
                 port,
                 templateName,
@@ -421,11 +406,7 @@ test.describe("Vite CSS", () => {
           port = await getPort();
           cwd = await createProject(
             {
-              "react-router.config.ts": reactRouterConfig({
-                future: {
-                  v8_viteEnvironmentApi: templateName !== "vite-5-template",
-                },
-              }),
+              "react-router.config.ts": reactRouterConfig(),
               "vite.config.ts": await viteConfig.basic({
                 port,
                 templateName,

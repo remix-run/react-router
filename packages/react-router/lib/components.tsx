@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getAwaitPromise, getPromiseResult } from "./await";
 
 import type {
   InitialEntry,
@@ -8,6 +9,7 @@ import type {
 } from "./router/history";
 import {
   Action as NavigationType,
+  createPath,
   createMemoryHistory,
   invariant,
   parsePath,
@@ -22,7 +24,7 @@ import type {
   RouterSubscriber,
   RouterInit,
 } from "./router/router";
-import { createRouter } from "./router/router";
+import { createRouter, clientErrors } from "./router/router";
 import type {
   DataRouteObject,
   DataStrategyFunction,
@@ -37,6 +39,7 @@ import type {
   TrackedPromise,
 } from "./router/utils";
 import {
+  defaultMapRouteProperties,
   getResolveToMatches,
   getRoutePattern,
   resolveTo,
@@ -47,8 +50,9 @@ import type { Navigator, ViewTransitionContextObject } from "./context";
 import {
   AwaitContext,
   DataRouterContext,
+  DataRouterDataContext,
+  DataRouterNavigationContext,
   DataRouterStateContext,
-  ENABLE_DEV_WARNINGS,
   FetchersContext,
   LocationContext,
   NavigationContext,
@@ -71,97 +75,15 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
+import { FrameworkContext } from "./dom/ssr/components";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
-
-/**
- * Webpack can fail to compile against react versions without this export -
- * it complains that `useOptimistic` doesn't exist in `React`.
- *
- * Using the string constant directly at runtime fixes the webpack build issue
- * but can result in terser stripping the actual call at minification time.
- *
- * Grabbing an exported reference once up front resolves that issue.
- *
- * See https://github.com/remix-run/react-router/issues/10579
- */
-const USE_OPTIMISTIC = "useOptimistic";
-// @ts-expect-error Needs React 19 types but we develop against 18
-const useOptimisticImpl = React[USE_OPTIMISTIC];
-const stableUseOptimisticSetter = () => undefined;
-
-function useOptimisticSafe<T>(
-  val: T,
-): [T, React.Dispatch<React.SetStateAction<T>>] {
-  if (useOptimisticImpl) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    return useOptimisticImpl(val);
-  } else {
-    return [val, stableUseOptimisticSetter];
-  }
-}
-
-export function mapRouteProperties(route: RouteObject) {
-  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
-    // Note: this check also occurs in createRoutesFromChildren so update
-    // there if you change this -- please and thank you!
-    hasErrorBoundary:
-      route.hasErrorBoundary ||
-      route.ErrorBoundary != null ||
-      route.errorElement != null,
-  };
-
-  if (route.Component) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.element) {
-        warning(
-          false,
-          "You should not include both `Component` and `element` on your route - " +
-            "`Component` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      element: React.createElement(route.Component),
-      Component: undefined,
-    });
-  }
-
-  if (route.HydrateFallback) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.hydrateFallbackElement) {
-        warning(
-          false,
-          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
-            "`HydrateFallback` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      hydrateFallbackElement: React.createElement(route.HydrateFallback),
-      HydrateFallback: undefined,
-    });
-  }
-
-  if (route.ErrorBoundary) {
-    if (ENABLE_DEV_WARNINGS) {
-      if (route.errorElement) {
-        warning(
-          false,
-          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
-            "`ErrorBoundary` will be used.",
-        );
-      }
-    }
-    Object.assign(updates, {
-      errorElement: React.createElement(route.ErrorBoundary),
-      ErrorBoundary: undefined,
-    });
-  }
-
-  return updates;
-}
+import {
+  getNavigatorCurrentUrl,
+  validateNavigationTarget,
+} from "./router/navigation";
+import { useOptimistic } from "react";
 
 export const hydrationRouteProperties: (keyof RouteObject)[] = [
   "HydrateFallback",
@@ -290,6 +212,10 @@ export interface MemoryRouterOpts {
  * in-memory [`History`](https://developer.mozilla.org/en-US/docs/Web/API/History)
  * stack. Useful for non-browser environments without a DOM API.
  *
+ * Data Routers should not be held in React state. You should create your router
+ * once outside of the React tree and pass it to {@link RouterProvider | `<RouterProvider>`}.
+ * You can use `patchRoutesOnNavigation` to add additional routes programmatically.
+ *
  * @public
  * @category Data Routers
  * @mode data
@@ -320,8 +246,8 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
+    mapRouteProperties: defaultMapRouteProperties,
     hydrationRouteProperties,
-    mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
     patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     instrumentations: opts?.instrumentations,
@@ -374,7 +300,9 @@ export interface ClientOnErrorFunction {
  */
 export interface RouterProviderProps {
   /**
-   * The {@link DataRouter} instance to use for navigation and data fetching.
+   * The {@link DataRouter} instance to use for navigation and data fetching. The
+   * router prop should be a single router instance created outside of the React
+   * tree. Avoid creating new routers during React renders/re-renders.
    */
   router: DataRouter;
   /**
@@ -386,7 +314,8 @@ export interface RouterProviderProps {
    * - If you are rendering in a non-DOM environment, you can import
    *   `RouterProvider` from `react-router` and ignore this prop
    */
-  flushSync?: (fn: () => unknown) => undefined;
+  flushSync?: <R>(fn: () => R) => R;
+
   /**
    * An error handler function that will be called for any middleware, loader, action,
    * or render errors that are encountered in your application.  This is useful for
@@ -427,9 +356,32 @@ export interface RouterProviderProps {
   useTransitions?: boolean;
 }
 
+// We never wait for a view transition's animation to start, so nothing else
+// observes `ready`. A skipped transition rejects it: with an `AbortError` when
+// `skipTransition()` or a newer transition skipped it, and with an
+// `InvalidStateError` when the browser skips it in a hidden document. Handle
+// those rejections and rethrow any other one, such as a duplicate
+// `view-transition-name`.
+function handleSkippedViewTransition(
+  transition: ViewTransition,
+  document: Document,
+) {
+  transition.ready.catch((reason: unknown) => {
+    let skipped =
+      document.visibilityState === "hidden" ||
+      (typeof reason === "object" &&
+        reason !== null &&
+        "name" in reason &&
+        reason.name === "AbortError");
+    if (!skipped) throw reason;
+  });
+}
+
 /**
  * Render the UI for the given {@link DataRouter}. This component should
- * typically be at the top of an app's element tree.
+ * typically be at the top of an app's element tree. The router prop should
+ * be a single router instance created outside of the React tree. Avoid
+ * creating new routers during React renders/re-renders.
  *
  * ```tsx
  * import { createBrowserRouter } from "react-router";
@@ -469,7 +421,9 @@ export function RouterProvider({
   useTransitions = unstable_rsc || useTransitions;
 
   let [_state, setStateImpl] = React.useState(router.state);
-  let [state, setOptimisticState] = useOptimisticSafe(_state);
+  let [state, setOptimisticState] = useOptimistic(_state);
+  // Rendered state may lag behind notifications during a transition.
+  let lastState = React.useRef(state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
@@ -482,12 +436,27 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
+  let handledErrors = React.useRef(
+    new WeakSet<NonNullable<RouterState["errors"]>>(),
+  );
 
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
       { deletedFetchers, newErrors, flushSync, viewTransitionOpts },
     ) => {
+      lastState.current = newState;
+
+      if (newErrors && newState.errors && clientErrors.has(newState.errors)) {
+        if (handledErrors.current.has(newState.errors)) {
+          newErrors = null;
+        } else {
+          // Mark these before invoking user code, including when onError is
+          // absent, so effect replays/resubscriptions don't report them again.
+          handledErrors.current.add(newState.errors);
+        }
+      }
+
       // Send router errors through onError
       if (newErrors && onError) {
         Object.values(newErrors).forEach((error) =>
@@ -567,6 +536,7 @@ export function RouterProvider({
         let t = router.window!.document.startViewTransition(() => {
           reactDomFlushSyncImpl(() => setStateImpl(newState));
         });
+        handleSkippedViewTransition(t, router.window!.document);
 
         // Clean up after the animation completes
         t.finished.finally(() => {
@@ -616,11 +586,26 @@ export function RouterProvider({
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>).
-  // If the router finished initializing (and emitted errors) before this
-  // subscriber was attached, `subscribe()` replays that notification so
-  // `onError` still fires for initial data load errors.
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
+  // State may change before our first render or between render and
+  // subscription. Recover missed state/errors without relying on other
+  // subscribers or reporting errors again during StrictMode effect replays.
+  React.useLayoutEffect(() => {
+    let errors = router.state.errors;
+    let newErrors = errors ? clientErrors.get(errors) : null;
+    if (
+      lastState.current !== router.state ||
+      (errors && newErrors && !handledErrors.current.has(errors))
+    ) {
+      setState(router.state, {
+        deletedFetchers: [],
+        flushSync: false,
+        newErrors: newErrors ?? null,
+      });
+    }
+  }, [router, setState]);
 
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
@@ -650,6 +635,7 @@ export function RouterProvider({
         }
         await renderPromise;
       });
+      handleSkippedViewTransition(transition, router.window.document);
       transition.finished.finally(() => {
         setRenderDfd(undefined);
         setTransition(undefined);
@@ -696,18 +682,20 @@ export function RouterProvider({
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
+      createURL: router.createURL,
       encodeLocation: router.encodeLocation,
       go: (n) => router.navigate(n),
       push: (to, state, opts) =>
         router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
+          ...opts,
+          replace: opts?.replace === false ? false : undefined,
+          state: state !== undefined ? state : opts?.state,
         }),
       replace: (to, state, opts) =>
         router.navigate(to, {
+          ...opts,
           replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
+          state: state !== undefined ? state : opts?.state,
         }),
     };
   }, [router]);
@@ -725,6 +713,54 @@ export function RouterProvider({
     [router, navigator, basename, onError],
   );
 
+  let dataRouterState = React.useMemo(
+    () => ({
+      historyAction: state.historyAction,
+      location: state.location,
+      matches: state.matches,
+      initialized: state.initialized,
+      renderFallback: state.renderFallback,
+      restoreScrollPosition: state.restoreScrollPosition,
+      preventScrollReset: state.preventScrollReset,
+      blockers: state.blockers,
+    }),
+    [
+      state.historyAction,
+      state.location,
+      state.matches,
+      state.initialized,
+      state.renderFallback,
+      state.restoreScrollPosition,
+      state.preventScrollReset,
+      state.blockers,
+    ],
+  );
+
+  let dataRouterNavigation = React.useMemo(
+    () => ({
+      navigation: state.navigation,
+      revalidation: state.revalidation,
+    }),
+    [state.navigation, state.revalidation],
+  );
+
+  let dataRouterData = React.useMemo(
+    () => ({
+      loaderData: state.loaderData,
+      actionData: state.actionData,
+      errors: state.errors,
+    }),
+    [state.loaderData, state.actionData, state.errors],
+  );
+
+  let fetchersContext = React.useMemo(
+    () => ({
+      fetchers: state.fetchers,
+      fetcherData: fetcherData.current,
+    }),
+    [state.fetchers],
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -734,27 +770,30 @@ export function RouterProvider({
   return (
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider value={fetcherData.current}>
-            <ViewTransitionContext.Provider value={vtContext}>
-              <Router
-                basename={basename}
-                location={state.location}
-                navigationType={state.historyAction}
-                navigator={navigator}
-                useTransitions={useTransitions}
-              >
-                <MemoizedDataRoutes
-                  routes={router.routes}
-                  manifest={router.manifest}
-                  future={router.future}
-                  state={state}
-                  isStatic={false}
-                  onError={onError}
-                />
-              </Router>
-            </ViewTransitionContext.Provider>
-          </FetchersContext.Provider>
+        <DataRouterStateContext.Provider value={dataRouterState}>
+          <DataRouterNavigationContext.Provider value={dataRouterNavigation}>
+            <DataRouterDataContext.Provider value={dataRouterData}>
+              <FetchersContext.Provider value={fetchersContext}>
+                <ViewTransitionContext.Provider value={vtContext}>
+                  <Router
+                    basename={basename}
+                    location={state.location}
+                    navigationType={state.historyAction}
+                    navigator={navigator}
+                    useTransitions={useTransitions}
+                  >
+                    <MemoizedDataRoutes
+                      routes={router.routes}
+                      manifest={router.manifest}
+                      state={state}
+                      isStatic={false}
+                      onError={onError}
+                    />
+                  </Router>
+                </ViewTransitionContext.Provider>
+              </FetchersContext.Provider>
+            </DataRouterDataContext.Provider>
+          </DataRouterNavigationContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {null}
@@ -795,24 +834,37 @@ const MemoizedDataRoutes = React.memo(DataRoutes);
 export function DataRoutes({
   routes,
   manifest,
-  future,
   state,
   isStatic,
   onError,
 }: {
   routes: DataRouteObject[];
   manifest: RouteManifest;
-  future: DataRouter["future"];
   state: RouterState;
   isStatic: boolean;
   onError?: ClientOnErrorFunction;
 }): React.ReactElement | null {
+  let dataRouterContext = React.useContext(DataRouterContext);
+
+  invariant(
+    dataRouterContext,
+    "You must render this element inside a <DataRouterContext.Provider> element",
+  );
+
+  let discoveryRuntime =
+    React.useContext(FrameworkContext)?.routeDiscoveryRuntime;
+  React.useEffect(() => {
+    // This effect runs after the initialized route tree commits and its hooks
+    // register. Descendants still suspended behind their own boundaries do not
+    // delay eager discovery.
+    if (state.initialized) discoveryRuntime?.markReady();
+  }, [state.initialized, discoveryRuntime]);
   return useRoutesImpl(routes, undefined, {
+    router: dataRouterContext.router,
     manifest,
     state,
     isStatic,
     onError,
-    future,
   });
 }
 
@@ -875,7 +927,7 @@ export function MemoryRouter({
   initialIndex,
   useTransitions,
 }: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>();
+  let historyRef = React.useRef<MemoryHistory>(null);
   if (historyRef.current == null) {
     historyRef.current = createMemoryHistory({
       initialEntries,
@@ -971,7 +1023,7 @@ export function Navigate({
     `<Navigate> may be used only in the context of a <Router> component.`,
   );
 
-  let { static: isStatic } = React.useContext(NavigationContext);
+  let { static: isStatic, navigator } = React.useContext(NavigationContext);
 
   warning(
     !isStatic,
@@ -991,6 +1043,12 @@ export function Navigate({
     getResolveToMatches(matches),
     locationPathname,
     relative === "path",
+  );
+  validateNavigationTarget(
+    typeof to === "string" ? to : createPath(to),
+    navigator.createHref(path),
+    getNavigatorCurrentUrl(navigator),
+    "reject",
   );
   let jsonPath = JSON.stringify(path);
 
@@ -1082,10 +1140,9 @@ export interface PathRouteProps {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: NonIndexRouteObject["action"];
-  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
    */
   shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
   /**
@@ -1175,10 +1232,9 @@ export interface IndexRouteProps {
    * See [`action`](../../start/data/route-object#action).
    */
   action?: IndexRouteObject["action"];
-  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
    */
   shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
   /**
@@ -1496,6 +1552,26 @@ export interface AwaitResolveRenderFunction<Resolve = any> {
  */
 export interface AwaitProps<Resolve> {
   /**
+   * <docs-warning>This prop is currently unstable and may change in minor or patch
+   * releases.</docs-warning>
+   *
+   * A promise (or value) to read using React's `use()` API in client components.
+   * Unlike `resolve` in client components, this accepts promise-like values
+   * without modifying the source promise.
+   *
+   * `errorElement` handles promise rejections. Errors thrown while rendering
+   * children bubble to the nearest React error boundary.
+   *
+   * ```tsx
+   * <Await unstable_promise={reviewsPromise} errorElement={<ReviewsError />}>
+   *   {(reviews) => <Reviews items={reviews} />}
+   * </Await>
+   * ```
+   *
+   * Pass exactly one of `unstable_promise` or `resolve`.
+   */
+  unstable_promise?: never;
+  /**
    * When using a function, the resolved value is provided as the parameter.
    *
    * ```tsx [2]
@@ -1521,14 +1597,17 @@ export interface AwaitProps<Resolve> {
   children: React.ReactNode | AwaitResolveRenderFunction<Resolve>;
 
   /**
-   * The error element renders instead of the `children` when the [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+   * The error element renders instead of the `children` when the
+   * [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
    * rejects.
    *
+   * When using `resolve`, errors thrown while rendering `children` are
+   * also caught and rendered here. With `unstable_promise`, only promise
+   * rejections are handled; errors thrown while rendering `children` bubble to
+   * the nearest React error boundary.
+   *
    * ```tsx
-   * <Await
-   *   errorElement={<div>Oops</div>}
-   *   resolve={reviewsPromise}
-   * >
+   * <Await resolve={reviewsPromise} errorElement={<div>Oops</div>}>
    *   <Reviews />
    * </Await>
    * ```
@@ -1537,10 +1616,7 @@ export interface AwaitProps<Resolve> {
    * child component
    *
    * ```tsx
-   * <Await
-   *   errorElement={<ReviewsError />}
-   *   resolve={reviewsPromise}
-   * >
+   * <Await resolve={reviewsPromise} errorElement={<ReviewsError />}>
    *   <Reviews />
    * </Await>
    *
@@ -1599,10 +1675,43 @@ export interface AwaitProps<Resolve> {
   resolve: Resolve;
 }
 
+interface AwaitPromiseProps<Resolve> extends Omit<
+  AwaitProps<Resolve>,
+  "resolve" | "unstable_promise"
+> {
+  resolve?: never;
+  /**
+   * A promise (or value) to read using React's `use()` API in client components.
+   * Unlike `resolve` in client components, this accepts promise-like values
+   * without modifying the source promise.
+   *
+   * `errorElement` handles promise rejections. Errors thrown while rendering
+   * children bubble to the nearest React error boundary.
+   *
+   * ```tsx
+   * <Await unstable_promise={reviewsPromise} errorElement={<ReviewsError />}>
+   *   {(reviews) => <Reviews items={reviews} />}
+   * </Await>
+   * ```
+   *
+   * Pass exactly one of `unstable_promise` or `resolve`.
+   */
+  unstable_promise: Resolve;
+}
+
 /**
  * Used to render promise values with automatic error handling.
  *
+ * Passing the promise through `resolve` uses React Router-specific promise tracking, while passing
+ * it through `unstable_promise` uses React's built-in [`use()`](https://react.dev/reference/react/use)
+ * API.
+ *
  * **Note:** `<Await>` expects to be rendered inside a [`<React.Suspense>`](https://react.dev/reference/react/Suspense)
+ *
+ * <docs-warning>The `unstable_promise` prop is currently unstable and may change in minor or patch
+ * releases. We plan to stabilize `<Await promise>` and deprecate `<Await resolve>` during v8, and then
+ * drop `<Await resolve>` in v9. Please see below for minor `errorElement` behavioral differences
+ * between the two approaches.</docs-warning>
  *
  * @example
  * import { Await, useLoaderData } from "react-router";
@@ -1622,15 +1731,9 @@ export interface AwaitProps<Resolve> {
  *       <h1>{book.title}</h1>
  *       <p>{book.description}</p>
  *       <React.Suspense fallback={<ReviewsSkeleton />}>
- *         <Await
- *           resolve={reviews}
- *           errorElement={
- *             <div>Could not load reviews 😬</div>
- *           }
- *           children={(resolvedReviews) => (
- *             <Reviews items={resolvedReviews} />
- *           )}
- *         />
+ *         <Await resolve={reviews} errorElement={<BookError />}>
+ *           {(resolvedReviews) => <Reviews items={resolvedReviews} />}
+ *         </Await>
  *       </React.Suspense>
  *     </div>
  *   );
@@ -1644,13 +1747,17 @@ export interface AwaitProps<Resolve> {
  * @param {AwaitProps.children} props.children n/a
  * @param {AwaitProps.errorElement} props.errorElement n/a
  * @param {AwaitProps.resolve} props.resolve n/a
+ * @param {AwaitProps.unstable_promise} props.unstable_promise n/a
  * @returns React element for the rendered awaited value
  */
-export function Await<Resolve>({
-  children,
-  errorElement,
-  resolve,
-}: AwaitProps<Resolve>) {
+export function Await<Resolve>(
+  props: AwaitProps<Resolve> | AwaitPromiseProps<Resolve>,
+) {
+  invariant(
+    "resolve" in props !== "unstable_promise" in props,
+    "<Await> requires exactly one of `resolve` or `unstable_promise`",
+  );
+  let { children, errorElement } = props;
   let dataRouterContext = React.useContext(DataRouterContext);
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
 
@@ -1672,14 +1779,59 @@ export function Await<Resolve>({
     [dataRouterContext, dataRouterStateContext],
   );
 
+  if ("unstable_promise" in props) {
+    return (
+      <AwaitPromise
+        value={props.unstable_promise}
+        errorElement={errorElement}
+        onError={onError}
+      >
+        {children}
+      </AwaitPromise>
+    );
+  }
+
   return (
     <AwaitErrorBoundary
-      resolve={resolve}
+      resolve={props.resolve}
       errorElement={errorElement}
       onError={onError}
     >
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
+  );
+}
+
+function AwaitPromise({
+  value,
+  children,
+  errorElement,
+  onError,
+}: {
+  value: unknown;
+  children: React.ReactNode | AwaitResolveRenderFunction;
+  errorElement?: React.ReactNode;
+  onError: (error: unknown) => void;
+}) {
+  let result: PromiseSettledResult<unknown> =
+    value != null &&
+    (typeof value === "object" || typeof value === "function") &&
+    "then" in value &&
+    typeof value.then === "function"
+      ? React.use(getAwaitPromise(value as PromiseLike<unknown>, onError))
+      : { status: "fulfilled", value };
+
+  if (result.status === "rejected" && !errorElement) {
+    throw result.reason;
+  }
+  return (
+    <AwaitContext.Provider value={result}>
+      {result.status === "rejected" ? (
+        errorElement
+      ) : (
+        <ResolveAwait>{children}</ResolveAwait>
+      )}
+    </AwaitContext.Provider>
   );
 }
 
@@ -1691,6 +1843,7 @@ type AwaitErrorBoundaryProps = React.PropsWithChildren<{
 
 type AwaitErrorBoundaryState = {
   error: any;
+  resolve: AwaitErrorBoundaryProps["resolve"];
 };
 
 enum AwaitRenderStatus {
@@ -1705,11 +1858,22 @@ class AwaitErrorBoundary extends React.Component<
 > {
   constructor(props: AwaitErrorBoundaryProps) {
     super(props);
-    this.state = { error: null };
+    this.state = { error: null, resolve: props.resolve };
   }
 
   static getDerivedStateFromError(error: any) {
     return { error };
+  }
+
+  static getDerivedStateFromProps(
+    props: AwaitErrorBoundaryProps,
+    state: AwaitErrorBoundaryState,
+  ) {
+    // A render error belongs to the previous `resolve`
+    if (props.resolve !== state.resolve) {
+      return { error: null, resolve: props.resolve };
+    }
+    return null;
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
@@ -1757,15 +1921,48 @@ class AwaitErrorBoundary extends React.Component<
       // Raw (untracked) promise - track it
       status = AwaitRenderStatus.pending;
       Object.defineProperty(resolve, "_tracked", { get: () => true });
-      promise = resolve.then(
-        (data: any) =>
-          Object.defineProperty(resolve, "_data", { get: () => data }),
-        (error: any) => {
-          // Log promise rejections
-          this.props.onError?.(error);
-          Object.defineProperty(resolve, "_error", { get: () => error });
-        },
-      );
+      let result = getPromiseResult(resolve);
+      if (result) {
+        // Read an already-settled result without another tick while preserving
+        // the existing tracked-promise contract.
+        promise = resolve;
+        if (result.status === "fulfilled") {
+          status = AwaitRenderStatus.success;
+          Object.defineProperty(resolve, "_data", {
+            get: () => result.value,
+          });
+        } else {
+          status = AwaitRenderStatus.error;
+          Object.defineProperty(resolve, "_error", {
+            get: () => result.reason,
+          });
+          // Report once when consumed, as with an ordinary untracked promise.
+          Promise.resolve(resolve).catch((reason) => {
+            try {
+              this.props.onError?.(reason);
+            } catch (error) {
+              // Reporting failures must not create an unhandled rejection.
+              console.error(
+                "<Await> caught the following error in onError",
+                error,
+              );
+            }
+          });
+        }
+      } else {
+        // Wrap in `Promise.resolve()` because React Flight's `ReactPromise`
+        // chunks pass `instanceof Promise` but return `undefined` from `.then()`.
+        // Native promises are returned as-is by `Promise.resolve()`.
+        promise = Promise.resolve(resolve).then(
+          (data: any) =>
+            Object.defineProperty(resolve, "_data", { get: () => data }),
+          (error: any) => {
+            // Log promise rejections
+            this.props.onError?.(error);
+            Object.defineProperty(resolve, "_error", { get: () => error });
+          },
+        );
+      }
     }
 
     if (status === AwaitRenderStatus.error && !errorElement) {
@@ -1833,7 +2030,11 @@ export function createRoutesFromChildren(
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children, treePath),
+        createRoutesFromChildren(
+          (element as unknown as React.ReactElement<React.FragmentProps>).props
+            .children,
+          treePath,
+        ),
       );
       return;
     }
@@ -1845,39 +2046,34 @@ export function createRoutesFromChildren(
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`,
     );
 
+    let props = (element as unknown as React.ReactElement<RouteProps>).props;
+
     invariant(
-      !element.props.index || !element.props.children,
+      !props.index || !props.children,
       "An index route cannot have child routes.",
     );
 
     let route: RouteObject = {
-      id: element.props.id || treePath.join("-"),
-      caseSensitive: element.props.caseSensitive,
-      element: element.props.element,
-      Component: element.props.Component,
-      index: element.props.index,
-      path: element.props.path,
-      middleware: element.props.middleware,
-      loader: element.props.loader,
-      action: element.props.action,
-      hydrateFallbackElement: element.props.hydrateFallbackElement,
-      HydrateFallback: element.props.HydrateFallback,
-      errorElement: element.props.errorElement,
-      ErrorBoundary: element.props.ErrorBoundary,
-      hasErrorBoundary:
-        element.props.hasErrorBoundary === true ||
-        element.props.ErrorBoundary != null ||
-        element.props.errorElement != null,
-      shouldRevalidate: element.props.shouldRevalidate,
-      handle: element.props.handle,
-      lazy: element.props.lazy,
+      id: props.id || treePath.join("-"),
+      caseSensitive: props.caseSensitive,
+      element: props.element,
+      Component: props.Component,
+      index: props.index,
+      path: props.path,
+      middleware: props.middleware,
+      loader: props.loader,
+      action: props.action,
+      hydrateFallbackElement: props.hydrateFallbackElement,
+      HydrateFallback: props.HydrateFallback,
+      errorElement: props.errorElement,
+      ErrorBoundary: props.ErrorBoundary,
+      shouldRevalidate: props.shouldRevalidate,
+      handle: props.handle,
+      lazy: props.lazy,
     };
 
-    if (element.props.children) {
-      route.children = createRoutesFromChildren(
-        element.props.children,
-        treePath,
-      );
+    if (props.children) {
+      route.children = createRoutesFromChildren(props.children, treePath);
     }
 
     routes.push(route);

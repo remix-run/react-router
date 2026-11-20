@@ -1,17 +1,26 @@
 import fs from "node:fs";
 import { execSync } from "node:child_process";
-import * as ViteNode from "../vite/vite-node";
+import { createRequire } from "node:module";
+import * as ViteRunner from "../vite/vite-runner";
 import type * as Vite from "vite";
 import Path from "pathe";
 import chokidar, {
   type FSWatcher,
   type EmitArgs as ChokidarEmitArgs,
 } from "chokidar";
+import {
+  readPackageJSON,
+  sortPackage,
+  updatePackage,
+  type PackageJson,
+} from "pkg-types";
 import colors from "picocolors";
-import pick from "lodash/pick";
-import omit from "lodash/omit";
-import cloneDeep from "lodash/cloneDeep";
-import isEqual from "lodash/isEqual";
+import pick from "lodash/pick.js";
+import omit from "lodash/omit.js";
+import cloneDeep from "lodash/cloneDeep.js";
+import isEqual from "lodash/isEqual.js";
+
+const nodeRequire = createRequire(import.meta.url);
 
 import {
   type RouteManifest,
@@ -85,26 +94,12 @@ type ServerModuleFormat = "esm" | "cjs";
 type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
+  unstable_customRouteDiscovery: boolean;
+  unstable_enableNodeReadableStream: boolean;
   unstable_optimizeDeps: boolean;
-  v8_passThroughRequests: boolean;
-  v8_trailingSlashAwareDataRequests: boolean;
-  /**
-   * Prerender with Vite Preview server
-   */
-  unstable_previewServerPrerendering?: boolean;
-  /**
-   * Enable route middleware
-   */
-  v8_middleware: boolean;
-  /**
-   * Automatically split route modules into multiple chunks when possible.
-   */
-  v8_splitRouteModules: boolean | "enforce";
-  /**
-   * Use Vite Environment API
-   */
-  v8_viteEnvironmentApi: boolean;
 }
+
+type SplitRouteModulesOption = boolean | "enforce";
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
 
@@ -143,6 +138,16 @@ export type ReactRouterConfig = {
     ? // Partial<FutureConfig> doesn't work when it's empty so just prevent any keys
       { [key: string]: never }
     : Partial<FutureConfig>;
+
+  /**
+   * Automatically split route modules into multiple chunks when possible.
+   *
+   * This can be set to `false` to keep route modules in a single chunk, or
+   * `"enforce"` to require all routes to be splittable.
+   *
+   * Defaults to `true`.
+   */
+  splitRouteModules?: SplitRouteModulesOption;
 
   /**
    * The React Router app basename.  Defaults to `"/"`.
@@ -209,12 +214,31 @@ export type ReactRouterConfig = {
    */
   serverBundles?: ServerBundlesFunction;
   /**
-   * Enable server-side rendering for your application. Disable to use "SPA
-   * Mode", which will request the `/` path at build-time and save it as an
-   * `index.html` file with your assets so your application can be deployed as a
-   * SPA without server-rendering. Default's to `true`.
+   * Control runtime server-side document rendering. Defaults to `true`.
+   *
+   * Set `false` to generate a static client build without a runtime server.
+   * Without prerendering, this generates a root-only SPA shell. With
+   * prerendering, it generates HTML and data files for selected paths plus
+   * a SPA fallback for non-prerendered paths.
+   *
+   * Set `"unstable_api-only"` to retain a runtime server for loaders, actions,
+   * and route discovery while disabling production document rendering.
+   * Documents follow the same prerendering and SPA fallback behavior as
+   * `ssr:false`, with runtime loaders and actions available for all routes.
+   * API-only mode is unstable and is not supported in RSC Framework Mode.
    */
-  ssr?: boolean;
+  ssr?: boolean | "unstable_api-only";
+
+  /**
+   * The origin to use for server requests when `ssr` is `"unstable_api-only"`.
+   * This is ignored when `ssr` is `true` or `false`. Defaults to the same
+   * origin that serves the client build. Applies to loader, action, and route
+   * discovery requests.
+   *
+   * **Note:** The server origin will need to be configured appropriately for
+   * Cross-Origin Request Sharing (CORS).
+   */
+  unstable_apiServerOrigin?: string;
 
   /**
    * Enable subresource integrity hashes on asset script tags. Defaults to
@@ -287,6 +311,11 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   future: FutureConfig;
   /**
+   * Whether to automatically split route modules into multiple chunks when
+   * possible.
+   */
+  splitRouteModules: SplitRouteModulesOption;
+  /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
    */
@@ -323,12 +352,24 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   serverModuleFormat: ServerModuleFormat;
   /**
-   * Enable server-side rendering for your application. Disable to use "SPA
-   * Mode", which will request the `/` path at build-time and save it as an
-   * `index.html` file with your assets so your application can be deployed as a
-   * SPA without server-rendering. Default's to `true`.
+   * Control runtime server-side document rendering. Defaults to `true`.
+   *
+   * Set `false` to generate a static client build without a runtime server.
+   * Without prerendering, this generates a root-only SPA shell. With
+   * prerendering, it generates HTML and data files for selected paths plus
+   * a SPA fallback for non-prerendered paths.
+   *
+   * Set `"unstable_api-only"` to retain a runtime server for loaders, actions,
+   * and route discovery while disabling production document rendering.
+   * Documents follow the same prerendering and SPA fallback behavior as
+   * `ssr:false`, with runtime loaders and actions available for all routes.
+   * API-only mode is unstable and is not supported in RSC Framework Mode.
    */
-  ssr: boolean;
+  ssr: boolean | "unstable_api-only";
+  /**
+   * The origin to use for server requests in API-only mode.
+   */
+  unstable_apiServerOrigin?: string;
   /**
    * Whether to generate subresource integrity hashes for asset script tags.
    */
@@ -431,18 +472,16 @@ function err<T>(error: string): Result<T> {
 
 async function resolveConfig({
   root,
-  viteNodeContext,
+  viteRunnerContext,
   reactRouterConfigFile,
   skipRoutes,
   validateConfig,
-  shouldLogFutureFlagWarnings,
 }: {
   root: string;
-  viteNodeContext: ViteNode.Context;
+  viteRunnerContext: ViteRunner.Context;
   reactRouterConfigFile?: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
-  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigResult> {
   let reactRouterUserConfig: ReactRouterConfig = {};
 
@@ -452,7 +491,7 @@ async function resolveConfig({
         return err(`${reactRouterConfigFile} no longer exists`);
       }
 
-      let configModule = await viteNodeContext.runner.executeFile(
+      let configModule = await viteRunnerContext.runner.import(
         reactRouterConfigFile,
       );
 
@@ -529,10 +568,29 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_apiServerOrigin,
   } = {
     ...defaults, // Default values should be completely overridden by user/preset config, not merged
     ...userAndPresetConfigs,
   };
+
+  if (ssr === "unstable_api-only" && unstable_apiServerOrigin != null) {
+    try {
+      let url = new URL(unstable_apiServerOrigin);
+      if (url.pathname !== "/" || url.search || url.hash) {
+        return err(
+          "The `unstable_apiServerOrigin` config must be an origin without a path, query, or hash.",
+        );
+      }
+      unstable_apiServerOrigin = url.origin;
+    } catch {
+      return err(
+        "The `unstable_apiServerOrigin` config must be a valid absolute URL.",
+      );
+    }
+  } else {
+    unstable_apiServerOrigin = undefined;
+  }
 
   if (!ssr && serverBundles) {
     serverBundles = undefined;
@@ -640,7 +698,7 @@ async function resolveConfig({
 
       setAppDirectory(appDirectory);
       let routeConfigExport = (
-        await viteNodeContext.runner.executeFile(
+        await viteRunnerContext.runner.import(
           Path.join(appDirectory, routeConfigFile),
         )
       ).default;
@@ -689,24 +747,44 @@ async function resolveConfig({
   // Check for renamed flags and provide helpful error messages
   let futureConfig = userAndPresetConfigs.future;
   if (futureConfig) {
-    if ("unstable_splitRouteModules" in futureConfig) {
+    if (
+      "unstable_splitRouteModules" in futureConfig ||
+      "v8_splitRouteModules" in futureConfig
+    ) {
       return err(
-        "The `future.unstable_splitRouteModules` flag has been stabilized as `future.v8_splitRouteModules`",
+        "The `future.v8_splitRouteModules` flag has been moved to a top-level `config.splitRouteModules` field (default `true`)",
       );
     }
-    if ("unstable_viteEnvironmentApi" in futureConfig) {
+    if (
+      "unstable_viteEnvironmentApi" in futureConfig ||
+      "v8_viteEnvironmentApi" in futureConfig
+    ) {
       return err(
-        "The `future.unstable_viteEnvironmentApi` flag has been stabilized as `future.v8_viteEnvironmentApi`",
+        "The `future.v8_viteEnvironmentApi` flag has been removed because Vite Environment API usage is now always enabled",
       );
     }
-    if ("unstable_passThroughRequests" in futureConfig) {
+    if (
+      "unstable_passThroughRequests" in futureConfig ||
+      "v8_passThroughRequests" in futureConfig
+    ) {
       return err(
-        "The `future.unstable_passThroughRequests` flag has been stabilized as `future.v8_passThroughRequests`",
+        "The `future.v8_passThroughRequests` flag has been removed because pass-through requests are now the default behavior",
       );
     }
-    if ("unstable_trailingSlashAwareDataRequests" in futureConfig) {
+    if (
+      "unstable_middleware" in futureConfig ||
+      "v8_middleware" in futureConfig
+    ) {
       return err(
-        "The `future.unstable_trailingSlashAwareDataRequests` flag has been stabilized as `future.v8_trailingSlashAwareDataRequests`",
+        "The `future.v8_middleware` flag has been removed because middleware is now always enabled",
+      );
+    }
+    if (
+      "unstable_trailingSlashAwareDataRequests" in futureConfig ||
+      "v8_trailingSlashAwareDataRequests" in futureConfig
+    ) {
+      return err(
+        "The `future.v8_trailingSlashAwareDataRequests` flag has been removed because trailing slash-aware data requests are now the default behavior",
       );
     }
     if ("unstable_subResourceIntegrity" in futureConfig) {
@@ -717,24 +795,16 @@ async function resolveConfig({
   }
 
   let future: FutureConfig = {
+    unstable_customRouteDiscovery:
+      userAndPresetConfigs.future?.unstable_customRouteDiscovery ?? false,
+    unstable_enableNodeReadableStream:
+      userAndPresetConfigs.future?.unstable_enableNodeReadableStream ?? false,
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
-    v8_passThroughRequests:
-      userAndPresetConfigs.future?.v8_passThroughRequests ?? false,
-    v8_trailingSlashAwareDataRequests:
-      userAndPresetConfigs.future?.v8_trailingSlashAwareDataRequests ?? false,
-    unstable_previewServerPrerendering:
-      userAndPresetConfigs.future?.unstable_previewServerPrerendering ?? false,
-    v8_middleware: userAndPresetConfigs.future?.v8_middleware ?? false,
-    v8_splitRouteModules:
-      userAndPresetConfigs.future?.v8_splitRouteModules ?? false,
-    v8_viteEnvironmentApi:
-      (userAndPresetConfigs.future?.v8_viteEnvironmentApi ||
-        userAndPresetConfigs.future?.unstable_previewServerPrerendering) ??
-      false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;
+  let splitRouteModules = userAndPresetConfigs.splitRouteModules ?? true;
   let subResourceIntegrity = userAndPresetConfigs.subResourceIntegrity ?? false;
 
   let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
@@ -750,6 +820,8 @@ async function resolveConfig({
     serverBundles,
     serverModuleFormat,
     ssr,
+    unstable_apiServerOrigin,
+    splitRouteModules,
     subResourceIntegrity,
     allowedActionOrigins,
     unstable_routeConfig: routeConfig,
@@ -759,54 +831,7 @@ async function resolveConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
-  if (shouldLogFutureFlagWarnings) {
-    logFutureFlagWarnings(userAndPresetConfigs.future || {});
-  }
-
   return ok(reactRouterConfig);
-}
-
-function logFutureFlagWarning(flag: string, message: string): void {
-  console.log(
-    colors.yellow(
-      `  ⚠️  Future Flag Warning: ${message}\n` +
-        `     You can use the \`future.${flag}\` flag to opt in early.\n` +
-        `     -> https://reactrouter.com/v7/upgrading/future#future${flag.toLowerCase()}`,
-    ),
-  );
-}
-
-export function logFutureFlagWarnings(future: Partial<FutureConfig>): void {
-  if (future.v8_middleware === undefined) {
-    logFutureFlagWarning(
-      "v8_middleware",
-      "Route middleware support is changing in React Router v8.",
-    );
-  }
-  if (future.v8_splitRouteModules === undefined) {
-    logFutureFlagWarning(
-      "v8_splitRouteModules",
-      "Route module splitting behavior is changing in React Router v8.",
-    );
-  }
-  if (future.v8_viteEnvironmentApi === undefined) {
-    logFutureFlagWarning(
-      "v8_viteEnvironmentApi",
-      "Vite Environment API usage is changing in React Router v8.",
-    );
-  }
-  if (future.v8_passThroughRequests === undefined) {
-    logFutureFlagWarning(
-      "v8_passThroughRequests",
-      "Request handling behavior is changing in React Router v8.",
-    );
-  }
-  if (future.v8_trailingSlashAwareDataRequests === undefined) {
-    logFutureFlagWarning(
-      "v8_trailingSlashAwareDataRequests",
-      "Data request URL formats are changing in React Router v8.",
-    );
-  }
 }
 
 type ChokidarEventName = ChokidarEmitArgs[0];
@@ -833,22 +858,20 @@ export async function createConfigLoader({
   mode,
   skipRoutes,
   validateConfig,
-  shouldLogFutureFlagWarnings,
 }: {
   watch: boolean;
   rootDirectory?: string;
   mode: string;
   skipRoutes?: boolean;
   validateConfig?: ValidateConfigFunction;
-  shouldLogFutureFlagWarnings?: boolean;
 }): Promise<ConfigLoader> {
   root = Path.normalize(root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd());
 
   let vite = await import("vite");
-  let viteNodeContext = await ViteNode.createContext({
+  let viteRunnerContext = await ViteRunner.createContext({
     root,
     mode,
-    // Filter out any info level logs from vite-node
+    // Filter out any info level logs from Vite's module runner
     customLogger: vite.createLogger("warn", {
       prefix: "[react-router]",
     }),
@@ -867,18 +890,17 @@ export async function createConfigLoader({
   let getConfig = () =>
     resolveConfig({
       root,
-      viteNodeContext,
+      viteRunnerContext,
       reactRouterConfigFile,
       skipRoutes,
       validateConfig,
-      shouldLogFutureFlagWarnings,
     });
 
   let appDirectory: string;
 
   let initialConfigResult = await resolveConfig({
     root,
-    viteNodeContext,
+    viteRunnerContext,
     reactRouterConfigFile,
     skipRoutes,
     validateConfig,
@@ -940,7 +962,7 @@ export async function createConfigLoader({
           let moduleGraphChanged =
             configFileAddedOrRemoved ||
             Boolean(
-              viteNodeContext.devServer?.moduleGraph.getModuleById(filepath),
+              viteRunnerContext.environment.moduleGraph.getModuleById(filepath),
             );
 
           // Bail out if no relevant changes detected
@@ -948,8 +970,8 @@ export async function createConfigLoader({
             return;
           }
 
-          viteNodeContext.devServer?.moduleGraph.invalidateAll();
-          viteNodeContext.runner?.moduleCache.clear();
+          viteRunnerContext.environment.moduleGraph.invalidateAll();
+          viteRunnerContext.runner.clearCache();
 
           let result = await getConfig();
 
@@ -967,7 +989,7 @@ export async function createConfigLoader({
             configFileAddedOrRemoved ||
             (reactRouterConfigFile !== undefined &&
               isEntryFileDependency(
-                viteNodeContext.devServer.moduleGraph,
+                viteRunnerContext.environment.moduleGraph,
                 reactRouterConfigFile,
                 filepath,
               ));
@@ -980,7 +1002,7 @@ export async function createConfigLoader({
           let routeConfigCodeChanged =
             routeConfigFile !== undefined &&
             isEntryFileDependency(
-              viteNodeContext.devServer.moduleGraph,
+              viteRunnerContext.environment.moduleGraph,
               routeConfigFile,
               filepath,
             );
@@ -1018,7 +1040,7 @@ export async function createConfigLoader({
     },
     close: async () => {
       changeHandlers = [];
-      await viteNodeContext.devServer.close();
+      await viteRunnerContext.devServer.close();
       await fsWatcher?.close();
     },
   };
@@ -1054,7 +1076,7 @@ export async function resolveEntryFiles({
   let { appDirectory } = reactRouterConfig;
 
   let defaultsDirectory = Path.resolve(
-    Path.dirname(require.resolve("@react-router/dev/package.json")),
+    Path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     "defaults",
@@ -1081,21 +1103,11 @@ export async function resolveEntryFiles({
       );
     }
 
-    // TODO(v8): Remove - only required for Node 20.18 and below
-    let { readPackageJSON, sortPackage, updatePackage } = await import(
-      "pkg-types"
-    );
     let packageJsonDirectory = Path.dirname(packageJsonPath);
     let pkgJson = await readPackageJSON(packageJsonDirectory);
     let deps = pkgJson.dependencies ?? {};
 
-    if (!deps["@react-router/node"]) {
-      throw new Error(
-        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`,
-      );
-    }
-
-    if (!deps["isbot"]) {
+    if (reactRouterConfig.ssr && !deps["isbot"]) {
       console.log(
         "adding `isbot@5` to your package.json, you should commit this change",
       );
@@ -1114,7 +1126,11 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = `entry.server.node.tsx`;
+    entryServerFile =
+      hasNodeDependency(deps) &&
+      !reactRouterConfig.future.unstable_enableNodeReadableStream
+        ? `entry.server.node.tsx`
+        : `entry.server.web.tsx`;
   }
 
   let entryClientFilePath = userEntryClientFile
@@ -1136,7 +1152,7 @@ export async function resolveRSCEntryFiles({
   let { appDirectory } = reactRouterConfig;
 
   let defaultsDirectory = Path.resolve(
-    Path.dirname(require.resolve("@react-router/dev/package.json")),
+    Path.dirname(nodeRequire.resolve("@react-router/dev/package.json")),
     "dist",
     "config",
     "default-rsc-entries",
@@ -1170,6 +1186,19 @@ function omitRoutes(
 }
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx", ".mjs", ".mts"];
+
+export function hasNodeDependency(deps: PackageJson["dependencies"]) {
+  // Match the server condition check in the Vite plugin: missing dependencies
+  // imply Node for backwards compatibility.
+  return (
+    !deps ||
+    Boolean(
+      deps["@react-router/node"] ||
+      deps["@react-router/express"] ||
+      deps["@react-router/serve"],
+    )
+  );
+}
 
 function isEntryFile(entryBasename: string, filename: string) {
   return entryExts.some((ext) => filename === `${entryBasename}${ext}`);
@@ -1211,7 +1240,7 @@ function findEntry(
 }
 
 function isEntryFileDependency(
-  moduleGraph: Vite.ModuleGraph,
+  moduleGraph: Vite.EnvironmentModuleGraph,
   entryFilepath: string,
   filepath: string,
   visited = new Set<string>(),

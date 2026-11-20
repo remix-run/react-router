@@ -332,7 +332,7 @@ describe("route HydrateFallback", () => {
         id: "parent",
         path: "/",
         loader: () => `PARENT ${++parentCount}`,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         children: [
           {
             path: "child",
@@ -394,7 +394,7 @@ describe("route HydrateFallback", () => {
         id: "parent",
         path: "/",
         loader: () => `PARENT ${++parentCount}`,
-        hasErrorBoundary: true,
+        ErrorBoundary: () => null,
         children: [
           {
             path: "child",

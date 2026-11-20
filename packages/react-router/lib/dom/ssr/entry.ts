@@ -1,3 +1,4 @@
+import type { DiscoveryState, RouteDiscoveryRuntime } from "./route-discovery";
 import type { StaticHandlerContext } from "../../router/router";
 
 import type { EntryRoute } from "./routes";
@@ -16,6 +17,8 @@ type SerializedError = {
 
 // Object passed to RemixContext.Provider
 export interface FrameworkContextObject {
+  routeDiscoveryRuntime?: RouteDiscoveryRuntime;
+  routeDiscoveryState?: DiscoveryState;
   manifest: AssetsManifest;
   routeModules: RouteModules;
   criticalCss?: CriticalCss;
@@ -23,7 +26,10 @@ export interface FrameworkContextObject {
   future: FutureConfig;
   ssr: boolean;
   isSpaMode: boolean;
+  unstable_apiOnly?: boolean;
+  unstable_apiServerOrigin?: string;
   routeDiscovery: ServerBuild["routeDiscovery"];
+  nonce?: string;
   serializeError?(error: Error): SerializedError;
   renderMeta?: {
     didRenderScripts?: boolean;
@@ -43,15 +49,17 @@ export interface FrameworkContextObject {
 // Additional React-Router information needed at runtime, but not hydrated
 // through RemixContext
 export interface EntryContext extends FrameworkContextObject {
+  /**
+   * @deprecated This property was an internal implementation detail and was
+   * never intended for use in `entry.server.tsx`. It is always an empty array.
+   */
   branches: RouteBranch<DataRouteObject>[];
   staticHandlerContext: StaticHandlerContext;
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
 export interface FutureConfig {
-  v8_passThroughRequests: boolean;
-  v8_trailingSlashAwareDataRequests: boolean;
-  v8_middleware: boolean;
+  unstable_customRouteDiscovery?: boolean;
 }
 
 export type CriticalCss = string | { rel: "stylesheet"; href: string };

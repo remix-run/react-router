@@ -6,7 +6,6 @@ export const ssrExternals = isReactRouterRepo()
       // are linked to a directory outside of node_modules so Vite
       // treats them as internal code by default.
       "react-router",
-      "react-router-dom",
       "@react-router/architect",
       "@react-router/cloudflare",
       "@react-router/dev",

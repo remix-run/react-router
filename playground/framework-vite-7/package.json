@@ -1,0 +1,33 @@
+{
+  "name": "@playground/framework-vite-7",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "build": "react-router build",
+    "dev": "react-router dev",
+    "start": "react-router-serve ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc"
+  },
+  "dependencies": {
+    "@react-router/node": "workspace:*",
+    "@react-router/serve": "workspace:*",
+    "isbot": "^5.1.40",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "workspace:*"
+  },
+  "devDependencies": {
+    "@react-router/dev": "workspace:*",
+    "@types/node": "^22.19.19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^7.0.0",
+    "vite-tsconfig-paths": "^4.2.2"
+  },
+  "engines": {
+    "node": ">=22.22.0"
+  }
+}

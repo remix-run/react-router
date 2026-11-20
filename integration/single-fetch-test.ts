@@ -4,6 +4,7 @@ import {
   UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol,
 } from "react-router";
 
+import { isFirefoxMicrotaskWarning } from "./helpers/console.js";
 import {
   createAppFixture,
   createFixture,
@@ -205,7 +206,7 @@ test.describe("single-fetch", () => {
     let fixture = await createFixture({
       files,
     });
-    let res = await fixture.requestSingleFetchData("/_root.data");
+    let res = await fixture.requestSingleFetchData("/_.data");
     expect(res.data).toEqual({
       root: {
         data: {
@@ -454,20 +455,19 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#data")).toContain("1");
     expect(urls).toEqual([]);
 
-    await page.click('button[name="revalidate"][value="yes"]');
-    await page.waitForSelector("#action-data");
-    await page.waitForSelector("#idle");
-    expect(await app.getHtml("#data")).toContain("2");
-    expect(urls).toEqual([expect.stringMatching(/\/no-revalidate\.data$/)]);
-
     await page.click('button[name="revalidate"][value="no"]');
     await page.waitForSelector("#action-data");
     await page.waitForSelector("#idle");
-    expect(await app.getHtml("#data")).toContain("2");
+    expect(await app.getHtml("#data")).toContain("1");
     expect(urls).toEqual([
-      expect.stringMatching(/\/no-revalidate\.data$/),
       expect.stringMatching(/\/no-revalidate\.data\?_routes=root$/),
     ]);
+    urls.splice(0, urls.length);
+
+    await page.click('button[name="revalidate"][value="yes"]');
+    await page.waitForSelector("#data:has-text('2')");
+    expect(await app.getHtml("#data")).toContain("2");
+    expect(urls).toEqual([expect.stringMatching(/\/no-revalidate\.data$/)]);
   });
 
   test("revalidates on reused routes by default", async ({ page }) => {
@@ -1091,7 +1091,7 @@ test.describe("single-fetch", () => {
                     <Link to="/page?optout" defaultShouldRevalidate={false}>Page (opt-out)</Link>
                   </nav>
                   <pre id="data">
-                    {JSON.stringify(useMatches().map(m => [m.id, m.data]))}
+                    {JSON.stringify(useMatches().map(m => [m.id, m.loaderData]))}
                   </pre>
                   <Outlet />
                   <Scripts />
@@ -1127,27 +1127,27 @@ test.describe("single-fetch", () => {
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/"); // root increments to 1
-    expect(await page.locator("#data").innerText()).toBe(
+    await expect(page.locator("#data")).toHaveText(
       '[["root",{"count":1}],["routes/_index",null]]',
     );
 
     await app.clickLink("/page"); // root increments to 2
-    expect(await page.locator("#data").innerText()).toBe(
+    await expect(page.locator("#data")).toHaveText(
       '[["root",{"count":2}],["routes/page",{"count":1}]]',
     );
     expect(urls).toEqual(["/page.data"]);
     urls.splice(0, urls.length);
 
     await app.clickLink("/"); // root increments to 3
-    expect(await page.locator("#data").innerText()).toBe(
+    await expect(page.locator("#data")).toHaveText(
       '[["root",{"count":3}],["routes/_index",null]]',
     );
-    expect(urls).toEqual(["/_root.data"]);
+    expect(urls).toEqual(["/_.data"]);
     urls.splice(0, urls.length);
 
     await app.clickLink("/page?optout");
     // root stays at 3, page is a fresh load so increments to 2
-    expect(await page.locator("#data").innerText()).toBe(
+    await expect(page.locator("#data")).toHaveText(
       '[["root",{"count":3}],["routes/page",{"count":2}]]',
     );
     expect(urls).toEqual(["/page.data?optout=&_routes=routes%2Fpage"]);
@@ -1961,7 +1961,7 @@ test.describe("single-fetch", () => {
     await app.clickLink("/base/");
     await expect(page.getByText("Index")).toBeVisible();
 
-    expect(requests).toEqual(["/base/data.data", "/base/_root.data"]);
+    expect(requests).toEqual(["/base/data.data", "/base/_.data"]);
   });
 
   test("processes redirects when a basename is present", async ({ page }) => {
@@ -2240,8 +2240,8 @@ test.describe("single-fetch", () => {
         `,
         "app/routes/parent.tsx": js`
           import { Link, Outlet, useLoaderData } from "react-router";
-          export function loader({ request }) {
-            return { url: request.url };
+          export function loader({ url }) {
+            return { url: url.toString() };
           }
           export default function Component() {
             return (
@@ -2254,14 +2254,14 @@ test.describe("single-fetch", () => {
         `,
         "app/routes/parent.a.tsx": js`
           import { useLoaderData } from "react-router";
-          export function loader({ request }) {
-            return { url: request.url };
+          export function loader({ url }) {
+            return { url: url.toString() };
           }
-          export async function clientLoader({ request, serverLoader }) {
+          export async function clientLoader({ url, serverLoader }) {
             let serverData = await serverLoader();
             return {
               serverUrl: serverData.url,
-              clientUrl: request.url
+              clientUrl: url.toString()
             }
           }
           export default function Component() {
@@ -2498,8 +2498,8 @@ test.describe("single-fetch", () => {
 
     expect(await page.innerText("[data-submit]")).toEqual("no content!");
     expect(requests).toEqual([
-      ["POST", 204, "/_root.data?index"],
-      ["GET", 200, "/_root.data"],
+      ["POST", 204, "/_.data?index"],
+      ["GET", 200, "/_.data"],
     ]);
   });
 
@@ -2539,7 +2539,7 @@ test.describe("single-fetch", () => {
     expect(await documentRes.text()).toBe("");
 
     // Data requests
-    let dataRes = await fixture.requestSingleFetchData("/_root.data");
+    let dataRes = await fixture.requestSingleFetchData("/_.data");
     expect(dataRes.data).toEqual({
       root: {
         data: {
@@ -2552,7 +2552,7 @@ test.describe("single-fetch", () => {
         },
       },
     });
-    dataRes = await fixture.requestSingleFetchData("/_root.data", {
+    dataRes = await fixture.requestSingleFetchData("/_.data", {
       headers: {
         "If-None-Match": "1234",
       },
@@ -3837,7 +3837,11 @@ test.describe("single-fetch", () => {
 
       // Capture console logs and uncaught errors
       let msgs: string[] = [];
-      page.on("console", (msg) => msgs.push(msg.text()));
+      page.on("console", (msg) => {
+        if (!isFirefoxMicrotaskWarning(msg)) {
+          msgs.push(msg.text());
+        }
+      });
       page.on("pageerror", (error) => msgs.push(error.message));
 
       await app.goto("/", true);
@@ -4567,7 +4571,7 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("h1")).toMatch("It worked!");
   });
 
-  test("always uses /{path}.data without future.v8_trailingSlashAwareDataRequests flag", async ({
+  test("uses {path}.data or {path}/_.data depending on trailing slash", async ({
     page,
   }) => {
     let fixture = await createFixture({
@@ -4590,107 +4594,12 @@ test.describe("single-fetch", () => {
           import { Link, useLoaderData } from "react-router";
 
           export function loader({ request }) {
-            let url = new URL(request.url);
+            let pathname = new URL(request.url).pathname
+              .replace(/_\.data$/, "")
+              .replace(/\.data$/, "");
             return {
-              pathname: url.pathname,
-              hasTrailingSlash: url.pathname.endsWith("/"),
-            };
-          }
-
-          export default function About() {
-            let { pathname, hasTrailingSlash } = useLoaderData();
-            return (
-              <div>
-                <h1>About</h1>
-                <p id="pathname">{pathname}</p>
-                <p id="trailing-slash">{String(hasTrailingSlash)}</p>
-                <Link to="/">Go back home</Link>
-              </div>
-            );
-          }
-        `,
-      },
-    });
-    let appFixture = await createAppFixture(fixture);
-    let app = new PlaywrightFixture(appFixture, page);
-
-    let requests: string[] = [];
-    page.on("request", (req) => {
-      let url = new URL(req.url());
-      if (url.pathname.endsWith(".data")) {
-        requests.push(url.pathname + url.search);
-      }
-    });
-
-    // Document load without trailing slash
-    await app.goto("/about");
-    await page.waitForSelector("#pathname");
-    expect(await page.locator("#pathname").innerText()).toEqual("/about");
-    expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
-
-    // Client-side navigation without trailing slash
-    await app.goto("/");
-    await app.clickLink("/about");
-    await page.waitForSelector("#pathname");
-    expect(await page.locator("#pathname").innerText()).toEqual("/about");
-    expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
-    expect(requests).toEqual(["/about.data"]);
-    requests = [];
-
-    // Document load with trailing slash
-    await app.goto("/about/");
-    await page.waitForSelector("#pathname");
-    expect(await page.locator("#pathname").innerText()).toEqual("/about/");
-    expect(await page.locator("#trailing-slash").innerText()).toEqual("true");
-
-    // Client-side navigation with trailing slash
-    await app.goto("/");
-    await app.clickLink("/about/");
-    await page.waitForSelector("#pathname");
-    expect(await page.locator("#pathname").innerText()).toEqual("/about");
-    expect(await page.locator("#trailing-slash").innerText()).toEqual("false");
-    expect(requests).toEqual(["/about.data"]);
-    requests = [];
-
-    // Client-side navigation back to /
-    await app.clickLink("/");
-    await page.waitForSelector("h1:has-text('Home')");
-    expect(requests).toEqual(["/_root.data"]);
-    requests = [];
-  });
-
-  test("uses {path}.data or {path}/_.data depending on trailing slash with future.v8_trailingSlashAwareDataRequests flag", async ({
-    page,
-  }) => {
-    let fixture = await createFixture({
-      files: {
-        ...files,
-        "react-router.config.ts": reactRouterConfig({
-          future: {
-            v8_trailingSlashAwareDataRequests: true,
-          },
-        }),
-        "app/routes/_index.tsx": js`
-          import { Link } from "react-router";
-
-          export default function Index() {
-            return (
-              <div>
-                <h1>Home</h1>
-                <Link to="/about/">Go to About (with trailing slash)</Link>
-                <Link to="/about">Go to About (without trailing slash)</Link>
-              </div>
-            );
-          }
-        `,
-        "app/routes/about.tsx": js`
-          import { Link, useLoaderData } from "react-router";
-
-          export function loader({ request }) {
-            let url = new URL(request.url);
-            return {
-              pathname: url.pathname,
-              hasTrailingSlash: url.pathname.endsWith("/"),
+              pathname,
+              hasTrailingSlash: pathname.endsWith("/"),
             };
           }
 

@@ -5,7 +5,6 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { reactRouterConfig } from "./helpers/vite.js";
 
 const files = {
   "app/root.tsx": js`
@@ -96,18 +95,11 @@ const files = {
 };
 
 test.describe("pass through requests", () => {
-  test("sends proper arguments to loaders when future.v8_passThroughRequests is disabled", async ({
+  test("passes the raw request through to loaders and actions", async ({
     page,
   }) => {
     let fixture = await createFixture({
-      files: {
-        "react-router.config.ts": reactRouterConfig({
-          future: {
-            v8_passThroughRequests: false,
-          },
-        }),
-        ...files,
-      },
+      files,
     });
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
@@ -122,108 +114,33 @@ test.describe("pass through requests", () => {
 
     // Document load
     await app.goto("/");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe("/");
-    expect(await page.locator("[data-loader-path]").textContent()).toBe("/");
+    await expect(page.locator("[data-loader-url]")).toHaveText("/");
+    await expect(page.locator("[data-loader-path]")).toHaveText("/");
 
     // Client-side navigation with query params
     await app.clickLink("/?a=1");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe("/?a=1");
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/?a=1",
-    );
-    expect(requests).toEqual(["/_root.data?a=1"]);
+    await expect(page.locator("[data-loader-url]")).toHaveText("/_.data?a=1");
+    await expect(page.locator("[data-loader-path]")).toHaveText("/?a=1");
+    expect(requests).toEqual(["/_.data?a=1"]);
     requests = [];
 
     // Client-side form submission with query params
     await app.clickElement('button[type="submit"]');
-    expect(await page.locator("[data-action-url]").textContent()).toBe("/?a=1");
-    expect(await page.locator("[data-action-path]").textContent()).toBe(
-      "/?a=1",
+    await expect(page.locator("[data-action-url]")).toHaveText(
+      "/_.data?index&a=1",
     );
-    expect(await page.locator("[data-loader-url]").textContent()).toBe("/?a=1");
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/?a=1",
-    );
-    expect(requests).toEqual(["/_root.data?index&a=1", "/_root.data?a=1"]);
+    await expect(page.locator("[data-action-path]")).toHaveText("/?a=1");
+    await expect(page.locator("[data-loader-url]")).toHaveText("/_.data?a=1");
+    await expect(page.locator("[data-loader-path]")).toHaveText("/?a=1");
+    expect(requests).toEqual(["/_.data?index&a=1", "/_.data?a=1"]);
     requests = [];
 
     // Navigate to new page
     await app.clickLink("/page?b=2");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe(
-      "/page?b=2",
-    );
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/page?b=2",
-    );
-    expect(requests).toEqual(["/page.data?b=2&_routes=routes%2Fpage"]);
-    requests = [];
-  });
-
-  test("sends proper arguments to loaders when future.v8_passThroughRequests is enabled", async ({
-    page,
-  }) => {
-    let fixture = await createFixture({
-      files: {
-        "react-router.config.ts": reactRouterConfig({
-          future: {
-            v8_passThroughRequests: true,
-          },
-        }),
-        ...files,
-      },
-    });
-    let appFixture = await createAppFixture(fixture);
-    let app = new PlaywrightFixture(appFixture, page);
-
-    let requests: string[] = [];
-    page.on("request", (req) => {
-      let url = new URL(req.url());
-      if (url.pathname.endsWith(".data")) {
-        requests.push(url.pathname + url.search);
-      }
-    });
-
-    // Document load
-    await app.goto("/");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe("/");
-    expect(await page.locator("[data-loader-path]").textContent()).toBe("/");
-
-    // Client-side navigation with query params
-    await app.clickLink("/?a=1");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe(
-      "/_root.data?a=1",
-    );
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/?a=1",
-    );
-    expect(requests).toEqual(["/_root.data?a=1"]);
-    requests = [];
-
-    // Client-side form submission with query params
-    await app.clickElement('button[type="submit"]');
-    expect(await page.locator("[data-action-url]").textContent()).toBe(
-      "/_root.data?index&a=1",
-    );
-    expect(await page.locator("[data-action-path]").textContent()).toBe(
-      "/?a=1",
-    );
-    expect(await page.locator("[data-loader-url]").textContent()).toBe(
-      "/_root.data?a=1",
-    );
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/?a=1",
-    );
-    expect(requests).toEqual(["/_root.data?index&a=1", "/_root.data?a=1"]);
-    requests = [];
-
-    // Navigate to new page
-    await app.clickLink("/page?b=2");
-    expect(await page.locator("[data-loader-url]").textContent()).toBe(
+    await expect(page.locator("[data-loader-url]")).toHaveText(
       "/page.data?b=2&_routes=routes%2Fpage",
     );
-    expect(await page.locator("[data-loader-path]").textContent()).toBe(
-      "/page?b=2",
-    );
+    await expect(page.locator("[data-loader-path]")).toHaveText("/page?b=2");
     expect(requests).toEqual(["/page.data?b=2&_routes=routes%2Fpage"]);
     requests = [];
   });

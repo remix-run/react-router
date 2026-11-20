@@ -1,9 +1,9 @@
-type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
+type PackageManager = "npm" | "pnpm" | "yarn" | "bun" | "nub";
 
 /**
  * Determine which package manager the user prefers.
  *
- * npm, pnpm and Yarn set the user agent environment variable
+ * npm, pnpm, Yarn, Bun, and nub set the user agent environment variable
  * that can be used to determine which package manager ran
  * the command.
  */
@@ -16,6 +16,7 @@ export const detectPackageManager = (): PackageManager | undefined => {
     if (pkgManager === "pnpm") return "pnpm";
     if (pkgManager === "yarn") return "yarn";
     if (pkgManager === "bun") return "bun";
+    if (pkgManager === "nub") return "nub";
     return undefined;
   } catch {
     return undefined;

@@ -700,21 +700,21 @@ describe("shouldRevalidate", () => {
 
     let arg = shouldRevalidate.mock.calls[0][0];
     expect(arg).toMatchInlineSnapshot(`
-      {
-        "actionResult": "FETCH",
-        "actionStatus": undefined,
-        "currentParams": {},
-        "currentUrl": "http://localhost/",
-        "defaultShouldRevalidate": true,
-        "formAction": "/fetch",
-        "formData": FormData {},
-        "formEncType": "application/x-www-form-urlencoded",
-        "formMethod": "POST",
-        "json": undefined,
-        "nextParams": {},
-        "nextUrl": "http://localhost/",
-        "text": undefined,
-      }
+     {
+       "actionResult": "FETCH",
+       "actionStatus": undefined,
+       "currentParams": {},
+       "currentUrl": "http://localhost/",
+       "defaultShouldRevalidate": true,
+       "formAction": "/fetch",
+       "formData": FormData {},
+       "formEncType": "application/x-www-form-urlencoded",
+       "formMethod": "POST",
+       "json": undefined,
+       "nextParams": {},
+       "nextUrl": "http://localhost/",
+       "text": undefined,
+     }
     `);
     expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
 
@@ -763,21 +763,21 @@ describe("shouldRevalidate", () => {
 
     let arg = shouldRevalidate.mock.calls[0][0];
     expect(arg).toMatchInlineSnapshot(`
-      {
-        "actionResult": undefined,
-        "actionStatus": undefined,
-        "currentParams": {},
-        "currentUrl": "http://localhost/",
-        "defaultShouldRevalidate": true,
-        "formAction": "/fetch",
-        "formData": FormData {},
-        "formEncType": "application/x-www-form-urlencoded",
-        "formMethod": "POST",
-        "json": undefined,
-        "nextParams": {},
-        "nextUrl": "http://localhost/",
-        "text": undefined,
-      }
+     {
+       "actionResult": undefined,
+       "actionStatus": undefined,
+       "currentParams": {},
+       "currentUrl": "http://localhost/",
+       "defaultShouldRevalidate": true,
+       "formAction": "/fetch",
+       "formData": FormData {},
+       "formEncType": "application/x-www-form-urlencoded",
+       "formMethod": "POST",
+       "json": undefined,
+       "nextParams": {},
+       "nextUrl": "http://localhost/",
+       "text": undefined,
+     }
     `);
 
     router.dispose();
@@ -1059,7 +1059,7 @@ describe("shouldRevalidate", () => {
             {
               id: "index",
               index: true,
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               action: () => responses[++count],
             },
           ],
@@ -1124,7 +1124,7 @@ describe("shouldRevalidate", () => {
             {
               id: "index",
               index: true,
-              hasErrorBoundary: true,
+              ErrorBoundary: () => null,
               action: () => {
                 throw responses[++count];
               },
@@ -1179,7 +1179,7 @@ describe("shouldRevalidate", () => {
         {
           id: "root",
           path: "/",
-          hasErrorBoundary: true,
+          ErrorBoundary: () => null,
           loader: () => "NOPE",
           children: [
             {

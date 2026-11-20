@@ -10,7 +10,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { type TemplateName, viteConfig } from "./helpers/vite.js";
 
 const templateNames = [
-  "vite-5-template",
+  "vite-7-template",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
@@ -29,7 +29,7 @@ test.describe("MDX", () => {
               mdx: true,
             }),
             "app/root.tsx": js`
-              import { Outlet, Scripts } from "react-router"
+              import { Outlet, ${templateName === "rsc-vite-framework" ? "" : "Scripts"} } from "react-router"
         
               export default function Root() {
                 return (
@@ -39,7 +39,7 @@ test.describe("MDX", () => {
                       <main>
                         <Outlet />
                       </main>
-                      <Scripts />
+                      ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                     </body>
                   </html>
                 );

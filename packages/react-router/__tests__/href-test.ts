@@ -1,6 +1,31 @@
 import { href } from "../lib/href";
+import { matchPath } from "../lib/router/utils";
 
 describe("href", () => {
+  it.each([
+    ["/*", { "*": "/example.com/a//b" }, "/example.com/a//b"],
+    ["/:lang?/*", { "*": "//example.com/path" }, "/example.com/path"],
+    ["/:org/:repo", { org: "", repo: "example.com" }, "/example.com"],
+  ])("normalizes leading separators for %s", (pattern, params, expected) => {
+    let result = href(pattern, params);
+    expect(result).toBe(expected);
+    expect(new URL(result, "https://app.example/").origin).toBe(
+      "https://app.example",
+    );
+  });
+
+  it.each(["/de//example.com/path", "/de/%2Fexample.com/path"])(
+    "interpolates splats matched from %s",
+    (pathname) => {
+      let match = matchPath("/:lang/*", pathname);
+      let result = href("/:lang?/*", { "*": match!.params["*"] });
+      expect(result).toBe("/example.com/path");
+      expect(new URL(result, "https://app.example/").origin).toBe(
+        "https://app.example",
+      );
+    },
+  );
+
   it("works with param-less paths", () => {
     expect(href("/a/b/c")).toBe("/a/b/c");
   });
@@ -23,6 +48,7 @@ describe("href", () => {
   it("works with splats", () => {
     expect(href("/a/*", { "*": "b/c" })).toBe("/a/b/c");
     expect(href("/a/*", {})).toBe("/a");
+    expect(href("/a/*", { "*": null as any })).toBe("/a");
   });
 
   it("works with malformed splats", () => {
@@ -35,9 +61,71 @@ describe("href", () => {
     expect(() => href("/a/:b")).toThrow(
       `Path '/a/:b' requires param 'b' but it was not provided`,
     );
+    expect(() => href("/a/:b", { b: null as any })).toThrow(
+      `Path '/a/:b' requires param 'b' but it was not provided`,
+    );
   });
 
   it("works with periods", () => {
     expect(href("/a/:b.zip", { b: "hello" })).toBe("/a/hello.zip");
+  });
+
+  it("encodes param values that contain a /", () => {
+    expect(href("/products/:id", { id: "shoes/2026-summer" })).toBe(
+      "/products/shoes%2F2026-summer",
+    );
+  });
+
+  it("encodes param values that contain # or ?", () => {
+    expect(href("/products/:id", { id: "abc#frag" })).toBe(
+      "/products/abc%23frag",
+    );
+    // "?" is escaped (it would start the query string), "=" is not (it is a
+    // valid pchar in a path segment, unlike in a query string)
+    expect(href("/products/:id", { id: "abc?x=1" })).toBe(
+      "/products/abc%3Fx=1",
+    );
+  });
+
+  it("preserves characters RFC 3986 allows literally in a path segment", () => {
+    // pchar sub-delims plus ":" and "@" — see RFC 3986 §3.3
+    expect(href("/products/:id", { id: "$&+,;=:@" })).toBe(
+      "/products/$&+,;=:@",
+    );
+    // e.g. a semver build suffix survives untouched
+    expect(href("/releases/:version", { version: "1.0.0+1" })).toBe(
+      "/releases/1.0.0+1",
+    );
+  });
+
+  it("encodes splat param values while preserving segments", () => {
+    expect(href("/:param/*", { param: "a?b/c#d", "*": "e?f/g#h" })).toBe(
+      "/a%3Fb%2Fc%23d/e%3Ff/g%23h",
+    );
+    expect(href("/releases/*", { "*": "v1/1.0.0+1" })).toBe(
+      "/releases/v1/1.0.0+1",
+    );
+  });
+
+  it("round-trips through matchPath for param values with special characters", () => {
+    let pattern = "/products/:id";
+    for (let id of [
+      "shoes/2026-summer",
+      "abc#frag",
+      "abc?x=1",
+      "a b",
+      "$&+,;=:@",
+      "1.0.0+1",
+    ]) {
+      let result = href(pattern, { id });
+      // before the fix, href()'s own output didn't match its own pattern
+      let match = matchPath(pattern, result);
+      expect(match).not.toBeNull();
+      expect(decodeURIComponent(match!.params.id!)).toBe(id);
+    }
+  });
+
+  it("coerces values to strings", () => {
+    expect(href("/:a/:b", { a: 1, b: true })).toBe("/1/true");
   });
 });

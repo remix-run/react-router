@@ -60,8 +60,6 @@ type MetaMatch<T extends AnyMatchInfo> = Pretty<{
   params: Record<string, string | undefined>;
   pathname: string;
   meta: MetaDescriptor[];
-  /** @deprecated Use `MetaMatch.loaderData` instead */
-  data: MatchData<T>;
   loaderData: MatchData<T>;
   handle?: unknown;
   error?: unknown;
@@ -71,7 +69,9 @@ type MetaMatch<T extends AnyMatchInfo> = Pretty<{
 type MetaMatches<T extends Array<AnyMatchInfo>> =
   T extends [infer F extends AnyMatchInfo, ...infer R extends Array<AnyMatchInfo>]
     ? [MetaMatch<F>, ...MetaMatches<R>]
-    : Array<MetaMatch<AnyMatchInfo> | undefined>;
+    : T extends []
+      ? []
+      : Array<MetaMatch<AnyMatchInfo> | undefined>;
 
 type HasErrorBoundary<T extends RouteInfo> = T["module"] extends {
   ErrorBoundary: Func;
@@ -84,14 +84,6 @@ type CreateMetaArgs<T extends RouteInfo> = {
   location: Location;
   /** {@link https://reactrouter.com/start/framework/routing#dynamic-segments Dynamic route params} for the current route. */
   params: T["params"];
-  /**
-   * The return value for this route's server loader function
-   *
-   * @deprecated Use `Route.MetaArgs.loaderData` instead
-   */
-  data:
-    | T["loaderData"]
-    | (HasErrorBoundary<T> extends true ? undefined : never);
   /** The return value for this route's server loader function */
   loaderData:
     | T["loaderData"]
@@ -165,8 +157,6 @@ type Match<T extends AnyMatchInfo> = Pretty<{
   id: T["id"];
   params: Record<string, string | undefined>;
   pathname: string;
-  /** @deprecated Use `Match.loaderData` instead */
-  data: MatchData<T>;
   loaderData: MatchData<T>;
   handle: unknown;
 }>;
@@ -295,6 +285,20 @@ export type GetAnnotations<Info extends RouteInfo> = {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
+  // Generated metadata match tuples contain exactly the current route and its ancestors.
+  Expect<Equal<MetaMatches<[]>, []>>,
+  Expect<
+    Equal<MetaMatches<MatchInfo[]>, Array<MetaMatch<MatchInfo> | undefined>>
+  >,
+  Expect<
+    Equal<
+      MetaMatches<[{ id: "root"; module: {} }, { id: "leaf"; module: {} }]>,
+      [
+        MetaMatch<{ id: "root"; module: {} }>,
+        MetaMatch<{ id: "leaf"; module: {} }>,
+      ]
+    >
+  >,
   // Test that MetaArgs.loaderData is only potentially undefined when ErrorBoundary is present
   Expect<
     Equal<
@@ -349,36 +353,6 @@ type __tests = [
         matches: [];
       }>["loaderData"],
       undefined
-    >
-  >,
-  // Test that MetaArgs.data (deprecated) also follows the same pattern
-  Expect<
-    Equal<
-      CreateMetaArgs<{
-        module: {
-          loader: () => { test: string };
-        };
-        loaderData: { test: string };
-        params: unknown;
-        actionData: unknown;
-        matches: [];
-      }>["data"],
-      { test: string }
-    >
-  >,
-  Expect<
-    Equal<
-      CreateMetaArgs<{
-        module: {
-          loader: () => { test: string };
-          ErrorBoundary: Func;
-        };
-        loaderData: { test: string };
-        params: unknown;
-        actionData: unknown;
-        matches: [];
-      }>["data"],
-      { test: string } | undefined
     >
   >,
 ];

@@ -1,9 +1,7 @@
 import * as React from "react";
 
-import {
-  SUPPORTED_ERROR_TYPES,
-  decode,
-} from "../../../vendor/turbo-stream-v2/turbo-stream";
+import { decode } from "../../../vendor/turbo-stream-v2/turbo-stream";
+import type { Action as NavigationType } from "../../router/history";
 import type { Router as DataRouter } from "../../router/router";
 import { isDataWithResponseInit, isResponse } from "../../router/router";
 import type {
@@ -14,11 +12,10 @@ import type {
 } from "../../router/utils";
 import {
   ErrorResponseImpl,
+  SUPPORTED_ERROR_TYPES,
   isRouteErrorResponse,
   redirect,
   data,
-  stripBasename,
-  removeTrailingSlash,
 } from "../../router/utils";
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
@@ -172,19 +169,50 @@ type ShouldAllowOptOutFunction = (match: DataRouteMatch) => boolean;
 
 export type FetchAndDecodeFunction = (
   args: DataStrategyFunctionArgs,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
   targetRoutes?: string[],
   shouldAllowOptOut?: ShouldAllowOptOutFunction,
 ) => Promise<{ status: number; data: DecodedSingleFetchResults }>;
+
+/**
+ * Describes the operation that initiated an internal router request.
+ *
+ * Requests that reload fetchers as part of a navigation, revalidation, or
+ * initialization redirect keep that initiating `type`. `fetcherKey` identifies
+ * the fetcher being loaded, or is `null` when the request targets route loaders
+ * or actions.
+ *
+ * `navigationType` is the history action (`"PUSH"`, `"REPLACE"`, or `"POP"`)
+ * for navigation-initiated data requests, including reloaded fetchers. It is
+ * `null` for initialization, fetcher, and revalidation requests. Manifest
+ * requests have no navigation type.
+ */
+export type RouterFetchContext =
+  | { type: "manifest" }
+  | {
+      type: "navigation";
+      fetcherKey: string | null;
+      navigationType: NavigationType;
+    }
+  | {
+      type: "initialization" | "fetcher" | "revalidation";
+      fetcherKey: string | null;
+      navigationType: null;
+    };
+
+export type RouterFetch = (
+  request: Request,
+  context: RouterFetchContext,
+) => Promise<Response>;
 
 export function getTurboStreamSingleFetchDataStrategy(
   getRouter: () => DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   ssr: boolean,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
+  fetchImplementation: RouterFetch = (request) => fetch(request),
+  isApiOnly: boolean = false,
+  serverOrigin?: string,
+  isSpaMode: boolean = false,
 ): DataStrategyFunction {
   let dataStrategy = getSingleFetchDataStrategyImpl(
     getRouter,
@@ -196,10 +224,11 @@ export function getTurboStreamSingleFetchDataStrategy(
         hasClientLoader: manifestRoute.hasClientLoader,
       };
     },
-    fetchAndDecodeViaTurboStream,
+    fetchAndDecodeViaTurboStream(fetchImplementation, serverOrigin),
     ssr,
-    basename,
-    trailingSlashAware,
+    undefined,
+    isApiOnly,
+    isSpaMode,
   );
   return async (args) => args.runClientMiddleware(dataStrategy);
 }
@@ -209,9 +238,9 @@ export function getSingleFetchDataStrategyImpl(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
   shouldAllowOptOut: ShouldAllowOptOutFunction = () => true,
+  isApiOnly: boolean = false,
+  isSpaMode: boolean = false,
 ): DataStrategyFunction {
   return async (args) => {
     let { request, matches, fetcherKey } = args;
@@ -219,12 +248,7 @@ export function getSingleFetchDataStrategyImpl(
 
     // Actions are simple and behave the same for navigations and fetchers
     if (request.method !== "GET") {
-      return singleFetchActionStrategy(
-        args,
-        fetchAndDecode,
-        basename,
-        trailingSlashAware,
-      );
+      return singleFetchActionStrategy(args, fetchAndDecode);
     }
 
     let foundRevalidatingServerLoader = matches.some((m) => {
@@ -264,23 +288,12 @@ export function getSingleFetchDataStrategyImpl(
       //   errored otherwise
       // - So it's safe to make the call knowing there will be a `.data` file on
       //   the other end
-      return nonSsrStrategy(
-        args,
-        getRouteInfo,
-        fetchAndDecode,
-        basename,
-        trailingSlashAware,
-      );
+      return nonSsrStrategy(args, getRouteInfo, fetchAndDecode);
     }
 
     // Fetcher loads are singular calls to one loader
     if (fetcherKey) {
-      return singleFetchLoaderFetcherStrategy(
-        args,
-        fetchAndDecode,
-        basename,
-        trailingSlashAware,
-      );
+      return singleFetchLoaderFetcherStrategy(args, fetchAndDecode);
     }
 
     // Navigational loads are more complex...
@@ -290,9 +303,9 @@ export function getSingleFetchDataStrategyImpl(
       getRouteInfo,
       fetchAndDecode,
       ssr,
-      basename,
-      trailingSlashAware,
       shouldAllowOptOut,
+      isApiOnly,
+      isSpaMode,
     );
   };
 }
@@ -302,20 +315,15 @@ export function getSingleFetchDataStrategyImpl(
 async function singleFetchActionStrategy(
   args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
 ) {
   let actionMatch = args.matches.find((m) => m.shouldCallHandler());
   invariant(actionMatch, "No action match found");
   let actionStatus: number | undefined = undefined;
   let result = await actionMatch.resolve(async (handler) => {
     let result = await handler(async () => {
-      let { data, status } = await fetchAndDecode(
-        args,
-        basename,
-        trailingSlashAware,
-        [actionMatch!.route.id],
-      );
+      let { data, status } = await fetchAndDecode(args, [
+        actionMatch!.route.id,
+      ]);
       actionStatus = status;
       return unwrapSingleFetchResult(data, actionMatch!.route.id);
     });
@@ -345,37 +353,25 @@ async function nonSsrStrategy(
   args: DataStrategyFunctionArgs,
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
 ) {
   let matchesToLoad = args.matches.filter((m) => m.shouldCallHandler());
   let results: Record<string, DataStrategyResult> = {};
   await Promise.all(
-    matchesToLoad.map((m) =>
-      m.resolve(async (handler) => {
-        try {
-          let { hasClientLoader } = getRouteInfo(m);
-          // Need to pass through a `singleFetch` override handler so
-          // clientLoader's can still call server loaders through `.data`
-          // requests
-          let routeId = m.route.id;
-          let result = hasClientLoader
-            ? await handler(async () => {
-                let { data } = await fetchAndDecode(
-                  args,
-                  basename,
-                  trailingSlashAware,
-                  [routeId],
-                );
-                return unwrapSingleFetchResult(data, routeId);
-              })
-            : await handler();
-          results[m.route.id] = { type: "data", result };
-        } catch (e) {
-          results[m.route.id] = { type: "error", result: e };
-        }
-      }),
-    ),
+    matchesToLoad.map(async (m) => {
+      let routeId = m.route.id;
+      results[routeId] = await m.resolve(async (handler) => {
+        let { hasClientLoader } = getRouteInfo(m);
+        // Need to pass through a `singleFetch` override handler so
+        // clientLoader's can still call server loaders through `.data`
+        // requests
+        return hasClientLoader
+          ? handler(async () => {
+              let { data } = await fetchAndDecode(args, [routeId]);
+              return unwrapSingleFetchResult(data, routeId);
+            })
+          : handler();
+      });
+    }),
   );
   return results;
 }
@@ -388,9 +384,9 @@ async function singleFetchLoaderNavigationStrategy(
   getRouteInfo: GetRouteInfoFunction,
   fetchAndDecode: FetchAndDecodeFunction,
   ssr: boolean,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
   shouldAllowOptOut: (match: DataRouteMatch) => boolean = () => true,
+  isApiOnly: boolean = false,
+  isSpaMode: boolean = false,
 ) {
   // Track which routes need a server load for use in a `_routes` param
   let routesParams = new Set<string>();
@@ -436,12 +432,7 @@ async function singleFetchLoaderNavigationStrategy(
           }
           try {
             let result = await handler(async () => {
-              let { data } = await fetchAndDecode(
-                args,
-                basename,
-                trailingSlashAware,
-                [routeId],
-              );
+              let { data } = await fetchAndDecode(args, [routeId]);
               return unwrapSingleFetchResult(data, routeId);
             });
 
@@ -475,7 +466,7 @@ async function singleFetchLoaderNavigationStrategy(
   await Promise.all(routeDfds.map((d) => d.promise));
 
   // We can skip the server call:
-  // - On initial hydration - only clientLoaders can pass through via
+  // - On initial SSR hydration - only clientLoaders can pass through via
   //   `clientLoader.hydrate`. We check the navigation state below as well
   //   because if a clientLoader redirected we'll still be `initialized=false`
   //   but we want to call loaders for the new location
@@ -487,24 +478,19 @@ async function singleFetchLoaderNavigationStrategy(
   let isInitialLoad =
     !router.state.initialized && router.state.navigation.state === "idle";
   if (
-    (isInitialLoad || routesParams.size === 0) &&
+    ((isInitialLoad && !isApiOnly && !isSpaMode) || routesParams.size === 0) &&
     !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({ routes: {} });
   } else {
     // When routes have opted out, add a `_routes` param to filter server loaders
-    // Skipped in `ssr:false` because we expect to be loading static `.data` files
+    // Skip filtering for static `.data` files, which contain all route results.
     let targetRoutes =
       ssr && foundOptOutRoute && routesParams.size > 0
         ? [...routesParams.keys()]
         : undefined;
     try {
-      let data = await fetchAndDecode(
-        args,
-        basename,
-        trailingSlashAware,
-        targetRoutes,
-      );
+      let data = await fetchAndDecode(args, targetRoutes);
       singleFetchDfd.resolve(data.data);
     } catch (e) {
       singleFetchDfd.reject(e);
@@ -565,10 +551,7 @@ async function bubbleMiddlewareErrors(
         }
       });
     }
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    e
-  ) {
+  } catch {
     // No-op - this logic is only intended to process successful responses
     // If the `.data` failed, the routes will handle those errors themselves
   }
@@ -578,17 +561,13 @@ async function bubbleMiddlewareErrors(
 async function singleFetchLoaderFetcherStrategy(
   args: DataStrategyFunctionArgs,
   fetchAndDecode: FetchAndDecodeFunction,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
 ) {
   let fetcherMatch = args.matches.find((m) => m.shouldCallHandler());
   invariant(fetcherMatch, "No fetcher match found");
   let routeId = fetcherMatch.route.id;
   let result = await fetcherMatch.resolve(async (handler) =>
     handler(async () => {
-      let { data } = await fetchAndDecode(args, basename, trailingSlashAware, [
-        routeId,
-      ]);
+      let { data } = await fetchAndDecode(args, [routeId]);
       return unwrapSingleFetchResult(data, routeId);
     }),
   );
@@ -613,9 +592,8 @@ export function stripIndexParam(url: URL) {
 
 export function singleFetchUrl(
   reqUrl: URL | string,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
   extension: "data" | "rsc",
+  serverOrigin?: string,
 ) {
   let url =
     typeof reqUrl === "string"
@@ -623,124 +601,141 @@ export function singleFetchUrl(
           reqUrl,
           // This can be called during the SSR flow via PrefetchPageLinksImpl so
           // don't assume window is available
-          typeof window === "undefined"
-            ? "server://singlefetch/"
-            : window.location.origin,
+          serverOrigin ??
+            (typeof window === "undefined"
+              ? "server://singlefetch/"
+              : window.location.origin),
         )
-      : reqUrl;
+      : new URL(reqUrl);
 
-  if (trailingSlashAware) {
-    if (url.pathname.endsWith("/")) {
-      // Preserve trailing slash by using /_.data pattern
-      // e.g., /about/ -> /about/_.data
-      url.pathname = `${url.pathname}_.${extension}`;
-    } else {
-      url.pathname = `${url.pathname}.${extension}`;
-    }
+  if (serverOrigin && url.origin !== serverOrigin) {
+    url = new URL(url.pathname + url.search + url.hash, serverOrigin);
+  }
+
+  if (url.pathname.endsWith("/")) {
+    // Preserve trailing slash by using /_.data pattern
+    // e.g., /about/ -> /about/_.data
+    url.pathname = `${url.pathname}_.${extension}`;
   } else {
-    if (url.pathname === "/") {
-      url.pathname = `_root.${extension}`;
-    } else if (basename && stripBasename(url.pathname, basename) === "/") {
-      url.pathname = `${removeTrailingSlash(basename)}/_root.${extension}`;
-    } else {
-      url.pathname = `${removeTrailingSlash(url.pathname)}.${extension}`;
-    }
+    url.pathname = `${url.pathname}.${extension}`;
   }
 
   return url;
 }
 
-async function fetchAndDecodeViaTurboStream(
-  args: DataStrategyFunctionArgs,
-  basename: string | undefined,
-  trailingSlashAware: boolean,
-  targetRoutes?: string[],
-): Promise<{ status: number; data: DecodedSingleFetchResults }> {
-  let { request } = args;
-  let url = singleFetchUrl(request.url, basename, trailingSlashAware, "data");
-  if (request.method === "GET") {
-    url = stripIndexParam(url);
-    if (targetRoutes) {
-      url.searchParams.set("_routes", targetRoutes.join(","));
-    }
-  }
-
-  let res = await fetch(url, await createRequestInit(request));
-
-  // If this error'd without hitting the running server, then bubble a normal
-  // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
-  //
-  // This could be triggered by a few scenarios:
-  // - `.data` request 404 on a pre-rendered app using a CDN
-  // - 429 error returned from a CDN on a SSR app
-  if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
-    throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
-  }
-
-  // Handle non-RR redirects (i.e., from express middleware)
-  if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
-    return {
-      status: SINGLE_FETCH_REDIRECT_STATUS,
-      data: {
-        redirect: {
-          redirect: res.headers.get("X-Remix-Redirect")!,
-          status: Number(res.headers.get("X-Remix-Status") || "302"),
-          revalidate: res.headers.get("X-Remix-Revalidate") === "true",
-          reload: res.headers.get("X-Remix-Reload-Document") === "true",
-          replace: res.headers.get("X-Remix-Replace") === "true",
-        },
-      },
-    };
-  }
-
-  if (NO_BODY_STATUS_CODES.has(res.status)) {
-    let routes: { [key: string]: SingleFetchResult } = {};
-    // We get back just a single result for action requests - normalize that
-    // to a DecodedSingleFetchResults shape here
-    if (targetRoutes && request.method !== "GET") {
-      routes[targetRoutes[0]] = { data: undefined };
-    }
-    return {
-      status: res.status,
-      data: { routes },
-    };
-  }
-
-  invariant(res.body, "No response body to decode");
-
-  try {
-    let decoded = await decodeViaTurboStream(res.body, window);
-    let data: DecodedSingleFetchResults;
+function fetchAndDecodeViaTurboStream(
+  fetchImplementation: RouterFetch,
+  serverOrigin?: string,
+): FetchAndDecodeFunction {
+  return async (
+    args: DataStrategyFunctionArgs,
+    targetRoutes?: string[],
+  ): Promise<{ status: number; data: DecodedSingleFetchResults }> => {
+    let { request } = args;
+    let url = singleFetchUrl(request.url, "data", serverOrigin);
     if (request.method === "GET") {
-      let typed = decoded.value as SingleFetchResults;
-      if (SingleFetchRedirectSymbol in typed) {
-        data = { redirect: typed[SingleFetchRedirectSymbol] };
-      } else {
-        data = { routes: typed };
-      }
-    } else {
-      let typed = decoded.value as SingleFetchResult;
-      let routeId = targetRoutes?.[0];
-      invariant(routeId, "No routeId found for single fetch call decoding");
-      if ("redirect" in typed) {
-        data = { redirect: typed };
-      } else {
-        data = { routes: { [routeId]: typed } };
+      url = stripIndexParam(url);
+      if (targetRoutes) {
+        url.searchParams.set("_routes", targetRoutes.join(","));
       }
     }
-    return { status: res.status, data };
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    e
-  ) {
-    // Can't clone after consuming the body via turbo-stream so we can't
-    // include the body here.  In an ideal world we'd look for a turbo-stream
-    // content type here, or even X-Remix-Response but then folks can't
-    // statically deploy their prerendered .data files to a CDN unless they can
-    // tell that CDN to add special headers to those certain files - which is a
-    // bit restrictive.
-    throw new Error("Unable to decode turbo-stream response");
-  }
+    let req = new Request(url, await createRequestInit(request));
+    invariant(
+      args.unstable_initiator !== "static",
+      "Static data strategy initiator used for a client data request",
+    );
+    let fetchContext: RouterFetchContext;
+    if (args.unstable_initiator === "navigation") {
+      invariant(
+        args.unstable_navigationType !== null,
+        "Missing navigation type for a navigation data request",
+      );
+      fetchContext = {
+        type: "navigation",
+        fetcherKey: args.fetcherKey,
+        navigationType: args.unstable_navigationType,
+      };
+    } else {
+      fetchContext = {
+        type: args.unstable_initiator,
+        fetcherKey: args.fetcherKey,
+        navigationType: null,
+      };
+    }
+    let res = await fetchImplementation(req, fetchContext);
+
+    // If this error'd without hitting the running server, then bubble a normal
+    // `ErrorResponse` and don't try to decode the body with `turbo-stream`.
+    //
+    // This could be triggered by a few scenarios:
+    // - `.data` request 404 on a pre-rendered app using a CDN
+    // - 429 error returned from a CDN on a SSR app
+    if (res.status >= 400 && !res.headers.has("X-Remix-Response")) {
+      throw new ErrorResponseImpl(res.status, res.statusText, await res.text());
+    }
+
+    // Handle non-RR redirects (i.e., from express middleware)
+    if (res.status === 204 && res.headers.has("X-Remix-Redirect")) {
+      return {
+        status: SINGLE_FETCH_REDIRECT_STATUS,
+        data: {
+          redirect: {
+            redirect: res.headers.get("X-Remix-Redirect")!,
+            status: Number(res.headers.get("X-Remix-Status") || "302"),
+            revalidate: res.headers.get("X-Remix-Revalidate") === "true",
+            reload: res.headers.get("X-Remix-Reload-Document") === "true",
+            replace: res.headers.get("X-Remix-Replace") === "true",
+          },
+        },
+      };
+    }
+
+    if (NO_BODY_STATUS_CODES.has(res.status)) {
+      let routes: { [key: string]: SingleFetchResult } = {};
+      // We get back just a single result for action requests - normalize that
+      // to a DecodedSingleFetchResults shape here
+      if (targetRoutes && request.method !== "GET") {
+        routes[targetRoutes[0]] = { data: undefined };
+      }
+      return {
+        status: res.status,
+        data: { routes },
+      };
+    }
+
+    invariant(res.body, "No response body to decode");
+
+    try {
+      let decoded = await decodeViaTurboStream(res.body, window);
+      let data: DecodedSingleFetchResults;
+      if (request.method === "GET") {
+        let typed = decoded.value as SingleFetchResults;
+        if (SingleFetchRedirectSymbol in typed) {
+          data = { redirect: typed[SingleFetchRedirectSymbol] };
+        } else {
+          data = { routes: typed };
+        }
+      } else {
+        let typed = decoded.value as SingleFetchResult;
+        let routeId = targetRoutes?.[0];
+        invariant(routeId, "No routeId found for single fetch call decoding");
+        if ("redirect" in typed) {
+          data = { redirect: typed };
+        } else {
+          data = { routes: { [routeId]: typed } };
+        }
+      }
+      return { status: res.status, data };
+    } catch (cause) {
+      // Can't clone after consuming the body via turbo-stream so we can't
+      // include the body here.  In an ideal world we'd look for a turbo-stream
+      // content type here, or even X-Remix-Response but then folks can't
+      // statically deploy their prerendered .data files to a CDN unless they can
+      // tell that CDN to add special headers to those certain files - which is a
+      // bit restrictive.
+      throw new Error("Unable to decode turbo-stream response", { cause });
+    }
+  };
 }
 
 // Note: If you change this function please change the corresponding
@@ -848,19 +843,13 @@ function createDeferred<T = unknown>() {
       res(val);
       try {
         await promise;
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {}
+      } catch {}
     };
     reject = async (error?: unknown) => {
       rej(error);
       try {
         await promise;
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {}
+      } catch {}
     };
   });
   return {

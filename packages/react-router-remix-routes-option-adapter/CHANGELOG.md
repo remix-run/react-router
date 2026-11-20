@@ -1,5 +1,87 @@
 # `@react-router/remix-config-routes-adapter`
 
+## v8.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.5.2)
+
+## v8.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.5.1)
+
+## v8.5.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.5.0)
+
+## v8.4.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.4.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.4.0)
+
+## v8.3.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.3.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.3.1)
+
+## v8.3.0
+
+### Patch Changes
+
+- Allow `typescript@7` to be used ([#15317](https://github.com/remix-run/react-router/pull/15317))
+- Updated dependencies:
+  - [`@react-router/dev@8.3.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.3.0)
+
+## v8.2.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.2.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.2.0)
+
+## v8.1.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.1.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.1.0)
+
+## v8.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.0.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.0.1)
+
+## v8.0.0
+
+### Major Changes
+
+- Update minimum Node version to 22.22.0 ([#15143](https://github.com/remix-run/react-router/pull/15143))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.0.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.0.0)
+
+## v7.18.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@7.18.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@7.18.0)
+
 ## v7.17.0
 
 ### Patch Changes

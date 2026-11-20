@@ -4,19 +4,10 @@ import fs from "node:fs";
 import path from "node:path";
 import stream from "node:stream";
 import { promisify } from "node:util";
-import { fetch } from "@remix-run/web-fetch";
 import gunzip from "gunzip-maybe";
 import tar from "tar-fs";
-import { ProxyAgent } from "proxy-agent";
 
 import { color, isUrl } from "./utils";
-
-const defaultAgent = new ProxyAgent();
-const httpsAgent = new ProxyAgent();
-httpsAgent.protocol = "https:";
-function agent(url: string) {
-  return new URL(url).protocol === "https:" ? httpsAgent : defaultAgent;
-}
 
 export async function copyTemplate(
   template: string,
@@ -87,10 +78,7 @@ function isLocalFilePath(input: string): boolean {
         path.isAbsolute(input) ? input : path.resolve(process.cwd(), input),
       )
     );
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    e
-  ) {
+  } catch {
     return false;
   }
 }
@@ -237,10 +225,7 @@ async function downloadAndExtractTarball(
         ? `https://api.github.com/repos/${info.owner}/${info.name}/releases/latest`
         : `https://api.github.com/repos/${info.owner}/${info.name}/releases/tags/${info.tag}`;
 
-    let response = await fetch(releaseUrl, {
-      agent: agent("https://api.github.com"),
-      headers,
-    });
+    let response = await fetch(releaseUrl, { headers });
 
     if (response.status !== 200) {
       throw new CopyTemplateError(
@@ -277,10 +262,7 @@ async function downloadAndExtractTarball(
     resourceUrl = `https://api.github.com/repos/${info.owner}/${info.name}/releases/assets/${assetId}`;
     headers.Accept = "application/octet-stream";
   }
-  let response = await fetch(resourceUrl, {
-    agent: agent(resourceUrl),
-    headers,
-  });
+  let response = await fetch(resourceUrl, { headers });
 
   if (!response.body || response.status !== 200) {
     if (token) {
@@ -346,10 +328,7 @@ async function downloadAndExtractTarball(
         },
       }),
     );
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    e
-  ) {
+  } catch {
     throw new CopyTemplateError(
       "There was a problem extracting the file from the provided template." +
         `  Template URL: \`${tarballUrl}\`` +
@@ -416,10 +395,7 @@ function isValidGithubRepoUrl(
         ? pathSegments[2] === "tree" && pathSegments.length >= 4
         : true)
     );
-  } catch (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    e
-  ) {
+  } catch {
     return false;
   }
 }

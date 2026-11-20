@@ -3,12 +3,7 @@
 /// <reference lib="DOM.Iterable" />
 
 import type * as express from "express";
-import type {
-  AppLoadContext,
-  ServerBuild,
-  UNSAFE_MiddlewareEnabled as MiddlewareEnabled,
-  RouterContextProvider,
-} from "react-router";
+import type { ServerBuild, RouterContextProvider } from "react-router";
 import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import {
   createReadableStreamFromReadable,
@@ -28,9 +23,7 @@ type MaybePromise<T> = T | Promise<T>;
 export type GetLoadContextFunction = (
   req: express.Request,
   res: express.Response,
-) => MiddlewareEnabled extends true
-  ? MaybePromise<RouterContextProvider>
-  : MaybePromise<AppLoadContext>;
+) => MaybePromise<RouterContextProvider>;
 
 export type RequestHandler = (
   req: express.Request,
@@ -97,9 +90,18 @@ export function createRemixRequest(
   res: express.Response,
 ): Request {
   // req.hostname doesn't include port information so grab that from
-  // `X-Forwarded-Host` or `Host`
-  let [, hostnamePortStr] = req.get("X-Forwarded-Host")?.split(":") ?? [];
-  let [, hostPortStr] = req.get("host")?.split(":") ?? [];
+  // `X-Forwarded-Host` or `Host`, skipping any bracketed IPv6 address
+  // (e.g., `[::1]:3000`) so its colons aren't mistaken for the port
+  let ipv6 = /^\[.*?\]/;
+  let [, hostnamePortStr] = req.app?.enabled("trust proxy")
+    ? (req
+        .get("X-Forwarded-Host")
+        ?.split(",")[0]
+        .trimEnd()
+        .replace(ipv6, "")
+        .split(":") ?? [])
+    : [];
+  let [, hostPortStr] = req.get("host")?.replace(ipv6, "").split(":") ?? [];
   let hostnamePort = Number.parseInt(hostnamePortStr, 10);
   let hostPort = Number.parseInt(hostPortStr, 10);
   let port = Number.isSafeInteger(hostnamePort)
@@ -108,7 +110,8 @@ export function createRemixRequest(
       ? hostPort
       : "";
   // Use req.hostname here as it respects the "trust proxy" setting
-  let resolvedHost = `${req.hostname}${port ? `:${port}` : ""}`;
+  let hostname = req.hostname.split(/[\\/?#@]/)[0] || "localhost";
+  let resolvedHost = `${hostname}${port ? `:${port}` : ""}`;
   // Use `req.originalUrl` so Remix is aware of the full path
   let url = new URL(`${req.protocol}://${resolvedHost}${req.originalUrl}`);
 

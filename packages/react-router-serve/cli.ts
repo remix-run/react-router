@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import url from "node:url";
 import type { ServerBuild } from "react-router";
 import { createRequestHandler } from "@react-router/express";
-import { createRequestListener } from "@mjackson/node-fetch-server";
+import { createRequestListener } from "@remix-run/node-fetch-server";
 import compression from "compression";
 import express from "express";
+import type { RequestHandler as ExpressRequestHandler } from "express";
 import morgan from "morgan";
 import sourceMapSupport from "source-map-support";
-import getPort from "get-port";
 
 process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 
@@ -52,12 +53,12 @@ type NormalizedBuild = {
 function isRSCServerBuild(build: unknown): build is RSCServerBuildModule {
   return Boolean(
     typeof build === "object" &&
-      build &&
-      "default" in build &&
-      typeof build.default === "object" &&
-      build.default &&
-      "fetch" in build.default &&
-      typeof build.default.fetch === "function",
+    build &&
+    "default" in build &&
+    typeof build.default === "object" &&
+    build.default &&
+    "fetch" in build.default &&
+    typeof build.default.fetch === "function",
   );
 }
 
@@ -68,8 +69,69 @@ function parseNumber(raw?: string) {
   return maybe;
 }
 
+async function getAvailablePort(
+  preferredPort: number,
+  host?: string,
+): Promise<number> {
+  let preferredAvailablePort = await checkPort(preferredPort, host);
+  let availablePort = preferredAvailablePort ?? (await checkPort(0, host));
+
+  if (availablePort === undefined) {
+    throw new Error("No available port found");
+  }
+
+  return availablePort;
+}
+
+function checkPort(port: number, host?: string): Promise<number | undefined> {
+  return new Promise((resolve, reject) => {
+    let server = net.createServer();
+    let listenOptions = host ? { port, host } : { port };
+
+    server.unref();
+
+    server.once("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE" || error.code === "EACCES") {
+        resolve(undefined);
+      } else {
+        reject(error);
+      }
+    });
+
+    server.listen(listenOptions, () => {
+      let address = server.address();
+      let availablePort =
+        typeof address === "object" && address ? address.port : port;
+
+      server.close((error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(availablePort);
+        }
+      });
+    });
+  });
+}
+
+function getExpressPath(publicPath: string) {
+  // Vite allows `base` to be an absolute URL, but Express route paths must be
+  // pathnames. Strip any origin before mounting static asset middleware.
+  let pathname: string;
+
+  try {
+    pathname = new URL(publicPath).pathname;
+  } catch {
+    pathname = publicPath;
+  }
+
+  return pathname.startsWith("/") ? pathname : `/${pathname}`;
+}
+
 async function run() {
-  let port = parseNumber(process.env.PORT) ?? (await getPort({ port: 3000 }));
+  let port =
+    parseNumber(process.env.PORT) ??
+    (await getAvailablePort(3000, process.env.HOST));
 
   let buildPathArg = process.argv[2];
 
@@ -83,9 +145,9 @@ async function run() {
 
   let buildModule = await import(url.pathToFileURL(buildPath).href);
   let build: NormalizedBuild;
-  let isRSCBuild = false;
+  let isRSCBuild = isRSCServerBuild(buildModule);
 
-  if ((isRSCBuild = isRSCServerBuild(buildModule))) {
+  if (isRSCBuild) {
     const config = {
       publicPath: "/",
       assetsBuildDirectory: path.join("..", "client"),
@@ -103,7 +165,14 @@ async function run() {
     build = buildModule as ServerBuild;
   }
 
-  let onListen = () => {
+  let assetsBuildDirectory = path.isAbsolute(build.assetsBuildDirectory)
+    ? build.assetsBuildDirectory
+    : path.resolve(process.cwd(), build.assetsBuildDirectory);
+
+  let onListen = (error: unknown) => {
+    if (error) {
+      throw error;
+    }
     let address =
       process.env.HOST ||
       Object.values(os.networkInterfaces())
@@ -124,29 +193,71 @@ async function run() {
   app.disable("x-powered-by");
 
   if (!isRSCBuild) {
-    app.use(compression());
+    // `compression` may resolve to Express 4 types from transitive deps while
+    // `react-router-serve` uses Express 5, but the runtime middleware signature
+    // is compatible.
+    app.use(compression() as unknown as ExpressRequestHandler);
   }
 
+  let expressPublicPath = getExpressPath(build.publicPath);
+
   app.use(
-    path.posix.join(build.publicPath, "assets"),
-    express.static(path.join(build.assetsBuildDirectory, "assets"), {
+    path.posix.join(expressPublicPath, "assets"),
+    express.static(path.join(assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
     }),
   );
-  app.use(build.publicPath, express.static(build.assetsBuildDirectory));
+  app.use(expressPublicPath, express.static(assetsBuildDirectory));
   app.use(express.static("public", { maxAge: "1h" }));
+  app.use(
+    "/.well-known",
+    express.static(path.join(assetsBuildDirectory, ".well-known")),
+  );
+
   app.use(morgan("tiny"));
 
   if (build.fetch) {
-    app.all("*", createRequestListener(build.fetch));
+    // RSC
+    app.all("/{*splat}", createRequestListener(build.fetch));
+  } else if (buildModule.unstable_apiOnly === true) {
+    // API Only
+    let serverBuild = build as ServerBuild;
+    let manifestPath =
+      serverBuild.routeDiscovery.mode === "lazy"
+        ? path.posix.join(
+            serverBuild.basename ?? "/",
+            serverBuild.routeDiscovery.manifestPath,
+          )
+        : undefined;
+
+    let handler = createRequestHandler({
+      build: serverBuild,
+      mode: process.env.NODE_ENV,
+    }) as unknown as ExpressRequestHandler;
+
+    let fallbackFile = fs.existsSync(
+      path.join(assetsBuildDirectory, "__spa-fallback.html"),
+    )
+      ? "__spa-fallback.html"
+      : "index.html";
+
+    app.all("/{*splat}", (req, res, next) => {
+      if (req.path.endsWith(".data") || req.path === manifestPath) {
+        handler(req, res, next);
+      } else {
+        // Static middleware serves prerendered documents before this fallback.
+        res.sendFile(fallbackFile, { root: assetsBuildDirectory });
+      }
+    });
   } else {
+    // Normal SSR
     app.all(
-      "*",
+      "/{*splat}",
       createRequestHandler({
-        build: buildModule,
+        build: build as ServerBuild,
         mode: process.env.NODE_ENV,
-      }),
+      }) as unknown as ExpressRequestHandler,
     );
   }
 
@@ -155,6 +266,10 @@ async function run() {
     : app.listen(port, onListen);
 
   ["SIGTERM", "SIGINT"].forEach((signal) => {
-    process.once(signal, () => server?.close(console.error));
+    process.once(signal, () =>
+      server?.close((error) => {
+        if (error) console.error(error);
+      }),
+    );
   });
 }

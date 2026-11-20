@@ -1,3 +1,4 @@
+import { encodePathParam } from "./router/utils";
 import type { Pages } from "./types/register";
 import type { Equal } from "./types/utils";
 
@@ -12,15 +13,35 @@ type ToArgs<Params extends Record<string, string | undefined>> =
   // otherwise, require `params` arg
   [Params];
 
+function stringify(p: any) {
+  return p == null ? "" : typeof p === "string" ? p : String(p);
+}
+
 /**
-  Returns a resolved URL path for the specified route.
-
-  ```tsx
-  const h = href("/:lang?/about", { lang: "en" })
-  // -> `/en/about`
-
-  <Link to={href("/products/:id", { id: "abc123" })} />
-  ```
+ * Returns a resolved URL path for the specified route.
+ *
+ * Param values are percent-encoded for use in a path segment: characters that
+ * would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
+ * are escaped, while characters that RFC 3986 allows literally in a path
+ * segment (`$ & + , ; = : @`) are kept as-is. Note this differs from query-string
+ * encoding (`encodeURIComponent`/`URLSearchParams`), where those characters are
+ * delimiters and must be escaped. Splat (`*`) values are encoded per segment,
+ * preserving `/` separators.
+ *
+ * See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3)
+ *
+ * @example
+ * const h = href("/:lang?/about", { lang: "en" })
+ * // -> `/en/about`
+ *
+ * <Link to={href("/products/:id", { id: "abc123" })} />
+ *
+ * @public
+ * @category Utils
+ * @mode framework
+ * @param path The route path to resolve
+ * @param args The route params to use when resolving the path
+ * @returns The resolved URL path
  */
 export function href<Path extends keyof Args>(
   path: Path,
@@ -33,25 +54,28 @@ export function href<Path extends keyof Args>(
       (_: string, param: string, questionMark: string | undefined) => {
         const isRequired = questionMark === undefined;
         const value = params?.[param];
-        if (isRequired && value === undefined) {
+        if (isRequired && value == null) {
           throw new Error(
             `Path '${path}' requires param '${param}' but it was not provided`,
           );
         }
-        return value === undefined ? "" : "/" + value;
+        return value == null ? "" : "/" + encodePathParam(stringify(value));
       },
     );
 
   if (path.endsWith("*")) {
     // treat trailing splat the same way as compilePath, and force it to be as if it were `/*`.
-    // `react-router typegen` will not generate the params for a malformed splat, causing a type error, but we can still do the correct thing here.
+    // `react-router typegen` will not generate the params for a malformed splat,
+    // causing a type error, but we can still do the correct thing here.
     const value = params?.["*"];
-    if (value !== undefined) {
-      result += "/" + value;
+    if (value != null) {
+      result +=
+        "/" + stringify(value).split("/").map(encodePathParam).join("/");
     }
   }
 
-  return result || "/";
+  // Empty leading params and splats must not produce a protocol-relative URL.
+  return result.replace(/^\/{2,}/, "/") || "/";
 }
 
 /**

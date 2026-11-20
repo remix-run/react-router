@@ -1,5 +1,6 @@
 import type { ChildProcess } from "node:child_process";
 import { sync as spawnSync, spawn } from "cross-spawn";
+import { globSync } from "node:fs";
 import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { platform } from "node:os";
@@ -10,22 +11,21 @@ import stripIndent from "strip-indent";
 import waitOn from "wait-on";
 import getPort from "get-port";
 import shell from "shelljs";
-import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 import type { Config } from "@react-router/dev/config";
 
-const require = createRequire(import.meta.url);
+const nodeRequire = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/bin.js";
+const reactRouterBin = "node_modules/@react-router/dev/bin.cjs";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
 
 export const reactRouterConfig = (
   // Don't support function configs due to JSON.stringify()
-  config: Omit<Partial<Config>, "buildEnd" | "presets" | "serverBundles">,
+  config: Omit<Partial<Config>, "buildEnd" | "presets" | "serverBundles"> = {},
 ) => {
   if (
     typeof config.prerender === "function" ||
@@ -52,6 +52,7 @@ type ViteConfigBuildArgs = {
   assetsInlineLimit?: number;
   assetsDir?: string;
   cssCodeSplit?: boolean;
+  sourcemap?: boolean | "inline" | "hidden";
 };
 
 type ViteConfigBaseArgs = {
@@ -87,6 +88,7 @@ export const viteConfig = {
     assetsInlineLimit,
     assetsDir,
     cssCodeSplit,
+    sourcemap,
   }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
@@ -95,6 +97,7 @@ export const viteConfig = {
         cssCodeSplit: ${
           cssCodeSplit !== undefined ? cssCodeSplit : "undefined"
         },
+        sourcemap: ${JSON.stringify(sourcemap)},
       },
     `;
   },
@@ -149,13 +152,12 @@ export const viteConfig = {
 export const EXPRESS_SERVER = (args: {
   port: number;
   base?: string;
-  loadContext?: Record<string, unknown>;
   customLogic?: string;
   templateName?: TemplateName;
 }) => {
   if (args.templateName?.includes("rsc")) {
     return String.raw`
-      import { createRequestListener } from "@mjackson/node-fetch-server";
+      import { createRequestListener } from "@remix-run/node-fetch-server";
       import express from "express";
 
       const viteDevServer =
@@ -220,7 +222,6 @@ export const EXPRESS_SERVER = (args: {
         build: viteDevServer
           ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
           : await import("./build/index.js"),
-        getLoadContext: () => (${JSON.stringify(args.loadContext ?? {})}),
       })
     );
 
@@ -230,17 +231,13 @@ export const EXPRESS_SERVER = (args: {
 };
 
 type FrameworkModeViteMajorTemplateName =
-  | "vite-5-template"
-  | "vite-6-template"
-  | "vite-7-beta-template"
+  | "vite-7-template"
   | "vite-8-template"
   | "vite-plugin-cloudflare-template";
 
 type FrameworkModeRscTemplateName = "rsc-vite-framework";
 
-type FrameworkModeCloudflareTemplateName =
-  | "cloudflare-dev-proxy-template"
-  | "vite-plugin-cloudflare-template";
+type FrameworkModeCloudflareTemplateName = "vite-plugin-cloudflare-template";
 
 export type RscBundlerTemplateName = "rsc-vite";
 
@@ -251,9 +248,7 @@ export type TemplateName =
   | RscBundlerTemplateName;
 
 export const viteMajorTemplates = [
-  { templateName: "vite-5-template", templateDisplayName: "Vite 5" },
-  { templateName: "vite-6-template", templateDisplayName: "Vite 6" },
-  { templateName: "vite-7-beta-template", templateDisplayName: "Vite 7 Beta" },
+  { templateName: "vite-7-template", templateDisplayName: "Vite 7" },
   { templateName: "vite-8-template", templateDisplayName: "Vite 8" },
 ] as const satisfies Array<{
   templateName: FrameworkModeViteMajorTemplateName;
@@ -269,7 +264,7 @@ export const rscBundlerTemplates = [
 
 export async function createProject(
   files: Record<string, string> = {},
-  templateName: TemplateName = "vite-5-template",
+  templateName: TemplateName = "vite-7-template",
 ) {
   let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
@@ -354,7 +349,7 @@ export const wranglerPagesDev = async ({
   port: number;
 }) => {
   let nodeBin = process.argv[0];
-  let wranglerBin = require.resolve("wrangler/bin/wrangler.js", {
+  let wranglerBin = nodeRequire.resolve("wrangler/bin/wrangler.js", {
     paths: [cwd],
   });
 
@@ -381,7 +376,12 @@ type ServerArgs = {
 export const createDev =
   (nodeArgs: string[]) =>
   async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
-    let proc = node(nodeArgs, { cwd, env });
+    // Reused workers can inherit production mode from earlier fixtures. Dev
+    // servers need a predictable default, while production runners opt in.
+    let proc = node(nodeArgs, {
+      cwd,
+      env: { NODE_ENV: "development", ...env },
+    });
     await waitForServer(proc, { port, basename });
     return () => proc.kill();
   };
@@ -522,7 +522,7 @@ export const test = base.extend<Fixtures>({
       let port = await getPort();
       let cwd = await createProject(
         await files({ port }),
-        "cloudflare-dev-proxy-template",
+        "vite-plugin-cloudflare-template",
       );
       let { status } = build({ cwd });
       expect(status).toBe(0);
@@ -603,10 +603,9 @@ export function createEditor(projectDir: string) {
 }
 
 export function grep(cwd: string, pattern: RegExp): string[] {
-  let assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
-    cwd,
-    absolute: true,
-  });
+  let assetFiles = globSync("**/*.@(js|jsx|ts|tsx)", { cwd }).map((file) =>
+    path.resolve(cwd, file),
+  );
 
   let lines = shell
     .grep("-l", pattern, assetFiles)

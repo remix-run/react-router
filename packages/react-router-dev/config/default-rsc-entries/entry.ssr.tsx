@@ -4,6 +4,7 @@ import {
   unstable_routeRSCServerRequest as routeRSCServerRequest,
   unstable_RSCStaticRouter as RSCStaticRouter,
 } from "react-router";
+import subResourceIntegrity from "virtual:react-router/unstable_rsc/subresource-integrity";
 
 export async function generateHTML(
   request: Request,
@@ -31,6 +32,9 @@ export async function generateHTML(
           ...options,
           bootstrapScriptContent,
           formState,
+          importMap: subResourceIntegrity
+            ? { integrity: subResourceIntegrity }
+            : undefined,
           signal: request.signal,
         },
       );

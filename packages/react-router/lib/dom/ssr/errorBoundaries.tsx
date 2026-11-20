@@ -2,8 +2,7 @@ import * as React from "react";
 
 import { Scripts, useFrameworkContext } from "./components";
 import type { Location } from "../../router/history";
-import { isRouteErrorResponse } from "../../router/utils";
-import { ENABLE_DEV_WARNINGS } from "../../context";
+import { ENABLE_DEV_WARNINGS, isRouteErrorResponse } from "../../router/utils";
 
 type RemixErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
@@ -77,10 +76,13 @@ export function RemixRootDefaultErrorBoundary({
   error: unknown;
   isOutsideRemixApp?: boolean;
 }) {
+  let { nonce } = useFrameworkContext();
+
   console.error(error);
 
   let heyDeveloper = (
     <script
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `
         console.log(

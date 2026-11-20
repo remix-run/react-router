@@ -20,10 +20,14 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.useSubmit.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/functions/react-router.useSubmit.html)
 
 The imperative version of [`<Form>`](../components/Form) that lets you submit a form
 from code instead of a user interaction.
+
+The `viewTransition` submission option is deprecated. Use React's
+[`<ViewTransition>`](https://react.dev/reference/react/ViewTransition) component
+instead. See the [migration guide](../../how-to/view-transitions).
 
 ```tsx
 import { useSubmit } from "react-router";

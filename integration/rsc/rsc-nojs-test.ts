@@ -115,11 +115,16 @@ implementations.forEach((implementation) => {
                 throw redirect("https://example.com/");
               }
 
+              if (id === "unsupported-protocol") {
+                throw redirect("about:blank");
+              }
+
               return (
                 <>
                   <h1>{id || "home"}</h1>
                   <Link to="/render-redirect/redirect">Redirect</Link>
                   <Link to="/render-redirect/external">External</Link>
+                  <Link to="/render-redirect/unsupported-protocol">Unsupported</Link>
                 </>
               )
             }
@@ -147,11 +152,16 @@ implementations.forEach((implementation) => {
                 throw redirect("https://example.com/");
               }
 
+              if (id === "unsupported-protocol") {
+                throw redirect("about:blank");
+              }
+
               return (
                 <>
                   <h1>{id || "home"}</h1>
                   <Link to="/render-redirect/lazy/redirect">Redirect</Link>
                   <Link to="/render-redirect/external">External</Link>
+                  <Link to="/render-redirect/lazy/unsupported-protocol">Unsupported</Link>
                 </>
               );
             }
@@ -230,8 +240,17 @@ implementations.forEach((implementation) => {
       await page.goto(`http://localhost:${port}/render-redirect`);
       await expect(page.getByText("home")).toBeAttached();
       await page.getByText("External").click();
-      await page.waitForURL(`https://example.com/`);
-      await expect(page.getByText("Example Domain")).toBeAttached();
+      await expect(page).toHaveURL(`https://example.com/`);
+    });
+
+    test("Handles unsupported protocol redirect Responses from render", async ({
+      page,
+    }) => {
+      let response = await page.request.get(
+        `http://localhost:${port}/render-redirect/unsupported-protocol`,
+        { maxRedirects: 0 },
+      );
+      expect(response.headers()["location"]).not.toBe("about:blank");
     });
 
     test("Suppport throwing redirect Response from suspended render", async ({
@@ -253,8 +272,18 @@ implementations.forEach((implementation) => {
         "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
       );
       await page.goto(`http://localhost:${port}/render-redirect/lazy/external`);
-      await page.waitForURL(`https://example.com/`);
-      await expect(page.getByText("Example Domain")).toBeAttached();
+      await expect(page).toHaveURL(`https://example.com/`);
+    });
+
+    test("Handles unsupported protocol redirect Responses from suspended render", async ({
+      page,
+    }) => {
+      let response = await page.request.get(
+        `http://localhost:${port}/render-redirect/lazy/unsupported-protocol`,
+      );
+      expect(await response.text()).not.toContain(
+        '<meta http-equiv="refresh" content="0;url=about:',
+      );
     });
   });
 });

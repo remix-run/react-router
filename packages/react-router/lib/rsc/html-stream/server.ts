@@ -1,21 +1,65 @@
 // https://github.com/devongovett/rsc-html-stream/blob/main/server.js
 
+import { escapeAttribute } from "../../dom/ssr/markup";
+
 const encoder = new TextEncoder();
 const trailer = "</body></html>";
 
-export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
+export function injectRSCPayload(
+  rscStream: ReadableStream<Uint8Array>,
+  { nonce }: { nonce?: string } = {},
+) {
   let decoder = new TextDecoder();
   let resolveFlightDataPromise: (value: void) => void;
   let flightDataPromise = new Promise(
     (resolve) => (resolveFlightDataPromise = resolve),
   );
   let startedRSC = false;
+  let cancelled = false;
+  let rscReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
 
   // Buffer all HTML chunks enqueued during the current tick of the event loop (roughly)
   // and write them to the output stream all at once. This ensures that we don't generate
   // invalid HTML by injecting RSC in between two partial chunks of HTML.
   let buffered: Uint8Array[] = [];
   let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Stops all pending work after the readable side closes. You can call it more than once.
+  async function stop(reason: unknown) {
+    cancelled = true;
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+    buffered.length = 0;
+    // Resolve before the cancel. If `rscStream` is a tee branch, its cancel waits for
+    // the other branch, and `flush()` must not wait.
+    resolveFlightDataPromise();
+    // `writeRSCStream` releases the reader lock when it stops. A released reader cannot
+    // cancel the stream.
+    if (rscReader && rscStream.locked) {
+      await rscReader.cancel(reason).catch(() => {});
+    } else {
+      await rscStream.cancel(reason).catch(() => {});
+    }
+  }
+
+  // Returns `false` if the readable side is closed. If the readable side is cancelled
+  // while `flush()` runs, the transformer's `cancel()` does not run. A failed enqueue is
+  // then the only signal, so the RSC stream stays open until the next enqueue.
+  function tryEnqueue(
+    controller: TransformStreamDefaultController<Uint8Array>,
+    chunk: Uint8Array,
+  ) {
+    try {
+      controller.enqueue(chunk);
+      return true;
+    } catch (error) {
+      void stop(error);
+      return false;
+    }
+  }
+
   function flushBufferedChunks(
     controller: TransformStreamDefaultController<Uint8Array>,
   ) {
@@ -24,14 +68,18 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
       if (buf.endsWith(trailer)) {
         buf = buf.slice(0, -trailer.length);
       }
-      controller.enqueue(encoder.encode(buf));
+      if (!tryEnqueue(controller, encoder.encode(buf))) {
+        return;
+      }
     }
 
     buffered.length = 0;
     timeout = null;
   }
 
-  return new TransformStream({
+  let transformer: Transformer<Uint8Array, Uint8Array> & {
+    cancel?: (reason: unknown) => void | Promise<void>;
+  } = {
     transform(chunk, controller) {
       buffered.push(chunk);
       if (timeout) {
@@ -39,10 +87,16 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
       }
 
       timeout = setTimeout(async () => {
+        // The readable side may have been cancelled (e.g., the client aborted
+        // the request) while this flush was pending — enqueueing would throw.
+        if (cancelled) {
+          return;
+        }
         flushBufferedChunks(controller);
         if (!startedRSC) {
           startedRSC = true;
-          writeRSCStream(rscStream, controller)
+          rscReader = rscStream.getReader();
+          writeRSCStream(rscReader, controller, () => cancelled, nonce)
             .catch((err) => controller.error(err))
             .then(resolveFlightDataPromise);
         }
@@ -54,20 +108,28 @@ export function injectRSCPayload(rscStream: ReadableStream<Uint8Array>) {
         clearTimeout(timeout);
         flushBufferedChunks(controller);
       }
-      controller.enqueue(encoder.encode("</body></html>"));
+      tryEnqueue(controller, encoder.encode("</body></html>"));
     },
-  });
+    async cancel(reason) {
+      await stop(reason);
+    },
+  };
+  return new TransformStream(transformer);
 }
 
 async function writeRSCStream(
-  rscStream: ReadableStream<Uint8Array>,
+  reader: ReadableStreamDefaultReader<Uint8Array>,
   controller: TransformStreamDefaultController<Uint8Array>,
+  isCancelled: () => boolean,
+  nonce: string | undefined,
 ) {
   let decoder = new TextDecoder("utf-8", { fatal: true });
-  const reader = rscStream.getReader();
   try {
     let read: ReadableStreamReadResult<Uint8Array>;
     while ((read = await reader.read()) && !read.done) {
+      if (isCancelled()) {
+        return;
+      }
       const chunk = read.value;
       // Try decoding the chunk to send as a string.
       // If that fails (e.g. binary data that is invalid unicode), write as base64.
@@ -75,15 +137,14 @@ async function writeRSCStream(
         writeChunk(
           JSON.stringify(decoder.decode(chunk, { stream: true })),
           controller,
+          nonce,
         );
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        e
-      ) {
+      } catch {
         let base64 = JSON.stringify(btoa(String.fromCodePoint(...chunk)));
         writeChunk(
           `Uint8Array.from(atob(${base64}), m => m.codePointAt(0))`,
           controller,
+          nonce,
         );
       }
     }
@@ -92,18 +153,20 @@ async function writeRSCStream(
   }
 
   let remaining = decoder.decode();
-  if (remaining.length) {
-    writeChunk(JSON.stringify(remaining), controller);
+  if (remaining.length && !isCancelled()) {
+    writeChunk(JSON.stringify(remaining), controller, nonce);
   }
 }
 
 function writeChunk(
   chunk: string,
   controller: TransformStreamDefaultController<Uint8Array>,
+  nonce: string | undefined,
 ) {
+  let nonceAttr = nonce == null ? "" : ` nonce="${escapeAttribute(nonce)}"`;
   controller.enqueue(
     encoder.encode(
-      `<script>${escapeScript(
+      `<script${nonceAttr}>${escapeScript(
         `(self.__FLIGHT_DATA||=[]).push(${chunk})`,
       )}</script>`,
     ),

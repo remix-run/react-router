@@ -11,7 +11,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 import { type TemplateName, reactRouterConfig } from "./helpers/vite.js";
 
 const templateNames = [
-  "vite-5-template",
+  "vite-7-template",
   "rsc-vite-framework",
 ] as const satisfies TemplateName[];
 
@@ -125,17 +125,17 @@ test.describe("Client Data", () => {
     }
 
     test.describe(`template: ${templateName}`, () => {
-      for (const v8_splitRouteModules of [true, false]) {
-        test.describe(`v8_splitRouteModules: ${v8_splitRouteModules}`, () => {
+      for (const splitRouteModules of [true, false]) {
+        test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
           test.skip(
-            templateName.includes("rsc") && v8_splitRouteModules,
+            templateName.includes("rsc") && splitRouteModules,
             "RSC Framework Mode doesn't support splitRouteModules",
           );
 
           test.skip(
             ({ browserName }) =>
               Boolean(process.env.CI) &&
-              v8_splitRouteModules &&
+              splitRouteModules &&
               (browserName === "webkit" || process.platform === "win32"),
             "Webkit/Windows tests only run on a single worker in CI and splitRouteModules is not OS/browser-specific",
           );
@@ -149,10 +149,10 @@ test.describe("Client Data", () => {
                   templateName,
                   files: {
                     "react-router.config.ts": reactRouterConfig({
-                      future: { v8_splitRouteModules, v8_middleware: true },
+                      splitRouteModules,
                     }),
                     "app/root.tsx": js`
-                      import { Form, Outlet, Scripts } from "react-router"
+                      import { Form, Outlet, ${templateName === "rsc-vite-framework" ? "" : "Scripts"} } from "react-router"
 
                       export const middleware = [
                         async ({ request }, next) => {
@@ -181,7 +181,7 @@ test.describe("Client Data", () => {
                               <main>
                                 <Outlet />
                               </main>
-                              <Scripts />
+                              ${templateName === "rsc-vite-framework" ? "" : "<Scripts />"}
                             </body>
                           </html>
                         );
@@ -596,9 +596,10 @@ test.describe("Client Data", () => {
                       }
                       export async function clientLoader({ serverLoader }) {
                         console.log('running parent client loader')
-                        // Need a small delay to ensure we capture the server-rendered
-                        // fallbacks for assertions
-                        await new Promise(r => setTimeout(r, 100));
+                        // Let the test inspect the server-rendered error before hydration finishes.
+                        await new Promise(resolve => {
+                          window.__resolveParentClientLoader = resolve;
+                        });
                         let data = await serverLoader();
                         return { message: data.message + " (mutated by client)" };
                       }
@@ -951,6 +952,9 @@ test.describe("Client Data", () => {
                         return redirect('/client-loader-critical/hydrating-clientloader-redirects-trigger-new-data-requests-to-the-server/parent/b');
                       }
                       clientLoader.hydrate = true;
+                      export function HydrateFallback() {
+                        return null;
+                      }
                       export default function Component({ loaderData }) {
                         return <p>Should not see me</p>;
                       }
@@ -1296,7 +1300,6 @@ test.describe("Client Data", () => {
             test("bubbled server loader errors are persisted for hydrating routes", async ({
               page,
             }) => {
-              // test.skip(browserName === "firefox", "this test fails there due to extra debug logs.")
               let _consoleError = console.error;
               console.error = () => {};
               let app = new PlaywrightFixture(appFixture, page);
@@ -1319,6 +1322,14 @@ test.describe("Client Data", () => {
               expect(html).toMatch("Child Server Error");
               expect(html).not.toMatch("Should not see me");
               // Ensure we hydrate and remain on the boundary
+              await page.waitForFunction(
+                () =>
+                  typeof (window as any).__resolveParentClientLoader ===
+                  "function",
+              );
+              await page.evaluate(() =>
+                (window as any).__resolveParentClientLoader(),
+              );
               await page.waitForSelector(
                 ":has-text('Parent Server Loader (mutated by client)')",
               );
@@ -1402,7 +1413,7 @@ test.describe("Client Data", () => {
           test.describe("clientLoader - lazy route module", () => {
             test("no client loaders or fallbacks", async ({ page }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-loader-lazy/no-client-loaders-or-fallbacks/parent/child",
               );
@@ -1416,7 +1427,7 @@ test.describe("Client Data", () => {
 
             test("parent.clientLoader", async ({ page }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-loader-lazy/parent-client-loader/parent/child",
               );
@@ -1429,7 +1440,7 @@ test.describe("Client Data", () => {
 
             test("child.clientLoader", async ({ page }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-loader-lazy/child-client-loader/parent/child",
               );
@@ -1442,7 +1453,7 @@ test.describe("Client Data", () => {
 
             test("parent.clientLoader/child.clientLoader", async ({ page }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-loader-lazy/parent-client-loader-child-client-loader/parent/child",
               );
@@ -1458,7 +1469,7 @@ test.describe("Client Data", () => {
             }) => {
               let app = new PlaywrightFixture(appFixture, page);
 
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-loader-lazy/throws-a-400-if-you-call-serverloader-without-a-server-loader/parent/child",
               );
@@ -1633,7 +1644,7 @@ test.describe("Client Data", () => {
           test.describe("clientAction - lazy route module", () => {
             test("child.clientAction", async ({ page }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-action-lazy/child-client-action/parent/child",
               );
@@ -1655,7 +1666,7 @@ test.describe("Client Data", () => {
 
             test("child.clientAction/parent.childLoader", async ({ page }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-action-lazy/child-client-action-parent-child-loader/parent/child",
               );
@@ -1685,7 +1696,7 @@ test.describe("Client Data", () => {
 
             test("child.clientAction/child.clientLoader", async ({ page }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-action-lazy/child-client-action-child-client-loader/parent/child",
               );
@@ -1717,7 +1728,7 @@ test.describe("Client Data", () => {
               page,
             }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.clickLink(
                 "/client-action-lazy/child-client-action-parent-child-loader-child-client-loader/parent/child",
               );
@@ -1749,7 +1760,7 @@ test.describe("Client Data", () => {
               page,
             }) => {
               let app = new PlaywrightFixture(appFixture, page);
-              await app.goto("/");
+              await app.goto("/", true);
               await app.goto(
                 "/client-action-lazy/throws-a-400-if-you-call-serveraction-without-a-server-action/parent/child",
               );

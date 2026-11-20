@@ -147,8 +147,8 @@ function getExportDependencies(
             identifier.findParent((path) =>
               Boolean(
                 path.isPattern() &&
-                  path.parentPath?.isVariableDeclarator() &&
-                  path.parentPath.parentPath?.parentPath?.isExportNamedDeclaration(),
+                path.parentPath?.isVariableDeclarator() &&
+                path.parentPath.parentPath?.parentPath?.isExportNamedDeclaration(),
               ),
             ),
           );
@@ -956,12 +956,19 @@ export function getRouteChunkCode(
   chunkName: RouteChunkName,
   cache: Cache,
   cacheKey: string,
+  generateOptions: GeneratorOptions = {},
 ): GeneratorResult | undefined {
   if (chunkName === mainChunkName) {
-    return omitChunkedExports(code, routeChunkExportNames, {}, cache, cacheKey);
+    return omitChunkedExports(
+      code,
+      routeChunkExportNames,
+      generateOptions,
+      cache,
+      cacheKey,
+    );
   }
 
-  return getChunkedExport(code, chunkName, {}, cache, cacheKey);
+  return getChunkedExport(code, chunkName, generateOptions, cache, cacheKey);
 }
 
 const routeChunkQueryStringPrefix = "?route-chunk=";

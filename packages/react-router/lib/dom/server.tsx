@@ -6,20 +6,15 @@ import {
   createPath,
   invariant,
   parsePath,
+  warning,
 } from "../router/history";
 import type {
   FutureConfig,
   Router as DataRouter,
   RevalidationState,
-  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   StaticHandlerContext,
 } from "../router/router";
-import {
-  IDLE_BLOCKER,
-  IDLE_FETCHER,
-  IDLE_NAVIGATION,
-  createStaticHandler as routerCreateStaticHandler,
-} from "../router/router";
+import { IDLE_BLOCKER, IDLE_FETCHER, IDLE_NAVIGATION } from "../router/router";
 import type {
   DataRouteObject,
   RouteBranch,
@@ -30,9 +25,12 @@ import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
-import { DataRoutes, Router, mapRouteProperties } from "../components";
+import { ABSOLUTE_URL_REGEX } from "../router/url";
+import { DataRoutes, Router } from "../components";
 import {
   DataRouterContext,
+  DataRouterDataContext,
+  DataRouterNavigationContext,
   DataRouterStateContext,
   FetchersContext,
   ViewTransitionContext,
@@ -177,8 +175,6 @@ export function StaticRouterProvider({
     basename: context.basename || "/",
   };
 
-  let fetchersContext = new Map();
-
   let hydrateScript = "";
 
   if (hydrate !== false) {
@@ -196,31 +192,59 @@ export function StaticRouterProvider({
   }
 
   let { state } = dataRouterContext.router;
+  let dataRouterState = {
+    historyAction: state.historyAction,
+    location: state.location,
+    matches: state.matches,
+    initialized: state.initialized,
+    renderFallback: state.renderFallback,
+    restoreScrollPosition: state.restoreScrollPosition,
+    preventScrollReset: state.preventScrollReset,
+    blockers: state.blockers,
+  };
+  let dataRouterNavigation = {
+    navigation: state.navigation,
+    revalidation: state.revalidation,
+  };
+  let dataRouterData = {
+    loaderData: state.loaderData,
+    actionData: state.actionData,
+    errors: state.errors,
+  };
+  let fetchersContext = {
+    fetchers: state.fetchers,
+    fetcherData: new Map(),
+  };
 
   return (
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider value={fetchersContext}>
-            <ViewTransitionContext.Provider value={{ isTransitioning: false }}>
-              <Router
-                basename={dataRouterContext.basename}
-                location={state.location}
-                navigationType={state.historyAction}
-                navigator={dataRouterContext.navigator}
-                static={dataRouterContext.static}
-                useTransitions={false}
-              >
-                <DataRoutes
-                  manifest={router.manifest}
-                  routes={router.routes}
-                  future={router.future}
-                  state={state}
-                  isStatic={true}
-                />
-              </Router>
-            </ViewTransitionContext.Provider>
-          </FetchersContext.Provider>
+        <DataRouterStateContext.Provider value={dataRouterState}>
+          <DataRouterNavigationContext.Provider value={dataRouterNavigation}>
+            <DataRouterDataContext.Provider value={dataRouterData}>
+              <FetchersContext.Provider value={fetchersContext}>
+                <ViewTransitionContext.Provider
+                  value={{ isTransitioning: false }}
+                >
+                  <Router
+                    basename={dataRouterContext.basename}
+                    location={state.location}
+                    navigationType={state.historyAction}
+                    navigator={dataRouterContext.navigator}
+                    static={dataRouterContext.static}
+                    useTransitions={false}
+                  >
+                    <DataRoutes
+                      manifest={router.manifest}
+                      routes={router.routes}
+                      state={state}
+                      isStatic={true}
+                    />
+                  </Router>
+                </ViewTransitionContext.Provider>
+              </FetchersContext.Provider>
+            </DataRouterDataContext.Provider>
+          </DataRouterNavigationContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {hydrateScript ? (
@@ -242,7 +266,7 @@ function serializeErrors(
   let serialized: StaticHandlerContext["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // deserializeErrors in react-router-dom/index.tsx :)
+    // deserializeErrors in lib/dom/lib.tsx :)
     if (isRouteErrorResponse(val)) {
       serialized[key] = { ...val, __type: "RouteErrorResponse" };
     } else if (val instanceof Error) {
@@ -306,51 +330,6 @@ function getStatelessNavigator() {
   };
 }
 
-type CreateStaticHandlerOptions = Omit<
-  RouterCreateStaticHandlerOptions,
-  "mapRouteProperties"
->;
-
-/**
- * Create a static handler to perform server-side data loading
- *
- * @example
- * export async function handleRequest(request: Request) {
- *   let { query, dataRoutes } = createStaticHandler(routes);
- *   let context = await query(request);
- *
- *   if (context instanceof Response) {
- *     return context;
- *   }
- *
- *   let router = createStaticRouter(dataRoutes, context);
- *   return new Response(
- *     ReactDOMServer.renderToString(<StaticRouterProvider ... />),
- *     { headers: { "Content-Type": "text/html" } }
- *   );
- * }
- *
- * @public
- * @category Data Routers
- * @mode data
- * @param routes The {@link RouteObject | route objects} to create a static
- * handler for
- * @param opts Options
- * @param opts.basename The base URL for the static handler (default: `/`)
- * @param opts.future Future flags for the static handler
- * @returns A static handler that can be used to query data for the provided
- * routes
- */
-export function createStaticHandler(
-  routes: RouteObject[],
-  opts?: CreateStaticHandlerOptions,
-) {
-  return routerCreateStaticHandler(routes, {
-    ...opts,
-    mapRouteProperties,
-  });
-}
-
 /**
  * Create a static {@link DataRouter} for server-side rendering
  *
@@ -378,35 +357,51 @@ export function createStaticHandler(
  * `query`
  * @param opts Options
  * @param opts.future Future flags for the static {@link DataRouter}
- * @param opts.branches Optional pre-computed route branches
+ * @param opts.branches Deprecated optional pre-computed route branches. This option
+ * is no longer used because branch caching is done automatically inside the static router.
  * @returns A static {@link DataRouter} that can be used to render the provided routes
  */
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
+    /**
+     * @deprecated This option is no longer used because branch caching is done
+     * automatically inside the static router.
+     */
     branches?: RouteBranch<DataRouteObject>[];
     future?: Partial<FutureConfig>;
   } = {},
 ): DataRouter {
+  warning(
+    opts.branches == null,
+    "`createStaticRouter({ branches })` is deprecated and no longer used. " +
+      "Branch caching is done automatically inside the static router.",
+  );
+
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    mapRouteProperties,
+    undefined,
     undefined,
     manifest,
   );
+  let future: FutureConfig = {
+    ...opts?.future,
+  };
+  let matchRoutes = context._match;
 
   // Because our context matches may be from a set of routes passed to
   // createStaticHandler(), we update them here with our newly created/enhanced
   // data routes
-  let matches = context.matches.map((match) => {
+  let mapRouteMatch = (match: (typeof context.matches)[number]) => {
     let route = manifest[match.route.id] || match.route;
     return {
       ...match,
       route,
     };
-  });
+  };
+  let matches = context.matches.map(mapRouteMatch);
 
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
@@ -416,12 +411,7 @@ export function createStaticRouter(
       return context.basename;
     },
     get future() {
-      return {
-        v8_middleware: false,
-        v8_passThroughRequests: false,
-        v8_trailingSlashAwareDataRequests: false,
-        ...opts?.future,
-      };
+      return future;
     },
     get state() {
       return {
@@ -444,14 +434,14 @@ export function createStaticRouter(
     get routes() {
       return dataRoutes;
     },
-    get branches() {
-      return opts.branches;
-    },
     get manifest() {
       return manifest;
     },
     get window() {
       return undefined;
+    },
+    match(locationArg) {
+      return matchRoutes(locationArg)?.map(mapRouteMatch) ?? null;
     },
     initialize() {
       throw msg("initialize");
@@ -523,5 +513,3 @@ function encodeLocation(to: To): Path {
     hash: encoded.hash,
   };
 }
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;

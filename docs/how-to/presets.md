@@ -6,9 +6,6 @@ title: Presets
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 The [React Router config][react-router-config] supports a `presets` option to ease integration with other tools and hosting providers.
 
 [Presets][preset-type] can only do two things:
@@ -98,6 +95,6 @@ export default {
 } satisfies Config;
 ```
 
-[react-router-config]: https://api.reactrouter.com/v7/types/_react-router_dev.config.Config.html
-[preset-type]: https://api.reactrouter.com/v7/types/_react-router_dev.config.Preset.html
+[react-router-config]: https://api.reactrouter.com/v8/types/_react-router_dev.config.Config.html
+[preset-type]: https://api.reactrouter.com/v8/types/_react-router_dev.config.Preset.html
 [server-bundles]: ./server-bundles

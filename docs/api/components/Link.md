@@ -20,7 +20,7 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/do
 
 ## Summary
 
-[Reference Documentation ↗](https://api.reactrouter.com/v7/functions/react-router.Link.html)
+[Reference Documentation ↗](https://api.reactrouter.com/v8/variables/react-router.Link.html)
 
 A progressively enhanced [`<a href>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)
 wrapper to enable navigation with client-side routing.
@@ -185,7 +185,7 @@ This state is inaccessible on the server as it is implemented on top of
 
 [modes: framework, data, declarative]
 
-Can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/react-router.Path.html):
+Can be a string or a partial [`Path`](https://api.reactrouter.com/v8/interfaces/react-router.Path.html):
 
 ```tsx
 <Link to="/some/path" />
@@ -202,6 +202,9 @@ Can be a string or a partial [`Path`](https://api.reactrouter.com/v7/interfaces/
 ### viewTransition
 
 [modes: framework, data]
+
+**Deprecated.** Use React's [`<ViewTransition>`](https://react.dev/reference/react/ViewTransition)
+component instead. See the [migration guide](../../how-to/view-transitions).
 
 Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
 for this navigation.
