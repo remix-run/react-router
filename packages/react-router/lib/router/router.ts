@@ -2072,6 +2072,9 @@ export function createRouter(init: RouterInit): Router {
     let scopedContext = init.getContext
       ? await init.getContext()
       : new RouterContextProvider();
+    if (request.signal.aborted) {
+      return;
+    }
     let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
