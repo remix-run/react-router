@@ -1292,9 +1292,8 @@ export function createRouter(init: RouterInit): Router {
   // navigation
   let pendingNavigationLoadId = -1;
   // The signal of a navigation whose loader phase is awaiting lazy route
-  // discovery. Its matches are not known yet, so a fetcher action
-  // revalidation that settles in that window must neither match against the
-  // undiscovered routes nor complete the navigation on its behalf (#15730).
+  // discovery. Its matches are not known yet, so fetcher action revalidation
+  // must not match or complete it until discovery finishes.
   let pendingNavigationDiscoverySignal: AbortSignal | null = null;
 
   // Fetchers that triggered data reloads as a result of their actions
@@ -2497,6 +2496,8 @@ export function createRouter(init: RouterInit): Router {
     // If the children() function threw then, we want to proceed with the
     // partial matches it discovered.
     if (isFogOfWar) {
+      // Install before notifying subscribers, which may start a new navigation.
+      pendingNavigationDiscoverySignal = request.signal;
       if (shouldUpdateNavigationState) {
         let actionData = getUpdatedActionData(pendingActionResult);
         updateState(
@@ -2510,7 +2511,6 @@ export function createRouter(init: RouterInit): Router {
         );
       }
 
-      pendingNavigationDiscoverySignal = request.signal;
       let discoverResult = await discoverRoutes(
         matches,
         location.pathname,
@@ -2911,6 +2911,12 @@ export function createRouter(init: RouterInit): Router {
     );
   }
 
+  function isNavigationAwaitingDiscovery() {
+    // An aborted discovery callback may never settle. Only the active
+    // navigation's discovery should prevent matching or completing it.
+    return pendingNavigationDiscoverySignal?.aborted === false;
+  }
+
   // Call the action for the matched fetcher.submit(), and then handle redirects,
   // errors, and revalidation
   async function handleFetcherAction(
@@ -3090,23 +3096,21 @@ export function createRouter(init: RouterInit): Router {
     // it was submitting. Restore it now that the mutation has completed.
     isRevalidationRequired = true;
 
-    // Start the data load for current matches, or the next location if we're
-    // in the middle of a navigation
-    let nextLocation = state.navigation.location || state.location;
+    // While a navigation awaits discovery, revalidate the displayed page.
+    // Keep its URL and matches together so data strategies request the same
+    // routes on the server. The navigation loads its own routes after discovery.
+    let revalidationLocation = !isNavigationAwaitingDiscovery()
+      ? state.navigation.location
+      : undefined;
+    let nextLocation = revalidationLocation || state.location;
     let revalidationRequest = createClientSideRequest(
       init.history,
       nextLocation,
       abortController.signal,
     );
-    // While the navigation awaits discovery its routes are not patched in yet,
-    // so matching its location would hit a catch-all or nothing. Revalidate
-    // the current matches instead; the navigation loads its own once
-    // discovery completes.
-    let matches =
-      state.navigation.state !== "idle" &&
-      pendingNavigationDiscoverySignal == null
-        ? dataRouteMatcher.match(state.navigation.location)
-        : state.matches;
+    let matches = revalidationLocation
+      ? dataRouteMatcher.match(revalidationLocation)
+      : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
 
@@ -3286,7 +3290,7 @@ export function createRouter(init: RouterInit): Router {
     if (
       state.navigation.state === "loading" &&
       loadId > pendingNavigationLoadId &&
-      pendingNavigationDiscoverySignal == null
+      !isNavigationAwaitingDiscovery()
     ) {
       invariant(pendingAction, "Expected pending action");
       pendingNavigationController && pendingNavigationController.abort();
