@@ -3127,7 +3127,13 @@ export function useScrollRestoration({
           storageKey || SCROLL_RESTORATION_STORAGE_KEY,
         );
         if (sessionPositions) {
-          savedScrollPositions = JSON.parse(sessionPositions);
+          let parsedPositions = JSON.parse(sessionPositions);
+          savedScrollPositions =
+            parsedPositions &&
+            typeof parsedPositions === "object" &&
+            !Array.isArray(parsedPositions)
+              ? parsedPositions
+              : {};
         }
       } catch {
         // no-op, use default empty object
