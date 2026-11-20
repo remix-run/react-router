@@ -70,6 +70,7 @@ export type EncodeReplyFunction = (
 type WindowWithRouterGlobals = Window &
   typeof globalThis & {
     __reactRouterDataRouter: DataRouter;
+    __reactRouterClientVersion?: string;
     __routerInitialized: boolean;
     __routerActionID: number;
   };
@@ -179,6 +180,23 @@ export function createCallServer({
           }
 
           const rerender = await payload.rerender;
+          const clientVersion = globalVar.__reactRouterClientVersion;
+          // Even a superseded action can report a version mismatch.
+          if (rerender?.type === "render" && clientVersion !== undefined) {
+            const navigation =
+              globalVar.__reactRouterDataRouter.state.navigation;
+            if (
+              await handleClientVersionMismatch(
+                rerender.clientVersion !== clientVersion,
+                clientVersion,
+                navigation.location
+                  ? createPath(navigation.location)
+                  : window.location.href,
+              )
+            ) {
+              return;
+            }
+          }
           if (
             rerender &&
             landedActionId < actionId &&
@@ -277,6 +295,7 @@ function createRouterFromPayload({
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
   let { clientVersion } = payload;
+  globalVar.__reactRouterClientVersion = clientVersion;
 
   globalVar.__reactRouterRouteModules =
     globalVar.__reactRouterRouteModules ?? {};

@@ -10,6 +10,9 @@ describe("client version mismatch", () => {
   let fogOfWar: FogOfWar;
   let stored: Map<string, string>;
   let reload: jest.Mock;
+  let reloadCurrentDocument: jest.Mock;
+  let replaceState: jest.Mock;
+  let currentHref: string;
   let windowEvents: EventTarget;
   let originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   let originalStorage = Object.getOwnPropertyDescriptor(
@@ -25,6 +28,9 @@ describe("client version mismatch", () => {
     jest.useFakeTimers();
     stored = new Map();
     reload = jest.fn();
+    reloadCurrentDocument = jest.fn();
+    replaceState = jest.fn();
+    currentHref = "http://localhost/";
     windowEvents = new EventTarget();
     Object.defineProperty(globalThis, "window", {
       configurable: true,
@@ -32,14 +38,16 @@ describe("client version mismatch", () => {
         addEventListener: windowEvents.addEventListener.bind(windowEvents),
         removeEventListener:
           windowEvents.removeEventListener.bind(windowEvents),
+        history: { state: { idx: 1 }, replaceState },
         location: {
           origin: "http://localhost",
           get href() {
-            return "http://localhost/";
+            return currentHref;
           },
           set href(path: string) {
             reload(path);
           },
+          reload: reloadCurrentDocument,
         },
       },
     });
@@ -85,6 +93,19 @@ describe("client version mismatch", () => {
     expect(stored.get(storageKey)).toBe("v1");
     expect(settled).not.toHaveBeenCalled();
     expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("reloads the document at the destination fragment", () => {
+    currentHref = "http://localhost/current?query=1#before";
+    fogOfWar.handleClientVersionMismatch(true, "v1", "/current?query=1#after");
+
+    expect(replaceState).toHaveBeenCalledWith(
+      { idx: 1 },
+      "",
+      "http://localhost/current?query=1#after",
+    );
+    expect(reloadCurrentDocument).toHaveBeenCalledTimes(1);
+    expect(reload).not.toHaveBeenCalled();
   });
 
   it("rejects discovery when a previous document already tried this version", async () => {

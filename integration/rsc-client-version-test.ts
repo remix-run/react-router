@@ -333,6 +333,101 @@ test.describe("RSC client versions", () => {
     expect(documentRequests[1]).toBe(`${baseUrl}/other`);
   });
 
+  test("reloads the current document and preserves its fragment when a server function rerender has a new client version", async ({
+    page,
+    vitePreview,
+  }) => {
+    let files: Files = async () => ({
+      ...getFiles(),
+      "app/actions.ts": js`
+        "use server";
+
+        export async function increment(count: number) {
+          return count + 1;
+        }
+      `,
+      "app/routes/_index.tsx": js`
+        import { Counter } from "../counter";
+
+        export default function Index() {
+          return <Counter />;
+        }
+      `,
+      "app/counter.tsx": js`
+        "use client";
+
+        import { useActionState, useEffect, useState } from "react";
+        import { increment } from "./actions";
+
+        export function Counter() {
+          let [count, action] = useActionState(increment, 0);
+          let [hydrated, setHydrated] = useState(false);
+          useEffect(() => setHydrated(true), []);
+
+          return (
+            <form id="counter" action={action}>
+              <output>{count}</output>
+              <button disabled={!hydrated} type="submit">Increment</button>
+            </form>
+          );
+        }
+      `,
+    });
+    let { cwd, port } = await vitePreview(files, templateName);
+    let documentUrl = `http://localhost:${port}/?view=preview`;
+    let pageUrl = `${documentUrl}#counter`;
+    let documentGets: string[] = [];
+    page.on("request", (request) => {
+      if (request.resourceType() === "document" && request.method() === "GET") {
+        documentGets.push(request.url());
+      }
+    });
+
+    let { default: assetsManifest } = await import(
+      pathToFileURL(
+        path.join(cwd, "build/server/__vite_rsc_assets_manifest.js"),
+      ).href
+    );
+    let clientVersion = assetsManifest.clientVersion as string;
+    let newVersion = clientVersion === "deadbeef" ? "feedface" : "deadbeef";
+
+    await page.goto(pageUrl);
+    let increment = page.getByRole("button", { name: "Increment" });
+    await increment.click();
+    await expect(page.locator("output")).toHaveText("1");
+    expect(documentGets).toEqual([documentUrl]);
+
+    await page.route(documentUrl, async (route) => {
+      let request = route.request();
+      if (request.method() !== "POST" || !request.headers()["rsc-action-id"]) {
+        await route.continue();
+        return;
+      }
+
+      let response = await route.fetch();
+      let source = await response.text();
+      expect(source).toContain(clientVersion);
+      await route.fulfill({
+        response,
+        body: source.replaceAll(clientVersion, newVersion),
+      });
+    });
+
+    await Promise.all([
+      page.waitForResponse((response) => {
+        let request = response.request();
+        return (
+          request.method() === "POST" && !!request.headers()["rsc-action-id"]
+        );
+      }),
+      increment.click(),
+    ]);
+
+    await expect.poll(() => documentGets).toEqual([documentUrl, documentUrl]);
+    await expect(page.locator("output")).toHaveText("0");
+    await expect(page).toHaveURL(pageUrl);
+  });
+
   test("renders an error when manifest discovery already reloaded for the same client version", async ({
     page,
     vitePreview,
