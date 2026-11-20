@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { makeRe } from "minimatch";
+import { Minimatch } from "minimatch";
 
 import type { RouteManifest, RouteManifestEntry } from "./manifest";
 import { normalizeSlashes } from "./normalizeSlashes";
@@ -76,9 +76,10 @@ export function flatRoutes(
   ignoredFilePatterns: string[] = [],
   prefix = "routes",
 ) {
-  let ignoredFileRegex = Array.from(new Set(["**/.*", ...ignoredFilePatterns]))
-    .map((re) => makeRe(re))
-    .filter((re: any): re is RegExp => !!re);
+  let ignoredFileMatchers = Array.from(
+    new Set(["**/.*", ...ignoredFilePatterns]),
+    (pattern) => new Minimatch(pattern),
+  );
   let routesDir = path.join(appDirectory, prefix);
 
   let rootRoute = findFile(appDirectory, "root", routeModuleExts);
@@ -111,10 +112,14 @@ export function flatRoutes(
       route = findRouteModuleForFolder(
         appDirectory,
         filepath,
-        ignoredFileRegex,
+        ignoredFileMatchers,
       );
     } else if (entry.isFile()) {
-      route = findRouteModuleForFile(appDirectory, filepath, ignoredFileRegex);
+      route = findRouteModuleForFile(
+        appDirectory,
+        filepath,
+        ignoredFileMatchers,
+      );
     }
 
     if (route) routes.push(route);
@@ -300,10 +305,12 @@ export function flatRoutesUniversal(
 function findRouteModuleForFile(
   appDirectory: string,
   filepath: string,
-  ignoredFileRegex: RegExp[],
+  ignoredFileMatchers: Minimatch[],
 ): string | null {
   let relativePath = normalizeSlashes(path.relative(appDirectory, filepath));
-  let isIgnored = ignoredFileRegex.some((regex) => regex.test(relativePath));
+  let isIgnored = ignoredFileMatchers.some((matcher) =>
+    matcher.match(relativePath),
+  );
   if (isIgnored) return null;
   return filepath;
 }
@@ -311,10 +318,12 @@ function findRouteModuleForFile(
 function findRouteModuleForFolder(
   appDirectory: string,
   filepath: string,
-  ignoredFileRegex: RegExp[],
+  ignoredFileMatchers: Minimatch[],
 ): string | null {
-  let relativePath = path.relative(appDirectory, filepath);
-  let isIgnored = ignoredFileRegex.some((regex) => regex.test(relativePath));
+  let relativePath = normalizeSlashes(path.relative(appDirectory, filepath));
+  let isIgnored = ignoredFileMatchers.some((matcher) =>
+    matcher.match(relativePath),
+  );
   if (isIgnored) return null;
 
   let routeRouteModule = findFile(filepath, "route", routeModuleExts);
