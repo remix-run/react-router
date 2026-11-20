@@ -139,5 +139,5 @@ layout route.
 ### shouldRevalidate
 
 The route shouldRevalidate function.
-See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
 

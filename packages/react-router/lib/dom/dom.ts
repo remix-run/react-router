@@ -1,4 +1,4 @@
-import { warning } from "../router/history";
+import { createPath, parsePath, warning } from "../router/history";
 import type { RelativeRoutingType } from "../router/router";
 import type { FormEncType, HTMLFormMethod } from "../router/utils";
 import { stripBasename } from "../router/utils";
@@ -254,6 +254,8 @@ const supportedFormEncTypes: Set<FormEncType> = new Set([
 ]);
 
 function getFormEncType(encType: string | null) {
+  // `enctype` and `formenctype` keywords are ASCII case-insensitive in HTML
+  encType = encType?.toLowerCase() ?? null;
   if (encType != null && !supportedFormEncTypes.has(encType as FormEncType)) {
     warning(
       false,
@@ -264,6 +266,16 @@ function getFormEncType(encType: string | null) {
     return null;
   }
   return encType;
+}
+
+function stripBasenameFromAction(action: string, basename: string) {
+  // Without a basename, preserve explicit targets such as "?" and "#".
+  // Turning them into an empty action changes index-route targeting.
+  if (basename === "/") return action;
+
+  let path = parsePath(action);
+  let pathname = stripBasename(path.pathname || "", basename);
+  return pathname == null ? null : createPath({ ...path, pathname });
 }
 
 export function getFormSubmissionInfo(
@@ -287,7 +299,7 @@ export function getFormSubmissionInfo(
     // prefixed to ensure non-JS scenarios work, so strip it since we'll
     // re-prefix in the router
     let attr = target.getAttribute("action");
-    action = attr ? stripBasename(attr, basename) : null;
+    action = attr ? stripBasenameFromAction(attr, basename) : null;
     method = target.getAttribute("method") || defaultMethod;
     encType = getFormEncType(target.getAttribute("enctype")) || defaultEncType;
 
@@ -311,7 +323,7 @@ export function getFormSubmissionInfo(
     // prefixed to ensure non-JS scenarios work, so strip it since we'll
     // re-prefix in the router
     let attr = target.getAttribute("formaction") || form.getAttribute("action");
-    action = attr ? stripBasename(attr, basename) : null;
+    action = attr ? stripBasenameFromAction(attr, basename) : null;
 
     method =
       target.getAttribute("formmethod") ||

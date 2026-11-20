@@ -235,6 +235,18 @@ export default {
 } satisfies Config;
 ```
 
+### `splitRouteModules`
+
+Split route modules into multiple chunks when possible, so client-side route exports such as `clientLoader` can load independently from the route component. Set it to `false` to keep each route module in a single chunk, or `"enforce"` to fail the build when a route can't be split. See [Code Splitting][code-splitting] for more information.
+
+Defaults to `true`.
+
+```tsx filename=react-router.config.ts
+export default {
+  splitRouteModules: false,
+} satisfies Config;
+```
+
 ### `ssr`
 
 If `true`, React Router will server render your application.
@@ -249,9 +261,23 @@ export default {
 } satisfies Config;
 ```
 
+### `subResourceIntegrity`
+
+Generate subresource integrity hashes for the client build and add them to the module script tags rendered by [`<Scripts>`][scripts], so the browser can check that each asset hasn't been changed.
+
+Defaults to `false`.
+
+```tsx filename=react-router.config.ts
+export default {
+  subResourceIntegrity: true,
+} satisfies Config;
+```
+
 [future-flags]: ../../upgrading/future
 [presets]: ../../how-to/presets
 [server-bundles]: ../../how-to/server-bundles
 [pre-rendering]: ../../how-to/pre-rendering
 [spa-mode]: ../../how-to/spa
 [lazy-route-discovery]: ../../explanation/lazy-route-discovery
+[code-splitting]: ../../explanation/code-splitting
+[scripts]: ../components/Scripts

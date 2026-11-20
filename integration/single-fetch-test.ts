@@ -4,6 +4,7 @@ import {
   UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol,
 } from "react-router";
 
+import { isFirefoxMicrotaskWarning } from "./helpers/console.js";
 import {
   createAppFixture,
   createFixture,
@@ -3836,7 +3837,11 @@ test.describe("single-fetch", () => {
 
       // Capture console logs and uncaught errors
       let msgs: string[] = [];
-      page.on("console", (msg) => msgs.push(msg.text()));
+      page.on("console", (msg) => {
+        if (!isFirefoxMicrotaskWarning(msg)) {
+          msgs.push(msg.text());
+        }
+      });
       page.on("pageerror", (error) => msgs.push(error.message));
 
       await app.goto("/", true);
