@@ -17,6 +17,64 @@ import "@testing-library/jest-dom";
 import { mockFrameworkContext } from "../utils/framework";
 
 describe(`ScrollRestoration`, () => {
+  it.each([
+    { stored: null, expected: { page: 123 } },
+    { stored: false, expected: { page: 123 } },
+    { stored: true, expected: { page: 123 } },
+    { stored: 0, expected: { page: 123 } },
+    { stored: 1, expected: { page: 123 } },
+    { stored: "invalid", expected: { page: 123 } },
+    { stored: [], expected: { page: 123 } },
+    { stored: { previous: 456 }, expected: { previous: 456, page: 123 } },
+  ])(
+    "saves a scroll-position map when storage contains $stored",
+    ({ stored, expected }) => {
+      jest.restoreAllMocks();
+      let storageKey = "invalid-scroll-positions";
+      let originalScrollTo = window.scrollTo;
+      window.scrollTo = jest.fn();
+      Object.defineProperty(window, "scrollY", { writable: true, value: 123 });
+      window.sessionStorage.setItem(storageKey, JSON.stringify(stored));
+      let errors: unknown[] = [];
+      let onError = (event: ErrorEvent) => {
+        errors.push(event.error);
+        event.preventDefault();
+      };
+      window.addEventListener("error", onError);
+      let createRouter = () =>
+        createMemoryRouter([
+          {
+            path: "/",
+            element: (
+              <ScrollRestoration
+                storageKey={storageKey}
+                getKey={() => "page"}
+              />
+            ),
+          },
+        ]);
+      let router = createRouter();
+      let view = render(<RouterProvider router={router} />);
+      try {
+        window.dispatchEvent(new Event("pagehide"));
+        expect(errors).toEqual([]);
+        expect(JSON.parse(window.sessionStorage.getItem(storageKey)!)).toEqual(
+          expected,
+        );
+      } finally {
+        view.unmount();
+        router.dispose();
+        window.removeEventListener("error", onError);
+        window.sessionStorage.setItem(storageKey, "{}");
+        let resetRouter = createRouter();
+        render(<RouterProvider router={resetRouter} />).unmount();
+        resetRouter.dispose();
+        window.sessionStorage.removeItem(storageKey);
+        window.scrollTo = originalScrollTo;
+      }
+    },
+  );
+
   it("restores the scroll position for a page when re-visited", () => {
     const consoleWarnMock = jest
       .spyOn(console, "warn")
@@ -192,6 +250,55 @@ describe(`ScrollRestoration`, () => {
     consoleWarnMock.mockRestore();
   });
 
+  it("re-enables manual scroll restoration when the page is restored from the bfcache", () => {
+    jest.restoreAllMocks();
+
+    let testWindow = getWindow("/base");
+    window.scrollTo = jest.fn();
+
+    let router = createBrowserRouter(
+      [
+        {
+          path: "/",
+          Component() {
+            return (
+              <>
+                <Outlet />
+                <ScrollRestoration />
+              </>
+            );
+          },
+          children: testPages,
+        },
+      ],
+      { basename: "/base", window: testWindow },
+    );
+    let { unmount } = render(<RouterProvider router={router} />);
+
+    // While <ScrollRestoration> is mounted we own scroll restoration
+    expect(window.history.scrollRestoration).toBe("manual");
+
+    // Hand it back to the browser when the page is hidden, so that a
+    // re-created document restores its own scroll position
+    window.dispatchEvent(new Event("pagehide"));
+    expect(window.history.scrollRestoration).toBe("auto");
+
+    // A discarded document goes through mount again, so we leave that case
+    // to the browser
+    window.dispatchEvent(pageShowEvent(false));
+    expect(window.history.scrollRestoration).toBe("auto");
+
+    // A bfcache restore keeps this document (and this component) alive, so we
+    // own scroll restoration again
+    window.dispatchEvent(pageShowEvent(true));
+    expect(window.history.scrollRestoration).toBe("manual");
+
+    // …until we're unmounted, after which the browser keeps control
+    unmount();
+    window.dispatchEvent(pageShowEvent(true));
+    expect(window.history.scrollRestoration).toBe("auto");
+  });
+
   describe("SSR", () => {
     let scrollTo = window.scrollTo;
     beforeAll(() => {
@@ -316,6 +423,47 @@ describe(`ScrollRestoration`, () => {
       expect(script).toHaveAttribute("nonce", "explicit-nonce");
     });
 
+    it("fails gracefully in the inline script if sessionStorage is not available", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration data-testid="scroll-script" />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+      render(
+        <FrameworkContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </FrameworkContext.Provider>,
+      );
+      let script = screen.getByTestId("scroll-script");
+
+      let consoleErrorMock = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      // e.g. Chrome with "Block all cookies" or a sandboxed cross-origin iframe
+      let sessionStorageMock = jest
+        .spyOn(window, "sessionStorage", "get")
+        .mockImplementation(() => {
+          throw new DOMException("Access is denied", "SecurityError");
+        });
+
+      // The browser runs this script before hydration, so a throw here is an
+      // uncaught page error
+      // eslint-disable-next-line no-new-func
+      expect(() => new Function(script.innerHTML)()).not.toThrow();
+      expect(consoleErrorMock).toHaveBeenCalled();
+
+      sessionStorageMock.mockRestore();
+      consoleErrorMock.mockRestore();
+    });
+
     it("should restore scroll position", () => {
       let scrollToMock = jest.spyOn(window, "scrollTo");
       let router = createMemoryRouter([
@@ -376,6 +524,12 @@ describe(`ScrollRestoration`, () => {
     });
   });
 });
+
+function pageShowEvent(persisted: boolean) {
+  let event = new Event("pageshow");
+  Object.defineProperty(event, "persisted", { value: persisted });
+  return event;
+}
 
 const testPages = [
   {

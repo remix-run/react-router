@@ -22,10 +22,10 @@ import type {
   DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  RouterContextProvider,
 } from "../router/utils";
 import { ErrorResponseImpl, createContext, resolvePath } from "../router/utils";
 import { PROTOCOL_RELATIVE_URL_REGEX } from "../router/url";
+import { validateNavigationTarget } from "../router/navigation";
 import type {
   DecodedSingleFetchResults,
   FetchAndDecodeFunction,
@@ -46,6 +46,7 @@ import type { RouteModules } from "../dom/ssr/routeModules";
 import { populateRSCRouteModules } from "./route-modules";
 import {
   URL_LIMIT,
+  getManifestPathsParam,
   getPathsWithAncestors,
   handleClientVersionMismatch,
 } from "../dom/ssr/fog-of-war";
@@ -152,6 +153,12 @@ export function createCallServer({
         .then(async (payload) => {
           if (payload.type === "redirect") {
             let location = normalizeRedirectLocation(payload.location);
+            validateNavigationTarget(
+              payload.location,
+              location,
+              new URL(window.location.href),
+              "allow-explicit",
+            );
             if (payload.reload || isExternalLocation(location)) {
               if (hasInvalidProtocol(location)) {
                 throw new Error("Invalid redirect location");
@@ -173,26 +180,22 @@ export function createCallServer({
           }
 
           const rerender = await payload.rerender;
-          // Version skew is a whole-client condition, so check before the
-          // action-supersede guard below — a superseded action must still
-          // reload a stale document. Redirect rerenders carry no version and
-          // are re-checked by the data strategy when they navigate.
           const clientVersion = globalVar.__reactRouterClientVersion;
-          if (
-            rerender &&
-            rerender.type === "render" &&
-            clientVersion !== undefined &&
-            (await handleClientVersionMismatch(
-              rerender.clientVersion !== clientVersion,
-              clientVersion,
-              createPath(
-                globalVar.__reactRouterDataRouter.state.navigation.location ||
-                  globalVar.__reactRouterDataRouter.state.location,
-              ),
-            ))
-          ) {
-            // The stale rerender is never applied; the document is reloading.
-            return;
+          // Even a superseded action can report a version mismatch.
+          if (rerender?.type === "render" && clientVersion !== undefined) {
+            const navigation =
+              globalVar.__reactRouterDataRouter.state.navigation;
+            if (
+              await handleClientVersionMismatch(
+                rerender.clientVersion !== clientVersion,
+                clientVersion,
+                navigation.location
+                  ? createPath(navigation.location)
+                  : window.location.href,
+              )
+            ) {
+              return;
+            }
           }
           if (
             rerender &&
@@ -201,6 +204,12 @@ export function createCallServer({
           ) {
             if (rerender.type === "redirect") {
               let location = normalizeRedirectLocation(rerender.location);
+              validateNavigationTarget(
+                rerender.location,
+                location,
+                new URL(window.location.href),
+                "allow-explicit",
+              );
               if (rerender.reload || isExternalLocation(location)) {
                 if (hasInvalidProtocol(location)) {
                   throw new Error("Invalid redirect location");
@@ -286,8 +295,6 @@ function createRouterFromPayload({
   if (payload.type !== "render") throw new Error("Invalid payload type");
 
   let { clientVersion } = payload;
-  // Baseline for skew detection in paths constructed outside this function
-  // (`createCallServer` is wired via `setServerCallback` before hydration).
   globalVar.__reactRouterClientVersion = clientVersion;
 
   globalVar.__reactRouterRouteModules =
@@ -326,12 +333,14 @@ function createRouterFromPayload({
         invariant(match, "Route not found in payload");
         return {
           clientLoader: match.clientLoader,
+          clientMiddleware: match.clientMiddleware,
           hasLoader: match.hasLoader,
           hasHydrateFallback: match.hydrateFallbackElement != null,
         };
       },
       location: payload.location,
       basename: payload.basename,
+      future: {},
       isSpaMode: false,
     }),
     async patchRoutesOnNavigation({ path, signal, fetcherKey }) {
@@ -411,6 +420,7 @@ function createRouterFromPayload({
         hasAction: boolean;
         hasComponent: boolean;
         hasLoader: boolean;
+        hasClientMiddleware: boolean;
       }
     >,
   ) => {
@@ -426,11 +436,20 @@ function createRouterFromPayload({
         const routeUpdate = routeUpdateByRouteId.get(route.id);
 
         if (routeUpdate) {
-          const { routeModule, hasAction, hasComponent, hasLoader } =
-            routeUpdate;
+          const {
+            routeModule,
+            hasAction,
+            hasComponent,
+            hasLoader,
+            hasClientMiddleware,
+          } = routeUpdate;
           const newRoute = createRouteFromServerManifest({
             clientAction: routeModule.clientAction,
             clientLoader: routeModule.clientLoader,
+            // A component chunk doesn't include separately chunked middleware.
+            clientMiddleware: hasClientMiddleware
+              ? (routeModule.clientMiddleware ?? route.middleware)
+              : undefined,
             element: route.element as React.ReactElement,
             errorElement: route.errorElement as React.ReactElement,
             handle: route.handle,
@@ -787,6 +806,29 @@ export function RSCHydratedRouter({
     [router.subscribe, routes, router],
   );
 
+  React.useLayoutEffect(() => {
+    if (state.initialized) return;
+
+    // Initial hydration can be delayed while clientLoaders run. Keep the
+    // wrapper's state in sync when that first initialization completes so
+    // RouterProvider doesn't recover back to the pre-initialized snapshot.
+    let unsubscribe = () => {};
+    unsubscribe = router.subscribe((newState) => {
+      if (newState.initialized) {
+        unsubscribe();
+        React.startTransition(() => {
+          setState((current) =>
+            current.state.initialized
+              ? current
+              : { ...current, state: newState },
+          );
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [router.subscribe, router, state.initialized]);
+
   const transitionEnabledRouter = React.useMemo(
     () =>
       ({
@@ -993,6 +1035,7 @@ function createRouteFromServerManifest(
             throw noActionDefinedError("action", match.id);
           },
     path: match.path,
+    middleware: match.clientMiddleware,
     shouldRevalidate: match.shouldRevalidate,
     // We always have a "loader" in this RSC world since even if we don't
     // have a `loader` we may need to get the `element` implementation
@@ -1061,7 +1104,7 @@ function getManifestUrl(
       "",
     );
     url = new URL(`${basename}/.manifest`, window.location.origin);
-    url.searchParams.set("paths", paths.sort().join(","));
+    url.searchParams.set("paths", getManifestPathsParam(paths));
   }
 
   if (clientVersion !== undefined) {
@@ -1115,9 +1158,6 @@ async function fetchAndApplyManifestPatches(
     throw new Error("Failed to patch routes");
   }
 
-  // Track discovered paths so we don't have to fetch them again
-  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
-
   let patches = await payload.patches;
 
   // Without the `allowElementMutations` flag, this will no-op if the route
@@ -1130,6 +1170,9 @@ async function fetchAndApplyManifestPatches(
       );
     });
   });
+
+  // Navigation can only skip discovery once the streamed routes are installed.
+  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
 }
 
 function addToFifoQueue(path: string, queue: Set<string>) {

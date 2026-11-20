@@ -1,4 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
+import { globSync, readFileSync } from "node:fs";
+import { SourceMap } from "node:module";
+import path from "node:path";
 import getPort from "get-port";
 import dedent from "dedent";
 
@@ -8,6 +11,7 @@ import {
   reactRouterServe,
   viteConfig,
   reactRouterConfig,
+  viteMajorTemplates,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -249,6 +253,216 @@ async function unblockClientLoader(page: Page) {
 }
 
 test.describe("Split route modules", async () => {
+  test("emits source maps for split route chunks", async () => {
+    let marker = "SPLIT_ROUTE_SOURCE_MAP_TEST";
+    let cwd = await createProject({
+      "react-router.config.ts": reactRouterConfig({
+        splitRouteModules: true,
+      }),
+      "vite.config.js": await viteConfig.basic({ sourcemap: true }),
+      "app/routes/_index.tsx": js`
+        export async function clientLoader() {
+          throw new Error("${marker}");
+        }
+
+        export default function Index() {
+          return <h1>Index</h1>;
+        }
+      `,
+    });
+
+    let { status, stderr } = build({ cwd });
+    expect(status).toBe(0);
+    expect(stderr.toString()).not.toContain(
+      "Sourcemap is likely to be incorrect",
+    );
+
+    let chunkPath = globSync(path.join(cwd, "build/client/assets/*.js")).find(
+      (file) => readFileSync(file, "utf8").includes(marker),
+    );
+    expect(chunkPath).toBeDefined();
+
+    let chunk = readFileSync(chunkPath!, "utf8");
+    let markerOffset = chunk.indexOf(marker);
+    let generatedLines = chunk.slice(0, markerOffset).split("\n");
+    let generatedLine = generatedLines.length - 1;
+    let generatedColumn = generatedLines.at(-1)!.length;
+
+    let map = JSON.parse(readFileSync(`${chunkPath}.map`, "utf8"));
+    let entry = new SourceMap(map).findEntry(generatedLine, generatedColumn);
+    if (!("originalSource" in entry)) {
+      throw new Error("Expected to find a source map entry for the marker");
+    }
+    expect(entry.originalSource?.split("?")[0].replaceAll("\\", "/")).toMatch(
+      /app\/routes\/_index\.tsx$/,
+    );
+
+    let sourceIndex = map.sources.findIndex((source: string) =>
+      source
+        .split("?")[0]
+        .replaceAll("\\", "/")
+        .endsWith("app/routes/_index.tsx"),
+    );
+    expect(sourceIndex).not.toBe(-1);
+    let source = map.sourcesContent[sourceIndex];
+    expect(source).toContain(marker);
+    let originalMarkerOffset = source.indexOf(marker);
+    let originalLine =
+      source.slice(0, originalMarkerOffset).split("\n").length - 1;
+    expect(entry.originalLine).toBe(originalLine);
+  });
+
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(`${templateDisplayName} / disables eager dependency optimization in the child compiler`, async () => {
+      let cwd = await createProject(
+        {
+          "vite.config.js": js`
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default {
+              environments: {
+                ssr: {
+                  optimizeDeps: {
+                    noDiscovery: false,
+                    include: ["react/jsx-runtime"],
+                  },
+                },
+              },
+              plugins: [
+                reactRouter(),
+                {
+                  name: "check-child-compiler-optimization",
+                  configResolved(config) {
+                    if (config.command !== "serve") return;
+                    for (let environment of Object.values(config.environments)) {
+                      let { noDiscovery, include } = environment.optimizeDeps;
+                      if (!noDiscovery || include?.length) {
+                        throw new Error("Child compiler dependency optimization is enabled");
+                      }
+                    }
+                  },
+                },
+              ],
+            };
+          `,
+        },
+        templateName,
+      );
+
+      let { status, stderr } = build({ cwd });
+      expect(status, stderr.toString()).toBe(0);
+    });
+
+    test(`${templateDisplayName} / reuses client chunk detection for normalized route paths`, async ({
+      page,
+    }) => {
+      let cwd = await createProject(
+        {
+          "app/routes.ts": js`
+            import { index } from "@react-router/dev/routes";
+            export default [index("./routes/home.tsx")];
+          `,
+          "app/routes/home.tsx": js`
+            import { jsx } from "react/jsx-runtime";
+
+            export async function clientLoader() {
+              while (globalThis.blockClientLoader !== false) {
+                await new Promise((resolve) => setTimeout(resolve, 0));
+              }
+              return null;
+            }
+
+            export function HydrateFallback() {
+              return jsx("p", { children: "Loading..." });
+            }
+
+            export default function Home() {
+              return jsx("h1", { children: "Hello" });
+            }
+          `,
+          "vite.config.js": js`
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default {
+              plugins: [
+                {
+                  name: "child-compiler-cjs-interop",
+                  enforce: "pre",
+                  transform(code, id, options) {
+                    if (!options?.ssr || !id.endsWith("/routes/home.tsx")) return;
+                    // Model an SSR transform that makes the JSX helper a shared
+                    // statement, preventing the child compiler from splitting it.
+                    return code.replace(
+                      'import { jsx } from "react/jsx-runtime";',
+                      'import jsxRuntime from "react/jsx-runtime"; const jsx = jsxRuntime.jsx;',
+                    );
+                  },
+                },
+                reactRouter(),
+              ],
+            };
+          `,
+        },
+        templateName,
+      );
+
+      let { status, stderr } = build({ cwd });
+      expect(status, stderr.toString()).toBe(0);
+      let port = await getPort();
+      let stop = await reactRouterServe({ cwd, port });
+      try {
+        await page.goto(`http://localhost:${port}`);
+        await expect(page.getByText("Loading...")).toBeVisible();
+        await unblockClientLoader(page);
+        await expect(
+          page.getByRole("heading", { name: "Hello" }),
+        ).toBeVisible();
+        await expect(page.getByText("Loading...")).toHaveCount(0);
+      } finally {
+        stop();
+      }
+    });
+  });
+
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(`${templateDisplayName} / declares source maps for placeholder chunks of exports that can't be split`, async () => {
+      let cwd = await createProject(
+        {
+          "react-router.config.ts": reactRouterConfig({
+            splitRouteModules: true,
+          }),
+          "vite.config.js": await viteConfig.basic({ sourcemap: true }),
+          "app/routes/_index.tsx": js`
+            let shared = 0;
+
+            export async function clientLoader() {
+              shared++;
+              return shared;
+            }
+
+            export default function Index() {
+              return <h1>{shared}</h1>;
+            }
+          `,
+        },
+        templateName,
+      );
+
+      let { status, stderr } = build({ cwd });
+      expect(status).toBe(0);
+      expect(stderr.toString()).not.toContain(
+        "Sourcemap is likely to be incorrect",
+      );
+
+      let placeholder = globSync(
+        path.join(cwd, "build/client/assets/*.js"),
+      ).find((file) =>
+        readFileSync(file, "utf8").includes("No clientLoader chunk"),
+      );
+      expect(placeholder).toBeDefined();
+    });
+  });
+
   test.describe("enabled", () => {
     let port: number;
     let cwd: string;

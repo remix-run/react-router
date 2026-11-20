@@ -1,1 +1,1 @@
-detect client version skew in `unstable_createCallServer` action responses — a stale client now reloads instead of applying a rerender payload from a newer deployment
+Reload the document when an RSC server function returns a rerender from a different client version. Preserve URL fragments when recovering from a client version mismatch.

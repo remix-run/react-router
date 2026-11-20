@@ -16,9 +16,14 @@ import {
   FrameworkContext,
   usePrefetchBehavior,
 } from "../../../lib/dom/ssr/components";
-import { DataRouterStateContext } from "../../../lib/context";
+import {
+  DataRouterDataContext,
+  DataRouterNavigationContext,
+  DataRouterStateContext,
+} from "../../../lib/context";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
+import { IDLE_NAVIGATION } from "../../../lib/router/router";
 import "@testing-library/jest-dom";
 import { mockEntryContext, mockFrameworkContext } from "../../utils/framework";
 
@@ -158,9 +163,13 @@ describe("<NavLink />", () => {
 
 describe("<ServerRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/"),
-    );
+    let staticHandlerContext = await createStaticHandler([
+      {
+        id: "root",
+        path: "/",
+        children: [{ id: "empty", index: true }],
+      },
+    ]).query(new Request("http://localhost/"));
 
     invariant(
       !(staticHandlerContext instanceof Response),
@@ -168,6 +177,7 @@ describe("<ServerRouter>", () => {
     );
 
     let context = mockEntryContext({
+      staticHandlerContext,
       manifest: {
         routes: {
           root: {
@@ -298,12 +308,18 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterStateContext.Provider
-        value={{ matches: [], errors: null } as any}
-      >
-        <FrameworkContext.Provider value={context}>
-          <Links />
-        </FrameworkContext.Provider>
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
@@ -318,12 +334,18 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterStateContext.Provider
-        value={{ matches: [], errors: null } as any}
-      >
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="explicit-nonce" />
-        </FrameworkContext.Provider>
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="explicit-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
@@ -337,12 +359,18 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterStateContext.Provider
-        value={{ matches: [], errors: null } as any}
-      >
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
@@ -358,12 +386,18 @@ describe("<Links />", () => {
     });
 
     let { container } = render(
-      <DataRouterStateContext.Provider
-        value={{ matches: [], errors: null } as any}
-      >
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
+      <DataRouterStateContext.Provider value={{ matches: [] } as any}>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
@@ -416,9 +450,17 @@ describe("<Links />", () => {
           } as any
         }
       >
-        <FrameworkContext.Provider value={context}>
-          <Links nonce="test-nonce" />
-        </FrameworkContext.Provider>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links nonce="test-nonce" />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
@@ -470,9 +512,17 @@ describe("<Links />", () => {
           } as any
         }
       >
-        <FrameworkContext.Provider value={context}>
-          <Links />
-        </FrameworkContext.Provider>
+        <DataRouterNavigationContext.Provider
+          value={{ navigation: IDLE_NAVIGATION, revalidation: "idle" }}
+        >
+          <DataRouterDataContext.Provider
+            value={{ loaderData: {}, actionData: null, errors: null }}
+          >
+            <FrameworkContext.Provider value={context}>
+              <Links />
+            </FrameworkContext.Provider>
+          </DataRouterDataContext.Provider>
+        </DataRouterNavigationContext.Provider>
       </DataRouterStateContext.Provider>,
     );
 
@@ -483,9 +533,9 @@ describe("<Links />", () => {
 
 describe("<Scripts />", () => {
   it("propagates nonce to modulepreload links", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/"),
-    );
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/" },
+    ]).query(new Request("http://localhost/"));
 
     invariant(
       !(staticHandlerContext instanceof Response),
@@ -493,6 +543,7 @@ describe("<Scripts />", () => {
     );
 
     let context = mockEntryContext({
+      staticHandlerContext,
       manifest: {
         routes: {
           root: {
@@ -559,9 +610,9 @@ describe("<Scripts />", () => {
   });
 
   it("propagates the ServerRouter nonce to default HydrateFallback scripts when a route has a clientLoader without a HydrateFallback", async () => {
-    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-      new Request("http://localhost/"),
-    );
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/" },
+    ]).query(new Request("http://localhost/"));
 
     invariant(
       !(staticHandlerContext instanceof Response),
@@ -569,6 +620,7 @@ describe("<Scripts />", () => {
     );
 
     let context = mockEntryContext({
+      staticHandlerContext,
       manifest: {
         routes: {
           root: {

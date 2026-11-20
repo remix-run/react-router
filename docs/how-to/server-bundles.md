@@ -6,9 +6,6 @@ title: Server Bundles
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 <docs-warning>This is an advanced feature designed for hosting provider integrations. When compiling your app into multiple server bundles, there will need to be a custom routing layer in front of your app directing requests to the correct bundle.</docs-warning>
 
 React Router typically builds your server code into a single bundle that exports a request handler function. However, there are scenarios where you might want to split your route tree into multiple server bundles, each exposing a request handler function for a subset of routes. To provide this flexibility, [`react-router.config.ts`][react-router-config] supports a `serverBundles` option, which is a function for assigning routes to different server bundles.

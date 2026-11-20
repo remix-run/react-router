@@ -10,6 +10,22 @@ import {
 import type { AppFixture, Fixture } from "./helpers/create-fixture.js";
 import { implementations, setupRscTest, validateRSCHtml } from "./rsc/utils.js";
 
+const csrfRootRoute = js`
+  import { Outlet } from "react-router";
+
+  export function Layout({ children }) {
+    return <html><body>{children}</body></html>;
+  }
+
+  export default function Root() {
+    return <Outlet />;
+  }
+
+  export function ErrorBoundary() {
+    return <p>Action request rejected</p>;
+  }
+`;
+
 const csrfActionRoute = js`
   let actionCalls = 0;
 
@@ -50,6 +66,7 @@ test.describe("RSC CSRF action protection", () => {
       fixture = await createFixture({
         templateName: "rsc-vite-framework",
         files: {
+          "app/root.tsx": csrfRootRoute,
           "app/routes/csrf-action.tsx": csrfActionRoute,
         },
       });
@@ -81,6 +98,7 @@ test.describe("RSC CSRF action protection", () => {
         },
       );
       expect(response.status()).toBe(400);
+      expect(await response.text()).toContain("Action request rejected");
 
       await app.goto("/csrf-action");
       await expectActionCalls(page, "0");
@@ -117,21 +135,7 @@ test.describe("RSC CSRF action protection", () => {
               ] satisfies RSCRouteConfig;
             `,
 
-            "src/routes/root.tsx": js`
-              import { Outlet } from "react-router";
-
-              export function Layout({ children }: { children: React.ReactNode }) {
-                return (
-                  <html>
-                    <body>{children}</body>
-                  </html>
-                );
-              }
-
-              export default function RootRoute() {
-                return <Outlet />;
-              }
-            `,
+            "src/routes/root.tsx": csrfRootRoute,
 
             "src/routes/csrf-action.tsx": csrfActionRoute,
           },
@@ -160,6 +164,7 @@ test.describe("RSC CSRF action protection", () => {
           },
         );
         expect(response.status()).toBe(400);
+        expect(await response.text()).toContain("Action request rejected");
 
         await page.goto(`http://localhost:${port}/csrf-action`);
         await expectActionCalls(page, "0");

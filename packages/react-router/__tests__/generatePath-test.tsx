@@ -1,6 +1,62 @@
 import { generatePath } from "react-router";
 
 describe("generatePath", () => {
+  it.each([
+    ["/*", "/example.com/a//b", "/example.com/a//b"],
+    ["/:lang?/*", "//example.com/path", "/example.com/path"],
+    ["/*", "\\example.com/path", "/example.com/path"],
+    ["*", "\\/example.com/path", "/example.com/path"],
+  ])("normalizes leading separators for %s", (pattern, splat, expected) => {
+    let result = generatePath(pattern, { "*": splat });
+    expect(result).toBe(expected);
+    expect(new URL(result, "https://app.example/").origin).toBe(
+      "https://app.example",
+    );
+  });
+
+  it.each([
+    ["/files/*", "a%20b/%2F", "/files/a%20b/%2F"],
+    ["/files/*", "a?download=1#top", "/files/a?download=1#top"],
+    ["/files/*", "a b/café\\file", "/files/a b/café\\file"],
+    ["/files/*", "a\tb", "/files/a\tb"],
+    ["*", "a?next=https://example.com/#top", "a?next=https://example.com/#top"],
+    ["*", "1:a", "1:a"],
+    ["*", " example/path", " example/path"],
+  ])(
+    "preserves splat interpolation for %s with %j",
+    (pattern, splat, expected) => {
+      expect(generatePath(pattern, { "*": splat })).toBe(expected);
+    },
+  );
+
+  it.each([
+    ["/*", "/\t/example.com/path"],
+    ["/*", "/\n/example.com/path"],
+    ["/*", "/\r/example.com/path"],
+    ["*", "\u0000//example.com/path"],
+    ["*", " //example.com/path"],
+    ["*", "ht\ttps://example.com/path"],
+  ])("validates generated URL prefixes for %s with %j", (pattern, splat) => {
+    expect(() => generatePath(pattern, { "*": splat })).toThrow(
+      "External navigation is not allowed",
+    );
+  });
+
+  it("encodes colons in the first segment of relative patterns", () => {
+    for (let result of [
+      generatePath("*", { "*": "https://example.com/path" }),
+      generatePath(":protocol/*", {
+        protocol: "https:",
+        "*": "/example.com/path",
+      }),
+    ]) {
+      expect(result).toBe("https%3A//example.com/path");
+      expect(new URL(result, "https://app.example/").origin).toBe(
+        "https://app.example",
+      );
+    }
+  });
+
   describe("with no params", () => {
     it("returns the unmodified path", () => {
       expect(generatePath("/")).toBe("/");

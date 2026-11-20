@@ -19,9 +19,6 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ho
 
 [MODES: framework, data]
 
-<br />
-<br />
-
 <docs-warning>This API is experimental and subject to breaking changes in 
 minor/patch releases. Please use with caution and pay **very** close attention 
 to release notes for relevant changes.</docs-warning>
@@ -40,7 +37,7 @@ and [`useNavigationType`](../hooks/useNavigationType) into a single hook.
 ```tsx
 import { unstable_useRouterState as useRouterState } from "react-router";
 
-let { active, pending } = unstable_useRouterState();
+let { active, pending } = useRouterState();
 
 // Active is always populated with the current location
 active.location; // replaces `useLocation()`

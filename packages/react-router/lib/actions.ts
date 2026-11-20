@@ -4,24 +4,30 @@ export function throwIfPotentialCSRFAttack(
 ) {
   let originHeader = request.headers.get("origin");
   let originDomain: string | null = null;
+  let originUrl: URL | null = null;
 
   try {
-    originDomain =
-      typeof originHeader === "string" && originHeader !== "null"
-        ? new URL(originHeader).host
-        : originHeader;
+    if (typeof originHeader === "string" && originHeader !== "null") {
+      originUrl = new URL(originHeader);
+      originDomain = originUrl.host;
+    } else {
+      originDomain = originHeader;
+    }
   } catch {
     throw new Error(
       `\`origin\` header is not a valid URL. Aborting the action.`,
     );
   }
-  let host = new URL(request.url).host;
+  let requestUrl = new URL(request.url);
+  let originMatchesRequest = originUrl
+    ? originUrl.origin === requestUrl.origin
+    : originDomain === requestUrl.host;
 
-  if (originDomain && originDomain !== host) {
+  if (originDomain && !originMatchesRequest) {
     if (!isAllowedOrigin(originDomain, allowedActionOrigins)) {
       // This seems to be an CSRF attack. We should not proceed with the action.
       throw new Error(
-        "The `request.url` host does not match `origin` header from a forwarded " +
+        "The `request.url` origin does not match `origin` header from a forwarded " +
           "action request. Aborting the action.",
       );
     }

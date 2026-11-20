@@ -35,6 +35,7 @@ export type {
   DataRouteObject,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
+  DataStrategyInitiator as unstable_DataStrategyInitiator,
   DataStrategyMatch,
   DataStrategyResult,
   DataWithResponseInit as UNSAFE_DataWithResponseInit,
@@ -369,6 +370,8 @@ export {
 /** @internal */
 export {
   DataRouterContext as UNSAFE_DataRouterContext,
+  DataRouterDataContext as UNSAFE_DataRouterDataContext,
+  DataRouterNavigationContext as UNSAFE_DataRouterNavigationContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   FetchersContext as UNSAFE_FetchersContext,
   LocationContext as UNSAFE_LocationContext,
@@ -430,3 +433,16 @@ export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 
 /** @internal */
 export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";
+
+export { useRouteDiscovery as unstable_useRouteDiscovery } from "./lib/dom/ssr/route-discovery";
+export type {
+  ManifestMismatchEvent as unstable_ManifestMismatchEvent,
+  DiscoveryResult as unstable_DiscoveryResult,
+  RouteDiscoveryOptions as unstable_RouteDiscoveryOptions,
+} from "./lib/dom/ssr/route-discovery";
+/** @internal */
+export {
+  RouteDiscoveryRuntime as UNSAFE_RouteDiscoveryRuntime,
+  useCustomRouteDiscovery as UNSAFE_useCustomRouteDiscovery,
+  getCustomPatchRoutesOnNavigationFunction as UNSAFE_getCustomPatchRoutesOnNavigationFunction,
+} from "./lib/dom/ssr/route-discovery";

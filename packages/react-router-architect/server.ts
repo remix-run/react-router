@@ -54,7 +54,11 @@ export function createReactRouterRequest(
   event: APIGatewayProxyEventV2,
 ): Request {
   let rawHost = event.requestContext.domainName || event.headers.host || "";
-  let [hostname, portStr] = rawHost.split(":");
+  // A bracketed IPv6 address (e.g., `[::1]:3333`) has colons of its own, so
+  // take it as a whole and look for the port after it
+  let ipv6 = /^\[.*?\]/;
+  let hostname = rawHost.match(ipv6)?.[0] ?? rawHost.split(":")[0];
+  let [, portStr] = rawHost.replace(ipv6, "").split(":");
   hostname = hostname.split(/[\\/?#@]/)[0] || "localhost";
   let hostPort = Number.parseInt(portStr ?? "", 10);
   let port = Number.isSafeInteger(hostPort) ? hostPort : undefined;
@@ -62,9 +66,6 @@ export function createReactRouterRequest(
   let search = event.rawQueryString.length ? `?${event.rawQueryString}` : "";
   let scheme = process.env.ARC_SANDBOX ? "http" : "https";
   let url = new URL(`${scheme}://${host}${event.rawPath}${search}`);
-  let isFormData = event.headers["content-type"]?.includes(
-    "multipart/form-data",
-  );
   // Note: No current way to abort these for Architect, but our router expects
   // requests to contain a signal, so it can detect aborted requests
   let controller = new AbortController();
@@ -75,9 +76,7 @@ export function createReactRouterRequest(
     signal: controller.signal,
     body:
       event.body && event.isBase64Encoded
-        ? isFormData
-          ? Buffer.from(event.body, "base64")
-          : Buffer.from(event.body, "base64").toString()
+        ? Buffer.from(event.body, "base64")
         : event.body,
   });
 }
@@ -105,16 +104,15 @@ export async function sendReactRouterResponse(
   nodeResponse: Response,
 ): Promise<APIGatewayProxyStructuredResultV2> {
   let cookies: string[] = [];
+  let headerEntries: [string, string][] = [];
 
   // Arc/AWS API Gateway will send back set-cookies outside of response headers.
   for (let [key, value] of nodeResponse.headers.entries()) {
     if (key.toLowerCase() === "set-cookie") {
       cookies.push(value);
+    } else {
+      headerEntries.push([key, value]);
     }
-  }
-
-  if (cookies.length) {
-    nodeResponse.headers.delete("Set-Cookie");
   }
 
   let contentType = nodeResponse.headers.get("Content-Type");
@@ -131,7 +129,7 @@ export async function sendReactRouterResponse(
 
   return {
     statusCode: nodeResponse.status,
-    headers: Object.fromEntries(nodeResponse.headers.entries()),
+    headers: Object.fromEntries(headerEntries),
     cookies,
     body,
     isBase64Encoded,

@@ -83,29 +83,6 @@ export async function createRelease(
 }
 
 /**
- * List open PRs
- */
-export async function listOpenPrs(
-  options: { createdAfter?: Date; base?: string; author?: string } = {},
-) {
-  let response = await request("GET /repos/{owner}/{repo}/pulls", {
-    ...requestOptions(),
-    state: "open",
-    sort: "created",
-    direction: "desc",
-    per_page: 100,
-    ...(options.base ? { base: options.base } : {}),
-  });
-
-  return response.data.filter(
-    (pr) =>
-      (!options.createdAfter ||
-        new Date(pr.created_at) >= options.createdAfter) &&
-      (!options.author || pr.user?.login === options.author),
-  );
-}
-
-/**
  * Find an open PR from a specific branch to a base branch
  */
 export async function findOpenPr(head: string, base: string) {
@@ -218,16 +195,23 @@ export async function updatePrComment(commentId: number, body: string) {
  * Get all files changed in a PR
  */
 export async function getPrFiles(prNumber: number) {
-  let response = await request(
-    "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
-    {
+  let getPage = (page: number) =>
+    request("GET /repos/{owner}/{repo}/pulls/{pull_number}/files", {
       ...requestOptions(),
       pull_number: prNumber,
       per_page: 100,
-    },
-  );
+      page,
+    });
 
-  return response.data;
+  let response = await getPage(1);
+  let files = [...response.data];
+
+  for (let page = 2; response.data.length === 100; page++) {
+    response = await getPage(page);
+    files.push(...response.data);
+  }
+
+  return files;
 }
 
 /**
@@ -249,18 +233,4 @@ export async function addPrLabels(prNumber: number, labels: string[]) {
     issue_number: prNumber,
     labels,
   });
-}
-
-/**
- * Remove a label from a PR (or issue)
- */
-export async function removePrLabel(prNumber: number, label: string) {
-  await request(
-    "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}",
-    {
-      ...requestOptions(),
-      issue_number: prNumber,
-      name: label,
-    },
-  );
 }

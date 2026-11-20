@@ -52,6 +52,7 @@ type ViteConfigBuildArgs = {
   assetsInlineLimit?: number;
   assetsDir?: string;
   cssCodeSplit?: boolean;
+  sourcemap?: boolean | "inline" | "hidden";
 };
 
 type ViteConfigBaseArgs = {
@@ -87,6 +88,7 @@ export const viteConfig = {
     assetsInlineLimit,
     assetsDir,
     cssCodeSplit,
+    sourcemap,
   }: ViteConfigBuildArgs = {}) => {
     return dedent`
       build: {
@@ -95,6 +97,7 @@ export const viteConfig = {
         cssCodeSplit: ${
           cssCodeSplit !== undefined ? cssCodeSplit : "undefined"
         },
+        sourcemap: ${JSON.stringify(sourcemap)},
       },
     `;
   },
@@ -373,7 +376,12 @@ type ServerArgs = {
 export const createDev =
   (nodeArgs: string[]) =>
   async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
-    let proc = node(nodeArgs, { cwd, env });
+    // Reused workers can inherit production mode from earlier fixtures. Dev
+    // servers need a predictable default, while production runners opt in.
+    let proc = node(nodeArgs, {
+      cwd,
+      env: { NODE_ENV: "development", ...env },
+    });
     await waitForServer(proc, { port, basename });
     return () => proc.kill();
   };

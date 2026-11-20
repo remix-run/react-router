@@ -240,8 +240,7 @@ implementations.forEach((implementation) => {
       await page.goto(`http://localhost:${port}/render-redirect`);
       await expect(page.getByText("home")).toBeAttached();
       await page.getByText("External").click();
-      await page.waitForURL(`https://example.com/`);
-      await expect(page.getByText("Example Domain")).toBeAttached();
+      await expect(page).toHaveURL(`https://example.com/`);
     });
 
     test("Handles unsupported protocol redirect Responses from render", async ({
@@ -273,8 +272,7 @@ implementations.forEach((implementation) => {
         "Playwright doesn't like external redirects for tests. It times out waiting for the URL even though it navigates.",
       );
       await page.goto(`http://localhost:${port}/render-redirect/lazy/external`);
-      await page.waitForURL(`https://example.com/`);
-      await expect(page.getByText("Example Domain")).toBeAttached();
+      await expect(page).toHaveURL(`https://example.com/`);
     });
 
     test("Handles unsupported protocol redirect Responses from suspended render", async ({

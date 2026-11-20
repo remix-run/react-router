@@ -558,7 +558,41 @@ describe("fetchers", () => {
         formData: createFormData({}),
       });
       t.router.deleteFetcher("b"); //unmount
-      await B.actions.bar.redirect("/baz");
+      let C = await B.actions.bar.redirect("/baz", undefined, undefined, [
+        "index",
+      ]);
+      await C.loaders.root.resolve("ROOT");
+      await C.loaders.index.resolve("INDEX");
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(t.router.state.location.pathname).toBe("/");
+    });
+
+    it("revalidates after an unmounted fetcher submission redirect", async () => {
+      let t = initializeTest();
+      t.router.getFetcher("key");
+      let A = await t.fetch("/bar", "key", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.router.deleteFetcher("key");
+
+      let B = await A.actions.bar.redirect("/baz", undefined, undefined, [
+        "index",
+      ]);
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(B.loaders.root.stub).toHaveBeenCalledTimes(1);
+      expect(B.loaders.index.stub).toHaveBeenCalledTimes(1);
+      expect(B.loaders.baz.stub).not.toHaveBeenCalled();
+
+      await B.loaders.root.resolve("ROOT*");
+      await B.loaders.index.resolve("INDEX*");
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+        index: "INDEX*",
+      });
+      expect(t.router.state.errors).toBe(null);
       expect(t.router.state.fetchers.size).toBe(0);
       expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
       expect(t.router.state.location.pathname).toBe("/");
@@ -1740,7 +1774,11 @@ describe("fetchers", () => {
         let B = await t.navigate("/bar");
 
         // This redirect should be ignored
-        await A.actions.foo.redirect("/baz");
+        let C = await A.actions.foo.redirect("/baz", undefined, undefined, [
+          "bar",
+        ]);
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.bar.resolve("BAR");
         expect(t.router.getFetcher(key)?.state).toBe("idle");
 
         await B.loaders.root.resolve("ROOT*");
@@ -1756,6 +1794,148 @@ describe("fetchers", () => {
         expect(t.router.getFetcher(key)?.state).toBe("idle");
         expect(t.fetchers[key]?.data).toBeUndefined();
       });
+
+      it("revalidates after an ignored submission redirect during a pending navigation", async () => {
+        let key = "key";
+        let t = initializeTest();
+        let A = await t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        let B = await t.navigate("/bar");
+
+        // This redirect should be ignored, but the action still ran so the
+        // fetcher revalidates the loaders for the pending navigation location
+        let C = await A.actions.foo.redirect("/baz", undefined, undefined, [
+          "bar",
+        ]);
+        expect(t.router.state.navigation.location?.pathname).toBe("/bar");
+        expect(t.router.getFetcher(key)?.state).toBe("loading");
+
+        await B.loaders.root.resolve("ROOT*");
+        await B.loaders.bar.resolve("BAR");
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/bar" },
+          loaderData: {
+            root: "ROOT*",
+            bar: "BAR",
+          },
+        });
+        expect(t.router.getFetcher(key)?.state).toBe("loading");
+
+        await C.loaders.root.resolve("ROOT**");
+        await C.loaders.bar.resolve("BAR*");
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/bar" },
+          loaderData: {
+            root: "ROOT**",
+            bar: "BAR*",
+          },
+        });
+        expect(C.loaders.baz.stub).not.toHaveBeenCalled();
+        expect(t.router.getFetcher(key)?.state).toBe("idle");
+        expect(t.fetchers[key]?.data).toBeUndefined();
+      });
+
+      it("revalidates after an ignored submission redirect if the navigation already completed", async () => {
+        let key = "key";
+        let t = initializeTest();
+        let A = await t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        let B = await t.navigate("/bar");
+
+        // The navigation completes while the action is still running, so its
+        // loaders ran before the action's mutation
+        await B.loaders.root.resolve("ROOT*");
+        await B.loaders.bar.resolve("BAR");
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/bar" },
+          loaderData: {
+            root: "ROOT*",
+            bar: "BAR",
+          },
+        });
+
+        // The redirect is ignored, but loader data is revalidated
+        let C = await A.actions.foo.redirect("/baz", undefined, undefined, [
+          "bar",
+        ]);
+        expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+        expect(t.router.getFetcher(key)?.state).toBe("loading");
+
+        await C.loaders.root.resolve("ROOT**");
+        await C.loaders.bar.resolve("BAR*");
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/bar" },
+          loaderData: {
+            root: "ROOT**",
+            bar: "BAR*",
+          },
+        });
+        expect(C.loaders.baz.stub).not.toHaveBeenCalled();
+        expect(t.router.getFetcher(key)?.state).toBe("idle");
+        expect(t.fetchers[key]?.data).toBeUndefined();
+      });
+
+      it.each([false, true])(
+        "revalidates shared loaders after an ignored submission redirect during a subsequent navigation (unmounted: %s)",
+        async (unmounted) => {
+          let key = "key";
+          let t = initializeTest();
+          t.router.getFetcher(key);
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+
+          // Complete a navigation before the action's mutation, clearing its
+          // pending revalidation requirement.
+          let B = await t.navigate("/foo");
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.foo.resolve("FOO");
+          expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+
+          // A second navigation shares the root route and normally does not
+          // revalidate it when navigating between children.
+          let C = await t.navigate("/bar");
+          expect(C.loaders.root.stub).not.toHaveBeenCalled();
+
+          if (unmounted) {
+            t.router.deleteFetcher(key);
+          }
+
+          // The action's redirect is ignored, but its mutation must revalidate
+          // shared loaders as well as the pending navigation's new loaders.
+          let D = await A.actions.foo.redirect("/baz", undefined, undefined, [
+            "bar",
+          ]);
+          expect(t.router.state.navigation.location?.pathname).toBe("/bar");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+          expect(D.loaders.root.stub).toHaveBeenCalledTimes(1);
+          expect(D.loaders.bar.stub).toHaveBeenCalledTimes(1);
+
+          await D.loaders.root.resolve("ROOT**");
+          await D.loaders.bar.resolve("BAR*");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {
+              root: "ROOT**",
+              bar: "BAR*",
+            },
+          });
+          expect(C.loaders.bar.signal.aborted).toBe(true);
+          expect(D.loaders.baz.stub).not.toHaveBeenCalled();
+          expect(t.router.state.fetchers.size).toBe(0);
+          expect(t.fetchers[key]?.data).toBeUndefined();
+        },
+      );
 
       it("ignores submission redirect navigation if preceded by a normal GET navigation (w/o loaders)", async () => {
         let key = "key";
@@ -1803,6 +1983,148 @@ describe("fetchers", () => {
         });
         expect(t.router.getFetcher(key)?.state).toBe("idle");
         expect(t.fetchers[key]?.data).toBeUndefined();
+      });
+    });
+
+    describe(`
+      A) fetch POST /foo |---------R
+      B) fetch POST /foo   |--R
+      C) redirect nav GET /   |--O
+    `, () => {
+      it("revalidates when a submission redirect is ignored because of a completed redirect navigation", async () => {
+        let t = initializeTest();
+        let A = await t.fetch("/foo", "a", {
+          formMethod: "post",
+          formData: createFormData({ key: "a" }),
+        });
+        let B = await t.fetch("/foo", "b", {
+          formMethod: "post",
+          formData: createFormData({ key: "b" }),
+        });
+
+        // B's redirect is followed
+        let C = await B.actions.foo.redirect("/");
+        expect(t.router.state.navigation.location?.pathname).toBe("/");
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.index.resolve("INDEX*");
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/" },
+          loaderData: {
+            root: "ROOT*",
+            index: "INDEX*",
+          },
+        });
+        expect(t.router.getFetcher("a")?.state).toBe("submitting");
+        expect(t.router.getFetcher("b")?.state).toBe("idle");
+
+        // A's redirect is ignored since B's redirect navigation started after
+        // A was submitted, but that navigation's loaders ran before A's action
+        // completed, so A must still revalidate
+        let D = await A.actions.foo.redirect("/");
+        expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+        expect(t.router.getFetcher("a")?.state).toBe("loading");
+
+        await D.loaders.root.resolve("ROOT**");
+        await D.loaders.index.resolve("INDEX**");
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/" },
+          loaderData: {
+            root: "ROOT**",
+            index: "INDEX**",
+          },
+        });
+        expect(t.router.getFetcher("a")?.state).toBe("idle");
+        expect(t.router.getFetcher("b")?.state).toBe("idle");
+      });
+
+      it("revalidates when a submission redirect is ignored because of a pending redirect navigation", async () => {
+        let t = initializeTest();
+        let A = await t.fetch("/foo", "a", {
+          formMethod: "post",
+          formData: createFormData({ key: "a" }),
+        });
+        let B = await t.fetch("/foo", "b", {
+          formMethod: "post",
+          formData: createFormData({ key: "b" }),
+        });
+
+        // B's redirect is followed
+        let C = await B.actions.foo.redirect("/");
+        expect(t.router.state.navigation.location?.pathname).toBe("/");
+
+        // A's redirect is ignored but it revalidates, and since that
+        // revalidation is newer than the pending navigation its data wins
+        let D = await A.actions.foo.redirect("/");
+        expect(t.router.state.navigation.location?.pathname).toBe("/");
+        expect(t.router.getFetcher("a")?.state).toBe("loading");
+
+        await D.loaders.root.resolve("ROOT**");
+        await D.loaders.index.resolve("INDEX**");
+        expect(C.loaders.root.signal.aborted).toBe(true);
+        expect(C.loaders.index.signal.aborted).toBe(true);
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/" },
+          loaderData: {
+            root: "ROOT**",
+            index: "INDEX**",
+          },
+        });
+        expect(t.router.getFetcher("a")?.state).toBe("idle");
+        expect(t.router.getFetcher("b")?.state).toBe("idle");
+
+        // The aborted navigation loaders are ignored
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.index.resolve("INDEX*");
+        expect(t.router.state.loaderData).toEqual({
+          root: "ROOT**",
+          index: "INDEX**",
+        });
+      });
+    });
+
+    describe(`
+      A) fetch POST /foo |---------|--O
+      B) fetch POST /foo   |--R
+      C) redirect nav GET /   |--------X
+    `, () => {
+      it("completes a fetcher redirect navigation taken over by a newer fetcher revalidation", async () => {
+        let t = initializeTest();
+        let A = await t.fetch("/foo", "a", {
+          formMethod: "post",
+          formData: createFormData({ key: "a" }),
+        });
+        let B = await t.fetch("/foo", "b", {
+          formMethod: "post",
+          formData: createFormData({ key: "b" }),
+        });
+
+        // B's redirect is followed
+        let C = await B.actions.foo.redirect("/");
+        expect(t.router.state.navigation.location?.pathname).toBe("/");
+        expect(t.router.getFetcher("b")?.state).toBe("loading");
+
+        // A's revalidation is newer than B's redirect navigation, so when it
+        // lands first it completes that navigation
+        await A.actions.foo.resolve("A ACTION");
+        expect(t.router.getFetcher("a")?.state).toBe("loading");
+        await A.loaders.root.resolve("ROOT**");
+        await A.loaders.index.resolve("INDEX**");
+        expect(C.loaders.root.signal.aborted).toBe(true);
+        expect(t.router.state).toMatchObject({
+          navigation: IDLE_NAVIGATION,
+          location: { pathname: "/" },
+          loaderData: {
+            root: "ROOT**",
+            index: "INDEX**",
+          },
+        });
+        expect(t.router.getFetcher("a")?.state).toBe("idle");
+        expect(t.fetchers["a"]?.data).toBe("A ACTION");
+        // B's redirect navigation was completed, so B is done too
+        expect(t.router.getFetcher("b")?.state).toBe("idle");
       });
     });
 
@@ -2369,6 +2691,73 @@ describe("fetchers", () => {
           // the root since it's the closest "active" rendered route with an
           // error boundary
           root: new Error("Fetcher error"),
+        },
+      });
+      expect(t.router.getFetcher(key)).toBe(IDLE_FETCHER);
+    });
+
+    it("handles fetcher revalidation errors at contextual route boundaries", async () => {
+      let key = "key";
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            ErrorBoundary: () => null,
+            children: [
+              {
+                id: "parent",
+                path: "parent",
+                loader: true,
+                ErrorBoundary: () => null,
+                children: [
+                  {
+                    id: "child",
+                    path: "child",
+                    loader: true,
+                    action: true,
+                    ErrorBoundary: () => null,
+                  },
+                ],
+              },
+              {
+                id: "api",
+                path: "api",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/parent/child"],
+        hydrationData: {
+          loaderData: { parent: "PARENT", child: "CHILD" },
+        },
+      });
+
+      // The fetcher is owned by the parent route, not the child page
+      let A = await t.fetch("/api", key, "parent");
+      await A.loaders.api.resolve("API");
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: "API",
+      });
+
+      let B = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "navigation", "loader", "api");
+      await B.actions.child.resolve("ACTION");
+      await B.loaders.parent.resolve("PARENT*");
+      await B.loaders.child.resolve("CHILD*");
+      await B.loaders.api.reject(new Error("Fetcher error"));
+      expect(t.router.state).toMatchObject({
+        loaderData: {
+          parent: "PARENT*",
+          child: "CHILD*",
+        },
+        errors: {
+          parent: new Error("Fetcher error"),
         },
       });
       expect(t.router.getFetcher(key)).toBe(IDLE_FETCHER);
@@ -3701,6 +4090,178 @@ describe("fetchers", () => {
       let A = await t.fetch("/fetch", "a", "root");
       t.router.resetFetcher("a", { reason: "BECAUSE I SAID SO" });
       expect(A.loaders.fetch.signal.reason).toBe("BECAUSE I SAID SO");
+    });
+
+    it("does not revalidate reset fetchers", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/", action: true },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      await A.loaders.fetch.resolve("FETCH");
+      t.router.resetFetcher("a");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+
+      let B = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "navigation", "loader", "fetch");
+      await B.actions.root.resolve("ACTION");
+      expect(B.loaders.fetch.stub).not.toHaveBeenCalled();
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+    });
+
+    it("does not force a revalidation after resetting an interrupted load", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/", action: true },
+          {
+            id: "fetch",
+            path: "/fetch",
+            loader: true,
+            shouldRevalidate: () => false,
+          },
+        ],
+      });
+
+      // A submission interrupts the in-flight load, then the fetcher is reset
+      let A = await t.fetch("/fetch", "a", "root");
+      let B = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "navigation", "loader", "fetch");
+      expect(A.loaders.fetch.signal.aborted).toBe(true);
+      t.router.resetFetcher("a");
+      await B.actions.root.resolve("ACTION");
+      expect(B.loaders.fetch.stub).not.toHaveBeenCalled();
+
+      // A new load must not inherit the forced revalidation of the cancelled one
+      let C = await t.fetch("/fetch", "a", "root");
+      await C.loaders.fetch.resolve("FETCH");
+
+      let D = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(D.loaders, "navigation", "loader", "fetch");
+      await D.actions.root.resolve("ACTION");
+      expect(D.loaders.fetch.stub).not.toHaveBeenCalled();
+      expect(t.fetchers["a"]).toMatchObject({
+        state: "idle",
+        data: "FETCH",
+      });
+    });
+  });
+
+  describe("fetchReloadIds cleanup", () => {
+    it("does not strand a reload id when a load supersedes a submission on the same key", async () => {
+      let t = initializeTest();
+      let key = "key";
+
+      let A = await t.fetch("/foo", key, {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      expect(t.fetchers[key].state).toBe("submitting");
+
+      await A.actions.foo.resolve("ACTION");
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: "POST",
+        formAction: "/foo",
+        state: "loading",
+        data: "ACTION",
+      });
+
+      let B = await t.fetch("/foo", key);
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: undefined,
+        formAction: undefined,
+        state: "loading",
+        data: "ACTION",
+      });
+
+      await A.loaders.root.resolve("ROOT*");
+      await A.loaders.index.resolve("INDEX*");
+      await B.loaders.foo.resolve("FOO");
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: undefined,
+        formAction: undefined,
+        state: "idle",
+        data: "FOO",
+      });
+
+      // idle fetchers are pruned from state.fetchers
+      expect(t.router.state.fetchers.has(key)).toBe(false);
+
+      let C = await t.navigate("/bar");
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.bar.resolve("BAR");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/bar" },
+        navigation: { state: "idle" },
+        loaderData: {
+          root: "ROOT**",
+          bar: "BAR",
+        },
+      });
+    });
+
+    it("does not strand a reload id when a fetcher is reset during post-action revalidation", async () => {
+      let t = initializeTest();
+      let key = "key";
+
+      let A = await t.fetch("/foo", key, {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: "POST",
+        formAction: "/foo",
+        state: "submitting",
+        data: undefined,
+      });
+
+      await A.actions.foo.resolve("ACTION");
+      expect(t.fetchers[key]).toMatchObject({
+        formMethod: "POST",
+        formAction: "/foo",
+        state: "loading",
+        data: "ACTION",
+      });
+
+      t.router.resetFetcher(key);
+      expect(t.fetchers[key]).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+      expect(t.router.state.fetchers.has(key)).toBe(false);
+
+      await A.loaders.root.resolve("ROOT*");
+      await A.loaders.index.resolve("INDEX*");
+
+      let B = await t.navigate("/bar");
+      await B.loaders.root.resolve("ROOT**");
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/bar" },
+        navigation: { state: "idle" },
+        loaderData: {
+          root: "ROOT**",
+          bar: "BAR",
+        },
+      });
     });
   });
 

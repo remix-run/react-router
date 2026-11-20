@@ -3,10 +3,13 @@ import { pathToFileURL } from "node:url";
 import { expect, type Page } from "@playwright/test";
 
 import {
+  build,
+  createProject,
   reactRouterConfig,
   test,
   type Files,
   type TemplateName,
+  viteConfig,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -15,18 +18,38 @@ const templateName = "rsc-vite-framework" as const satisfies TemplateName;
 function getFiles() {
   return {
     "app/root.tsx": js`
-      import { Link, Outlet } from "react-router";
+      import { Link, Outlet, useNavigation, useRouteError } from "react-router";
 
-      export default function Root() {
+      export function Layout({ children }) {
+        let navigation = useNavigation();
         return (
           <html lang="en">
             <body>
-              <Link to="/other?token=abc123&ref=campaign#section1">
-                Go to Other
-              </Link>
-              <Outlet />
+              <p data-navigation-state>{navigation.state}</p>
+              {children}
             </body>
           </html>
+        );
+      }
+
+      export default function Root() {
+        return (
+          <>
+            <Link to="/other?token=abc123&ref=campaign#section1">
+              Go to Other
+            </Link>
+            <Outlet />
+          </>
+        );
+      }
+
+      export function ErrorBoundary() {
+        let error = useRouteError();
+        return (
+          <>
+            <p data-error>{error.message}</p>
+            <p data-error-cause>{error.cause?.message}</p>
+          </>
         );
       }
     `,
@@ -72,6 +95,34 @@ async function interceptWithStaleClientVersion(page: Page) {
 }
 
 test.describe("RSC client versions", () => {
+  test("renders a server component on the initial request with a client loader", async ({
+    page,
+    dev,
+  }) => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.ts": await viteConfig.basic({ port, templateName }),
+      ...getFiles(),
+      "app/routes.ts": js`
+        import { type RouteConfig, index } from "@react-router/dev/routes";
+
+        export default [index("routes/home.tsx")] satisfies RouteConfig;
+      `,
+      "app/routes/home.tsx": js`
+        export function clientLoader() {
+          return null;
+        }
+
+        export function ServerComponent() {
+          return <h1>Hello</h1>;
+        }
+      `,
+    });
+    let { port } = await dev(files, templateName);
+
+    await page.goto(`http://localhost:${port}/`);
+    await expect(page.getByRole("heading", { name: "Hello" })).toBeVisible();
+  });
+
   test("derives the client version from the Vite RSC assets manifest", async ({
     page,
     request,
@@ -119,6 +170,63 @@ test.describe("RSC client versions", () => {
       "/other?token=abc123&ref=campaign#section1",
     );
     expect(documentRequests).toHaveLength(1);
+  });
+
+  test("preserves client versions when the client build does not write files", async () => {
+    let cwd = await createProject(
+      {
+        ...getFiles(),
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
+          import react from "@vitejs/plugin-react";
+          import rsc from "@vitejs/plugin-rsc";
+
+          export default defineConfig({
+            environments: {
+              client: { build: { write: false } },
+            },
+            plugins: [
+              reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true }),
+              react(),
+              rsc(),
+            ],
+          });
+        `,
+      },
+      templateName,
+    );
+    expect(build({ cwd }).status).toBe(0);
+
+    let { fetchServer } = await import(
+      pathToFileURL(path.join(cwd, "build/server/index.js")).href
+    );
+    let staleResponse = await fetchServer(
+      new Request("http://localhost/other.manifest?version=stale"),
+    );
+    expect(staleResponse.status).toBe(204);
+    expect(staleResponse.headers.get("X-Remix-Reload-Document")).toBe("true");
+
+    let manifests = await Promise.all(
+      ["build/server", "build/server/__ssr_build"].map(async (directory) => {
+        let { default: manifest } = await import(
+          pathToFileURL(
+            path.join(cwd, directory, "__vite_rsc_assets_manifest.js"),
+          ).href
+        );
+        return manifest;
+      }),
+    );
+    let { clientVersion, ...versionedManifestValues } = manifests[0];
+    expect(clientVersion).toBe(
+      await getClientVersion(JSON.stringify(versionedManifestValues)),
+    );
+    expect(manifests[1].clientVersion).toBe(clientVersion);
+
+    let currentResponse = await fetchServer(
+      new Request(`http://localhost/other.manifest?version=${clientVersion}`),
+    );
+    expect(currentResponse.status).toBe(200);
   });
 
   test("defers an eager discovery mismatch until navigation, then reloads the destination", async ({
@@ -225,7 +333,7 @@ test.describe("RSC client versions", () => {
     expect(documentRequests[1]).toBe(`${baseUrl}/other`);
   });
 
-  test("reloads when a server function rerender has a new client version", async ({
+  test("reloads the current document and preserves its fragment when a server function rerender has a new client version", async ({
     page,
     vitePreview,
   }) => {
@@ -234,43 +342,46 @@ test.describe("RSC client versions", () => {
       "app/actions.ts": js`
         "use server";
 
-        export async function incrementCounter(count: number) {
+        export async function increment(count: number) {
           return count + 1;
         }
       `,
-      "app/counter.client.tsx": js`
-        "use client";
-
-        import { useActionState } from "react";
-
-        import { incrementCounter } from "./actions";
-
-        export function Counter() {
-          const [count, increment] = useActionState(incrementCounter, 0);
-          return (
-            <form action={increment}>
-              <output data-count>{count}</output>
-              <button type="submit" data-submit>Increment</button>
-            </form>
-          );
-        }
-      `,
       "app/routes/_index.tsx": js`
-        import { Counter } from "../counter.client";
+        import { Counter } from "../counter";
 
         export default function Index() {
+          return <Counter />;
+        }
+      `,
+      "app/counter.tsx": js`
+        "use client";
+
+        import { useActionState, useEffect, useState } from "react";
+        import { increment } from "./actions";
+
+        export function Counter() {
+          let [count, action] = useActionState(increment, 0);
+          let [hydrated, setHydrated] = useState(false);
+          useEffect(() => setHydrated(true), []);
+
           return (
-            <div>
-              <h1>Home</h1>
-              <Counter />
-            </div>
+            <form id="counter" action={action}>
+              <output>{count}</output>
+              <button disabled={!hydrated} type="submit">Increment</button>
+            </form>
           );
         }
       `,
     });
     let { cwd, port } = await vitePreview(files, templateName);
-    let baseUrl = `http://localhost:${port}`;
-    let documentRequests = trackDocumentRequests(page);
+    let documentUrl = `http://localhost:${port}/?view=preview`;
+    let pageUrl = `${documentUrl}#counter`;
+    let documentGets: string[] = [];
+    page.on("request", (request) => {
+      if (request.resourceType() === "document" && request.method() === "GET") {
+        documentGets.push(request.url());
+      }
+    });
 
     let { default: assetsManifest } = await import(
       pathToFileURL(
@@ -280,16 +391,19 @@ test.describe("RSC client versions", () => {
     let clientVersion = assetsManifest.clientVersion as string;
     let newVersion = clientVersion === "deadbeef" ? "feedface" : "deadbeef";
 
-    // Swap the client version inside the server function's rerender payload,
-    // simulating an action response from a newer deployment.
-    let replacedVersion = false;
-    await page.route(`${baseUrl}/`, async (route) => {
-      if (route.request().method() !== "POST" || replacedVersion) {
+    await page.goto(pageUrl);
+    let increment = page.getByRole("button", { name: "Increment" });
+    await increment.click();
+    await expect(page.locator("output")).toHaveText("1");
+    expect(documentGets).toEqual([documentUrl]);
+
+    await page.route(documentUrl, async (route) => {
+      let request = route.request();
+      if (request.method() !== "POST" || !request.headers()["rsc-action-id"]) {
         await route.continue();
         return;
       }
 
-      replacedVersion = true;
       let response = await route.fetch();
       let source = await response.text();
       expect(source).toContain(clientVersion);
@@ -299,19 +413,22 @@ test.describe("RSC client versions", () => {
       });
     });
 
-    await page.goto(`${baseUrl}/`);
-    await expect(page.locator("[data-count]")).toHaveText("0");
+    await Promise.all([
+      page.waitForResponse((response) => {
+        let request = response.request();
+        return (
+          request.method() === "POST" && !!request.headers()["rsc-action-id"]
+        );
+      }),
+      increment.click(),
+    ]);
 
-    await page.getByRole("button", { name: "Increment" }).click();
-
-    // The stale client must reload the document instead of applying the
-    // mismatched rerender.
-    await expect.poll(() => documentRequests.length).toBe(2);
-    expect(documentRequests[1]).toBe(`${baseUrl}/`);
-    await expect(page.locator("[data-count]")).toHaveText("0");
+    await expect.poll(() => documentGets).toEqual([documentUrl, documentUrl]);
+    await expect(page.locator("output")).toHaveText("0");
+    await expect(page).toHaveURL(pageUrl);
   });
 
-  test("does not reload repeatedly for the same stale client version", async ({
+  test("renders an error when manifest discovery already reloaded for the same client version", async ({
     page,
     vitePreview,
   }) => {
@@ -320,10 +437,6 @@ test.describe("RSC client versions", () => {
     let baseUrl = `http://localhost:${port}`;
     let documentRequests = trackDocumentRequests(page);
     let manifestRequests = await interceptWithStaleClientVersion(page);
-    let consoleErrors: string[] = [];
-    page.on("console", (message) => {
-      if (message.type() === "error") consoleErrors.push(message.text());
-    });
     let eagerMismatch = page.waitForResponse(
       (response) =>
         response.url().includes(".manifest") && response.status() === 204,
@@ -342,10 +455,61 @@ test.describe("RSC client versions", () => {
 
     await page.getByRole("link", { name: "Go to Other" }).click();
     await expect.poll(() => manifestRequests.length).toBeGreaterThan(1);
-    await expect
-      .poll(() => consoleErrors)
-      .toContain("Unable to discover routes due to manifest version mismatch.");
+    await expect(page.locator("[data-error]")).toHaveText(
+      "Unable to discover routes due to manifest version mismatch.",
+    );
+    await expect(page.locator("[data-navigation-state]")).toHaveText("idle");
+    await expect(page.locator("[data-location]")).toHaveCount(0);
+    expect(documentRequests).toHaveLength(1);
+  });
 
+  test("renders an error when an RSC payload mismatch already reloaded for the same client version", async ({
+    page,
+    vitePreview,
+  }) => {
+    let files: Files = async () => ({
+      ...getFiles(),
+      "react-router.config.ts": reactRouterConfig({
+        ssr: false,
+        prerender: ["/", "/other"],
+      }),
+    });
+    let { cwd, port } = await vitePreview(files, templateName);
+    let baseUrl = `http://localhost:${port}`;
+    let documentRequests = trackDocumentRequests(page);
+    let { default: assetsManifest } = await import(
+      pathToFileURL(
+        path.join(cwd, "build/server/__vite_rsc_assets_manifest.js"),
+      ).href
+    );
+    let clientVersion = assetsManifest.clientVersion as string;
+    let newVersion = clientVersion === "deadbeef" ? "feedface" : "deadbeef";
+
+    await page.route(/\/other\.rsc(?:\?|$)/, async (route) => {
+      let response = await route.fetch();
+      let source = await response.text();
+      expect(source).toContain(clientVersion);
+      await route.fulfill({
+        response,
+        body: source.replaceAll(clientVersion, newVersion),
+      });
+    });
+
+    await page.goto(`${baseUrl}/`);
+    await page.evaluate((version) => {
+      sessionStorage.setItem("react-router-manifest-version", version);
+    }, clientVersion);
+
+    await page.getByRole("link", { name: "Go to Other" }).click();
+
+    await expect(page.locator("[data-error]")).toHaveText(
+      "Unable to decode RSC response",
+    );
+    await expect(page.locator("[data-error-cause]")).toHaveText(
+      "Unable to discover routes due to manifest version mismatch.",
+    );
+    await expect(page.locator("[data-navigation-state]")).toHaveText("idle");
+    await expect(page.locator("[data-location]")).toHaveCount(0);
     expect(documentRequests).toHaveLength(1);
   });
 });

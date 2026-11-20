@@ -342,9 +342,10 @@ export function createMemoryHistory(
       action = Action.Pop;
       let nextIndex = clampIndex(index + delta);
       let nextLocation = entries[nextIndex];
+      let actualDelta = nextIndex - index;
       index = nextIndex;
       if (listener) {
-        listener({ action, location: nextLocation, delta });
+        listener({ action, location: nextLocation, delta: actualDelta });
       }
     },
     listen(fn: Listener) {
@@ -469,12 +470,14 @@ export function createHashHistory(
       pathname = "/" + pathname;
     }
 
+    let maskedLocation = (globalHistory.state as HistoryState)?.masked;
     return createLocation(
       "",
-      { pathname, search, hash },
+      maskedLocation || { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
       (globalHistory.state && globalHistory.state.usr) || null,
       (globalHistory.state && globalHistory.state.key) || "default",
+      maskedLocation ? { pathname, search, hash } : undefined,
     );
   }
 
@@ -538,10 +541,7 @@ export function warning(cond: any, message: string) {
       // find the source for a warning that appears in the console by
       // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      e
-    ) {}
+    } catch {}
   }
 }
 
