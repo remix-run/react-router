@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 
+import { createCookie } from "../../lib/server-runtime/cookies";
 import {
   createSession,
   createSessionStorage,
@@ -89,6 +90,28 @@ describe("createSessionStorage", () => {
 
     expect(deleteData).toHaveBeenCalledWith("session-id");
   });
+
+  it("ignores non-string session ids parsed from malformed cookies", async () => {
+    let readData = jest.fn(async (_id: string) => ({ user: "mjackson" }));
+    let cookie = createCookie("__session", { secrets: ["secret1"] });
+    let { getSession } = createSessionStorage({
+      cookie,
+      createData: async () => "session-id",
+      readData,
+      updateData: async () => {},
+      deleteData: async () => {},
+    });
+
+    for (let badId of [{ foo: "bar" }, ["a"], 123, true]) {
+      let setCookie = await cookie.serialize(badId);
+      let session = await getSession(getCookieFromSetCookie(setCookie));
+
+      expect(isSession(session)).toBe(true);
+      expect(session.id).toBe("");
+      expect(session.data).toEqual({});
+    }
+    expect(readData).not.toHaveBeenCalled();
+  });
 });
 
 describe("In-memory session storage", () => {
@@ -145,6 +168,18 @@ describe("Cookie session storage", () => {
     );
 
     expect(session.get("user")).toBeUndefined();
+  });
+
+  it("returns an empty session when the cookie parses to a non-object value", async () => {
+    let cookie = createCookie("__session", { secrets: ["secret1"] });
+    let { getSession } = createCookieSessionStorage({ cookie });
+
+    for (let badPayload of ["abc", [1, 2], 123, true]) {
+      let setCookie = await cookie.serialize(badPayload);
+      let session = await getSession(getCookieFromSetCookie(setCookie));
+
+      expect(session.data).toEqual({});
+    }
   });
 
   it('"makes the default path of cookies to be /', async () => {
