@@ -1954,9 +1954,8 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   // hiding and showing the component, or a new `router`), so it can briefly
   // point at a key that has already been deleted.
   let activeBlockerKey = React.useRef("");
-  // The router that key was assigned for.  The layout effect below runs before
-  // this effect's cleanup when `router` changes, so the key alone can't tell it
-  // that the key belongs to the previous router.
+  // Layout effects run before passive cleanup on router replacement, so the
+  // key may still belong to the previous router when registration runs.
   let activeBlockerRouter = React.useRef<typeof router | null>(null);
 
   // This effect is in charge of blocker key assignment and deletion (which is
@@ -1974,17 +1973,11 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   }, [router]);
 
   // This effect handles assigning the blockerFunction.  This is to handle
-  // unstable blocker function identities, and happens only after the prior
-  // effect so we don't get an orphaned blockerFunction in the router with a
+  // unstable blocker function identities, and waits for key assignment so we
+  // don't get an orphaned blockerFunction in the router with a
   // key of "".  Until then we just have the IDLE_BLOCKER.  It also skips a
   // stale `blockerKey` so a deleted key is never registered again.
-  //
-  // This must be a layout effect, not a passive effect: layout effects for
-  // the whole tree flush before any passive effects do, so this guarantees
-  // the router always has the latest blockerFunction registered before a
-  // navigation triggered by another component's *mount* effect (e.g. a
-  // useEffect that calls setSearchParams as soon as the destination route
-  // renders) can run shouldBlockNavigation against a stale predicate.
+  // Register before child passive effects can navigate with a stale predicate.
   React.useLayoutEffect(() => {
     if (
       blockerKey !== "" &&

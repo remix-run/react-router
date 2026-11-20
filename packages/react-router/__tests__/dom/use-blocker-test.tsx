@@ -230,129 +230,207 @@ describe("navigation blocking with useBlocker", () => {
     act(() => root.unmount());
   });
 
-  it("removes the blocker when hidden and shown again with <Activity>", async () => {
-    let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    let setMode: (mode: "visible" | "hidden") => void = () => {};
+  it.each([false, true])(
+    "uses the current blocker for a destination mount navigation (strict: %s)",
+    async (strict) => {
+      function Layout() {
+        let location = useLocation();
+        let blocker = useBlocker(location.pathname === "/");
+        return (
+          <>
+            <Link to="/about">About</Link>
+            <p>{blocker.state}</p>
+            {blocker.state === "blocked" && (
+              <button onClick={blocker.proceed}>Proceed</button>
+            )}
+            <Outlet />
+          </>
+        );
+      }
 
-    function Guarded() {
-      let blocker = useBlocker(true);
-      return <p>{blocker.state}</p>;
-    }
+      function About() {
+        let [searchParams, setSearchParams] = useSearchParams();
+        React.useEffect(() => {
+          if (!searchParams.has("mounted")) {
+            setSearchParams({ mounted: "yes" });
+          }
+        }, [searchParams, setSearchParams]);
+        return <h1>About</h1>;
+      }
 
-    router = createMemoryRouter([
-      {
-        Component() {
-          let [mode, _setMode] = React.useState<"visible" | "hidden">(
-            "visible",
-          );
-          setMode = _setMode;
-          return (
-            <div>
-              <Link to="/about">/about</Link>
-              <React.Activity mode={mode}>
-                <Guarded />
-              </React.Activity>
-              <Outlet />
-            </div>
-          );
+      router = createMemoryRouter([
+        {
+          Component: Layout,
+          children: [
+            { index: true, element: <h1>Home</h1> },
+            { path: "about", Component: About },
+          ],
         },
-        children: [
-          {
-            path: "/",
-            element: <h1>Home</h1>,
+      ]);
+      let Wrapper = strict ? React.StrictMode : React.Fragment;
+      act(() => {
+        root = ReactDOM.createRoot(node);
+        root.render(
+          <Wrapper>
+            <RouterProvider router={router} />
+          </Wrapper>,
+        );
+      });
+
+      act(() => click(node.querySelector("a")));
+      expect(node.querySelector("h1")?.textContent).toBe("Home");
+      expect(node.querySelector("p")?.textContent).toBe("blocked");
+
+      act(() => click(node.querySelector("button")));
+      expect(node.querySelector("h1")?.textContent).toBe("About");
+      expect(node.querySelector("p")?.textContent).toBe("unblocked");
+      expect(router.state.location.search).toBe("?mounted=yes");
+      expect(router.state.blockers.size).toBe(1);
+
+      act(() => root.unmount());
+      expect(router.state.blockers.size).toBe(0);
+    },
+  );
+
+  it.each([false, true])(
+    "removes the blocker when hidden and shown again with <Activity> (strict: %s)",
+    async (strict) => {
+      let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+      let setMode: (mode: "visible" | "hidden") => void = () => {};
+
+      function Guarded() {
+        let blocker = useBlocker(true);
+        return <p>{blocker.state}</p>;
+      }
+
+      router = createMemoryRouter([
+        {
+          Component() {
+            let [mode, _setMode] = React.useState<"visible" | "hidden">(
+              "visible",
+            );
+            setMode = _setMode;
+            return (
+              <div>
+                <Link to="/about">/about</Link>
+                <React.Activity mode={mode}>
+                  <Guarded />
+                </React.Activity>
+                <Outlet />
+              </div>
+            );
           },
-          {
-            path: "/about",
-            element: <h1>About</h1>,
-          },
-        ],
-      },
-    ]);
-
-    act(() => {
-      root = ReactDOM.createRoot(node);
-      root.render(<RouterProvider router={router} />);
-    });
-
-    // Hide and show the blocking component again
-    act(() => setMode("hidden"));
-    act(() => setMode("visible"));
-
-    // It still blocks while visible
-    act(() => click(node.querySelector("a[href='/about']")));
-    expect(node.querySelector("h1")?.textContent).toBe("Home");
-    expect(node.querySelector("p")?.textContent).toBe("blocked");
-
-    // Once hidden, nothing should be left behind to block navigation
-    act(() => setMode("hidden"));
-    act(() => click(node.querySelector("a[href='/about']")));
-    expect(node.querySelector("h1")?.textContent).toBe("About");
-    expect(warnSpy).not.toHaveBeenCalledWith(
-      "A router only supports one blocker at a time",
-    );
-
-    warnSpy.mockRestore();
-    act(() => root.unmount());
-  });
-
-  it("removes the blocker when the router is recreated", async () => {
-    let setShow: (show: boolean) => void = () => {};
-    let recreateRouter: () => void = () => {};
-
-    function Guarded() {
-      let blocker = useBlocker(true);
-      return <p>{blocker.state}</p>;
-    }
-
-    let routes: RouteObject[] = [
-      {
-        Component() {
-          let [show, _setShow] = React.useState(true);
-          setShow = _setShow;
-          return (
-            <div>
-              <Link to="/about">/about</Link>
-              {show ? <Guarded /> : null}
-              <Outlet />
-            </div>
-          );
+          children: [
+            {
+              path: "/",
+              element: <h1>Home</h1>,
+            },
+            {
+              path: "/about",
+              element: <h1>About</h1>,
+            },
+          ],
         },
-        children: [
-          {
-            path: "/",
-            element: <h1>Home</h1>,
-          },
-          {
-            path: "/about",
-            element: <h1>About</h1>,
-          },
-        ],
-      },
-    ];
+      ]);
 
-    function App() {
-      let [router, setRouter] = React.useState(() =>
-        createMemoryRouter(routes),
+      let Wrapper = strict ? React.StrictMode : React.Fragment;
+      act(() => {
+        root = ReactDOM.createRoot(node);
+        root.render(
+          <Wrapper>
+            <RouterProvider router={router} />
+          </Wrapper>,
+        );
+      });
+
+      // Hide and show the blocking component again
+      act(() => setMode("hidden"));
+      act(() => setMode("visible"));
+
+      // It still blocks while visible
+      act(() => click(node.querySelector("a[href='/about']")));
+      expect(node.querySelector("h1")?.textContent).toBe("Home");
+      expect(node.querySelector("p")?.textContent).toBe("blocked");
+
+      // Once hidden, nothing should be left behind to block navigation
+      act(() => setMode("hidden"));
+      act(() => click(node.querySelector("a[href='/about']")));
+      expect(node.querySelector("h1")?.textContent).toBe("About");
+      expect(warnSpy).not.toHaveBeenCalledWith(
+        "A router only supports one blocker at a time",
       );
-      recreateRouter = () => setRouter(createMemoryRouter(routes));
-      return <RouterProvider router={router} />;
-    }
 
-    act(() => {
-      root = ReactDOM.createRoot(node);
-      root.render(<App />);
-    });
+      warnSpy.mockRestore();
+      act(() => root.unmount());
+    },
+  );
 
-    act(() => recreateRouter());
+  it.each([false, true])(
+    "removes the blocker when the router is recreated (strict: %s)",
+    async (strict) => {
+      let setShow: (show: boolean) => void = () => {};
+      let recreateRouter: () => void = () => {};
 
-    // Once the blocking component unmounts, nothing should be left behind in
-    // the new router to block navigation
-    act(() => setShow(false));
-    act(() => click(node.querySelector("a[href='/about']")));
-    expect(node.querySelector("h1")?.textContent).toBe("About");
+      function Guarded() {
+        let blocker = useBlocker(true);
+        return <p>{blocker.state}</p>;
+      }
 
-    act(() => root.unmount());
-  });
+      let routes: RouteObject[] = [
+        {
+          Component() {
+            let [show, _setShow] = React.useState(true);
+            setShow = _setShow;
+            return (
+              <div>
+                <Link to="/about">/about</Link>
+                {show ? <Guarded /> : null}
+                <Outlet />
+              </div>
+            );
+          },
+          children: [
+            {
+              path: "/",
+              element: <h1>Home</h1>,
+            },
+            {
+              path: "/about",
+              element: <h1>About</h1>,
+            },
+          ],
+        },
+      ];
+
+      function App() {
+        let [router, setRouter] = React.useState(() =>
+          createMemoryRouter(routes),
+        );
+        recreateRouter = () => setRouter(createMemoryRouter(routes));
+        return <RouterProvider router={router} />;
+      }
+
+      let Wrapper = strict ? React.StrictMode : React.Fragment;
+      act(() => {
+        root = ReactDOM.createRoot(node);
+        root.render(
+          <Wrapper>
+            <App />
+          </Wrapper>,
+        );
+      });
+
+      act(() => recreateRouter());
+
+      // Once the blocking component unmounts, nothing should be left behind in
+      // the new router to block navigation
+      act(() => setShow(false));
+      act(() => click(node.querySelector("a[href='/about']")));
+      expect(node.querySelector("h1")?.textContent).toBe("About");
+
+      act(() => root.unmount());
+    },
+  );
 
   describe("on <Link> navigation", () => {
     describe("blocker returns false", () => {
@@ -1284,72 +1362,6 @@ describe("navigation blocking with useBlocker", () => {
         let h1 = node.querySelector("h1");
         expect(h1?.textContent).toBe("Contact");
       });
-    });
-  });
-
-  describe("when the destination route updates search params on mount", () => {
-    // https://github.com/remix-run/react-router/issues/11144
-    it("does not block a second time", async () => {
-      let routes: RouteObject[] = [
-        {
-          element: React.createElement(() => {
-            // Blocks while the current location is "/", matching a common
-            // real-world shape: a form page that blocks navigation while
-            // it's the active route, and stops blocking once it's not.
-            let location = useLocation();
-            let b = useBlocker(location.pathname === "/");
-            blocker = b;
-            return (
-              <div>
-                <Link to="/about">About</Link>
-                {b.state === "blocked" && (
-                  <button data-action="proceed" onClick={b.proceed}>
-                    Proceed
-                  </button>
-                )}
-                <Outlet />
-              </div>
-            );
-          }),
-          children: [
-            { index: true, element: <h1>Home</h1> },
-            {
-              path: "about",
-              element: React.createElement(() => {
-                let [, setSearchParams] = useSearchParams();
-                React.useEffect(() => {
-                  setSearchParams({ foo: "bar" });
-                  // eslint-disable-next-line react-hooks/exhaustive-deps
-                }, []);
-                return <h1>About</h1>;
-              }),
-            },
-          ],
-        },
-      ];
-      router = createMemoryRouter(routes, { initialEntries: ["/"] });
-      act(() => {
-        root = ReactDOM.createRoot(node);
-        root.render(<RouterProvider router={router} />);
-      });
-
-      act(() => {
-        click(node.querySelector("a[href='/about']"));
-      });
-      expect(blocker?.state).toBe("blocked");
-
-      act(() => {
-        click(node.querySelector("button[data-action='proceed']"));
-      });
-
-      // The destination route's own setSearchParams-on-mount navigation
-      // must not trigger a second block -- the source route (and its
-      // blocking condition) is no longer active.
-      expect(blocker?.state).toBe("unblocked");
-      expect(node.querySelector("h1")?.textContent).toBe("About");
-      expect(router.state.location.search).toBe("?foo=bar");
-
-      act(() => root.unmount());
     });
   });
 });

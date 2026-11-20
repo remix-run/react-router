@@ -12,6 +12,7 @@ import {
   useLoaderData,
   useLocation,
   useMatches,
+  useBlocker,
   createStaticHandler,
   createStaticRouter,
   StaticRouterProvider,
@@ -23,6 +24,38 @@ beforeEach(() => {
 });
 
 describe("A <StaticRouterProvider>", () => {
+  it("renders an unblocked blocker without registering it on the server", async () => {
+    let shouldBlock = jest.fn(() => true);
+    let routes = [
+      {
+        path: "/",
+        Component() {
+          let blocker = useBlocker(shouldBlock);
+          return <p>{blocker.state}</p>;
+        },
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+    let context = (await query(
+      new Request("http://localhost/"),
+    )) as StaticHandlerContext;
+    let router = createStaticRouter(routes, context);
+
+    let html = ReactDOMServer.renderToString(
+      <StaticRouterProvider
+        router={router}
+        context={context}
+        hydrate={false}
+      />,
+    );
+
+    expect(html).toBe("<p>unblocked</p>");
+    expect(shouldBlock).not.toHaveBeenCalled();
+    expect(router.state.blockers.size).toBe(0);
+    expect(console.error).not.toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
   it("reuses the static handler route matcher", async () => {
     let { query } = createStaticHandler([
       {
