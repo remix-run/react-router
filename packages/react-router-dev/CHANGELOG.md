@@ -1,5 +1,20 @@
 # `@react-router/dev`
 
+## v7.18.7
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Fix missing prerendered pages and loader data when using `unstable_previewServerPrerendering` with server bundles. ([#15800](https://github.com/remix-run/react-router/pull/15800))
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@7.18.7`](https://github.com/remix-run/react-router/releases/tag/react-router@7.18.7)
+  - [`@react-router/node@7.18.7`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@7.18.7)
+  - [`@react-router/serve@7.18.7`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@7.18.7)
+
 ## v7.18.6
 
 ### Patch Changes

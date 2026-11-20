@@ -1,5 +1,13 @@
 # `react-router`
 
+## v7.18.7
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Avoid false 404s in RSC Framework and RSC Data modes when navigating while eager route discovery is still streaming route definitions ([#15799](https://github.com/remix-run/react-router/pull/15799))
+
 ## v7.18.6
 
 ### Patch Changes
