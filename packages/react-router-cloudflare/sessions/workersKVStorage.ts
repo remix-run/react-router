@@ -3,17 +3,18 @@ import type {
   SessionIdStorageStrategy,
   SessionData,
 } from "react-router";
-import { createSessionStorage } from "react-router";
+import { createSession, createSessionStorage } from "react-router";
 
 interface WorkersKVSessionStorageOptions {
   /**
    * The Cookie used to store the session id on the client, or options used
-   * to automatically create one.
+   * to automatically create one. Configure secrets to sign the cookie.
    */
   cookie?: SessionIdStorageStrategy["cookie"];
 
   /**
-   * The KVNamespace used to store the sessions.
+   * The KVNamespace used to store the sessions. Use a namespace dedicated
+   * to session data.
    */
   kv: KVNamespace;
 }
@@ -31,7 +32,7 @@ export function createWorkersKVSessionStorage<
   cookie,
   kv,
 }: WorkersKVSessionStorageOptions): SessionStorage<Data, FlashData> {
-  return createSessionStorage({
+  let storage = createSessionStorage<Data, FlashData>({
     cookie,
     async createData(data, expires) {
       while (true) {
@@ -58,6 +59,9 @@ export function createWorkersKVSessionStorage<
       }
     },
     async readData(id) {
+      if (!isValidSessionId(id)) {
+        return null;
+      }
       let session = await kv.get(id);
 
       if (!session) {
@@ -67,12 +71,41 @@ export function createWorkersKVSessionStorage<
       return JSON.parse(session);
     },
     async updateData(id, data, expires) {
+      if (!isValidSessionId(id)) {
+        return;
+      }
       await kv.put(id, JSON.stringify(data), {
         expiration: expires ? Math.round(expires.getTime() / 1000) : undefined,
       });
     },
     async deleteData(id) {
+      if (!isValidSessionId(id)) {
+        return;
+      }
       await kv.delete(id);
     },
   });
+
+  return {
+    ...storage,
+    async getSession(cookieHeader, options) {
+      let session = await storage.getSession(cookieHeader, options);
+      return isValidSessionId(session.id)
+        ? session
+        : createSession<Data, FlashData>();
+    },
+    async commitSession(session, options) {
+      // A rejected id must create a new record instead of persisting in the cookie.
+      return storage.commitSession(
+        isValidSessionId(session.id) ? session : { ...session, id: "" },
+        options,
+      );
+    },
+  };
+}
+
+function isValidSessionId(id: unknown): id is string {
+  return (
+    typeof id === "string" && id.length === 16 && /^[0-9a-f]{16}$/i.test(id)
+  );
 }

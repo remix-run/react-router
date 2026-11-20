@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 
+import { isFirefoxMicrotaskWarning } from "./helpers/console.js";
 import {
   createFixture,
   js,
@@ -824,7 +825,11 @@ test("allows users to pass an onError function to HydratedRouter", async ({
   });
 
   let logs: string[] = [];
-  page.on("console", (msg) => logs.push(msg.text()));
+  page.on("console", (msg) => {
+    if (!isFirefoxMicrotaskWarning(msg)) {
+      logs.push(msg.text());
+    }
+  });
 
   let appFixture = await createAppFixture(fixture);
   let app = new PlaywrightFixture(appFixture, page);
@@ -939,7 +944,11 @@ test("allows users to instrument the client side router via HydratedRouter", asy
   });
 
   let logs: string[] = [];
-  page.on("console", (msg) => logs.push(msg.text()));
+  page.on("console", (msg) => {
+    if (!isFirefoxMicrotaskWarning(msg)) {
+      logs.push(msg.text());
+    }
+  });
 
   let appFixture = await createAppFixture(fixture);
   let app = new PlaywrightFixture(appFixture, page);

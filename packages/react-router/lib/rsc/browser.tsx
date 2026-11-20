@@ -314,6 +314,7 @@ function createRouterFromPayload({
         invariant(match, "Route not found in payload");
         return {
           clientLoader: match.clientLoader,
+          clientMiddleware: match.clientMiddleware,
           hasLoader: match.hasLoader,
           hasHydrateFallback: match.hydrateFallbackElement != null,
         };
@@ -400,6 +401,7 @@ function createRouterFromPayload({
         hasAction: boolean;
         hasComponent: boolean;
         hasLoader: boolean;
+        hasClientMiddleware: boolean;
       }
     >,
   ) => {
@@ -415,11 +417,20 @@ function createRouterFromPayload({
         const routeUpdate = routeUpdateByRouteId.get(route.id);
 
         if (routeUpdate) {
-          const { routeModule, hasAction, hasComponent, hasLoader } =
-            routeUpdate;
+          const {
+            routeModule,
+            hasAction,
+            hasComponent,
+            hasLoader,
+            hasClientMiddleware,
+          } = routeUpdate;
           const newRoute = createRouteFromServerManifest({
             clientAction: routeModule.clientAction,
             clientLoader: routeModule.clientLoader,
+            // A component chunk doesn't include separately chunked middleware.
+            clientMiddleware: hasClientMiddleware
+              ? (routeModule.clientMiddleware ?? route.middleware)
+              : undefined,
             element: route.element as React.ReactElement,
             errorElement: route.errorElement as React.ReactElement,
             handle: route.handle,
@@ -776,6 +787,29 @@ export function RSCHydratedRouter({
     [router.subscribe, routes, router],
   );
 
+  React.useLayoutEffect(() => {
+    if (state.initialized) return;
+
+    // Initial hydration can be delayed while clientLoaders run. Keep the
+    // wrapper's state in sync when that first initialization completes so
+    // RouterProvider doesn't recover back to the pre-initialized snapshot.
+    let unsubscribe = () => {};
+    unsubscribe = router.subscribe((newState) => {
+      if (newState.initialized) {
+        unsubscribe();
+        React.startTransition(() => {
+          setState((current) =>
+            current.state.initialized
+              ? current
+              : { ...current, state: newState },
+          );
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [router.subscribe, router, state.initialized]);
+
   const transitionEnabledRouter = React.useMemo(
     () =>
       ({
@@ -982,6 +1016,7 @@ function createRouteFromServerManifest(
             throw noActionDefinedError("action", match.id);
           },
     path: match.path,
+    middleware: match.clientMiddleware,
     shouldRevalidate: match.shouldRevalidate,
     // We always have a "loader" in this RSC world since even if we don't
     // have a `loader` we may need to get the `element` implementation
@@ -1104,9 +1139,6 @@ async function fetchAndApplyManifestPatches(
     throw new Error("Failed to patch routes");
   }
 
-  // Track discovered paths so we don't have to fetch them again
-  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
-
   let patches = await payload.patches;
 
   // Without the `allowElementMutations` flag, this will no-op if the route
@@ -1119,6 +1151,9 @@ async function fetchAndApplyManifestPatches(
       );
     });
   });
+
+  // Navigation can only skip discovery once the streamed routes are installed.
+  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
 }
 
 function addToFifoQueue(path: string, queue: Set<string>) {

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 
+import { isFirefoxMicrotaskWarning } from "./helpers/console.js";
 import {
   createFixture,
   createAppFixture,
@@ -129,7 +130,9 @@ test.describe("actions", () => {
 
       test.beforeEach(({ page }) => {
         page.on("console", (msg) => {
-          logs.push(msg.text());
+          if (!isFirefoxMicrotaskWarning(msg)) {
+            logs.push(msg.text());
+          }
         });
       });
 
