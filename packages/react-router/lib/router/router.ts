@@ -2610,6 +2610,20 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
 
+    // Capture the current data for routes whose loaders we're skipping so we can
+    // still reuse it if a concurrent fetcher removes it from `state.loaderData`
+    // (i.e., via an ancestor error) before this navigation completes
+    let reusedLoaderData: RouteData = {};
+    dsMatches.forEach((m) => {
+      if (
+        !m.shouldLoad &&
+        m.route.loader &&
+        state.loaderData.hasOwnProperty(m.route.id)
+      ) {
+        reusedLoaderData[m.route.id] = state.loaderData[m.route.id];
+      }
+    });
+
     // Short circuit if we have no loaders/middlewares to run, unless there's a
     // custom dataStrategy since they may have different revalidation rules
     // (i.e., single fetch)
@@ -2758,6 +2772,22 @@ export function createRouter(init: RouterInit): Router {
       fetcherResults,
       workingFetchers,
     );
+
+    // Restore reused data that was removed while our loaders were running.
+    // Routes below a navigation error boundary don't keep their data.
+    for (let match of matches) {
+      let id = match.route.id;
+      if (
+        reusedLoaderData.hasOwnProperty(id) &&
+        !loaderData.hasOwnProperty(id) &&
+        !state.loaderData.hasOwnProperty(id)
+      ) {
+        loaderData[id] = reusedLoaderData[id];
+      }
+      if (errors && errors.hasOwnProperty(id)) {
+        break;
+      }
+    }
 
     // Preserve SSR errors during partial hydration, but only report new client
     // errors to subscribers and RouterProvider's missed-error recovery.
