@@ -1,9 +1,9 @@
+import { spawnSync } from "node:child_process";
 import * as path from "node:path";
 import { expect } from "@playwright/test";
 import stripAnsi from "strip-ansi";
 import dedent from "dedent";
 
-import type { Files } from "./helpers/vite.js";
 import {
   test,
   createProject,
@@ -213,7 +213,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 });
 
 test.describe("Vite / server-only escape hatch", async () => {
-  let files: Files = async ({ port }) => ({
+  let files = async ({ port }) => ({
     "vite.config.ts": dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -266,5 +266,82 @@ test.describe("Vite / server-only escape hatch", async () => {
     });
     await expect(page.locator("[data-title]")).toHaveText("This should work");
     expect(page.errors).toEqual([]);
+  });
+});
+
+test.describe("Vite / server-only module imported by a Vitest test file", () => {
+  let files = {
+    "app/utils.server.ts": serverOnlyModule,
+    "app/routes/_index.tsx": String.raw`
+      import { serverOnly } from "../utils.server";
+
+      export const loader = () => ({ serverOnly });
+
+      export default () => <h1>Index</h1>;
+    `,
+    "app/actions/signup.ts": String.raw`
+      import { serverOnly } from "../utils.server";
+
+      export const signup = () => ({ serverOnly });
+    `,
+    "tests/signup.test.ts": String.raw`
+      import { expect, test } from "vitest";
+      import { serverOnly } from "../app/utils.server";
+      import { signup } from "../app/actions/signup";
+
+      test("signup", () => {
+        expect(serverOnly).toBe("SERVER_ONLY");
+        expect(signup()).toEqual({ serverOnly: "SERVER_ONLY" });
+      });
+    `,
+  };
+
+  let viteConfigWith = (extra: string) => String.raw`
+    import { reactRouter } from "@react-router/dev/vite";
+
+    export default {
+      plugins: [reactRouter()],
+      ${extra}
+    };
+  `;
+
+  let vitestBin = path.resolve(
+    import.meta.dirname,
+    "..",
+    "node_modules",
+    "vitest",
+    "vitest.mjs",
+  );
+
+  test("vitest can import .server modules", async () => {
+    let cwd = await createProject({
+      ...files,
+      "vite.config.ts": viteConfigWith(
+        `test: { environment: "jsdom", include: ["tests/**/*.test.ts"] },`,
+      ),
+    });
+    let result = spawnSync(process.argv[0], [vitestBin, "run"], {
+      cwd,
+      env: { ...process.env, FORCE_COLOR: undefined, NO_COLOR: "1" },
+    });
+    let output = stripAnsi(result.stdout.toString() + result.stderr.toString());
+    expect(output).not.toMatch("Server-only module referenced by client");
+    expect(result.status, output).toBe(0);
+  });
+
+  test("build with mode 'test' still rejects .server modules in client code", async () => {
+    let cwd = await createProject({
+      ...files,
+      "app/routes/_index.tsx": String.raw`
+        import { serverOnly } from "../utils.server";
+
+        export default () => <h1>{serverOnly}</h1>;
+      `,
+      "vite.config.ts": viteConfigWith(`mode: "test",`),
+    });
+    let stderr = stripAnsi(
+      build({ cwd, env: { VITEST: "true" } }).stderr.toString(),
+    );
+    expect(stderr).toMatch("Server-only module referenced by client");
   });
 });
