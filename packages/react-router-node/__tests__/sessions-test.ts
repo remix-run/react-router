@@ -5,6 +5,7 @@
 import path from "node:path";
 import { promises as fsp } from "node:fs";
 import os from "node:os";
+import { createCookie, createSession } from "react-router";
 
 import { createFileSessionStorage, getFile } from "../sessions/fileStorage";
 
@@ -55,31 +56,52 @@ describe("File session storage", () => {
     expect(session.get("user")).toBeUndefined();
   });
 
-  it("returns an empty session for invalid session ids", async () => {
-    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
-    let { getSession, commitSession } = createFileSessionStorage({
-      dir,
-    });
+  let invalidIds = [
+    "0123456789abcdeg",
+    "0123456789abcde",
+    "0123456789abcdef0",
+    "0123456789abcdef\n",
+    "../../etc/passwd",
+    1234567890123456,
+    ["0123456789abcdef"],
+    {},
+  ].map((id) => ({ id }));
 
-    let cookie = `__session=${btoa(JSON.stringify("0123456789abcdef"))}`;
-    let session = await getSession(cookie);
-    session.set("user", "mjackson");
-    expect(session.get("user")).toBe("mjackson");
-    let setCookie = await commitSession(session);
-    session = await getSession(getCookieFromSetCookie(setCookie));
-    expect(session.get("user")).toBe("mjackson");
+  it.each(invalidIds)(
+    "replaces invalid session id $id when reading a cookie",
+    async ({ id }) => {
+      let cookie = createCookie("__session", { secrets: ["secret1"] });
+      let { getSession, commitSession } = createFileSessionStorage({
+        dir,
+        cookie,
+      });
+      let session = await getSession(await cookie.serialize(id));
 
-    cookie = `__session=${btoa(JSON.stringify("0123456789abcdeg"))}`;
-    session = await getSession(cookie);
-    session.set("user", "mjackson");
-    expect(session.get("user")).toBe("mjackson");
+      expect(session.id).toBe("");
+      session.set("user", "mjackson");
+      let setCookie = await commitSession(session);
+      let storedSession = await getSession(getCookieFromSetCookie(setCookie));
 
-    setCookie = await commitSession(session);
-    session = await getSession(getCookieFromSetCookie(setCookie));
-    expect(session.get("user")).toBeUndefined();
+      expect(storedSession.id).toMatch(/^[0-9a-f]{16}$/);
+      expect(storedSession.get("user")).toBe("mjackson");
+    },
+  );
 
-    spy.mockRestore();
-  });
+  it.each(invalidIds)(
+    "creates a new file when committing invalid session id $id",
+    async ({ id }) => {
+      let { getSession, commitSession } = createFileSessionStorage({
+        dir,
+        cookie: { secrets: ["secret1"] },
+      });
+      let session = createSession({ user: "mjackson" }, id as string);
+      let setCookie = await commitSession(session);
+      let storedSession = await getSession(getCookieFromSetCookie(setCookie));
+
+      expect(storedSession.id).toMatch(/^[0-9a-f]{16}$/);
+      expect(storedSession.get("user")).toBe("mjackson");
+    },
+  );
 
   it("doesn't destroy the entire session directory when destroying an empty file session", async () => {
     let { getSession, destroySession } = createFileSessionStorage({
