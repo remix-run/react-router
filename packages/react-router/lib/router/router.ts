@@ -1239,6 +1239,8 @@ export function createRouter(init: RouterInit): Router {
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: NavigationType = NavigationType.Pop;
+  // The latest action's commit data, without data preserved for the loading UI.
+  let pendingActionData: RouterState["actionData"] | undefined;
   // Distance from the committed UI while one or more POPs are pending.
   let pendingPopstateDelta = 0;
   let pendingDiscoveryCancellation: Promise<void> | undefined;
@@ -1558,10 +1560,12 @@ export function createRouter(init: RouterInit): Router {
       state.navigation.state === "loading" &&
       location.state?._isRedirect !== true;
 
+    let actionDataForCommit =
+      newState.actionData || (isActionReload ? pendingActionData : undefined);
     let actionData: RouteData | null;
-    if (newState.actionData) {
-      if (Object.keys(newState.actionData).length > 0) {
-        actionData = newState.actionData;
+    if (actionDataForCommit) {
+      if (Object.keys(actionDataForCommit).length > 0) {
+        actionData = actionDataForCommit;
       } else {
         // Empty actionData -> clear prior actionData due to an action error
         actionData = null;
@@ -1690,6 +1694,7 @@ export function createRouter(init: RouterInit): Router {
   function resetPendingNavigation() {
     pendingPopstateDelta = 0;
     pendingAction = NavigationType.Pop;
+    pendingActionData = undefined;
     pendingPreventScrollReset = false;
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
@@ -1978,6 +1983,9 @@ export function createRouter(init: RouterInit): Router {
     pendingNavigationController && pendingNavigationController.abort();
     pendingNavigationController = null;
     pendingAction = historyAction;
+    if (!opts?.overrideNavigation) {
+      pendingActionData = undefined;
+    }
     isUninterruptedRevalidation =
       (opts && opts.startUninterruptedRevalidation) === true;
 
@@ -2146,6 +2154,11 @@ export function createRouter(init: RouterInit): Router {
         request.url,
         request.signal,
       );
+    }
+
+    if (pendingActionResult) {
+      pendingActionData =
+        getActionDataForCommit(pendingActionResult).actionData;
     }
 
     // Call loaders
@@ -2769,11 +2782,11 @@ export function createRouter(init: RouterInit): Router {
     pendingActionResult: PendingActionResult | undefined,
   ): Record<string, RouteData> | null | undefined {
     if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
+      // Keep the data of routes that are still rendered during the `loading`
+      // state. The final commit replaces it with the new action's data only.
       // This is cast to `any` currently because `RouteData`uses any and it
       // would be a breaking change to use any.
       // TODO: (v9) change `RouteData` to use `unknown` instead of `any`
-      // Keep the data of routes that are still rendered during the `loading`
-      // state. The final commit replaces it with the new action's data only.
       return {
         ...state.actionData,
         [pendingActionResult[0]]: pendingActionResult[1].data as any,
