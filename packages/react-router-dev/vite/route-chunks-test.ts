@@ -12,6 +12,85 @@ let cache: [Cache, string] = [new Map(), "cacheKey"];
 
 describe("route chunks", () => {
   describe("chunkable", () => {
+    test("retains JSX component imports in isolated chunks", () => {
+      const code = dedent`
+        import { Spinner, Page } from "./components";
+        export function HydrateFallback() { return <Spinner />; }
+        export default function Route() { return <Page />; }
+      `;
+      expect(hasChunkableExport(code, "HydrateFallback", ...cache)).toBe(true);
+      const chunk = getChunkedExport(
+        code,
+        "HydrateFallback",
+        {},
+        ...cache,
+      )?.code;
+      expect(chunk).toContain('import { Spinner } from "./components"');
+      expect(chunk).toContain("<Spinner />");
+      expect(chunk).not.toContain("Page");
+    });
+
+    test("does not isolate a component shared through JSX", () => {
+      const code = dedent`
+        const Shared = () => <p>Shared</p>;
+        export function HydrateFallback() { return <Shared />; }
+        export default function Route() { return <Shared />; }
+      `;
+      expect(hasChunkableExport(code, "HydrateFallback", ...cache)).toBe(false);
+    });
+
+    test.each([
+      ['import * as React from "react";', "React"],
+      ['import { createElement as h } from "react";', "h"],
+      ['/** @jsx h */ import { h } from "./factory";', "h"],
+    ])("retains implicit JSX factory imports: %s", (imports, name) => {
+      const code = `${imports}
+        export function HydrateFallback() { return <><p>Loading</p></>; }
+        export default function Route() { return <p>Page</p>; }`;
+      expect(hasChunkableExport(code, "HydrateFallback", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "HydrateFallback", {}, ...cache)?.code,
+      ).toContain(imports.replace("/** @jsx h */ ", ""));
+      expect(
+        omitChunkedExports(code, ["HydrateFallback"], {}, ...cache)?.code,
+      ).toContain(name);
+    });
+
+    test("retains JSX pragmas when the first statement is omitted", () => {
+      const code = dedent`
+        /** @jsxImportSource custom */
+        import { pageData } from "./data";
+        export const clientLoader = () => pageData;
+        export function HydrateFallback() { return <p>Loading</p>; }
+      `;
+      const chunk = getChunkedExport(
+        code,
+        "HydrateFallback",
+        {},
+        ...cache,
+      )?.code;
+      expect(chunk).toContain("/** @jsxImportSource custom */");
+      expect(chunk).not.toContain("./data");
+    });
+
+    test("parses TypeScript assertions in routes without JSX", () => {
+      const code = `export const clientLoader = () => <string>"value";`;
+      expect(
+        hasChunkableExport(code, "clientLoader", new Map(), "route.ts"),
+      ).toBe(true);
+    });
+
+    test("type-only dependencies do not prevent splitting", () => {
+      const code = dedent`
+        import type { Data } from "./types";
+        export const clientLoader = (): Data => ({ value: "data" });
+        export default function Route({ loaderData }: { loaderData: Data }) {
+          return <p>{loaderData.value}</p>;
+        }
+      `;
+      expect(hasChunkableExport(code, "clientLoader", ...cache)).toBe(true);
+    });
+
     test("functions with no identifiers", () => {
       const code = dedent`
         export default function () { return null; }

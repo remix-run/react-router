@@ -24,6 +24,65 @@ Wouldn't it be great if React could handle updating the DOM in response to code 
 That's exactly what [React Fast Refresh][react-refresh] is all about!
 Of course, React is all about components, not general JavaScript code, so React Fast Refresh only handles hot updates for exported React components.
 
+### Configuring the React Plugin
+
+To configure React Compiler or other React plugin options, enable the experimental [`future.unstable_externalReactPlugin`](../upgrading/future#futureunstable_externalreactplugin) flag and add `@vitejs/plugin-react` after `reactRouter()`. This opts your app into the external React plugin integration, replacing React Router's built-in Fast Refresh implementation.
+
+```ts filename=vite.config.ts
+import { reactRouter } from "@react-router/dev/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [reactRouter(), react()],
+});
+```
+
+Use a version of `@vitejs/plugin-react` compatible with your Vite version. Version 5.2 supports Vite 7 and 8, while version 6 requires Vite 8 and provides a `compiler` option for enabling [React Compiler](https://react.dev/learn/react-compiler).
+
+With version 5, you can configure the Babel-based React Compiler:
+
+```sh
+npm install -D babel-plugin-react-compiler
+```
+
+```ts filename=vite.config.ts
+export default defineConfig({
+  plugins: [
+    reactRouter(),
+    react({
+      babel: { plugins: ["babel-plugin-react-compiler"] },
+    }),
+  ],
+});
+```
+
+Version 6's experimental native compiler option requires `oxc-transform-react`:
+
+```sh
+npm install -D @vitejs/plugin-react@^6 oxc-transform-react
+```
+
+```ts filename=vite.config.ts
+export default defineConfig({
+  plugins: [reactRouter(), react({ compiler: true })],
+});
+```
+
+If your app uses MDX, add Vite's `enforce: "pre"` property to the plugin returned by `mdx()` and place it before `reactRouter()` so MDX is compiled before route transforms and React Fast Refresh. Include those files in your React plugin configuration too:
+
+```ts filename=vite.config.ts
+export default defineConfig({
+  plugins: [
+    { enforce: "pre", ...mdx() },
+    reactRouter(),
+    react({ include: /\.(mdx?|[jt]sx?)$/ }),
+  ],
+});
+```
+
+Route modules excluded by your React plugin will reload the page when their components change. React Router continues to handle updates to route APIs such as `loader`, `clientLoader`, and `meta`.
+
 But React Fast Refresh does have some limitations that you should be aware of.
 
 ### Class Component State
@@ -43,7 +102,7 @@ export default function ComponentF() {} // ✅
 
 ### Named Function Components
 
-Function components must be named, not anonymous, for React Fast Refresh to track changes:
+Function components must be named, not anonymous, for React Fast Refresh to track changes. The experimental external React plugin integration gives anonymous default components in route modules a name automatically. Otherwise, name your components explicitly:
 
 ```tsx
 export default () => {}; // ❌

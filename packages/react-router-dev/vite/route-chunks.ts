@@ -4,7 +4,7 @@ import { type Cache, getOrSetFromCache } from "./cache";
 import {
   type Babel,
   type NodePath,
-  parse,
+  parseRouteSource,
   traverse,
   generate,
   t,
@@ -30,12 +30,15 @@ export function codeToAst(
   cache: Cache,
   cacheKey: string,
 ): Babel.File {
-  // We use structuredClone to allow AST mutation without modifying the cache.
-  return structuredClone(
-    getOrSetFromCache(cache, `${cacheKey}::codeToAst`, code, () =>
-      parse(code, { sourceType: "module" }),
-    ),
+  const { tokens, ...ast } = getOrSetFromCache(
+    cache,
+    `${cacheKey}::codeToAst`,
+    code,
+    () => parseRouteSource(code, cacheKey, { tokens: true }),
   );
+  // Clone mutable AST nodes. Babel token types contain functions and cannot
+  // be structured-cloned; generation only reads this shared token array.
+  return { ...structuredClone(ast), tokens };
 }
 
 function assertNodePath(
@@ -96,13 +99,38 @@ function getExportDependencies(
     () => {
       let exportDependencies: ExportDependencies = new Map();
       let ast = codeToAst(code, cache, cacheKey);
+      // Classic JSX uses its factory implicitly. React imports can be shared
+      // across chunks; explicit pragmas may also refer to local bindings.
+      let jsxFactories = new Set<string>();
+      for (let node of ast.program.body) {
+        if (!t.isImportDeclaration(node) || node.source.value !== "react")
+          continue;
+        for (let specifier of node.specifiers) {
+          if (
+            !t.isImportSpecifier(specifier) ||
+            (t.isIdentifier(specifier.imported) &&
+              ["createElement", "Fragment"].includes(specifier.imported.name))
+          ) {
+            jsxFactories.add(specifier.local.name);
+          }
+        }
+      }
+      for (let comment of ast.comments ?? []) {
+        for (let match of comment.value.matchAll(/@jsx(?:Frag)?\s+([\w$]+)/g)) {
+          jsxFactories.add(match[1]);
+        }
+      }
 
       function handleExport(
         exportName: string,
         exportPath: NodePath<ExportDeclaration>,
         identifiersPath: NodePath = exportPath,
       ) {
-        let identifiers = getDependentIdentifiersForPath(identifiersPath);
+        let identifiers = getDependentIdentifiersForPath(identifiersPath, {
+          visited: new Set(),
+          identifiers: new Set(),
+          jsxFactories,
+        });
 
         let topLevelStatements = new Set([
           exportPath.node,
@@ -284,12 +312,17 @@ function getExportDependencies(
 
 function getDependentIdentifiersForPath(
   path: NodePath,
-  state?: { visited: Set<NodePath>; identifiers: Set<NodePath<Identifier>> },
+  state: {
+    visited: Set<NodePath>;
+    identifiers: Set<NodePath<Identifier>>;
+    jsxFactories: Set<string>;
+  },
 ): Set<NodePath<Identifier>> {
-  let { visited, identifiers } = state ?? {
-    visited: new Set(),
-    identifiers: new Set(),
-  };
+  let { visited, identifiers, jsxFactories } = state;
+
+  // Type-only references disappear during compilation and must not couple
+  // otherwise independent runtime exports.
+  if (path.findParent((parent) => parent.isTSType())) return identifiers;
 
   // Ensure we don't recurse indefinitely
   if (visited.has(path)) {
@@ -300,6 +333,42 @@ function getDependentIdentifiersForPath(
 
   // Recursively traverse the AST to find all identifiers the path depends on.
   path.traverse({
+    TSType(path) {
+      path.skip();
+    },
+    TSTypeParameterDeclaration(path) {
+      path.skip();
+    },
+    "JSXElement|JSXFragment"(path) {
+      for (let name of jsxFactories) {
+        let binding = path.scope.getBinding(name);
+        if (binding) {
+          getDependentIdentifiersForPath(binding.path, state);
+        }
+      }
+    },
+    JSXIdentifier(path) {
+      // JSX tag names are bindings too, before the React plugin lowers JSX.
+      // Follow the binding identifier so import filtering and shared chunk
+      // detection treat <Component /> just like createElement(Component).
+      if (path.parentPath.isJSXMemberExpression() && path.key !== "object")
+        return;
+      if (
+        !path.parentPath.isJSXOpeningElement() &&
+        !path.parentPath.isJSXClosingElement() &&
+        !path.parentPath.isJSXMemberExpression()
+      )
+        return;
+      if (
+        !path.parentPath.isJSXMemberExpression() &&
+        /^[a-z]/.test(path.node.name)
+      )
+        return;
+      const binding = path.scope.getBinding(path.node.name);
+      if (binding) {
+        getDependentIdentifiersForPath(binding.path, state);
+      }
+    },
     Identifier(path) {
       // We can skip all of this work if we've already processed this identifier.
       if (identifiers.has(path)) {
@@ -314,7 +383,7 @@ function getDependentIdentifiersForPath(
         return;
       }
 
-      getDependentIdentifiersForPath(binding.path, { visited, identifiers });
+      getDependentIdentifiersForPath(binding.path, state);
 
       // Trace all references to the identifier
       for (let reference of binding.referencePaths) {
@@ -326,19 +395,13 @@ function getDependentIdentifiersForPath(
           continue;
         }
 
-        getDependentIdentifiersForPath(reference, {
-          visited,
-          identifiers,
-        });
+        getDependentIdentifiersForPath(reference, state);
       }
 
       // For completeness we also want to trace constant violations since, even
       // though the code results in a runtime error, it still compiles.
       for (let constantViolation of binding.constantViolations) {
-        getDependentIdentifiersForPath(constantViolation, {
-          visited,
-          identifiers,
-        });
+        getDependentIdentifiersForPath(constantViolation, state);
       }
     },
   });
@@ -350,10 +413,7 @@ function getDependentIdentifiersForPath(
   // Include all identifiers in the top-level statement as dependencies, except
   // for import/export statements since they have more fine-grained filtering.
   if (!withinImportStatement && !withinExportStatement) {
-    getDependentIdentifiersForPath(topLevelStatement, {
-      visited,
-      identifiers,
-    });
+    getDependentIdentifiersForPath(topLevelStatement, state);
   }
 
   // Destructuring assignments in export statements have more fine-grained
@@ -368,10 +428,7 @@ function getDependentIdentifiersForPath(
     let variableDeclarator = path.findParent((p) => p.isVariableDeclarator());
     assertNodePath(variableDeclarator);
 
-    getDependentIdentifiersForPath(variableDeclarator, {
-      visited,
-      identifiers,
-    });
+    getDependentIdentifiersForPath(variableDeclarator, state);
   }
 
   return identifiers;
@@ -697,7 +754,13 @@ export function getChunkedExport(
         })
         .filter((node): node is NonNullable<typeof node> => node !== null);
 
-      return generate(ast, generateOptions);
+      return generate(
+        ast,
+        generateOptions,
+        generateOptions && "experimental_preserveFormat" in generateOptions
+          ? code
+          : undefined,
+      );
     },
   );
 }
@@ -905,7 +968,13 @@ export function omitChunkedExports(
         return undefined;
       }
 
-      return generate(ast, generateOptions);
+      return generate(
+        ast,
+        generateOptions,
+        generateOptions && "experimental_preserveFormat" in generateOptions
+          ? code
+          : undefined,
+      );
     },
   );
 }

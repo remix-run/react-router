@@ -13,6 +13,7 @@ const entry = ["cli/index.ts", "config.ts", "routes.ts", "vite.ts"];
 const neverBundle = [
   "#development-condition-enabled",
   "./static/refresh-utils.mjs",
+  "./static/route-hmr.mjs",
   "./static/rsc-refresh-utils.mjs",
   /\.json$/,
 ];
@@ -23,6 +24,7 @@ async function copyBuildAssets() {
     "vite/static/refresh-utils.mjs",
     "dist/static/refresh-utils.mjs",
   );
+  await fsp.copyFile("vite/static/route-hmr.mjs", "dist/static/route-hmr.mjs");
   await fsp.copyFile(
     "vite/static/rsc-refresh-utils.mjs",
     "dist/static/rsc-refresh-utils.mjs",

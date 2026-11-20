@@ -33,8 +33,6 @@ npm install react-router@8 @react-router/{dev,node,etc.}@8
 
 ## Future Flags
 
-_No future flags yet_
-
 ## Other Planned Breaking Changes
 
 _No known planned breaking changes yet_
@@ -42,6 +40,54 @@ _No known planned breaking changes yet_
 ## Unstable Future Flags (Optional)
 
 We document some [unstable] flags here as a reference for folks contributing to the project via beta testing, but they are not generally recommended for production use and may have breaking changes in patch or minor releases - adopt with caution!
+
+### `future.unstable_externalReactPlugin`
+
+[MODES: framework]
+
+**Background**
+
+This flag opts Framework Mode into using an app-provided `@vitejs/plugin-react` instead of React Router's built-in React Fast Refresh integration. It lets you configure React Compiler and other React plugin options in your Vite config.
+
+The flag also changes when React Router processes route modules, so the integration is currently experimental. Without the flag, React Router continues to use its existing compilation and Fast Refresh implementation.
+
+👉 **Install the React Plugin**
+
+Choose a version compatible with your Vite version. Version 5.2 supports Vite 7 and 8:
+
+```sh
+npm install -D @vitejs/plugin-react@^5.2.0
+```
+
+**Update your Code**
+
+Add the React plugin after the React Router plugin:
+
+```ts filename=vite.config.ts
+import { reactRouter } from "@react-router/dev/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [reactRouter(), react()],
+});
+```
+
+See [Configuring the React Plugin](../explanation/hot-module-replacement#configuring-the-react-plugin) for React Compiler and MDX examples. This flag applies to Framework Mode apps using `reactRouter()`; RSC Framework Mode has its own React integration.
+
+👉 **Enable the Flag**
+
+```ts filename=react-router.config.ts
+import type { Config } from "@react-router/dev/config";
+
+export default {
+  future: {
+    unstable_externalReactPlugin: true,
+  },
+} satisfies Config;
+```
+
+Changing this flag while the dev server is running restarts the server to apply the new compilation pipeline.
 
 ### `future.unstable_enableNodeReadableStream`
 
