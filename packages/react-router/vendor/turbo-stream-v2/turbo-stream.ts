@@ -2,7 +2,6 @@ import { SUPPORTED_ERROR_TYPES } from "../../lib/router/utils";
 import { flatten } from "./flatten";
 import { unflatten } from "./unflatten";
 import {
-  Deferred,
   TYPE_ERROR,
   TYPE_PREVIOUS_RESOLVED,
   TYPE_PROMISE,
@@ -22,8 +21,6 @@ export async function decode(
 ) {
   const { plugins } = options ?? {};
 
-  const done = new Deferred<void>();
-  done.promise.catch(() => {});
   const reader = readable
     .pipeThrough(createLineSplittingTransform())
     .getReader();
@@ -37,23 +34,22 @@ export async function decode(
 
   const decoded = await decodeInitial.call(decoder, reader);
 
-  let donePromise = done.promise;
+  let donePromise: Promise<void>;
   if (decoded.done) {
-    done.resolve();
+    donePromise = Promise.resolve();
   } else {
-    donePromise = decodeDeferred
-      .call(decoder, reader)
-      .then(done.resolve)
-      .catch((reason) => {
-        for (const deferred of Object.values(decoder.deferred)) {
-          deferred.reject(reason);
-        }
+    donePromise = decodeDeferred.call(decoder, reader).catch((reason) => {
+      for (const deferred of Object.values(decoder.deferred)) {
+        deferred.reject(reason);
+      }
 
-        done.reject(reason);
-      });
+      throw reason;
+    });
   }
 
   const finished = donePromise.then(() => reader.closed);
+  // Callers may only consume the initial value. Keep completion errors
+  // observable through `done` without leaving an unhandled rejection.
   finished.catch(() => {});
 
   return {

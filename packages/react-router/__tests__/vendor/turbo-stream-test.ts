@@ -1,3 +1,7 @@
+import { execFile } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+
 import { decode, encode } from "../../vendor/turbo-stream-v2/turbo-stream";
 import {
   Deferred,
@@ -779,56 +783,52 @@ test("should encode and decode large payload and yield the event loop", async ()
   await decoded.done;
 });
 
-test("does not emit unhandledRejection when stream errors after initial chunk and done is not awaited", async () => {
-  const unhandled: unknown[] = [];
-  const onUnhandled = (reason: unknown) => {
-    unhandled.push(reason);
-  };
-  process.on("unhandledRejection", onUnhandled);
+describe("decoder completion errors", () => {
+  const failures = [
+    ["TypeError", { name: "TypeError", message: "network error" }],
+    ["AbortError", { name: "AbortError", message: "stream aborted" }],
+    [
+      "unknown",
+      { name: "Error", message: "Deferred ID 999 not found in stream" },
+    ],
+    ["parse", { name: "SyntaxError", message: "" }],
+  ] as const;
 
-  try {
-    let pulls = 0;
-    const body = new ReadableStream<Uint8Array>({
-      pull(controller) {
-        if (++pulls === 1) {
-          controller.enqueue(
-            new TextEncoder().encode(
-              '[{"_1":2},"root",{"_3":4},"data","ok"]\n',
-            ),
-          );
-        } else {
-          controller.error(new TypeError("network error"));
-        }
-      },
-    });
-
-    const decoded = await decode(body);
-    expect(decoded.value).toEqual({ root: { data: "ok" } });
-
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(unhandled).toEqual([]);
-  } finally {
-    process.off("unhandledRejection", onUnhandled);
-  }
-});
-
-test("still rejects decoded.done when stream errors after initial chunk", async () => {
-  let pulls = 0;
-  const body = new ReadableStream<Uint8Array>({
-    pull(controller) {
-      if (++pulls === 1) {
-        controller.enqueue(
-          new TextEncoder().encode('[{"_1":2},"root",{"_3":4},"data","ok"]\n'),
-        );
-      } else {
-        controller.error(new TypeError("network error"));
-      }
+  test.each(failures)(
+    "handles ignored completion after %s",
+    async (failure) => {
+      const { stdout, stderr } = await promisify(execFile)(process.execPath, [
+        fileURLToPath(new URL("./turbo-stream-rejection.cjs", import.meta.url)),
+        failure,
+        "ignored",
+      ]);
+      expect(stderr).toBe("");
+      expect(JSON.parse(stdout)).toEqual({
+        hasDeferred: true,
+        done: "ignored",
+        deferred: "ignored",
+        unhandled: [],
+      });
     },
-  });
+  );
 
-  const decoded = await decode(body);
-  expect(decoded.value).toEqual({ root: { data: "ok" } });
-  await expect(decoded.done).rejects.toThrow("network error");
+  test.each(failures)(
+    "rejects observed completion and deferred value after %s",
+    async (failure, error) => {
+      const { stdout, stderr } = await promisify(execFile)(process.execPath, [
+        fileURLToPath(new URL("./turbo-stream-rejection.cjs", import.meta.url)),
+        failure,
+        "observed",
+      ]);
+      expect(stderr).toBe("");
+      expect(JSON.parse(stdout)).toEqual({
+        hasDeferred: true,
+        done: error,
+        deferred: error,
+        unhandled: [],
+      });
+    },
+  );
 });
 
 type Nested = { value: number; next: Nested | null };
