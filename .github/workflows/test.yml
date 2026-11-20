@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - v7
     tags-ignore:
       - v*
     paths-ignore:
