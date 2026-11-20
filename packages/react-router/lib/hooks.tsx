@@ -10,6 +10,7 @@ import {
   IsDataRouteContext,
   LocationContext,
   NavigationContext,
+  RSCErrorAlreadyReportedContext,
   RSCRouterContext,
   RouteContext,
   RouteErrorContext,
@@ -975,6 +976,7 @@ export function useRoutesImpl(
 
 function DefaultErrorComponent() {
   let error = useRouteError();
+  let alreadyReported = React.useContext(RSCErrorAlreadyReportedContext);
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
     : error instanceof Error
@@ -987,10 +989,12 @@ function DefaultErrorComponent() {
 
   let devInfo = null;
   if (ENABLE_DEV_WARNINGS) {
-    console.error(
-      "Error handled by React Router default ErrorBoundary:",
-      error,
-    );
+    if (!alreadyReported) {
+      console.error(
+        "Error handled by React Router default ErrorBoundary:",
+        error,
+      );
+    }
 
     devInfo = (
       <>
