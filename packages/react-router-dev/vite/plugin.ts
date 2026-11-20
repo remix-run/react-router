@@ -49,7 +49,7 @@ import type {
 import invariant from "../invariant";
 import type { Cache } from "./cache";
 import type { ReactRouterBuildContext } from "./build";
-import { generate, parse } from "./babel";
+import { generate, parse, traverse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest } from "./node-adapter";
 import {
@@ -61,7 +61,7 @@ import * as VirtualModule from "./virtual-module";
 import { resolveFileUrl } from "./resolve-file-url";
 import { resolveRelativeRouteFilePath } from "./resolve-relative-route-file-path";
 import { combineURLs } from "./combine-urls";
-import { removeExports } from "./remove-exports";
+import { removeExports, rewriteReExportSources } from "./remove-exports";
 import { ssrExternals } from "./ssr-externals";
 import {
   type RouteChunkName,
@@ -162,6 +162,22 @@ from the client build output. This is important in cases where custom route
 exports are only ever used on the server. Without this optimization, we can't
 tree-shake any unused custom exports because routes are entry points. */
 const BUILD_CLIENT_ROUTE_QUERY_STRING = "?__react-router-build-client-route";
+
+/** Appended to the sources of re-exports in route modules on the client so
+the re-exported module gets its own client copy with server-only exports
+removed. Without this, re-exporting a `loader` from another file ships that
+file's server code to the browser since there is no tree-shaking in dev. */
+const ROUTE_REEXPORT_QUERY_STRING = "?__react-router-route-reexport";
+
+function isRouteReExportModuleId(id: string): boolean {
+  return id.includes(ROUTE_REEXPORT_QUERY_STRING);
+}
+
+function tagReExportSources(ast: ReturnType<typeof parse>): void {
+  rewriteReExportSources(ast, (source) =>
+    source.includes("?") ? source : source + ROUTE_REEXPORT_QUERY_STRING,
+  );
+}
 
 export type EnvironmentName = "client" | SsrEnvironmentName;
 
@@ -573,7 +589,75 @@ const getRouteModuleExports = async (
     readRouteFile,
   );
 
-  return getExportNames(code);
+  let exportNames = new Set(getExportNames(code));
+  await addStarReExportNames({
+    viteChildCompiler,
+    ctx,
+    importer: path.resolve(ctx.reactRouterConfig.appDirectory, routeFile),
+    code,
+    exportNames,
+    seen: new Set(),
+  });
+  return [...exportNames];
+};
+
+// `export * from "..."` hides the re-exported names from the lexer, so follow
+// the source modules and add their export names (except `default`, which star
+// re-exports do not forward)
+const addStarReExportNames = async ({
+  viteChildCompiler,
+  ctx,
+  importer,
+  code,
+  exportNames,
+  seen,
+}: {
+  viteChildCompiler: Vite.ViteDevServer | null;
+  ctx: ReactRouterPluginContext;
+  importer: string;
+  code: string;
+  exportNames: Set<string>;
+  seen: Set<string>;
+}): Promise<void> => {
+  if (!viteChildCompiler) return;
+  if (!/\bexport\s*\*\s*from\b/.test(code)) return;
+
+  let sources: string[] = [];
+  traverse(parse(code, { sourceType: "module" }), {
+    ExportAllDeclaration(path) {
+      sources.push(path.node.source.value);
+    },
+  });
+
+  for (let source of sources) {
+    try {
+      let resolved = await viteChildCompiler.pluginContainer.resolveId(
+        source,
+        importer,
+        { ssr: true },
+      );
+      if (!resolved) continue;
+      let [file] = resolved.id.split("?");
+      if (seen.has(file)) continue;
+      seen.add(file);
+      let moduleCode = await compileRouteFile(viteChildCompiler, ctx, file);
+      for (let name of getExportNames(moduleCode)) {
+        if (name !== "default") {
+          exportNames.add(name);
+        }
+      }
+      await addStarReExportNames({
+        viteChildCompiler,
+        ctx,
+        importer: file,
+        code: moduleCode,
+        exportNames,
+        seen,
+      });
+    } catch {
+      // Same behavior as before star re-exports were followed
+    }
+  }
 };
 
 let getDefaultServerBuildDirectory = (
@@ -2387,6 +2471,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
     {
       name: "react-router:route-exports",
       async transform(code, id, options) {
+        // Client copy of a module re-exported from a route: remove
+        // server-only exports here too, and keep following any re-exports
+        if (isRouteReExportModuleId(id)) {
+          if (options?.ssr) return;
+          let [filepath] = id.split("?");
+          let ast = parse(code, { sourceType: "module" });
+          removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+          tagReExportSources(ast);
+          return generate(ast, {
+            sourceMaps: true,
+            filename: id,
+            sourceFileName: filepath,
+          });
+        }
+
         // Ensure we perform this transform on all route module chunks
         if (isRouteChunkModuleId(id)) {
           id = id.split("?")[0];
@@ -2443,6 +2542,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         let ast = parse(code, { sourceType: "module" });
         if (!options?.ssr) {
           removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+          tagReExportSources(ast);
         } else if (
           isApiOnlyMode(ctx.reactRouterConfig) &&
           isServerEnvironment &&

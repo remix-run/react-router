@@ -236,3 +236,27 @@ function validateDestructuredExports(
 function invalidDestructureError(name: string) {
   return new Error(`Cannot remove destructured export "${name}"`);
 }
+
+// Rewrite the sources of re-exports (export { x } from "...", export * from
+// "...") so the re-exported module can be given its own transform, e.g. a
+// client copy of the module with server-only route exports removed
+export const rewriteReExportSources = (
+  ast: ParseResult<Babel.File>,
+  rewrite: (source: string) => string,
+) => {
+  traverse(ast, {
+    ExportNamedDeclaration(path) {
+      let node = path.node;
+      if (!node.source) return;
+      // Leave `export * as ns from "..."` alone since members of the
+      // namespace object are not route exports
+      if (node.specifiers.some((s) => s.type === "ExportNamespaceSpecifier")) {
+        return;
+      }
+      node.source.value = rewrite(node.source.value);
+    },
+    ExportAllDeclaration(path) {
+      path.node.source.value = rewrite(path.node.source.value);
+    },
+  });
+};
