@@ -687,14 +687,15 @@ export function RouterProvider({
       go: (n) => router.navigate(n),
       push: (to, state, opts) =>
         router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
+          ...opts,
+          replace: opts?.replace === false ? false : undefined,
+          state: state !== undefined ? state : opts?.state,
         }),
       replace: (to, state, opts) =>
         router.navigate(to, {
+          ...opts,
           replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
+          state: state !== undefined ? state : opts?.state,
         }),
     };
   }, [router]);
