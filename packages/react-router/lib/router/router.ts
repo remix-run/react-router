@@ -1293,6 +1293,10 @@ export function createRouter(init: RouterInit): Router {
   // the globally incrementing load when a fetcher load lands after a completed
   // navigation
   let pendingNavigationLoadId = -1;
+  // The signal of a navigation whose loader phase is awaiting lazy route
+  // discovery. Its matches are not known yet, so fetcher action revalidation
+  // must not match or complete it until discovery finishes.
+  let pendingNavigationDiscoverySignal: AbortSignal | null = null;
 
   // Fetchers that triggered data reloads as a result of their actions
   let fetchReloadIds = new Map<string, number>();
@@ -2503,6 +2507,8 @@ export function createRouter(init: RouterInit): Router {
     // If the children() function threw then, we want to proceed with the
     // partial matches it discovered.
     if (isFogOfWar) {
+      // Install before notifying subscribers, which may start a new navigation.
+      pendingNavigationDiscoverySignal = request.signal;
       if (shouldUpdateNavigationState) {
         let actionData = getUpdatedActionData(pendingActionResult);
         updateState(
@@ -2521,6 +2527,9 @@ export function createRouter(init: RouterInit): Router {
         location.pathname,
         request.signal,
       );
+      if (pendingNavigationDiscoverySignal === request.signal) {
+        pendingNavigationDiscoverySignal = null;
+      }
 
       if (
         (future.unstable_customRouteDiscovery && request.signal.aborted) ||
@@ -2922,6 +2931,12 @@ export function createRouter(init: RouterInit): Router {
     );
   }
 
+  function isNavigationAwaitingDiscovery() {
+    // An aborted discovery callback may never settle. Only the active
+    // navigation's discovery should prevent matching or completing it.
+    return pendingNavigationDiscoverySignal?.aborted === false;
+  }
+
   // Call the action for the matched fetcher.submit(), and then handle redirects,
   // errors, and revalidation
   async function handleFetcherAction(
@@ -3101,18 +3116,21 @@ export function createRouter(init: RouterInit): Router {
     // it was submitting. Restore it now that the mutation has completed.
     isRevalidationRequired = true;
 
-    // Start the data load for current matches, or the next location if we're
-    // in the middle of a navigation
-    let nextLocation = state.navigation.location || state.location;
+    // While a navigation awaits discovery, revalidate the displayed page.
+    // Keep its URL and matches together so data strategies request the same
+    // routes on the server. The navigation loads its own routes after discovery.
+    let revalidationLocation = !isNavigationAwaitingDiscovery()
+      ? state.navigation.location
+      : undefined;
+    let nextLocation = revalidationLocation || state.location;
     let revalidationRequest = createClientSideRequest(
       init.history,
       nextLocation,
       abortController.signal,
     );
-    let matches =
-      state.navigation.state !== "idle"
-        ? dataRouteMatcher.match(state.navigation.location)
-        : state.matches;
+    let matches = revalidationLocation
+      ? dataRouteMatcher.match(revalidationLocation)
+      : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
 
@@ -3286,10 +3304,13 @@ export function createRouter(init: RouterInit): Router {
 
     // If we are currently in a navigation loading state and this fetcher is
     // more recent than the navigation, we want the newer data so abort the
-    // navigation and complete it with the fetcher data
+    // navigation and complete it with the fetcher data. A navigation that is
+    // still awaiting discovery has no matches to complete with, and it bumps
+    // its load id only afterwards, so leave it to finish on its own.
     if (
       state.navigation.state === "loading" &&
-      loadId > pendingNavigationLoadId
+      loadId > pendingNavigationLoadId &&
+      !isNavigationAwaitingDiscovery()
     ) {
       invariant(pendingAction, "Expected pending action");
       pendingNavigationController && pendingNavigationController.abort();
