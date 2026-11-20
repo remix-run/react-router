@@ -3274,14 +3274,16 @@ export function useScrollRestoration({
     // Enable scroll restoration in the router
     // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useLayoutEffect(() => {
-      let disableScrollRestoration = router?.enableScrollRestoration(
-        savedScrollPositions,
-        () => window.scrollY,
-        getKey
-          ? (location, matches) =>
-              getScrollRestorationKey(location, matches, basename, getKey)
-          : undefined,
-      );
+      let disableScrollRestoration = router?.enableScrollRestoration({
+        window: {
+          positions: savedScrollPositions,
+          getPosition: () => window.scrollY,
+          getKey: getKey
+            ? (location, matches) =>
+                getScrollRestorationKey(location, matches, basename, getKey)
+            : undefined,
+        },
+      });
       return () => disableScrollRestoration && disableScrollRestoration();
     }, [router, basename, getKey]);
 

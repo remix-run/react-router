@@ -29,6 +29,105 @@ describe("scroll restoration", () => {
     },
   ];
 
+  describe("scroll restoration registrations", () => {
+    it.each(["window", "elements"] as const)(
+      "keeps the other registration active when unregistering %s",
+      async (target) => {
+        let t = setup({ routes: [{ path: "*" }], initialEntries: ["/one"] });
+        let positions = { "/one": 25, "/two": 50 };
+        let save = jest.fn();
+        let unregisterElements = t.router.enableScrollRestoration({
+          elements: {
+            save,
+            restore: (location) => ({
+              storageKey: "test",
+              key: location.pathname,
+              positions: { "#content": { x: 10, y: 90 } },
+            }),
+          },
+        });
+        expect(t.router.state.restoreScrollPosition).toBeNull();
+        let unregisterWindow = t.router.enableScrollRestoration({
+          window: {
+            positions,
+            getPosition: () => 100,
+            getKey: (location) => location.pathname,
+          },
+        });
+        expect(t.router.state.restoreScrollPosition).toBe(25);
+
+        await t.router.navigate("/two");
+        expect(positions["/one"]).toBe(100);
+        expect(t.router.state.restoreScrollPosition).toBe(50);
+        expect(t.router.state.restoreElementScrollPositions).toMatchObject({
+          key: "/two",
+          positions: { "#content": { x: 10, y: 90 } },
+        });
+
+        if (target === "window") unregisterWindow();
+        else unregisterElements();
+        await t.router.navigate(-1);
+        expect(t.router.state.restoreScrollPosition).toBe(
+          target === "window" ? null : 100,
+        );
+        expect(t.router.state.restoreElementScrollPositions).toEqual(
+          target === "elements"
+            ? undefined
+            : {
+                storageKey: "test",
+                key: "/one",
+                positions: { "#content": { x: 10, y: 90 } },
+              },
+        );
+        expect(positions["/two"]).toBe(target === "window" ? 50 : 100);
+        expect(save).toHaveBeenCalledTimes(target === "elements" ? 1 : 2);
+      },
+    );
+
+    it("scopes combined cleanup to its own registration even when options are reused", async () => {
+      let t = setup({ routes: [{ path: "*" }], initialEntries: ["/one"] });
+      let positions = { default: 25 };
+      let save = jest.fn();
+      let dispose = jest.fn();
+      let options = {
+        window: { positions, getPosition: () => 100 },
+        elements: {
+          save,
+          dispose,
+          restore: () => ({
+            storageKey: "test",
+            key: "entry",
+            positions: { "#content": { x: 10, y: 90 } },
+          }),
+        },
+      };
+      let unregisterStale = t.router.enableScrollRestoration(options);
+      let unregisterCurrent = t.router.enableScrollRestoration(options);
+      unregisterStale();
+
+      await t.router.navigate("/two");
+      await t.router.navigate(-1);
+      expect(save).toHaveBeenCalledTimes(2);
+      expect(t.router.state.restoreScrollPosition).toBe(100);
+      expect(t.router.state.restoreElementScrollPositions).toMatchObject({
+        positions: { "#content": { x: 10, y: 90 } },
+      });
+
+      unregisterCurrent();
+      unregisterCurrent();
+      await t.router.navigate("/three");
+      expect(save).toHaveBeenCalledTimes(2);
+      expect(t.router.state.restoreScrollPosition).toBeNull();
+      expect(t.router.state.restoreElementScrollPositions).toBeUndefined();
+      expect(dispose).not.toHaveBeenCalled();
+
+      t.router.enableScrollRestoration(options);
+      t.router.dispose();
+      t.router.dispose();
+      expect(dispose).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("element scroll restoration", () => {
     it("captures synchronous navigations and snapshots both axes independently of window", async () => {
       let t = setup({ routes: [{ path: "*" }], initialEntries: ["/one"] });
@@ -40,13 +139,15 @@ describe("scroll restoration", () => {
         "/two": { "#sidebar": { x: 40, y: 0 } },
       };
       let save = jest.fn();
-      t.router.enableElementScrollRestoration({
-        save,
-        restore: (location) => ({
-          storageKey: "test",
-          key: location.pathname,
-          positions: positions[location.pathname as keyof typeof positions],
-        }),
+      t.router.enableScrollRestoration({
+        elements: {
+          save,
+          restore: (location) => ({
+            storageKey: "test",
+            key: location.pathname,
+            positions: positions[location.pathname as keyof typeof positions],
+          }),
+        },
       });
       await t.router.navigate("/two");
       expect(save).toHaveBeenCalledTimes(1);
@@ -79,13 +180,15 @@ describe("scroll restoration", () => {
         hydrationData: { loaderData: { index: "INDEX" } },
       });
       let save = jest.fn();
-      t.router.enableElementScrollRestoration({
-        save,
-        restore: (location) => ({
-          storageKey: "test",
-          key: location.pathname,
-          positions: { "#content": { x: 0, y: 150 } },
-        }),
+      t.router.enableScrollRestoration({
+        elements: {
+          save,
+          restore: (location) => ({
+            storageKey: "test",
+            key: location.pathname,
+            positions: { "#content": { x: 0, y: 150 } },
+          }),
+        },
       });
       let pending = await t.navigate("/tasks");
       await t.navigate("/no-loader");
@@ -108,13 +211,15 @@ describe("scroll restoration", () => {
       expect(t.router.state).not.toHaveProperty(
         "restoreElementScrollPositions",
       );
-      let disable = t.router.enableElementScrollRestoration({
-        save() {},
-        restore: () => ({
-          storageKey: "test",
-          key: "entry",
-          positions: { "#content": { x: 10, y: 90 } },
-        }),
+      let disable = t.router.enableScrollRestoration({
+        elements: {
+          save() {},
+          restore: () => ({
+            storageKey: "test",
+            key: "entry",
+            positions: { "#content": { x: 10, y: 90 } },
+          }),
+        },
       });
       await t.router.navigate("/two", { preventScrollReset: true });
       expect(t.router.state.preventScrollReset).toBe(true);
@@ -142,7 +247,7 @@ describe("scroll restoration", () => {
       expect(t.router.state.preventScrollReset).toBe(false);
 
       // Assume initial location had a saved position
-      let positions = { default: 50 };
+      let positions = { default: 50, window: 100, elements: 200 };
       t.router.enableScrollRestoration(positions, () => 0);
       expect(t.router.state.restoreScrollPosition).toBe(50);
     });

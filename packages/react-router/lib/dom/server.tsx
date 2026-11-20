@@ -453,9 +453,6 @@ export function createStaticRouter(
     enableScrollRestoration() {
       throw msg("enableScrollRestoration");
     },
-    enableElementScrollRestoration() {
-      throw msg("enableElementScrollRestoration");
-    },
     navigate() {
       throw msg("navigate");
     },

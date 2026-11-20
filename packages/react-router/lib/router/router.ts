@@ -170,10 +170,17 @@ export interface Router {
   subscribe(fn: RouterSubscriber): () => void;
 
   /**
+   * @private Register window and/or element scroll restoration independently.
+   * Cleanup unregisters only the handlers installed by this call.
+   */
+  enableScrollRestoration(options: ScrollRestorationOptions): () => void;
+
+  /**
    * @private
    * PRIVATE - DO NOT USE
    *
    * Enable scroll restoration behavior in the router
+   * Keep the positional overload last to preserve its Parameters tuple.
    *
    * @param savedScrollPositions Object that will manage positions, in case
    *                             it's being restored from sessionStorage
@@ -185,16 +192,6 @@ export interface Router {
     getScrollPosition: GetScrollPositionFunction,
     getKey?: GetScrollRestorationKeyFunction,
   ): () => void;
-
-  /** @private Capture and restore element positions alongside navigations. */
-  enableElementScrollRestoration(callbacks: {
-    save(): void;
-    dispose?(): void;
-    restore(
-      location: Location,
-      matches: UIMatch[],
-    ): ElementScrollRestorationSnapshot;
-  }): () => void;
 
   /**
    * @private
@@ -606,6 +603,23 @@ export type ElementScrollRestorationSnapshot = {
   storageKey: string;
   key: string;
   positions: ElementScrollPositions;
+};
+
+/** @private Configuration for router scroll restoration registrations. */
+export type ScrollRestorationOptions = {
+  window?: {
+    positions: Record<string, number>;
+    getPosition: GetScrollPositionFunction;
+    getKey?: GetScrollRestorationKeyFunction;
+  };
+  elements?: {
+    save(): void;
+    restore(
+      location: Location,
+      matches: UIMatch[],
+    ): ElementScrollRestorationSnapshot;
+    dispose?(): void;
+  };
 };
 
 /**
@@ -1132,12 +1146,7 @@ export function createRouter(init: RouterInit): Router {
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
   let subscribers = new Set<RouterSubscriber>();
-  // Externally-provided object to hold scroll restoration locations during routing
-  let savedScrollPositions: Record<string, number> | null = null;
-  // Externally-provided function to get scroll restoration keys
-  let getScrollRestorationKey: GetScrollRestorationKeyFunction | null = null;
-  // Externally-provided function to get current scroll position
-  let getScrollPosition: GetScrollPositionFunction | null = null;
+  let windowScrollRestoration: ScrollRestorationOptions["window"];
   // One-time flag to control the initial hydration scroll restoration.  Because
   // we don't get the saved positions from <ScrollRestoration /> until _after_
   // the initial render, we need to manually trigger a separate updateState to
@@ -1145,9 +1154,7 @@ export function createRouter(init: RouterInit): Router {
   // Set to true if we have `hydrationData` since we assume we were SSR'd and that
   // SSR did the initial scroll restoration.
   let initialScrollRestored = init.hydrationData != null;
-  let elementScrollRestoration:
-    | Parameters<Router["enableElementScrollRestoration"]>[0]
-    | undefined;
+  let elementScrollRestoration: ScrollRestorationOptions["elements"];
 
   let initialMatches = dataRouteMatcher.match(init.history.location);
   let initialMatchesIsFOW = false;
@@ -3991,20 +3998,44 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // Opt in to capturing and reporting scroll positions during navigations,
-  // used by the <ScrollRestoration> component
+  // used by the <ScrollRestoration> component and element scroll hooks.
+  function enableScrollRestoration(
+    options: ScrollRestorationOptions,
+  ): () => void;
   function enableScrollRestoration(
     positions: Record<string, number>,
     getPosition: GetScrollPositionFunction,
     getKey?: GetScrollRestorationKeyFunction,
-  ) {
-    savedScrollPositions = positions;
-    getScrollPosition = getPosition;
-    getScrollRestorationKey = getKey || null;
+  ): () => void;
+  function enableScrollRestoration(
+    positionsOrOptions: Record<string, number> | ScrollRestorationOptions,
+    getPosition?: GetScrollPositionFunction,
+    getKey?: GetScrollRestorationKeyFunction,
+  ): () => void {
+    let options: ScrollRestorationOptions = getPosition
+      ? {
+          window: {
+            positions: positionsOrOptions as Record<string, number>,
+            getPosition,
+            getKey,
+          },
+        }
+      : (positionsOrOptions as ScrollRestorationOptions);
+    // Copy each configuration so cleanup belongs to this call, even when the
+    // same options object is registered again before its previous cleanup.
+    let windowRegistration = options.window && { ...options.window };
+    let elementRegistration = options.elements && { ...options.elements };
+    if (windowRegistration) windowScrollRestoration = windowRegistration;
+    if (elementRegistration) elementScrollRestoration = elementRegistration;
 
     // Perform initial hydration scroll restoration, since we miss the boat on
     // the initial updateState() because we've not yet rendered <ScrollRestoration/>
-    // and therefore have no savedScrollPositions available
-    if (!initialScrollRestored && state.navigation === IDLE_NAVIGATION) {
+    // and therefore have no saved positions available
+    if (
+      windowRegistration &&
+      !initialScrollRestored &&
+      state.navigation === IDLE_NAVIGATION
+    ) {
       initialScrollRestored = true;
       let y = getSavedScrollPosition(state.location, state.matches);
       if (y != null) {
@@ -4013,15 +4044,25 @@ export function createRouter(init: RouterInit): Router {
     }
 
     return () => {
-      savedScrollPositions = null;
-      getScrollPosition = null;
-      getScrollRestorationKey = null;
+      if (
+        windowRegistration &&
+        windowScrollRestoration === windowRegistration
+      ) {
+        windowScrollRestoration = undefined;
+      }
+      if (
+        elementRegistration &&
+        elementScrollRestoration === elementRegistration
+      ) {
+        elementScrollRestoration = undefined;
+      }
     };
   }
 
   function getScrollKey(location: Location, matches: DataRouteMatch[]) {
-    if (getScrollRestorationKey) {
-      let key = getScrollRestorationKey(
+    let getKey = windowScrollRestoration?.getKey;
+    if (getKey) {
+      let key = getKey(
         location,
         matches.map((m) => convertRouteMatchToUiMatch(m, state.loaderData)),
       );
@@ -4050,25 +4091,15 @@ export function createRouter(init: RouterInit): Router {
     };
   }
 
-  function enableElementScrollRestoration(
-    callbacks: Parameters<Router["enableElementScrollRestoration"]>[0],
-  ) {
-    elementScrollRestoration = callbacks;
-    return () => {
-      if (elementScrollRestoration === callbacks) {
-        elementScrollRestoration = undefined;
-      }
-    };
-  }
-
   function saveScrollPosition(
     location: Location,
     matches: DataRouteMatch[],
   ): void {
     elementScrollRestoration?.save();
-    if (savedScrollPositions && getScrollPosition) {
+    if (windowScrollRestoration) {
+      let { positions, getPosition } = windowScrollRestoration;
       let key = getScrollKey(location, matches);
-      savedScrollPositions[key] = getScrollPosition();
+      positions[key] = getPosition();
     }
   }
 
@@ -4076,9 +4107,9 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     matches: DataRouteMatch[],
   ): number | null {
-    if (savedScrollPositions) {
+    if (windowScrollRestoration) {
       let key = getScrollKey(location, matches);
-      let y = savedScrollPositions[key];
+      let y = windowScrollRestoration.positions[key];
       if (typeof y === "number") {
         return y;
       }
@@ -4281,7 +4312,6 @@ export function createRouter(init: RouterInit): Router {
     initialize,
     subscribe,
     enableScrollRestoration,
-    enableElementScrollRestoration,
     navigate,
     fetch,
     revalidate,

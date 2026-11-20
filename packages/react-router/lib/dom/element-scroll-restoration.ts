@@ -129,18 +129,20 @@ class ElementScrollManager {
   register(token: ElementScrollRegistration, selector: string) {
     this.registrations.set(token, selector);
     if (!this.disable) {
-      this.disable = this.router.enableElementScrollRestoration({
-        save: () => this.save(),
-        restore: (location, matches) => {
-          let { storageKey, getKey } = this.configuration();
-          let key = getKey(location, matches);
-          return {
-            storageKey,
-            key,
-            positions: this.cache()[key] || Object.create(null),
-          };
+      this.disable = this.router.enableScrollRestoration({
+        elements: {
+          save: () => this.save(),
+          restore: (location, matches) => {
+            let { storageKey, getKey } = this.configuration();
+            let key = getKey(location, matches);
+            return {
+              storageKey,
+              key,
+              positions: this.cache()[key] || Object.create(null),
+            };
+          },
+          dispose: () => this.dispose(),
         },
-        dispose: () => this.dispose(),
       });
       window.addEventListener("pagehide", this.pagehide);
     }

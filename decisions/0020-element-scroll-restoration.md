@@ -166,6 +166,11 @@ shipping. Package the feature with an unstable change file.
 
 The unstable implementation uses the following internal choices:
 
+- Register window and element handling through the router's existing
+  `enableScrollRestoration` method. An options overload accepts independent
+  `window` and `elements` handlers; the positional window signature remains
+  supported. Each cleanup unregisters only the handlers installed by its call,
+  so standalone element hooks and the root component have independent lifetimes.
 - Use `document.querySelector` semantics and document that selectors should
   identify one stable, unique container. Duplicate registrations of the same
   selector share ownership; different selectors for one node are unsupported.
