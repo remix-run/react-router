@@ -1128,6 +1128,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
       sri,
     };
 
+    // Prerendering needs all routes, including those in other server bundles.
+    ctx.reactRouterManifest = reactRouterBrowserManifest;
+
     return {
       reactRouterBrowserManifest,
       reactRouterServerManifest,
@@ -2254,9 +2257,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
                     })
                   ).reactRouterServerManifest
                 : await getReactRouterManifestForDev();
-
-            // Cache manifest on context for prerendering later
-            ctx.reactRouterManifest = reactRouterManifest;
 
             // Check for invalid APIs when SSR is disabled
             if (!ctx.reactRouterConfig.ssr) {
