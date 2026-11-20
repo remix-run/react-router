@@ -250,6 +250,87 @@ describe("RSC server", () => {
     });
   });
 
+  describe("request methods", () => {
+    test.each(["GET", "HEAD"])(
+      "handles %s resource responses",
+      async (method) => {
+        let finishCancellation = () => {};
+        let cancel = jest.fn(
+          () =>
+            new Promise<void>((_, reject) => {
+              finishCancellation = () => reject(new Error("Stream closed"));
+            }),
+        );
+        let body = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode("Hello"));
+          },
+          pull(controller) {
+            controller.close();
+          },
+          cancel,
+        });
+        let middlewareHasBody = false;
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/resource", { method }),
+          routes: [
+            {
+              id: "resource",
+              path: "/resource",
+              middleware: [
+                async (_, next) => {
+                  let response = await next();
+                  middlewareHasBody = response.body !== null;
+                  response.headers.set("X-Middleware", "yes");
+                  return response;
+                },
+              ],
+              loader: () =>
+                new Response(body, {
+                  status: 201,
+                  statusText: "Created",
+                  headers: {
+                    "Content-Type": "text/plain",
+                    "Content-Length": "5",
+                  },
+                }),
+            },
+          ],
+          generateResponse() {
+            throw new Error(
+              "Resource response should not be encoded as Flight",
+            );
+          },
+        });
+
+        expect(middlewareHasBody).toBe(true);
+        expect(response.status).toBe(201);
+        expect(response.statusText).toBe("Created");
+        expect(response.headers.get("Content-Type")).toBe("text/plain");
+        expect(response.headers.get("Content-Length")).toBe("5");
+        expect(response.headers.get("X-Middleware")).toBe("yes");
+        expect(response.body === null).toBe(method === "HEAD");
+        expect(await response.text()).toBe(method === "HEAD" ? "" : "Hello");
+        expect(cancel).toHaveBeenCalledTimes(method === "HEAD" ? 1 : 0);
+        finishCancellation();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+    );
+
+    test("preserves HEAD Flight bodies for SSR rendering", async () => {
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/", { method: "HEAD" }),
+        routes: [{ id: "root", path: "/", Component: () => null }],
+        generateResponse: () => new Response("Encoded Flight"),
+      });
+
+      expect(response.headers.get("React-Router-Resource")).toBeNull();
+      expect(await response.text()).toBe("Encoded Flight");
+    });
+  });
+
   describe("middleware short-circuit responses", () => {
     test("preserves cached Flight responses returned by middleware", async () => {
       let cachedResponse: Response | undefined;
@@ -372,48 +453,56 @@ describe("RSC server", () => {
       },
     );
 
-    test("tags non-RSC middleware responses as React-Router-Resource", async () => {
-      let generateResponseCalled = false;
-      let response = await matchRSCServerRequest({
-        createTemporaryReferenceSet: () => ({}),
-        request: new Request("https://remix.run/docs/intro.md"),
-        routes: [
-          {
-            id: "root",
-            path: "/",
-            middleware: [
-              async ({ request }, next) => {
-                let url = new URL(request.url);
-                if (url.pathname.endsWith(".md")) {
-                  return new Response("# MARKDOWN_BODY", {
-                    headers: { "Content-Type": "text/markdown; charset=utf-8" },
-                  });
-                }
-                return next();
-              },
-            ],
-            children: [
-              {
-                id: "intro",
-                path: "docs/intro.md",
-                Component: () => null,
-              },
-            ],
+    test.each(["GET", "HEAD"])(
+      "tags %s non-RSC middleware responses as React-Router-Resource",
+      async (method) => {
+        let generateResponseCalled = false;
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/docs/intro.md", { method }),
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              middleware: [
+                async ({ request }, next) => {
+                  let url = new URL(request.url);
+                  if (url.pathname.endsWith(".md")) {
+                    return new Response("# MARKDOWN_BODY", {
+                      headers: {
+                        "Content-Type": "text/markdown; charset=utf-8",
+                      },
+                    });
+                  }
+                  return next();
+                },
+              ],
+              children: [
+                {
+                  id: "intro",
+                  path: "docs/intro.md",
+                  Component: () => null,
+                },
+              ],
+            },
+          ],
+          generateResponse() {
+            generateResponseCalled = true;
+            return new Response(null);
           },
-        ],
-        generateResponse() {
-          generateResponseCalled = true;
-          return new Response(null);
-        },
-      });
+        });
 
-      expect(generateResponseCalled).toBe(false);
-      expect(response.headers.get("React-Router-Resource")).toBe("true");
-      expect(response.headers.get("Content-Type")).toBe(
-        "text/markdown; charset=utf-8",
-      );
-      expect(await response.text()).toBe("# MARKDOWN_BODY");
-    });
+        expect(generateResponseCalled).toBe(false);
+        expect(response.headers.get("React-Router-Resource")).toBe("true");
+        expect(response.headers.get("Content-Type")).toBe(
+          "text/markdown; charset=utf-8",
+        );
+        expect(response.body === null).toBe(method === "HEAD");
+        expect(await response.text()).toBe(
+          method === "HEAD" ? "" : "# MARKDOWN_BODY",
+        );
+      },
+    );
 
     test("routeRSCServerRequest passes through tagged resource response without decoding as Flight", async () => {
       let serverResponse = new Response("# MARKDOWN_BODY", {
