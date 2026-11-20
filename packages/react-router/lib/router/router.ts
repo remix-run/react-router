@@ -2138,6 +2138,7 @@ export function createRouter(init: RouterInit): Router {
 
       matches = actionResult.matches || matches;
       pendingActionResult = actionResult.pendingActionResult;
+      historyAction = pendingAction;
       loadingNavigation = getLoadingNavigation(
         location,
         matches,
@@ -2840,6 +2841,12 @@ export function createRouter(init: RouterInit): Router {
       routeId,
       opts?.relative,
     );
+    validateNavigationTarget(
+      null,
+      normalizedPath,
+      init.history.createURL("/"),
+      "reject",
+    );
     let matches = dataRouteMatcher.match(normalizedPath);
 
     let fogOfWar = checkFogOfWar(matches, normalizedPath);
@@ -3309,7 +3316,7 @@ export function createRouter(init: RouterInit): Router {
         loaderData: mergeLoaderData(
           state.loaderData,
           loaderData,
-          matches,
+          state.matches,
           errors,
         ),
         fetchers: finalFetchers,
@@ -7136,6 +7143,12 @@ function normalizeRelativeRoutingRedirectResponse(
   invariant(
     location,
     "Redirects returned/thrown from loaders/actions must have a Location header",
+  );
+  validateNavigationTarget(
+    location,
+    location,
+    new URL(request.url),
+    "allow-explicit",
   );
 
   if (!isAbsoluteUrl(location)) {

@@ -687,14 +687,15 @@ export function RouterProvider({
       go: (n) => router.navigate(n),
       push: (to, state, opts) =>
         router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
+          ...opts,
+          replace: opts?.replace === false ? false : undefined,
+          state: state !== undefined ? state : opts?.state,
         }),
       replace: (to, state, opts) =>
         router.navigate(to, {
+          ...opts,
           replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
+          state: state !== undefined ? state : opts?.state,
         }),
     };
   }, [router]);
@@ -1141,7 +1142,7 @@ export interface PathRouteProps {
   action?: NonIndexRouteObject["action"];
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
    */
   shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
   /**
@@ -1233,7 +1234,7 @@ export interface IndexRouteProps {
   action?: IndexRouteObject["action"];
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
    */
   shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
   /**
