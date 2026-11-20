@@ -987,7 +987,10 @@ test.describe("typegen", () => {
     });
   });
 
-  test("arrow function component and meta can access matches without circular type error (#12499)", async ({ edit, $ }) => {
+  test("arrow function component and meta can access matches without circular type error (#12499)", async ({
+    edit,
+    $,
+  }) => {
     await edit({
       "app/routes.ts": tsx`
         import { type RouteConfig, route } from "@react-router/dev/routes";
