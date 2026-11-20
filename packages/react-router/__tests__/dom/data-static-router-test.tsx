@@ -8,6 +8,7 @@ import type { StaticHandlerContext } from "../../index";
 import {
   Form,
   Link,
+  NavLink,
   Outlet,
   useLoaderData,
   useLocation,
@@ -1297,6 +1298,77 @@ describe("A <StaticRouterProvider>", () => {
         '<a href="https://remix.run">absolute different-origin url</a>' +
         '<a href="mailto:foo@baz.com">absolute mailto: url</a>',
     );
+  });
+
+  it("is defensive against leading double slashes in request URLs", async () => {
+    let routes = [
+      {
+        path: "*",
+        element: (
+          <>
+            <NavLink to="?tab=1">Query link</NavLink>
+            <NavLink to="#section">Hash link</NavLink>
+          </>
+        ),
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    for (let pathname of ["//", "//about"]) {
+      let context = (await query(
+        new Request(`http://localhost${pathname}`),
+      )) as StaticHandlerContext;
+      let router = createStaticRouter(routes, context);
+
+      let html = ReactDOMServer.renderToStaticMarkup(
+        <React.StrictMode>
+          <StaticRouterProvider
+            router={router}
+            context={context}
+            hydrate={false}
+          />
+        </React.StrictMode>,
+      );
+
+      expect(html).toBe(
+        `<a aria-current="page" class="active" href="${pathname}?tab=1" data-discover="true">Query link</a>` +
+          `<a aria-current="page" class="active" href="${pathname}#section" data-discover="true">Hash link</a>`,
+      );
+      expect(router.encodeLocation(pathname)).toEqual({
+        pathname,
+        search: "",
+        hash: "",
+      });
+    }
+  });
+
+  it("encodes mixed leading separators in router.encodeLocation", async () => {
+    let routes = [{ path: "/", element: <h1>Home</h1> }];
+    let context = (await createStaticHandler(routes).query(
+      new Request("http://localhost/"),
+    )) as StaticHandlerContext;
+    let router = createStaticRouter(routes, context);
+
+    expect(router.encodeLocation("//about?tab=1#top")).toEqual({
+      pathname: "//about",
+      search: "?tab=1",
+      hash: "#top",
+    });
+    expect(router.encodeLocation("\\\\about")).toEqual({
+      pathname: "//about",
+      search: "",
+      hash: "",
+    });
+    expect(router.encodeLocation("/\\about")).toEqual({
+      pathname: "//about",
+      search: "",
+      hash: "",
+    });
+    expect(router.encodeLocation("\\/about")).toEqual({
+      pathname: "//about",
+      search: "",
+      hash: "",
+    });
   });
 
   describe("boundary tracking", () => {

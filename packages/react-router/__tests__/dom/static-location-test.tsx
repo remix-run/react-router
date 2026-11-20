@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server.edge";
-import { Routes, Route, StaticRouter, useLocation } from "../../index";
+import { NavLink, Routes, Route, StaticRouter, useLocation } from "../../index";
 
 describe("A <StaticRouter>", () => {
   describe("with a string location prop", () => {
@@ -81,5 +81,24 @@ describe("A <StaticRouter>", () => {
         key: expect.any(String),
       });
     });
+  });
+
+  it("is defensive against leading double slashes in location", () => {
+    for (let pathname of ["//", "//about"]) {
+      let html = ReactDOMServer.renderToStaticMarkup(
+        <StaticRouter location={pathname}>
+          <Routes>
+            <Route
+              path="*"
+              element={<NavLink to="?tab=1">Query link</NavLink>}
+            />
+          </Routes>
+        </StaticRouter>,
+      );
+
+      expect(html).toBe(
+        `<a aria-current="page" class="active" href="${pathname}?tab=1" data-discover="true">Query link</a>`,
+      );
+    }
   });
 });
