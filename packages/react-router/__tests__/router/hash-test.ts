@@ -1,6 +1,6 @@
 /* eslint-disable jest/expect-expect */
 
-import type { HashHistory } from "../../lib/router/history";
+import type { HashHistory, Location } from "../../lib/router/history";
 import { createHashHistory } from "../../lib/router/history";
 
 import Listen from "./TestSequences/Listen";
@@ -164,6 +164,70 @@ describe("a hash history", () => {
   describe("forward", () => {
     it("calls change listeners with the next location", async () => {
       await GoForward(history);
+    });
+  });
+
+  describe("masked locations", () => {
+    let gallery: Location = {
+      pathname: "/gallery",
+      search: "?photo=123",
+      hash: "#photo",
+      state: { source: "gallery" },
+      key: "gallery",
+      mask: {
+        pathname: "/images/123",
+        search: "?size=large",
+        hash: "#preview",
+      },
+    };
+
+    it("shows the mask in the URL and keeps the router location on push and replace", () => {
+      history.push(gallery);
+      expect(testWindow.location.hash).toEqual(
+        "#/images/123?size=large#preview",
+      );
+      expect(history.location).toEqual(gallery);
+
+      let nextGallery: Location = {
+        ...gallery,
+        search: "?photo=456",
+        key: "next-gallery",
+        mask: { pathname: "/images/456", search: "", hash: "" },
+      };
+      history.replace(nextGallery);
+      expect(testWindow.location.hash).toEqual("#/images/456");
+      expect(history.location).toEqual(nextGallery);
+    });
+
+    it("restores masked and unmasked locations on POP", async () => {
+      history.push(gallery);
+      history.push("/other");
+      let other = history.location;
+
+      // JSDom doesn't fire the listener synchronously
+      let back = new Promise<Location>((resolve) => {
+        let unlisten = history.listen(({ location }) => {
+          unlisten();
+          resolve(location);
+        });
+      });
+      history.go(-1);
+      expect(await back).toEqual(gallery);
+      expect(history.location).toEqual(gallery);
+      expect(testWindow.location.hash).toEqual(
+        "#/images/123?size=large#preview",
+      );
+
+      let forward = new Promise<Location>((resolve) => {
+        let unlisten = history.listen(({ location }) => {
+          unlisten();
+          resolve(location);
+        });
+      });
+      history.go(1);
+      expect(await forward).toEqual(other);
+      expect(history.location.mask).toBeUndefined();
+      expect(testWindow.location.hash).toEqual("#/other");
     });
   });
 });
