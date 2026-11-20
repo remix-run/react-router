@@ -1,5 +1,12 @@
 # `@react-router/cloudflare`
 
+## v8.5.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.3`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.3)
+
 ## v8.5.2
 
 ### Patch Changes
