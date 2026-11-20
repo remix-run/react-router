@@ -1,5 +1,21 @@
 # `@react-router/express`
 
+## v8.5.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+  - [`@react-router/node@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.2)
+
+## v8.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+
 ## v8.5.0
 
 ### Patch Changes

@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import * as React from "react";
 import type {
+  ActionFunctionArgs,
   DataStrategyResult,
   ErrorResponse,
   Fetcher,
@@ -17,10 +18,13 @@ import type {
 import {
   Await,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_NavigationContext as NavigationContext,
   Form,
   Link,
   Outlet,
+  Route,
   RouterProvider,
+  Routes,
   createBrowserRouter,
   createHashRouter,
   isRouteErrorResponse,
@@ -30,6 +34,7 @@ import {
   useAsyncError,
   useFetcher,
   useFetchers,
+  useFormAction,
   useLoaderData,
   useLocation,
   useNavigate,
@@ -37,7 +42,9 @@ import {
   useRouteError,
   useSearchParams,
   useSubmit,
+  useViewTransitionState,
 } from "../../index";
+import { RouterProvider as DOMRouterProvider } from "../../lib/dom-export/dom-router-provider";
 import { createDeferred, tick } from "../router/utils/utils";
 import getHtml from "../utils/getHtml";
 import getWindow from "../utils/getWindow";
@@ -2207,6 +2214,101 @@ function testDomRouter(
         await waitFor(() => screen.getByText("Index Page"));
       });
 
+      it('defaults <Form method="post"> to be a REPLACE navigation when its action is the current URL with characters that get encoded', async () => {
+        let router = createTestRouter(
+          [
+            {
+              Component: Layout,
+              children: [
+                { index: true, Component: () => <h1>Index Page</h1> },
+                {
+                  path: "café",
+                  action: () => "action data",
+                  Component: FormPage,
+                },
+              ],
+            },
+          ],
+          {},
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Layout() {
+          let navigate = useNavigate();
+          return (
+            <>
+              <Link to="café?q=a b">Go to Form</Link>
+              <button onClick={() => navigate(-1)}>Go back</button>
+              <div className="output">
+                <Outlet />
+              </div>
+            </>
+          );
+        }
+
+        function FormPage() {
+          let data = useActionData() as string | undefined;
+          return (
+            <Form method="post" action="/café?q=a b">
+              <p>Form Page</p>
+              <p>{data}</p>
+              <input name="test" defaultValue="value" />
+              <button type="submit">Submit</button>
+            </Form>
+          );
+        }
+
+        let html = () => getHtml(container.querySelector(".output")!);
+
+        // Start on index page
+        expect(html()).toMatch("Index Page");
+
+        // Navigate to form page
+        fireEvent.click(screen.getByText("Go to Form"));
+        await waitFor(() => screen.getByText("Form Page"));
+        expect(router.state.location.pathname).toBe("/caf%C3%A9");
+        expect(router.state.location.search).toBe("?q=a%20b");
+
+        // Submit without redirect does a replace
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("action data"));
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.pathname).toBe("/caf%C3%A9");
+        expect(router.state.location.search).toBe("?q=a%20b");
+
+        // Back navigate to index page
+        fireEvent.click(screen.getByText("Go back"));
+        await waitFor(() => screen.getByText("Index Page"));
+      });
+
+      it('defaults <Form method="post"> to be a REPLACE navigation when its action matches the current URL as loaded', async () => {
+        // Browsers encode the `'` in the query of a path URL but keep it as-is
+        // in a hash URL, so the loaded location differs between routers
+        let router = createTestRouter(
+          [
+            {
+              path: "search",
+              action: () => "action data",
+              Component() {
+                let data = useActionData() as string | undefined;
+                return (
+                  <Form method="post" action="/search?q=O'Reilly">
+                    <p>{data}</p>
+                    <button type="submit">Submit</button>
+                  </Form>
+                );
+              },
+            },
+          ],
+          { window: getWindow("/search?q=O'Reilly") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("action data"));
+        expect(router.state.historyAction).toBe("REPLACE");
+      });
+
       it('Uses a PUSH navigation on <Form method="post"> if it redirects', async () => {
         let router = createTestRouter(
           [
@@ -2901,6 +3003,221 @@ function testDomRouter(
           </div>"
         `);
       });
+
+      it("preserves search and hash when submitting a root <Form> action with a basename", async () => {
+        let indexAction = jest.fn(
+          ({ request }: ActionFunctionArgs) => request.url,
+        );
+        let pathAction = jest.fn(() => "path action");
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Outlet,
+              children: [
+                { index: true, action: indexAction },
+                {
+                  path: "path",
+                  action: pathAction,
+                  Component() {
+                    return (
+                      <Form method="post" action="/?index&x=a%23b#details">
+                        <button type="submit">Submit</button>
+                      </Form>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            basename: "/base",
+            window: getWindow("/base/path"),
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/base?index&x=a%23b#details",
+        );
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() =>
+          expect(router.state.location).toMatchObject({
+            pathname: "/base",
+            search: "?index&x=a%23b",
+            hash: "#details",
+          }),
+        );
+        expect(indexAction).toHaveBeenCalledTimes(1);
+        expect(indexAction.mock.calls[0][0].request.url).toBe(
+          "http://localhost/base?index&x=a%23b",
+        );
+        expect(pathAction).not.toHaveBeenCalled();
+      });
+
+      it('supports a basename on <Form action="/#details"> submitted without a button', async () => {
+        let rootAction = jest.fn(() => "root action");
+        let pathAction = jest.fn(() => "path action");
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Outlet,
+              action: rootAction,
+              children: [
+                { index: true },
+                {
+                  path: "path",
+                  action: pathAction,
+                  Component() {
+                    return <Form method="post" action="/#details" />;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            basename: "/base",
+            window: getWindow("/base/path"),
+          },
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        fireEvent.submit(container.querySelector("form")!);
+        await waitFor(() =>
+          expect(router.state.location).toMatchObject({
+            pathname: "/base",
+            search: "",
+            hash: "#details",
+          }),
+        );
+        expect(rootAction).toHaveBeenCalledTimes(1);
+        expect(pathAction).not.toHaveBeenCalled();
+      });
+
+      it('supports a basename on a submit button with formAction={useFormAction("/?index")}', async () => {
+        let indexAction = jest.fn(() => "index action");
+        let pathAction = jest.fn(() => "path action");
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Outlet,
+              children: [
+                { index: true, action: indexAction },
+                {
+                  path: "path",
+                  action: pathAction,
+                  Component() {
+                    let formAction = useFormAction("/?index");
+                    return (
+                      <Form method="post">
+                        <button type="submit" formAction={formAction}>
+                          Submit
+                        </button>
+                      </Form>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            basename: "/base",
+            window: getWindow("/base/path"),
+          },
+        );
+        render(<RouterProvider router={router} />);
+
+        expect(screen.getByText("Submit").getAttribute("formaction")).toBe(
+          "/base?index",
+        );
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => expect(indexAction).toHaveBeenCalledTimes(1));
+        expect(pathAction).not.toHaveBeenCalled();
+      });
+
+      it("submits a root fetcher.Form action with a basename without navigating", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component: Outlet,
+              children: [
+                {
+                  index: true,
+                  action: ({ request }) => request.url,
+                },
+                {
+                  path: "path",
+                  Component() {
+                    let fetcher = useFetcher();
+                    return (
+                      <fetcher.Form
+                        method="post"
+                        action="/?index&x=a%23b#details"
+                      >
+                        <p>{fetcher.data}</p>
+                        <button type="submit">Submit</button>
+                      </fetcher.Form>
+                    );
+                  },
+                },
+              ],
+            },
+          ],
+          { basename: "/base", window: getWindow("/base/path") },
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        await screen.findByText("http://localhost/base?index&x=a%23b");
+        expect(router.state.location).toMatchObject({
+          pathname: "/base/path",
+          search: "",
+          hash: "",
+        });
+        router.dispose();
+      });
+
+      it.each(["?", "#"])(
+        "preserves an explicit %s submitter target from an index route",
+        async (formAction) => {
+          let parentAction = jest.fn(() => "parent");
+          let indexAction = jest.fn(() => "index");
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                Component: Outlet,
+                action: parentAction,
+                children: [
+                  {
+                    index: true,
+                    action: indexAction,
+                    element: (
+                      <Form method="post">
+                        <button type="submit" formAction={formAction}>
+                          Submit
+                        </button>
+                      </Form>
+                    ),
+                  },
+                ],
+              },
+            ],
+            { window: getWindow("/") },
+          );
+          render(<RouterProvider router={router} />);
+
+          fireEvent.click(screen.getByText("Submit"));
+          await waitFor(() => expect(parentAction).toHaveBeenCalledTimes(1));
+          expect(indexAction).not.toHaveBeenCalled();
+          router.dispose();
+        },
+      );
     });
 
     describe("call-site revalidation opt-out", () => {
@@ -4783,6 +5100,116 @@ function testDomRouter(
             "
           `);
       });
+
+      it.each([
+        ["Multipart/Form-Data", "multipart/form-data", false],
+        ["Text/Plain", "text/plain", false],
+        [
+          "APPLICATION/X-WWW-FORM-URLENCODED",
+          "application/x-www-form-urlencoded",
+          false,
+        ],
+        [undefined, "application/x-www-form-urlencoded", false],
+        ["Application/JSON", "application/x-www-form-urlencoded", true],
+      ])(
+        "reads <Form encType=%s> encoding attributes",
+        async (encType, expectedEncType, warns) => {
+          let actionSpy = jest.fn();
+          let router = createTestRouter(
+            [{ path: "/", action: actionSpy, Component: FormPage }],
+            { window: getWindow("/") },
+          );
+          render(<RouterProvider router={router} />);
+
+          function FormPage() {
+            return (
+              <Form method="post">
+                <input name="a" defaultValue="1" />
+                <button type="submit">Submit</button>
+              </Form>
+            );
+          }
+
+          // Submitting without a submitter exercises the form-element path.
+          let form = screen.getByText("Submit").closest("form")!;
+          if (encType !== undefined) {
+            form.setAttribute("enctype", encType);
+          }
+          fireEvent.submit(form);
+          await waitFor(() => expect(actionSpy).toHaveBeenCalled());
+          let { request } = actionSpy.mock.calls[0][0];
+          expect(request.headers.get("Content-Type")).toMatch(
+            new RegExp(`^${expectedEncType};`),
+          );
+          let body =
+            expectedEncType === "text/plain"
+              ? await request.text()
+              : Object.fromEntries(await request.formData());
+          let expectedBody =
+            expectedEncType === "text/plain" ? "a=1\n" : { a: "1" };
+          expect(body).toEqual(expectedBody);
+          expect(consoleWarn).toHaveBeenCalledTimes(warns ? 1 : 0);
+        },
+      );
+
+      it.each([
+        ["Text/Plain", "text/plain", false],
+        ["MULTIPART/FORM-DATA", "multipart/form-data", false],
+        [
+          "Application/X-Www-Form-Urlencoded",
+          "application/x-www-form-urlencoded",
+          false,
+        ],
+        [undefined, "multipart/form-data", false],
+        ["Application/JSON", "multipart/form-data", true],
+      ])(
+        "reads submitter formEncType=%s encoding attributes",
+        async (formEncType, expectedEncType, warns) => {
+          let actionSpy = jest.fn();
+          let router = createTestRouter(
+            [{ path: "/", action: actionSpy, Component: FormPage }],
+            { window: getWindow("/") },
+          );
+          render(<RouterProvider router={router} />);
+
+          function FormPage() {
+            return (
+              <Form method="post" encType="multipart/form-data">
+                <input name="a" defaultValue="1" />
+                <button
+                  type="submit"
+                  name="b"
+                  value="2"
+                  formEncType={formEncType}
+                >
+                  Submit
+                </button>
+              </Form>
+            );
+          }
+
+          let submitter = screen.getByText("Submit");
+          submitter
+            .closest("form")!
+            .setAttribute("enctype", "Multipart/Form-Data");
+          fireEvent.click(submitter);
+          await waitFor(() => expect(actionSpy).toHaveBeenCalled());
+          let { request } = actionSpy.mock.calls[0][0];
+          expect(request.headers.get("Content-Type")).toMatch(
+            new RegExp(`^${expectedEncType};`),
+          );
+          let body =
+            expectedEncType === "text/plain"
+              ? await request.text()
+              : Object.fromEntries(await request.formData());
+          let expectedBody =
+            expectedEncType === "text/plain"
+              ? "a=1\nb=2\n"
+              : { a: "1", b: "2" };
+          expect(body).toEqual(expectedBody);
+          expect(consoleWarn).toHaveBeenCalledTimes(warns ? 1 : 0);
+        },
+      );
 
       it("includes submit button name/value on form submission", async () => {
         let actionSpy = jest.fn();
@@ -9251,6 +9678,400 @@ function testDomRouter(
           // Render of new location with navigation.state = "idle"
           [{ pathname: "/page" }, { state: "idle" }],
         ]);
+      });
+
+      describe("skipped by the browser", () => {
+        // When the browser skips a view transition, it still runs the update
+        // callback, rejects `ready` with the skip reason, and fulfills
+        // `updateCallbackDone` and `finished` once the callback is done.
+        // The messages are Chromium's.
+        function skippedViewTransition(
+          reason: DOMException,
+          ready?: Promise<void>,
+        ) {
+          return (update: () => unknown) => {
+            let updateCallbackDone = Promise.resolve()
+              .then(() => update())
+              .then(() => undefined);
+            return {
+              ready: ready ?? Promise.reject(reason),
+              updateCallbackDone,
+              finished: updateCallbackDone.then(() => undefined),
+              skipTransition: () => {},
+            };
+          };
+        }
+
+        let documentHidden = new DOMException(
+          "Transition was aborted because of invalid state. Document hidden",
+          "InvalidStateError",
+        );
+        let skippedByNewerTransition = new DOMException(
+          "Transition was skipped. New ViewTransition started",
+          "AbortError",
+        );
+
+        // Jest fails the test if `ready`'s rejection goes unhandled
+        async function navigateWithSkippedViewTransition({
+          reason,
+          visibilityState,
+          flushSync,
+          ready,
+        }: {
+          reason: DOMException;
+          visibilityState: DocumentVisibilityState;
+          flushSync: boolean;
+          ready?: Promise<void>;
+        }) {
+          let testWindow = getWindow("/");
+          Object.defineProperty(testWindow.document, "visibilityState", {
+            configurable: true,
+            get: () => visibilityState,
+          });
+          testWindow.document.startViewTransition = skippedViewTransition(
+            reason,
+            ready,
+          ) as unknown as Document["startViewTransition"];
+          let transitioningToPage: boolean[] = [];
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                Component() {
+                  transitioningToPage.push(useViewTransitionState("/page"));
+                  return <Outlet />;
+                },
+                children: [
+                  { index: true, Component: () => <h1>Home</h1> },
+                  { path: "page", Component: () => <h1>Page</h1> },
+                ],
+              },
+            ],
+            { window: testWindow },
+          );
+          render(<DOMRouterProvider router={router} />);
+          await act(() =>
+            router.navigate("/page", { viewTransition: true, flushSync }),
+          );
+          await waitFor(() => screen.getByText("Page"));
+          await waitFor(() => expect(transitioningToPage.at(-1)).toBe(false));
+          // Unhandled rejections are reported after the microtask queue drains
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          return transitioningToPage;
+        }
+
+        it("handles a transition skipped in a hidden document", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: documentHidden,
+            visibilityState: "hidden",
+            flushSync: false,
+          });
+          expect(transitioningToPage).toContain(true);
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
+
+        it("handles a flushSync transition skipped in a hidden document", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: documentHidden,
+            visibilityState: "hidden",
+            flushSync: true,
+          });
+          expect(transitioningToPage).toContain(true);
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
+
+        it("handles a transition skipped by a newer transition", async () => {
+          let transitioningToPage = await navigateWithSkippedViewTransition({
+            reason: skippedByNewerTransition,
+            visibilityState: "visible",
+            flushSync: false,
+          });
+          expect(transitioningToPage.at(-1)).toBe(false);
+        });
+
+        it.each([false, true])(
+          "rethrows unexpected ready rejections in a visible document (flushSync: %s)",
+          async (flushSync) => {
+            let reason = new DOMException(
+              "Duplicate view-transition-name",
+              "InvalidStateError",
+            );
+            let ready = Promise.reject<void>(reason);
+            let catchReady = ready.catch.bind(ready);
+            let handledReady: Promise<unknown> | undefined;
+            jest.spyOn(ready, "catch").mockImplementation((onRejected) => {
+              let result = catchReady(onRejected);
+              handledReady = result;
+              // Observe the expected rejection immediately so Jest does not
+              // report it as an unhandled rejection before the assertion.
+              result.catch(() => {});
+              return result;
+            });
+
+            await navigateWithSkippedViewTransition({
+              reason,
+              visibilityState: "visible",
+              flushSync,
+              ready,
+            });
+
+            expect(handledReady).toBeDefined();
+            await expect(handledReady).rejects.toBe(reason);
+          },
+        );
+      });
+    });
+
+    describe("descendant <Routes> NavigateOptions", () => {
+      it("navigator.push preserves explicit state and push intent", async () => {
+        function Navigate() {
+          let { navigator } = React.useContext(NavigationContext);
+          return (
+            <button
+              onClick={() =>
+                navigator.push("/target", "explicit", {
+                  replace: true,
+                  state: "fallback",
+                })
+              }
+            >
+              Navigate
+            </button>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Navigate },
+            { path: "/target", element: <h1>Target</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Navigate"));
+        await screen.findByText("Target");
+        expect(router.state.historyAction).toBe("PUSH");
+        expect(router.state.location.state).toBe("explicit");
+      });
+
+      it("navigator.push falls back to options state with replace false", async () => {
+        function Navigate() {
+          let { navigator } = React.useContext(NavigationContext);
+          return (
+            <button
+              onClick={() =>
+                navigator.push("/target", undefined, {
+                  replace: false,
+                  state: "fallback",
+                })
+              }
+            >
+              Navigate
+            </button>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Navigate },
+            { path: "/target", element: <h1>Target</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Navigate"));
+        await screen.findByText("Target");
+        expect(router.state.historyAction).toBe("PUSH");
+        expect(router.state.location.state).toBe("fallback");
+      });
+
+      it("navigator.replace preserves explicit null state and replace intent", async () => {
+        function Navigate() {
+          let { navigator } = React.useContext(NavigationContext);
+          return (
+            <button
+              onClick={() =>
+                navigator.replace("/target", null, {
+                  replace: false,
+                  state: "fallback",
+                })
+              }
+            >
+              Navigate
+            </button>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Navigate },
+            { path: "/target", element: <h1>Target</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Navigate"));
+        await screen.findByText("Target");
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.state).toBe(null);
+      });
+
+      it("navigator.replace falls back to options state", async () => {
+        function Navigate() {
+          let { navigator } = React.useContext(NavigationContext);
+          return (
+            <button
+              onClick={() =>
+                navigator.replace("/target", undefined, { state: "fallback" })
+              }
+            >
+              Navigate
+            </button>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            { path: "/", Component: Navigate },
+            { path: "/target", element: <h1>Target</h1> },
+          ],
+          { window: getWindow("/") },
+        );
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Navigate"));
+        await screen.findByText("Target");
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.state).toBe("fallback");
+      });
+
+      it("forwards navigation options from descendant Link, useNavigate, and useSearchParams", async () => {
+        let loaderCalls = 0;
+        let testWindow = getWindow("/gallery");
+        let startViewTransition = jest.fn((cb: () => void) => {
+          cb();
+          return {
+            ready: Promise.resolve(),
+            finished: Promise.resolve(),
+            updateCallbackDone: Promise.resolve(),
+            skipTransition: jest.fn(),
+          };
+        });
+        testWindow.document.startViewTransition =
+          startViewTransition as unknown as Document["startViewTransition"];
+
+        let flushSync = jest.fn(<R,>(fn: () => R): R => fn());
+
+        function GalleryShell() {
+          return (
+            <Routes>
+              <Route index element={<GallerySubRoute />} />
+              <Route path="details" element={<h1>Details</h1>} />
+            </Routes>
+          );
+        }
+
+        function GallerySubRoute() {
+          let navigate = useNavigate();
+          let location = useLocation();
+          let [, setSearchParams] = useSearchParams();
+          return (
+            <div>
+              <p id="search">{location.search || "none"}</p>
+              <Link
+                to="/gallery?photo=1"
+                mask="/images/1"
+                defaultShouldRevalidate={false}
+              >
+                Open Photo 1
+              </Link>
+              <button
+                onClick={() =>
+                  navigate("/gallery?photo=2", {
+                    replace: true,
+                    state: { source: "navigate" },
+                    mask: "/images/2",
+                    defaultShouldRevalidate: false,
+                    flushSync: true,
+                  })
+                }
+              >
+                Replace Photo 2
+              </button>
+              <button
+                onClick={() =>
+                  setSearchParams(
+                    { photo: "3" },
+                    {
+                      replace: false,
+                      state: { source: "search" },
+                      mask: "/images/3",
+                      defaultShouldRevalidate: false,
+                    },
+                  )
+                }
+              >
+                Search Photo 3
+              </button>
+              <Link to="details" viewTransition>
+                View Details
+              </Link>
+            </div>
+          );
+        }
+
+        let router = createTestRouter(
+          [
+            {
+              id: "gallery",
+              path: "/gallery/*",
+              loader() {
+                loaderCalls += 1;
+                return { count: loaderCalls };
+              },
+              Component: GalleryShell,
+            },
+          ],
+          {
+            window: testWindow,
+            hydrationData: { loaderData: { gallery: { count: 0 } } },
+          },
+        );
+
+        render(<RouterProvider router={router} flushSync={flushSync} />);
+
+        fireEvent.click(screen.getByText("Open Photo 1"));
+        await waitFor(() => expect(screen.getByText("?photo=1")).toBeDefined());
+        expect(loaderCalls).toBe(0);
+        expect(router.state.location.mask).toEqual({
+          pathname: "/images/1",
+          search: "",
+          hash: "",
+        });
+        assertLocation(testWindow, "/images/1");
+
+        fireEvent.click(screen.getByText("Replace Photo 2"));
+        await waitFor(() => expect(screen.getByText("?photo=2")).toBeDefined());
+        expect(loaderCalls).toBe(0);
+        expect(flushSync).toHaveBeenCalled();
+        expect(router.state.historyAction).toBe("REPLACE");
+        expect(router.state.location.state).toEqual({ source: "navigate" });
+        expect(router.state.location.mask).toEqual({
+          pathname: "/images/2",
+          search: "",
+          hash: "",
+        });
+        assertLocation(testWindow, "/images/2");
+
+        fireEvent.click(screen.getByText("Search Photo 3"));
+        await screen.findByText("?photo=3");
+        expect(loaderCalls).toBe(0);
+        expect(router.state.historyAction).toBe("PUSH");
+        expect(router.state.location.state).toEqual({ source: "search" });
+        assertLocation(testWindow, "/images/3");
+
+        fireEvent.click(screen.getByText("View Details"));
+        await waitFor(() => expect(screen.getByText("Details")).toBeDefined());
+        expect(startViewTransition).toHaveBeenCalledTimes(1);
       });
     });
 

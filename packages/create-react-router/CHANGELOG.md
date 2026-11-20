@@ -1,5 +1,19 @@
 # `create-react-router`
 
+## v8.5.2
+
+### Patch Changes
+
+- Allow project scaffolding to complete when `git add` or the initial `git commit` fails ([#15737](https://github.com/remix-run/react-router/pull/15737))
+- Derive the generated package name from the project directory basename ([#15698](https://github.com/remix-run/react-router/pull/15698))
+  - Handle absolute paths, trailing separators, and paths entered at the directory prompt
+
+## v8.5.1
+
+### Patch Changes
+
+- Fix package manager command execution on Windows by handling `.cmd` shims properly ([#15565](https://github.com/remix-run/react-router/pull/15565))
+
 ## v8.5.0
 
 ### Patch Changes

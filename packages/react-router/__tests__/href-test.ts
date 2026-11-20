@@ -2,6 +2,30 @@ import { href } from "../lib/href";
 import { matchPath } from "../lib/router/utils";
 
 describe("href", () => {
+  it.each([
+    ["/*", { "*": "/example.com/a//b" }, "/example.com/a//b"],
+    ["/:lang?/*", { "*": "//example.com/path" }, "/example.com/path"],
+    ["/:org/:repo", { org: "", repo: "example.com" }, "/example.com"],
+  ])("normalizes leading separators for %s", (pattern, params, expected) => {
+    let result = href(pattern, params);
+    expect(result).toBe(expected);
+    expect(new URL(result, "https://app.example/").origin).toBe(
+      "https://app.example",
+    );
+  });
+
+  it.each(["/de//example.com/path", "/de/%2Fexample.com/path"])(
+    "interpolates splats matched from %s",
+    (pathname) => {
+      let match = matchPath("/:lang/*", pathname);
+      let result = href("/:lang?/*", { "*": match!.params["*"] });
+      expect(result).toBe("/example.com/path");
+      expect(new URL(result, "https://app.example/").origin).toBe(
+        "https://app.example",
+      );
+    },
+  );
+
   it("works with param-less paths", () => {
     expect(href("/a/b/c")).toBe("/a/b/c");
   });
@@ -24,6 +48,7 @@ describe("href", () => {
   it("works with splats", () => {
     expect(href("/a/*", { "*": "b/c" })).toBe("/a/b/c");
     expect(href("/a/*", {})).toBe("/a");
+    expect(href("/a/*", { "*": null as any })).toBe("/a");
   });
 
   it("works with malformed splats", () => {
@@ -34,6 +59,9 @@ describe("href", () => {
 
   it("throws when required params are missing", () => {
     expect(() => href("/a/:b")).toThrow(
+      `Path '/a/:b' requires param 'b' but it was not provided`,
+    );
+    expect(() => href("/a/:b", { b: null as any })).toThrow(
       `Path '/a/:b' requires param 'b' but it was not provided`,
     );
   });

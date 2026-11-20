@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 
+import { isFirefoxMicrotaskWarning } from "./helpers/console.js";
 import {
   createFixture,
   createAppFixture,
@@ -129,7 +130,9 @@ test.describe("actions", () => {
 
       test.beforeEach(({ page }) => {
         page.on("console", (msg) => {
-          logs.push(msg.text());
+          if (!isFirefoxMicrotaskWarning(msg)) {
+            logs.push(msg.text());
+          }
         });
       });
 
@@ -170,13 +173,15 @@ test.describe("actions", () => {
         await app.goto(`/no-action`);
         await page.click("button[type=submit]");
         await page.waitForSelector(`h1:has-text("405 Method Not Allowed")`);
-        expect(logs.length).toBe(2);
-        expect(logs[0]).toMatch(
-          'Route "routes/no-action" does not have an action',
-        );
-        // logs[1] is the raw ErrorResponse instance from the boundary but playwright
-        // seems to just log the name of the constructor, which in the minified code
-        // is meaningless so we don't bother asserting
+        await expect
+          .poll(() => logs)
+          .toContainEqual(
+            expect.stringContaining(
+              'Route "routes/no-action" does not have an action',
+            ),
+          );
+        await expect.poll(() => logs.length).toBe(2);
+        // Console messages can arrive after the DOM update, and their order varies.
 
         // The rest of the tests in this suite assert no logs, so clear this out to
         // avoid failures in afterEach

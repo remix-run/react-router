@@ -13,10 +13,11 @@ import { getRoutePattern } from "../../router/utils";
 import { useFrameworkContext } from "./components";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
-import type { WindowReactRouterContext } from "../global";
+import type { ServerHandoff } from "../../server-runtime/serverHandoff";
 import type { RouterFetch } from "./single-fetch";
 import {
   getManifestPath,
+  getManifestPathsParam,
   getPathsWithAncestors,
   handleClientVersionMismatch,
   isFogOfWarEnabled,
@@ -52,8 +53,10 @@ type RouteDiscoverySsrInfo = {
   manifest: AssetsManifest;
   routeModules: RouteModules;
   router: Router | undefined;
+  // Picked from `ServerHandoff` rather than `WindowReactRouterContext` so the
+  // emitted types don't import `../global` and its `declare global` block
   context: Pick<
-    WindowReactRouterContext,
+    ServerHandoff,
     | "ssr"
     | "routeDiscovery"
     | "isSpaMode"
@@ -258,7 +261,7 @@ export class RouteDiscoveryRuntime {
   private requestUrl(paths: string[]) {
     let { manifest, context } = this.ssrInfo;
     let params = new URLSearchParams();
-    params.set("paths", paths.slice().sort().join(","));
+    params.set("paths", getManifestPathsParam(paths));
     params.set("version", manifest.version);
     let url = new URL(
       getManifestPath(context.routeDiscovery.manifestPath, context.basename),

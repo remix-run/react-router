@@ -471,6 +471,12 @@ Which `ErrorBoundary` is rendered will differ based on whether your middleware t
 
 ### Authentication
 
+Middleware on a protected route or a common ancestor can authenticate and authorize a request before the matched loaders and actions run.
+
+Loaders run in parallel and can be requested independently, so parent loaders are not capable of "protecting" child route loaders or actions. Each protected loader and action must perform its own checks unless appropriate server middleware enforces them before the handler runs.
+
+<docs-warning>Attach authorization middleware to the protected route or layout instead of gating its checks with literal pathname-prefix comparisons such as `url.pathname.startsWith("/admin")`. Literal checks may miss potential URL encodings that React Router route matching would cover.</docs-warning>
+
 ```tsx filename=app/middleware/auth.ts
 import { redirect } from "react-router";
 import { userContext } from "~/context";

@@ -5,7 +5,10 @@ import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
-import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
+import {
+  RSCErrorAlreadyReportedContext,
+  RSCRouterGlobalErrorBoundary,
+} from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";
@@ -25,6 +28,7 @@ const defaultManifestPath = "/__manifest";
 
 type DecodedPayload = Promise<RSCPayload> & {
   _deepestRenderedBoundaryId?: string | null;
+  _isErrorRender?: boolean;
   formState: Promise<any>;
 };
 
@@ -353,6 +357,7 @@ export async function routeRSCServerRequest({
           );
 
           return Object.defineProperties(payloadPromise, {
+            _isErrorRender: { value: true },
             _deepestRenderedBoundaryId: {
               get() {
                 return deepestRenderedBoundaryId;
@@ -649,11 +654,16 @@ export function RSCStaticRouter({ getPayload, nonce }: RSCStaticRouterProps) {
     <RSCRouterContext.Provider value={true}>
       <RSCRouterGlobalErrorBoundary location={payload.location}>
         <FrameworkContext.Provider value={frameworkContext}>
-          <StaticRouterProvider
-            context={context}
-            router={router}
-            hydrate={false}
-          />
+          {/* Initial route errors are handled by matchRSCServerRequest. */}
+          <RSCErrorAlreadyReportedContext.Provider
+            value={payload.errors != null && !decoded._isErrorRender}
+          >
+            <StaticRouterProvider
+              context={context}
+              router={router}
+              hydrate={false}
+            />
+          </RSCErrorAlreadyReportedContext.Provider>
         </FrameworkContext.Provider>
       </RSCRouterGlobalErrorBoundary>
     </RSCRouterContext.Provider>

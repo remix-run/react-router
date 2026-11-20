@@ -3,6 +3,8 @@ import { useRouteError } from "../hooks";
 import type { Location } from "../router/history";
 import { ENABLE_DEV_WARNINGS, isRouteErrorResponse } from "../router/utils";
 
+export const RSCErrorAlreadyReportedContext = React.createContext(false);
+
 type RSCRouterGlobalErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
 }>;
@@ -102,7 +104,10 @@ function RSCDefaultRootErrorBoundaryImpl({
   error: unknown;
   renderAppShell: boolean;
 }) {
-  console.error(error);
+  let alreadyReported = React.useContext(RSCErrorAlreadyReportedContext);
+  if (!alreadyReported) {
+    console.error(error);
+  }
 
   let heyDeveloper = (
     <script

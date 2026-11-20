@@ -1,4 +1,8 @@
+import * as React from "react";
+import { renderToString } from "react-dom/server.node";
+
 import {
+  Await,
   matchRSCServerRequest,
   type RSCMatch,
   type RSCRouteConfigEntry,
@@ -7,6 +11,127 @@ import { routeRSCServerRequest } from "../../lib/rsc/server.ssr";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
+  describe("Await", () => {
+    describe.each(["resolve", "unstable_promise"] as const)("%s", (prop) => {
+      test.each(["Value", undefined, null, false, 0, ""])(
+        "supplies the resolved value to children: %p",
+        async (value) => {
+          let received: unknown = "unset";
+          await Await({
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: value }
+              : { resolve: value }),
+            children(data) {
+              received = data;
+              return null;
+            },
+          });
+          expect(received).toBe(value);
+        },
+      );
+
+      test("supplies fulfilled promises to children", async () => {
+        let promise = Promise.resolve("Value");
+        let received: unknown;
+        await Await({
+          ...(prop === "unstable_promise"
+            ? { unstable_promise: promise }
+            : { resolve: promise }),
+          children(value) {
+            received = value;
+            return null;
+          },
+        });
+        expect(received).toBe("Value");
+      });
+
+      test("propagates rejections without an errorElement", async () => {
+        let error = new Error("Rejected");
+        let promise = Promise.reject(error);
+        promise.catch(() => {});
+        await expect(
+          Await({
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: promise }
+              : { resolve: promise }),
+            children: "Success",
+          }),
+        ).rejects.toBe(error);
+      });
+
+      test("propagates child render errors past errorElement", async () => {
+        let error = new Error("Render failed");
+        await expect(
+          Await({
+            ...(prop === "unstable_promise"
+              ? { unstable_promise: "Value" }
+              : { resolve: "Value" }),
+            children() {
+              throw error;
+            },
+            errorElement: "Await error",
+          }),
+        ).rejects.toBe(error);
+      });
+
+      test.each([undefined, null, false, 0, "", NaN, 0n])(
+        "propagates rejections with falsy errorElement=%p",
+        async (errorElement) => {
+          let error = new Error("Rejected");
+          let promise = Promise.reject(error);
+          await expect(
+            Await({
+              ...(prop === "unstable_promise"
+                ? { unstable_promise: promise }
+                : { resolve: promise }),
+              children: "Success",
+              errorElement,
+            }),
+          ).rejects.toBe(error);
+        },
+      );
+
+      test("renders an empty fragment errorElement on rejection", async () => {
+        let promise = Promise.reject(new Error("Rejected"));
+        let result = await Await({
+          ...(prop === "unstable_promise"
+            ? { unstable_promise: promise }
+            : { resolve: promise }),
+          children: "Success",
+          errorElement: React.createElement(React.Fragment),
+        });
+        expect(renderToString(result)).toBe("");
+      });
+    });
+
+    test("accepts promise-like values", async () => {
+      let received: unknown;
+      await Await({
+        unstable_promise: {
+          then(resolve: (value: string) => void) {
+            resolve("Thenable");
+          },
+        },
+        children(value) {
+          received = value;
+          return null;
+        },
+      });
+      expect(received).toBe("Thenable");
+    });
+
+    test.each([{}, { resolve: undefined, unstable_promise: undefined }])(
+      "requires exactly one promise prop: %p",
+      async (props) => {
+        await expect(
+          Await({ ...props, children: null } as any),
+        ).rejects.toThrow(
+          "<Await> requires exactly one of `resolve` or `unstable_promise`",
+        );
+      },
+    );
+  });
+
   test("reuses the static handler route matcher after exploding lazy routes", async () => {
     let childRoute: RSCRouteConfigEntry = {
       id: "child",
@@ -122,6 +247,87 @@ describe("RSC server", () => {
 
       expect(response.status).toBe(200);
       expect(match?.payload.type).toBe("manifest");
+    });
+  });
+
+  describe("request methods", () => {
+    test.each(["GET", "HEAD"])(
+      "handles %s resource responses",
+      async (method) => {
+        let finishCancellation = () => {};
+        let cancel = jest.fn(
+          () =>
+            new Promise<void>((_, reject) => {
+              finishCancellation = () => reject(new Error("Stream closed"));
+            }),
+        );
+        let body = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode("Hello"));
+          },
+          pull(controller) {
+            controller.close();
+          },
+          cancel,
+        });
+        let middlewareHasBody = false;
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/resource", { method }),
+          routes: [
+            {
+              id: "resource",
+              path: "/resource",
+              middleware: [
+                async (_, next) => {
+                  let response = await next();
+                  middlewareHasBody = response.body !== null;
+                  response.headers.set("X-Middleware", "yes");
+                  return response;
+                },
+              ],
+              loader: () =>
+                new Response(body, {
+                  status: 201,
+                  statusText: "Created",
+                  headers: {
+                    "Content-Type": "text/plain",
+                    "Content-Length": "5",
+                  },
+                }),
+            },
+          ],
+          generateResponse() {
+            throw new Error(
+              "Resource response should not be encoded as Flight",
+            );
+          },
+        });
+
+        expect(middlewareHasBody).toBe(true);
+        expect(response.status).toBe(201);
+        expect(response.statusText).toBe("Created");
+        expect(response.headers.get("Content-Type")).toBe("text/plain");
+        expect(response.headers.get("Content-Length")).toBe("5");
+        expect(response.headers.get("X-Middleware")).toBe("yes");
+        expect(response.body === null).toBe(method === "HEAD");
+        expect(await response.text()).toBe(method === "HEAD" ? "" : "Hello");
+        expect(cancel).toHaveBeenCalledTimes(method === "HEAD" ? 1 : 0);
+        finishCancellation();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+    );
+
+    test("preserves HEAD Flight bodies for SSR rendering", async () => {
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/", { method: "HEAD" }),
+        routes: [{ id: "root", path: "/", Component: () => null }],
+        generateResponse: () => new Response("Encoded Flight"),
+      });
+
+      expect(response.headers.get("React-Router-Resource")).toBeNull();
+      expect(await response.text()).toBe("Encoded Flight");
     });
   });
 
@@ -247,48 +453,56 @@ describe("RSC server", () => {
       },
     );
 
-    test("tags non-RSC middleware responses as React-Router-Resource", async () => {
-      let generateResponseCalled = false;
-      let response = await matchRSCServerRequest({
-        createTemporaryReferenceSet: () => ({}),
-        request: new Request("https://remix.run/docs/intro.md"),
-        routes: [
-          {
-            id: "root",
-            path: "/",
-            middleware: [
-              async ({ request }, next) => {
-                let url = new URL(request.url);
-                if (url.pathname.endsWith(".md")) {
-                  return new Response("# MARKDOWN_BODY", {
-                    headers: { "Content-Type": "text/markdown; charset=utf-8" },
-                  });
-                }
-                return next();
-              },
-            ],
-            children: [
-              {
-                id: "intro",
-                path: "docs/intro.md",
-                Component: () => null,
-              },
-            ],
+    test.each(["GET", "HEAD"])(
+      "tags %s non-RSC middleware responses as React-Router-Resource",
+      async (method) => {
+        let generateResponseCalled = false;
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/docs/intro.md", { method }),
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              middleware: [
+                async ({ request }, next) => {
+                  let url = new URL(request.url);
+                  if (url.pathname.endsWith(".md")) {
+                    return new Response("# MARKDOWN_BODY", {
+                      headers: {
+                        "Content-Type": "text/markdown; charset=utf-8",
+                      },
+                    });
+                  }
+                  return next();
+                },
+              ],
+              children: [
+                {
+                  id: "intro",
+                  path: "docs/intro.md",
+                  Component: () => null,
+                },
+              ],
+            },
+          ],
+          generateResponse() {
+            generateResponseCalled = true;
+            return new Response(null);
           },
-        ],
-        generateResponse() {
-          generateResponseCalled = true;
-          return new Response(null);
-        },
-      });
+        });
 
-      expect(generateResponseCalled).toBe(false);
-      expect(response.headers.get("React-Router-Resource")).toBe("true");
-      expect(response.headers.get("Content-Type")).toBe(
-        "text/markdown; charset=utf-8",
-      );
-      expect(await response.text()).toBe("# MARKDOWN_BODY");
-    });
+        expect(generateResponseCalled).toBe(false);
+        expect(response.headers.get("React-Router-Resource")).toBe("true");
+        expect(response.headers.get("Content-Type")).toBe(
+          "text/markdown; charset=utf-8",
+        );
+        expect(response.body === null).toBe(method === "HEAD");
+        expect(await response.text()).toBe(
+          method === "HEAD" ? "" : "# MARKDOWN_BODY",
+        );
+      },
+    );
 
     test("routeRSCServerRequest passes through tagged resource response without decoding as Flight", async () => {
       let serverResponse = new Response("# MARKDOWN_BODY", {
@@ -397,6 +611,59 @@ describe("RSC server", () => {
     });
   });
 
+  test("switches to initial discovery above the pathname work limit", async () => {
+    let routeDiscovery = Object.freeze({ mode: "lazy" } as const);
+    let routes: RSCRouteConfigEntry[] = [
+      {
+        id: "root",
+        path: "",
+        Component: () => null,
+        children: [
+          { id: "other", path: "other" },
+          { id: "splat", path: "*", Component: () => null },
+        ],
+      },
+    ];
+
+    async function getPayload(pathname: string) {
+      let match: RSCMatch | undefined;
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request(`https://remix.run${pathname}`),
+        routes,
+        routeDiscovery,
+        generateResponse(nextMatch) {
+          match = nextMatch;
+          return new Response(null, { status: nextMatch.statusCode });
+        },
+      });
+      expect(response.status).toBe(200);
+      if (match?.payload.type !== "render") {
+        throw new Error("Expected a render payload");
+      }
+      return match.payload;
+    }
+
+    let pathname = `/${Array.from({ length: 60 }, (_, i) => i % 10).join("/")}`;
+    let payload = await getPayload(pathname);
+    expect(payload.routeDiscovery.mode).toBe("lazy");
+    expect(await payload.patches).toEqual([]);
+
+    payload = await getPayload(`${pathname}.rsc`);
+    expect(payload.routeDiscovery.mode).toBe("lazy");
+    expect(await payload.patches).toEqual([]);
+
+    pathname = `/${Array.from({ length: 70 }, (_, i) => i % 10).join("/")}`;
+    payload = await getPayload(pathname);
+    expect(payload.routeDiscovery.mode).toBe("initial");
+    expect((await payload.patches).map((patch) => patch.id)).toEqual(["other"]);
+
+    payload = await getPayload(`${pathname}.rsc`);
+    expect(payload.routeDiscovery.mode).toBe("initial");
+    expect((await payload.patches).map((patch) => patch.id)).toEqual(["other"]);
+    expect(routeDiscovery.mode).toBe("lazy");
+  });
+
   describe("error reporting", () => {
     let consoleError: jest.SpyInstance;
     let abortController: AbortController;
@@ -440,6 +707,21 @@ describe("RSC server", () => {
             middleware: [
               () => {
                 throw new Error("MIDDLEWARE_ERROR");
+              },
+            ],
+          },
+          {
+            id: "post-middleware-error",
+            path: "post-middleware-error",
+            Component: () => null,
+            async action({ request }) {
+              await request.formData();
+              return null;
+            },
+            middleware: [
+              async (_, next) => {
+                await next();
+                throw new Error("POST_MIDDLEWARE_ERROR");
               },
             ],
           },
@@ -489,6 +771,14 @@ describe("RSC server", () => {
         "middleware",
         new Request("https://remix.run/middleware-error"),
         "MIDDLEWARE_ERROR",
+      ],
+      [
+        "post-form-action middleware",
+        new Request("https://remix.run/post-middleware-error", {
+          method: "POST",
+          body: new URLSearchParams({ a: "b" }),
+        }),
+        "POST_MIDDLEWARE_ERROR",
       ],
     ])("calls onError with %s errors", async (_, request, message) => {
       let onError = jest.fn();

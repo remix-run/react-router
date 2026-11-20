@@ -16,8 +16,6 @@ test.describe("RSC Framework: server error logging", () => {
     fixture = await createFixture({
       templateName: "rsc-vite-framework",
       files: {
-        // Give the root an ErrorBoundary so the built-in default root
-        // boundary (which calls `console.error`) never renders
         "app/root.tsx": js`
           import { Links, Meta, Outlet, ScrollRestoration } from "react-router";
 
@@ -39,10 +37,6 @@ test.describe("RSC Framework: server error logging", () => {
           export default function App() {
             return <Outlet />;
           }
-
-          export function ErrorBoundary() {
-            return <h1 id="error-boundary">ROOT_ERROR_BOUNDARY</h1>;
-          }
         `,
         "app/routes/loader-error.tsx": js`
           export function loader() {
@@ -51,6 +45,24 @@ test.describe("RSC Framework: server error logging", () => {
 
           export default function LoaderError() {
             return <h1>LOADER_ERROR_ROUTE</h1>;
+          }
+
+          export function ErrorBoundary() {
+            return <h1>CUSTOM_ERROR_BOUNDARY</h1>;
+          }
+        `,
+        "app/routes/default-boundary.tsx": js`
+          export function loader() {
+            throw new Error("DEFAULT_BOUNDARY_ERROR_MESSAGE");
+          }
+
+          export default function DefaultBoundaryRoute() {
+            return null;
+          }
+        `,
+        "app/routes/render-error.tsx": js`
+          export default function RenderErrorRoute() {
+            throw new Error("SSR_RENDER_ERROR_MESSAGE");
           }
         `,
         "app/routes/resource-error.tsx": js`
@@ -76,24 +88,38 @@ test.describe("RSC Framework: server error logging", () => {
     console.error = originalConsoleError;
   });
 
-  function expectLogged(message: string) {
+  function expectLoggedOnce(message: string) {
     let messages = logged
       .flat()
       .map((arg) => (arg instanceof Error ? arg.message : String(arg)));
-    expect(messages.join("\n")).toContain(message);
+    expect(messages.filter((entry) => entry.includes(message))).toHaveLength(1);
   }
 
   test("logs errors thrown from loaders", async () => {
     let response = await fixture.requestDocument("/loader-error");
     expect(response.status).toBe(500);
-    expect(await response.text()).toContain("ROOT_ERROR_BOUNDARY");
-    expectLogged("LOADER_ERROR_MESSAGE");
+    expect(await response.text()).toContain("CUSTOM_ERROR_BOUNDARY");
+    expectLoggedOnce("LOADER_ERROR_MESSAGE");
+  });
+
+  test("logs a loader error once when rendering the default root boundary", async () => {
+    let response = await fixture.requestDocument("/default-boundary");
+    expect(response.status).toBe(500);
+    expect(await response.text()).toContain("Application Error");
+    expectLoggedOnce("DEFAULT_BOUNDARY_ERROR_MESSAGE");
+  });
+
+  test("logs an SSR render error from the default root boundary", async () => {
+    let response = await fixture.requestDocument("/render-error");
+    expect(response.status).toBe(500);
+    expect(await response.text()).toContain("Application Error");
+    expectLoggedOnce("SSR_RENDER_ERROR_MESSAGE");
   });
 
   test("logs errors thrown from resource routes", async () => {
     let response = await fixture.requestResource("/resource-error");
     expect(response.status).toBe(500);
     await response.text();
-    expectLogged("RESOURCE_ERROR_MESSAGE");
+    expectLoggedOnce("RESOURCE_ERROR_MESSAGE");
   });
 });

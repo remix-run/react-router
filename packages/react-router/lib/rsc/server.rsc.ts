@@ -10,7 +10,7 @@ import type {
   LinksFunction,
   MetaFunction,
 } from "../dom/ssr/routeModules";
-import { type Location } from "../router/history";
+import { invariant as routerInvariant, type Location } from "../router/history";
 import {
   createStaticHandler,
   isDataWithResponseInit,
@@ -41,7 +41,11 @@ import {
 } from "../router/utils";
 import { getDocumentHeadersImpl } from "../server-runtime/headers";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
-import { URL_LIMIT, getPathsWithAncestors } from "../dom/ssr/fog-of-war";
+import {
+  URL_LIMIT,
+  getPathsWithAncestors,
+  shouldUseInitialRouteDiscovery,
+} from "../dom/ssr/fog-of-war";
 import { throwIfPotentialCSRFAttack } from "../actions";
 import invariant from "../server-runtime/invariant";
 
@@ -144,12 +148,18 @@ const cachedResolvePromise: <T>(
   },
 );
 
-export const Await: typeof AwaitType = (async ({
-  children,
-  resolve,
-  errorElement,
-}: React.ComponentProps<typeof AwaitType>) => {
-  let promise = cachedResolvePromise(resolve);
+export const Await: typeof AwaitType = (async (
+  props: React.ComponentProps<typeof AwaitType>,
+) => {
+  routerInvariant(
+    "resolve" in props !== "unstable_promise" in props,
+    "<Await> requires exactly one of `resolve` or `unstable_promise`",
+  );
+  let { children, errorElement } = props;
+  let usePromise = "unstable_promise" in props;
+  let promise = cachedResolvePromise(
+    usePromise ? props.unstable_promise : props.resolve,
+  );
   let resolved: Awaited<typeof promise> = await promise;
 
   if (resolved.status === "rejected" && !errorElement) {
@@ -158,7 +168,9 @@ export const Await: typeof AwaitType = (async ({
   if (resolved.status === "rejected") {
     return React.createElement(UNSAFE_AwaitContextProvider, {
       children: React.createElement(React.Fragment, null, errorElement),
-      value: { _tracked: true, _error: resolved.reason } as TrackedPromise,
+      value: usePromise
+        ? resolved
+        : ({ _tracked: true, _error: resolved.reason } as TrackedPromise),
     });
   }
 
@@ -167,7 +179,9 @@ export const Await: typeof AwaitType = (async ({
 
   return React.createElement(UNSAFE_AwaitContextProvider, {
     children: toRender,
-    value: { _tracked: true, _data: resolved.value } as TrackedPromise,
+    value: usePromise
+      ? resolved
+      : ({ _tracked: true, _data: resolved.value } as TrackedPromise),
   });
 }) as any;
 
@@ -175,6 +189,7 @@ type RSCRouteConfigEntryBase = {
   action?: ActionFunction;
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: MiddlewareFunction<any>[];
   ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
   headers?: HeadersFunction;
@@ -222,6 +237,7 @@ type RSCRouteDataMatch = Omit<RouteMatch, "route"> & {
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: MiddlewareFunction<any>[];
   element?: React.ReactElement | false;
   errorElement?: React.ReactElement;
   handle?: any;
@@ -525,13 +541,14 @@ export async function matchRSCServerRequest({
     !leafMatch.route.Component &&
     !leafMatch.route.ErrorBoundary
   ) {
-    return generateResourceResponse(
+    let response = await generateResourceResponse(
       routerRequest,
       staticHandler,
       leafMatch.route.id,
       requestContext,
       onError,
     );
+    return normalizeResourceResponse(request, response);
   }
 
   let response = await generateRenderResponse(
@@ -554,6 +571,26 @@ export async function matchRSCServerRequest({
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
   response.headers.set("X-Remix-Response", "yes");
+  return normalizeResourceResponse(request, response);
+}
+
+function normalizeResourceResponse(
+  request: Request,
+  response: Response,
+): Response {
+  if (
+    request.method === "HEAD" &&
+    response.headers.get("React-Router-Resource") === "true"
+  ) {
+    // Release a discarded resource stream after middleware has finished, without
+    // waiting for cleanup or letting a cancellation error change the response.
+    response.body?.cancel().catch(() => {});
+    return new Response(null, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+  }
   return response;
 }
 
@@ -886,6 +923,7 @@ async function generateRenderResponse(
       : null;
 
   let actionResult: Promise<unknown> | undefined;
+  let handledSubmission = false;
   const ctx: ServerContext = {
     request,
     runningAction: false,
@@ -908,7 +946,10 @@ async function generateRenderResponse(
         let formState: ReactFormState | undefined;
         let skipRevalidation = false;
         let potentialCSRFAttackError: unknown | undefined;
-        if (isMutationMethod(request.method)) {
+        // A middleware error can invoke this callback again after the route
+        // action has already consumed the POST body.
+        if (isSubmission && !handledSubmission) {
+          handledSubmission = true;
           try {
             throwIfPotentialCSRFAttack(request, allowedActionOrigins);
           } catch (error) {
@@ -944,7 +985,9 @@ async function generateRenderResponse(
                 isDataRequest,
                 generateResponse,
                 temporaryReferences,
-                (ctx.redirect as unknown as Response)?.headers,
+                result === ctx.redirect
+                  ? undefined
+                  : (ctx.redirect as unknown as Response)?.headers,
               );
             }
 
@@ -1079,7 +1122,11 @@ function generateRedirectResponse(
 
   // Preserve non-internal headers on the user-created redirect and merge in
   // any side-effect redirect headers
-  let headers = new Headers(sideEffectRedirectHeaders);
+  let headers = new Headers(
+    sideEffectRedirectHeaders === response.headers
+      ? undefined
+      : sideEffectRedirectHeaders,
+  );
   for (const [key, value] of response.headers.entries()) {
     headers.append(key, value);
   }
@@ -1269,8 +1316,12 @@ async function getRenderPayload(
     }),
   );
 
+  let pathname = staticContext.location.pathname;
+  let useInitialRouteDiscovery =
+    (routeDiscovery?.mode === "initial" && !isDataRequest) ||
+    shouldUseInitialRouteDiscovery(pathname, staticHandler._matchCost);
   let patches: Promise<RSCRouteManifest[]>;
-  if (routeDiscovery?.mode === "initial" && !isDataRequest) {
+  if (useInitialRouteDiscovery) {
     patches = getAllRoutePatches(routes, basename).then((patches) =>
       patches.filter(
         (patch) => !staticContext.matches.some((m) => m.route.id === patch.id),
@@ -1278,7 +1329,8 @@ async function getRenderPayload(
     );
   } else {
     patches = getAdditionalRoutePatches(
-      getPathsWithAncestors([staticContext.location.pathname]),
+      // The full pathname is last and its matches are already in the payload.
+      getPathsWithAncestors([pathname]).slice(0, -1),
       staticHandler,
       staticContext.matches.map((m) => m.route.id),
     );
@@ -1286,6 +1338,9 @@ async function getRenderPayload(
 
   return {
     ...baseRenderPayload,
+    routeDiscovery: useInitialRouteDiscovery
+      ? ({ mode: "initial" } satisfies RouteDiscovery)
+      : baseRenderPayload.routeDiscovery,
     matches: await matchesPromise,
     patches,
   };
@@ -1385,6 +1440,7 @@ async function getRSCRouteMatch({
   return {
     clientAction: route.clientAction,
     clientLoader: route.clientLoader,
+    clientMiddleware: route.clientMiddleware,
     element,
     errorElement,
     handle: route.handle,
@@ -1432,6 +1488,7 @@ async function getManifestRoute(
   return {
     clientAction: route.clientAction,
     clientLoader: route.clientLoader,
+    clientMiddleware: route.clientMiddleware,
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!route.Component,

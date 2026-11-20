@@ -83,6 +83,7 @@ export function RemixRootDefaultErrorBoundary({
   let heyDeveloper = (
     <script
       nonce={nonce}
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{
         __html: `
         console.log(
