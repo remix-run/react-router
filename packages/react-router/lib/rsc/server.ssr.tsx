@@ -1,14 +1,11 @@
 import * as React from "react";
-import { RSCRouterContext } from "../context";
+import { RSCErrorAlreadyReportedContext, RSCRouterContext } from "../context";
 import { FrameworkContext } from "../dom/ssr/components";
 import type { FrameworkContextObject } from "../dom/ssr/entry";
 import { SINGLE_FETCH_REDIRECT_STATUS } from "../dom/ssr/single-fetch";
 import { createStaticRouter, StaticRouterProvider } from "../dom/server";
 import { injectRSCPayload } from "./html-stream/server";
-import {
-  RSCErrorAlreadyReportedContext,
-  RSCRouterGlobalErrorBoundary,
-} from "./errorBoundaries";
+import { RSCRouterGlobalErrorBoundary } from "./errorBoundaries";
 import { shouldHydrateRouteLoader } from "../dom/ssr/routes";
 import type { RSCPayload } from "./server.rsc";
 import { createRSCRouteModules } from "./route-modules";

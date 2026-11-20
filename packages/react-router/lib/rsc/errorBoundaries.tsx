@@ -1,9 +1,8 @@
 import React from "react";
+import { RSCErrorAlreadyReportedContext } from "../context";
 import { useRouteError } from "../hooks";
 import type { Location } from "../router/history";
 import { ENABLE_DEV_WARNINGS, isRouteErrorResponse } from "../router/utils";
-
-export const RSCErrorAlreadyReportedContext = React.createContext(false);
 
 type RSCRouterGlobalErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
