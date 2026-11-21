@@ -42,6 +42,17 @@ describe("Session", () => {
     expect(session.has("user")).toBe(false);
     expect(session.get("user")).toBeUndefined();
   });
+
+  it("removes flashed values when unset() is called", () => {
+    let session = createSession();
+
+    session.flash("notice", "saved");
+    expect(session.has("notice")).toBe(true);
+
+    session.unset("notice");
+    expect(session.has("notice")).toBe(false);
+    expect(session.get("notice")).toBeUndefined();
+  });
 });
 
 describe("isSession", () => {
