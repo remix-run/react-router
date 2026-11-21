@@ -24,7 +24,11 @@ export function getDocumentHeadersImpl(
   _defaultHeaders?: Headers,
 ): Headers {
   let boundaryIdx = context.errors
-    ? context.matches.findIndex((m) => context.errors![m.route.id])
+    ? context.matches.findIndex(
+        (m) =>
+          Object.prototype.hasOwnProperty.call(context.errors, m.route.id) &&
+          context.errors![m.route.id],
+      )
     : -1;
   let matches =
     boundaryIdx >= 0
@@ -40,11 +44,16 @@ export function getDocumentHeadersImpl(
     context.matches.slice(boundaryIdx).some((match) => {
       let id = match.route.id;
       if (
+        Object.prototype.hasOwnProperty.call(actionHeaders, id) &&
         actionHeaders[id] &&
-        (!actionData || !actionData.hasOwnProperty(id))
+        (!actionData || !Object.prototype.hasOwnProperty.call(actionData, id))
       ) {
         errorHeaders = actionHeaders[id];
-      } else if (loaderHeaders[id] && !loaderData.hasOwnProperty(id)) {
+      } else if (
+        Object.prototype.hasOwnProperty.call(loaderHeaders, id) &&
+        loaderHeaders[id] &&
+        (!loaderData || !Object.prototype.hasOwnProperty.call(loaderData, id))
+      ) {
         errorHeaders = loaderHeaders[id];
       }
       return errorHeaders != null;
@@ -55,8 +64,14 @@ export function getDocumentHeadersImpl(
 
   return matches.reduce((parentHeaders, match, idx) => {
     let { id } = match.route;
-    let loaderHeaders = context.loaderHeaders[id] || new Headers();
-    let actionHeaders = context.actionHeaders[id] || new Headers();
+    let loaderHeaders =
+      (Object.prototype.hasOwnProperty.call(context.loaderHeaders, id) &&
+        context.loaderHeaders[id]) ||
+      new Headers();
+    let actionHeaders =
+      (Object.prototype.hasOwnProperty.call(context.actionHeaders, id) &&
+        context.actionHeaders[id]) ||
+      new Headers();
 
     // Only expose errorHeaders to the leaf headers() function to
     // avoid duplication via parentHeaders
