@@ -1,6 +1,7 @@
 // We can only import types from Vite at the top level since we're in a CJS
 // context but want to use Vite's ESM build since Vite 7+ is ESM only
 import type * as Vite from "vite";
+import type { ServerResponse } from "node:http";
 import { type BinaryLike, createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import {
@@ -98,6 +99,52 @@ import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 import type { PrerenderRequest } from "./plugins/prerender";
 import { prerender } from "./plugins/prerender";
 import { getPrerenderRedirectHtml } from "./prerender-redirect";
+
+export const CHROMIUM_DEVTOOLS_WELL_KNOWN_PATH =
+  "/.well-known/appspecific/com.chrome.devtools.json";
+
+export function isChromiumDevToolsWellKnownRequest(
+  req: Vite.Connect.IncomingMessage,
+): boolean {
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    return false;
+  }
+  let [reqPathname] = (req.url ?? "").split("?");
+  let [originalPathname] = (req.originalUrl ?? "").split("?");
+  return (
+    reqPathname === CHROMIUM_DEVTOOLS_WELL_KNOWN_PATH ||
+    originalPathname === CHROMIUM_DEVTOOLS_WELL_KNOWN_PATH
+  );
+}
+
+export function handleChromiumDevToolsWellKnownRequest(
+  res: ServerResponse,
+  publicDir?: string,
+): void {
+  if (res.writableEnded) {
+    return;
+  }
+  if (publicDir) {
+    let staticFilePath = path.join(
+      publicDir,
+      ".well-known",
+      "appspecific",
+      "com.chrome.devtools.json",
+    );
+    if (existsSync(staticFilePath)) {
+      try {
+        let content = readFileSync(staticFilePath);
+        res.setHeader("Content-Type", "application/json");
+        res.end(content);
+        return;
+      } catch {}
+    }
+  }
+
+  res.statusCode = 204;
+  res.setHeader("Cache-Control", "no-store");
+  res.end();
+}
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -1690,6 +1737,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         });
 
         return () => {
+          // Quietly handle Chromium DevTools well-known probing requests
+          // if no static file was served from the public directory.
+          viteDevServer.middlewares.use((req, res, next) => {
+            if (isChromiumDevToolsWellKnownRequest(req)) {
+              handleChromiumDevToolsWellKnownRequest(
+                res,
+                viteDevServer.config.publicDir,
+              );
+              return;
+            }
+            next();
+          });
+
           // Let user servers handle SSR requests in middleware mode,
           // otherwise the Vite plugin will handle the request
           if (!viteDevServer.config.server.middlewareMode) {

@@ -342,6 +342,25 @@ test.describe("Vite dev", () => {
         );
       });
 
+      test("quietly handles Chromium DevTools well-known request", async ({
+        dev,
+        request,
+      }) => {
+        test.skip(
+          templateName.includes("rsc"),
+          "RSC Framework Mode uses a separate server setup",
+        );
+
+        const { port } = await dev(files, templateName);
+
+        let response = await request.get(
+          `http://localhost:${port}/.well-known/appspecific/com.chrome.devtools.json`,
+        );
+        expect(response.status()).toBe(204);
+        expect(response.headers()["cache-control"]).toBe("no-store");
+        expect(await response.text()).toBe("");
+      });
+
       test("handles JSX in .jsx file without React import", async ({
         dev,
         page,
