@@ -2075,6 +2075,45 @@ function testDomRouter(
           "render",
         ]);
       });
+
+      it("preserves falsy location.state values across PUSH, POP, and re-initialization", async () => {
+        let testWindow = getWindow("/");
+        let routes: RouteObject[] = [
+          { path: "/", Component: () => <h1>Home</h1> },
+          { path: "/a", Component: () => <h1>A</h1> },
+          { path: "/b", Component: () => <h1>B</h1> },
+          { path: "/c", Component: () => <h1>C</h1> },
+        ];
+        let router = createTestRouter(routes, { window: testWindow });
+
+        await router.navigate("/a", { state: 0 });
+        expect(router.state.location.state).toBe(0);
+
+        await router.navigate("/b", { state: false });
+        expect(router.state.location.state).toBe(false);
+
+        await router.navigate("/c", { state: "" });
+        expect(router.state.location.state).toBe("");
+
+        await router.navigate(-1);
+        expect(router.state.location.pathname).toBe("/b");
+        expect(router.state.location.state).toBe(false);
+
+        await router.navigate(-1);
+        expect(router.state.location.pathname).toBe("/a");
+        expect(router.state.location.state).toBe(0);
+
+        await router.navigate(1);
+        expect(router.state.location.pathname).toBe("/b");
+        expect(router.state.location.state).toBe(false);
+
+        let reloaded = createTestRouter(routes, { window: testWindow });
+        expect(reloaded.state.location.pathname).toBe("/b");
+        expect(reloaded.state.location.state).toBe(false);
+
+        router.dispose();
+        reloaded.dispose();
+      });
     });
 
     describe("history action", () => {

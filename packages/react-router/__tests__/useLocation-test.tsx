@@ -1,6 +1,15 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, useLocation } from "react-router";
+import {
+  BrowserRouter,
+  HashRouter,
+  MemoryRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router";
+import getWindow from "./utils/getWindow";
 
 function ShowLocation() {
   let location = useLocation();
@@ -84,4 +93,41 @@ describe("useLocation", () => {
       </pre>
     `);
   });
+
+  it.each([
+    ["BrowserRouter", BrowserRouter, false],
+    ["HashRouter", HashRouter, true],
+  ] as const)(
+    "preserves falsy state passed via useNavigate in %s",
+    async (_name, RouterComponent, isHash) => {
+      let navigate!: ReturnType<typeof useNavigate>;
+      let currentLocation!: ReturnType<typeof useLocation>;
+
+      function Capture() {
+        navigate = useNavigate();
+        currentLocation = useLocation();
+        return null;
+      }
+
+      TestRenderer.act(() => {
+        TestRenderer.create(
+          <RouterComponent window={getWindow("/", isHash)}>
+            <Routes>
+              <Route path="/" element={<Capture />} />
+              <Route path="/sub" element={<Capture />} />
+            </Routes>
+          </RouterComponent>,
+        );
+      });
+
+      for (let state of [0, false, ""]) {
+        let doNavigate = navigate;
+        await TestRenderer.act(async () => {
+          doNavigate("/sub", { state });
+        });
+        expect(currentLocation.pathname).toBe("/sub");
+        expect(currentLocation.state).toBe(state);
+      }
+    },
+  );
 });

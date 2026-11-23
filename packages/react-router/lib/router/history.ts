@@ -395,7 +395,7 @@ export function createBrowserHistory(
       "",
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
-      (globalHistory.state && globalHistory.state.usr) || null,
+      globalHistory.state?.usr ?? null,
       (globalHistory.state && globalHistory.state.key) || "default",
       maskedLocation
         ? {
@@ -475,7 +475,7 @@ export function createHashHistory(
       "",
       maskedLocation || { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
-      (globalHistory.state && globalHistory.state.usr) || null,
+      globalHistory.state?.usr ?? null,
       (globalHistory.state && globalHistory.state.key) || "default",
       maskedLocation ? { pathname, search, hash } : undefined,
     );
