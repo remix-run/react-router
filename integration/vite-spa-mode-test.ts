@@ -1429,11 +1429,14 @@ test.describe("SPA Mode", () => {
       },
     });
     let appFixture = await createAppFixture(fixture);
-    let menu = Promise.withResolvers<void>();
+    let releaseMenu!: () => void;
+    let menuReady = new Promise<void>((resolve) => {
+      releaseMenu = resolve;
+    });
 
     try {
       await page.route("**/assets/layout-menu-*.js", async (route) => {
-        await menu.promise;
+        await menuReady;
         await route.continue();
       });
       let html = await (await fixture.requestDocument("/")).text();
@@ -1452,7 +1455,7 @@ test.describe("SPA Mode", () => {
       await expect(page.locator("nav a")).toHaveCount(2);
       await expect(page.locator("nav a.active")).toHaveCount(0);
       await expect(page.locator("nav a[aria-current]")).toHaveCount(0);
-      menu.resolve();
+      releaseMenu();
       await expect(page.locator("h1")).toHaveText("Other page");
       await expect(page.locator('a[href="/"]')).not.toHaveClass(/\bactive\b/);
       await expect(page.locator('a[href="/other"]')).toHaveClass(/\bactive\b/);
@@ -1472,7 +1475,7 @@ test.describe("SPA Mode", () => {
         /\bactive\b/,
       );
     } finally {
-      menu.resolve();
+      releaseMenu();
       appFixture.close();
     }
   });
