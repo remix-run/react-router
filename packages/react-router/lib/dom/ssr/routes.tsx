@@ -303,6 +303,7 @@ export function createClientRoutes(
     }
 
     let dataRoute: DataRouteObject = {
+      caseSensitive: route.caseSensitive,
       id: route.id,
       index: route.index,
       path: route.path,

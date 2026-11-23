@@ -9,6 +9,7 @@ import {
   test,
   type Files,
   type TemplateName,
+  viteConfig,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -94,6 +95,34 @@ async function interceptWithStaleClientVersion(page: Page) {
 }
 
 test.describe("RSC client versions", () => {
+  test("renders a server component on the initial request with a client loader", async ({
+    page,
+    dev,
+  }) => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.ts": await viteConfig.basic({ port, templateName }),
+      ...getFiles(),
+      "app/routes.ts": js`
+        import { type RouteConfig, index } from "@react-router/dev/routes";
+
+        export default [index("routes/home.tsx")] satisfies RouteConfig;
+      `,
+      "app/routes/home.tsx": js`
+        export function clientLoader() {
+          return null;
+        }
+
+        export function ServerComponent() {
+          return <h1>Hello</h1>;
+        }
+      `,
+    });
+    let { port } = await dev(files, templateName);
+
+    await page.goto(`http://localhost:${port}/`);
+    await expect(page.getByRole("heading", { name: "Hello" })).toBeVisible();
+  });
+
   test("derives the client version from the Vite RSC assets manifest", async ({
     page,
     request,

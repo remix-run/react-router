@@ -123,6 +123,17 @@ test.describe("fs-routes", () => {
           }
         `,
 
+        "app/routes/default-re-export/route.jsx": js`
+          export { default } from "./component.jsx";
+          export const loader = () => ({ message: "data" });
+        `,
+
+        "app/routes/default-re-export/component.jsx": js`
+          export default function ({ loaderData }) {
+            return <h2>Default Re-export {loaderData.message}</h2>;
+          }
+        `,
+
         [`app/routes/ignored-route.jsx`]: js`
           export default function () {
             return <h2>i should 404</h2>;
@@ -218,6 +229,18 @@ test.describe("fs-routes", () => {
   <h1>Root</h1>
   <h2>Dashboard Layout</h2>
   <h3>Dashboard Index</h3>
+</div>`);
+    });
+
+    test("renders matching routes (re-exported default)", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/default-re-export");
+      expect(await app.getHtml("#content")).toBe(`<div id="content">
+  <h1>Root</h1>
+  <h2>
+    Default Re-export
+    <!-- -->data
+  </h2>
 </div>`);
     });
   }
