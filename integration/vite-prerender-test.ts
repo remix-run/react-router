@@ -1079,6 +1079,9 @@ test.describe(`Prerendering`, () => {
       });
       let stop = await dev({ cwd, port });
       try {
+        let url = `http://localhost:${port}/`;
+        expect((await fetch(url)).status).toBe(200);
+
         let edit = createEditor(cwd);
         let revert = await edit(
           "app/routes/a.tsx",
@@ -1086,15 +1089,15 @@ test.describe(`Prerendering`, () => {
         );
         // fetch rejects if the dev server process has exited
         await expect(async () => {
-          let res = await fetch(`http://localhost:${port}/`);
+          let res = await fetch(url);
           expect(res.status).toBe(500);
         }).toPass();
-        let res = await fetch(`http://localhost:${port}/`);
+        let res = await fetch(url);
         expect(res.status).toBe(500);
 
         await revert();
         await expect(async () => {
-          let res = await fetch(`http://localhost:${port}/`);
+          let res = await fetch(url);
           expect(res.status).toBe(200);
         }).toPass();
       } finally {
