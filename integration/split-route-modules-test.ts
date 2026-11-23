@@ -6,13 +6,14 @@ import getPort from "get-port";
 import dedent from "dedent";
 
 import {
-  createProject,
+  createProject as createBaseProject,
   build,
   reactRouterServe,
   viteConfig,
   reactRouterConfig,
-  viteMajorTemplates,
 } from "./helpers/vite.js";
+
+import { viteMajorTemplates, type Template } from "./helpers/templates";
 
 const js = String.raw;
 
@@ -252,7 +253,30 @@ async function unblockClientLoader(page: Page) {
   });
 }
 
-test.describe("Split route modules", async () => {
+function defineTests(template: Template, external: boolean) {
+  const createProject = (files: Record<string, string>) =>
+    createBaseProject(
+      {
+        ...files,
+        ...(external
+          ? {
+              "react-router.config.ts": (
+                files["react-router.config.ts"] ?? "export default {};"
+              ).replace(
+                /(export default\s*\{)/,
+                "$1 future: { unstable_externalReactPlugin: true },",
+              ),
+              "vite.config.js":
+                `import react from "@vitejs/plugin-react";\n` +
+                files["vite.config.js"].replace(
+                  "reactRouter(),",
+                  `reactRouter(), react(${template.name.includes("8") ? "{compiler:true}" : "{babel:{plugins:['babel-plugin-react-compiler']}}"}),`,
+                ),
+            }
+          : {}),
+      },
+      template.name,
+    );
   test("emits source maps for split route chunks", async () => {
     let marker = "SPLIT_ROUTE_SOURCE_MAP_TEST";
     let cwd = await createProject({
@@ -312,11 +336,11 @@ test.describe("Split route modules", async () => {
     expect(entry.originalLine).toBe(originalLine);
   });
 
-  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+  {
+    const templateDisplayName = template.displayName;
     test(`${templateDisplayName} / disables eager dependency optimization in the child compiler`, async () => {
-      let cwd = await createProject(
-        {
-          "vite.config.js": js`
+      let cwd = await createProject({
+        "vite.config.js": js`
             import { reactRouter } from "@react-router/dev/vite";
 
             export default {
@@ -345,9 +369,7 @@ test.describe("Split route modules", async () => {
               ],
             };
           `,
-        },
-        templateName,
-      );
+      });
 
       let { status, stderr } = build({ cwd });
       expect(status, stderr.toString()).toBe(0);
@@ -356,13 +378,12 @@ test.describe("Split route modules", async () => {
     test(`${templateDisplayName} / reuses client chunk detection for normalized route paths`, async ({
       page,
     }) => {
-      let cwd = await createProject(
-        {
-          "app/routes.ts": js`
+      let cwd = await createProject({
+        "app/routes.ts": js`
             import { index } from "@react-router/dev/routes";
             export default [index("./routes/home.tsx")];
           `,
-          "app/routes/home.tsx": js`
+        "app/routes/home.tsx": js`
             import { jsx } from "react/jsx-runtime";
 
             export async function clientLoader() {
@@ -380,7 +401,7 @@ test.describe("Split route modules", async () => {
               return jsx("h1", { children: "Hello" });
             }
           `,
-          "vite.config.js": js`
+        "vite.config.js": js`
             import { reactRouter } from "@react-router/dev/vite";
 
             export default {
@@ -402,9 +423,7 @@ test.describe("Split route modules", async () => {
               ],
             };
           `,
-        },
-        templateName,
-      );
+      });
 
       let { status, stderr } = build({ cwd });
       expect(status, stderr.toString()).toBe(0);
@@ -422,17 +441,17 @@ test.describe("Split route modules", async () => {
         stop();
       }
     });
-  });
+  }
 
-  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+  {
+    const templateDisplayName = template.displayName;
     test(`${templateDisplayName} / declares source maps for placeholder chunks of exports that can't be split`, async () => {
-      let cwd = await createProject(
-        {
-          "react-router.config.ts": reactRouterConfig({
-            splitRouteModules: true,
-          }),
-          "vite.config.js": await viteConfig.basic({ sourcemap: true }),
-          "app/routes/_index.tsx": js`
+      let cwd = await createProject({
+        "react-router.config.ts": reactRouterConfig({
+          splitRouteModules: true,
+        }),
+        "vite.config.js": await viteConfig.basic({ sourcemap: true }),
+        "app/routes/_index.tsx": js`
             let shared = 0;
 
             export async function clientLoader() {
@@ -444,9 +463,7 @@ test.describe("Split route modules", async () => {
               return <h1>{shared}</h1>;
             }
           `,
-        },
-        templateName,
-      );
+      });
 
       let { status, stderr } = build({ cwd });
       expect(status).toBe(0);
@@ -461,6 +478,51 @@ test.describe("Split route modules", async () => {
       );
       expect(placeholder).toBeDefined();
     });
+  }
+
+  test("retains route-local TypeScript dependencies in client loader chunks", async ({
+    page,
+  }) => {
+    const cwd = await createProject({
+      "react-router.config.ts": reactRouterConfig({
+        splitRouteModules: "enforce",
+      }),
+      "vite.config.js": await viteConfig.basic({}),
+      "app/routes/_index.tsx": js`
+        import { Link } from "react-router";
+        export default function Index() {
+          return <Link to="/example">Example</Link>;
+        }
+      `,
+      "app/routes/example.tsx": js`
+        const Value = "page";
+        enum Mode { "Value" = "enum-runtime-ok" }
+        enum Mode { Result = Value }
+        namespace Values { export const result = Mode.Result; }
+        import Alias = Values;
+        export const clientLoader = () => ({ value: Alias.result });
+        export default function Example({ loaderData }) {
+          return <p>{Value}: {loaderData.value}</p>;
+        }
+      `,
+    });
+    const result = build({ cwd });
+    expect(result.status, result.stderr.toString()).toBe(0);
+    const chunk = globSync(
+      path.join(cwd, "build/client/assets/*client-loader*.js"),
+    );
+    expect(chunk).toHaveLength(1);
+    expect(readFileSync(chunk[0], "utf8")).toContain("enum-runtime-ok");
+
+    const port = await getPort();
+    const stop = await reactRouterServe({ cwd, port });
+    try {
+      await page.goto(`http://localhost:${port}`, { waitUntil: "networkidle" });
+      await page.getByRole("link", { name: "Example", exact: true }).click();
+      await expect(page.locator("p")).toHaveText("page: enum-runtime-ok");
+    } finally {
+      stop();
+    }
   });
 
   test.describe("enabled", () => {
@@ -770,4 +832,12 @@ test.describe("Split route modules", async () => {
       });
     });
   });
-});
+}
+
+for (const template of viteMajorTemplates) {
+  for (const external of [false, true]) {
+    test.describe(`Split route modules - ${template.displayName} - ${external ? "consumer" : "built-in"} React plugin`, () => {
+      defineTests(template, external);
+    });
+  }
+}

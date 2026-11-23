@@ -95,6 +95,8 @@ type ValidateConfigFunction = (config: ReactRouterConfig) => string | void;
 
 interface FutureConfig {
   unstable_customRouteDiscovery: boolean;
+  /** Opt into the external React plugin integration, including route processing and HMR. */
+  unstable_externalReactPlugin: boolean;
   unstable_enableNodeReadableStream: boolean;
   unstable_optimizeDeps: boolean;
 }
@@ -797,6 +799,8 @@ async function resolveConfig({
   let future: FutureConfig = {
     unstable_customRouteDiscovery:
       userAndPresetConfigs.future?.unstable_customRouteDiscovery ?? false,
+    unstable_externalReactPlugin:
+      userAndPresetConfigs.future?.unstable_externalReactPlugin ?? false,
     unstable_enableNodeReadableStream:
       userAndPresetConfigs.future?.unstable_enableNodeReadableStream ?? false,
     unstable_optimizeDeps:
