@@ -154,6 +154,48 @@ describe("Custom link with useLinkClickHandler", () => {
     });
   });
 
+  describe("when the link has a download attribute", () => {
+    it("stays on the same page", () => {
+      act(() => {
+        ReactDOM.createRoot(node).render(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route
+                path="home"
+                element={
+                  <div>
+                    <h1>Home</h1>
+                    <CustomLink to="../about" download>
+                      About
+                    </CustomLink>
+                  </div>
+                }
+              />
+              <Route path="about" element={<h1>About</h1>} />
+            </Routes>
+          </MemoryRouter>,
+        );
+      });
+
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
+
+      let event = new MouseEvent("click", {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+      });
+      act(() => {
+        anchor?.dispatchEvent(event);
+      });
+
+      expect(event.defaultPrevented).toBe(false);
+      let h1 = node.querySelector("h1");
+      expect(h1).not.toBeNull();
+      expect(h1?.textContent).toEqual("Home");
+    });
+  });
+
   describe("when the modifier keys are used", () => {
     it("stays on the same page", () => {
       act(() => {

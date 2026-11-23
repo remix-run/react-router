@@ -24,7 +24,7 @@ export function isInputElement(object: any): object is HTMLInputElement {
 
 type LimitedMouseEvent = Pick<
   MouseEvent,
-  "button" | "metaKey" | "altKey" | "ctrlKey" | "shiftKey"
+  "button" | "metaKey" | "altKey" | "ctrlKey" | "shiftKey" | "currentTarget"
 >;
 
 function isModifiedEvent(event: LimitedMouseEvent) {
@@ -38,7 +38,11 @@ export function shouldProcessLinkClick(
   return (
     event.button === 0 && // Ignore everything but left clicks
     (!target || target === "_self") && // Let browser handle "target=_blank" etc.
-    !isModifiedEvent(event) // Ignore clicks with modifier keys
+    !isModifiedEvent(event) && // Ignore clicks with modifier keys
+    !(
+      isHtmlElement(event.currentTarget) &&
+      event.currentTarget.hasAttribute("download")
+    ) // Let browser handle <a download>
   );
 }
 

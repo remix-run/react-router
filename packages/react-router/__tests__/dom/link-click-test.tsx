@@ -434,6 +434,82 @@ describe("A <Link> click", () => {
     });
   });
 
+  describe("when the link has a download attribute", () => {
+    it("lets the browser download the file", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="../report.csv" download>
+              Report
+            </Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.createRoot(node).render(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="*" element={<h1>Not Found</h1>} />
+            </Routes>
+          </MemoryRouter>,
+        );
+      });
+
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
+
+      let event: MouseEvent;
+      act(() => {
+        event = click(anchor);
+      });
+
+      expect(event.defaultPrevented).toBe(false);
+      let h1 = node.querySelector("h1");
+      expect(h1).not.toBeNull();
+      expect(h1?.textContent).toEqual("Home");
+    });
+
+    it("navigates to the new page when download is false", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="../about" download={false}>
+              About
+            </Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.createRoot(node).render(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<h1>About</h1>} />
+            </Routes>
+          </MemoryRouter>,
+        );
+      });
+
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
+
+      let event: MouseEvent;
+      act(() => {
+        event = click(anchor);
+      });
+
+      expect(event.defaultPrevented).toBe(true);
+      let h1 = node.querySelector("h1");
+      expect(h1).not.toBeNull();
+      expect(h1?.textContent).toEqual("About");
+    });
+  });
+
   describe("when the modifier keys are used", () => {
     it("stays on the same page", () => {
       function Home() {
