@@ -2268,7 +2268,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             // Check for invalid APIs when SSR is disabled
             if (!ctx.reactRouterConfig.ssr) {
               invariant(viteConfig);
-              validateSsrFalsePrerenderExports(
+              await validateSsrFalsePrerenderExports(
                 viteConfig,
                 ctx,
                 reactRouterServerManifest,
@@ -2319,6 +2319,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (!isDotServer) return;
 
         if (!importer) return;
+
+        // Vitest uses client transforms for some tests that execute in Node
+        // (e.g. jsdom). Its root and project runners install distinct resolver
+        // plugins. Keep the guard on for servers that listen and Browser Mode.
+        let { command, plugins, server } = this.environment.getTopLevelConfig();
+        if (
+          command === "serve" &&
+          server.middlewareMode &&
+          plugins.some(
+            ({ name }) =>
+              name === "vitest:resolve-core" || name === "vitest:resolve-root",
+          ) &&
+          !plugins.some(({ name }) => name === "vitest:browser")
+        ) {
+          return;
+        }
+
         if (viteCommand !== "build" && importer.endsWith(".html")) {
           // Vite has a special `index.html` importer for `resolveId` within `transformRequest`
           // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/transformRequest.ts#L158
