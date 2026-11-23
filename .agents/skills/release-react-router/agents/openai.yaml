@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release React Router"
+  short_description: "Verify, merge, and follow React Router releases"
+  default_prompt: "Use $release-react-router to review the current release PR, merge it if ready, and verify npm tags and the GitHub release."

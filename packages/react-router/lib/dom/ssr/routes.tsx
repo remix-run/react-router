@@ -235,6 +235,7 @@ export function createClientRoutes(
     Omit<EntryRoute, "children">[]
   > = groupRoutesByParentId(manifest),
   needsRevalidation?: Set<string>,
+  isApiOnly: boolean = false,
 ): DataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
     let routeModule = routeModulesCache[route.id];
@@ -302,6 +303,7 @@ export function createClientRoutes(
     }
 
     let dataRoute: DataRouteObject = {
+      caseSensitive: route.caseSensitive,
       id: route.id,
       index: route.index,
       path: route.path,
@@ -391,6 +393,7 @@ export function createClientRoutes(
         routeModule.clientLoader,
         route.hasLoader,
         isSpaMode,
+        isApiOnly,
       );
 
       dataRoute.action = (
@@ -403,7 +406,7 @@ export function createClientRoutes(
             "No `routeModule` available for critical-route action",
           );
           if (!routeModule.clientAction) {
-            if (isSpaMode) {
+            if (isSpaMode && !isApiOnly) {
               throw noActionDefinedError("clientAction", route.id);
             }
             return fetchServerAction(singleFetch);
@@ -435,7 +438,7 @@ export function createClientRoutes(
       if (!route.hasClientAction) {
         dataRoute.action = (_: ActionFunctionArgs, singleFetch?: unknown) =>
           prefetchStylesAndCallHandler(() => {
-            if (isSpaMode) {
+            if (isSpaMode && !isApiOnly) {
               throw noActionDefinedError("clientAction", route.id);
             }
             return fetchServerAction(singleFetch);
@@ -555,6 +558,7 @@ export function createClientRoutes(
       route.id,
       routesByParentId,
       needsRevalidation,
+      isApiOnly,
     );
     if (children.length > 0) dataRoute.children = children;
     return dataRoute;
@@ -677,9 +681,11 @@ export function shouldHydrateRouteLoader(
   clientLoader: ClientLoaderFunction | undefined,
   hasLoader: boolean,
   isSpaMode: boolean,
+  isApiOnly: boolean = false,
 ) {
   return (
     (isSpaMode && routeId !== "root") ||
+    (isApiOnly && isSpaMode && hasLoader) ||
     (clientLoader != null &&
       (clientLoader.hydrate === true || hasLoader !== true))
   );

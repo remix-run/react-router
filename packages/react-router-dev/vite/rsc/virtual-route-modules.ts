@@ -354,6 +354,7 @@ ${result}`;
         hasErrorBoundary: ${JSON.stringify(hasErrorBoundary)},
         hasLoader: ${JSON.stringify(hasLoader)},
         hasClientLoader: ${JSON.stringify(staticExports.includes("clientLoader"))},
+        hasClientMiddleware: ${JSON.stringify(staticExports.includes("clientMiddleware"))},
       });\n` +
           `\nif (import.meta.hot) {\n` +
           `  import.meta.hot.accept((mod) => {

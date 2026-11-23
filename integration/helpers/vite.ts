@@ -376,7 +376,12 @@ type ServerArgs = {
 export const createDev =
   (nodeArgs: string[]) =>
   async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
-    let proc = node(nodeArgs, { cwd, env });
+    // Reused workers can inherit production mode from earlier fixtures. Dev
+    // servers need a predictable default, while production runners opt in.
+    let proc = node(nodeArgs, {
+      cwd,
+      env: { NODE_ENV: "development", ...env },
+    });
     await waitForServer(proc, { port, basename });
     return () => proc.kill();
   };
