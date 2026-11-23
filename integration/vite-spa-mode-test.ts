@@ -1447,7 +1447,10 @@ test.describe("SPA Mode", () => {
       }
 
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/other?tab=details", false);
+      await Promise.all([
+        page.waitForRequest("**/assets/layout-menu-*.js"),
+        app.goto("/other?tab=details", false),
+      ]);
       await expect(page.locator("body")).toHaveAttribute(
         "data-initial-tab",
         "details",
@@ -1455,14 +1458,20 @@ test.describe("SPA Mode", () => {
       await expect(page.locator("nav a")).toHaveCount(2);
       await expect(page.locator("nav a.active")).toHaveCount(0);
       await expect(page.locator("nav a[aria-current]")).toHaveCount(0);
+      let otherLink = page.locator('a[href="/other"]');
+      let prerenderedOtherLink = await otherLink.evaluateHandle((link) => link);
       releaseMenu();
       await expect(page.locator("h1")).toHaveText("Other page");
       await expect(page.locator('a[href="/"]')).not.toHaveClass(/\bactive\b/);
-      await expect(page.locator('a[href="/other"]')).toHaveClass(/\bactive\b/);
-      await expect(page.locator('a[href="/other"]')).toHaveAttribute(
-        "aria-current",
-        "page",
-      );
+      await expect(otherLink).toHaveClass(/\bactive\b/);
+      await expect(otherLink).toHaveAttribute("aria-current", "page");
+      expect(
+        await otherLink.evaluate(
+          (link, original) => link === original,
+          prerenderedOtherLink,
+        ),
+      ).toBe(true);
+      await expect(page.locator("nav a[aria-current]")).toHaveCount(1);
 
       await app.clickLink("/");
       await expect(page.locator("h1")).toHaveText("Home page");
@@ -1471,9 +1480,7 @@ test.describe("SPA Mode", () => {
         "details",
       );
       await expect(page.locator('a[href="/"]')).toHaveClass(/\bactive\b/);
-      await expect(page.locator('a[href="/other"]')).not.toHaveClass(
-        /\bactive\b/,
-      );
+      await expect(otherLink).not.toHaveClass(/\bactive\b/);
     } finally {
       releaseMenu();
       appFixture.close();
