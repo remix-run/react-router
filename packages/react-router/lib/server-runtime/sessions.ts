@@ -293,7 +293,8 @@ export function createSessionStorage<Data = SessionData, FlashData = Data>({
 
   return {
     async getSession(cookieHeader, options) {
-      let parsedId = cookieHeader && (await cookie.parse(cookieHeader, options));
+      let parsedId =
+        cookieHeader && (await cookie.parse(cookieHeader, options));
       let id = typeof parsedId === "string" && parsedId ? parsedId : "";
       let data = id ? await readData(id) : null;
       return createSession<Data, FlashData>((data || {}) as Data, id);

@@ -15,6 +15,11 @@ function getCookieFromSetCookie(setCookie: string): string {
   return setCookie.split(/;\s*/)[0];
 }
 
+const cookieSigningModes = [
+  { signing: "signed", secrets: ["secret1"] },
+  { signing: "unsigned", secrets: [] },
+];
+
 describe("Session", () => {
   it("has an empty id by default", () => {
     expect(createSession().id).toEqual("");
@@ -91,27 +96,37 @@ describe("createSessionStorage", () => {
     expect(deleteData).toHaveBeenCalledWith("session-id");
   });
 
-  it("ignores non-string session ids parsed from malformed cookies", async () => {
-    let readData = jest.fn(async (_id: string) => ({ user: "mjackson" }));
-    let cookie = createCookie("__session", { secrets: ["secret1"] });
-    let { getSession } = createSessionStorage({
-      cookie,
-      createData: async () => "session-id",
-      readData,
-      updateData: async () => {},
-      deleteData: async () => {},
-    });
+  it.each(cookieSigningModes)(
+    "passes only nonempty string session ids from $signing cookies to readData",
+    async ({ secrets }) => {
+      let readData = jest.fn(async (_id: string) => ({ user: "mjackson" }));
+      let cookie = createCookie("adapter-session-payload", { secrets });
+      let { getSession } = createSessionStorage({
+        cookie,
+        createData: async () => "session-id",
+        readData,
+        updateData: async () => {},
+        deleteData: async () => {},
+      });
 
-    for (let badId of [{ foo: "bar" }, ["a"], 123, true]) {
-      let setCookie = await cookie.serialize(badId);
+      for (let badId of ["", null, { foo: "bar" }, ["a"], 123, true]) {
+        let setCookie = await cookie.serialize(badId);
+        let session = await getSession(getCookieFromSetCookie(setCookie));
+
+        expect(session.id).toBe("");
+        expect(session.data).toEqual({});
+      }
+      expect(readData).not.toHaveBeenCalled();
+
+      let setCookie = await cookie.serialize("session-id");
       let session = await getSession(getCookieFromSetCookie(setCookie));
 
-      expect(isSession(session)).toBe(true);
-      expect(session.id).toBe("");
-      expect(session.data).toEqual({});
-    }
-    expect(readData).not.toHaveBeenCalled();
-  });
+      expect(readData).toHaveBeenCalledTimes(1);
+      expect(readData).toHaveBeenCalledWith("session-id");
+      expect(session.id).toBe("session-id");
+      expect(session.data).toEqual({ user: "mjackson" });
+    },
+  );
 });
 
 describe("In-memory session storage", () => {
@@ -170,17 +185,26 @@ describe("Cookie session storage", () => {
     expect(session.get("user")).toBeUndefined();
   });
 
-  it("returns an empty session when the cookie parses to a non-object value", async () => {
-    let cookie = createCookie("__session", { secrets: ["secret1"] });
-    let { getSession } = createCookieSessionStorage({ cookie });
+  it.each(cookieSigningModes)(
+    "accepts only object data from $signing cookies",
+    async ({ secrets }) => {
+      let cookie = createCookie("cookie-session-payload", { secrets });
+      let { getSession } = createCookieSessionStorage({ cookie });
 
-    for (let badPayload of ["abc", [1, 2], 123, true]) {
-      let setCookie = await cookie.serialize(badPayload);
+      for (let badPayload of ["abc", [1, 2], 123, true, null]) {
+        let setCookie = await cookie.serialize(badPayload);
+        let session = await getSession(getCookieFromSetCookie(setCookie));
+
+        expect(session.data).toEqual({});
+      }
+
+      let data = { user: "mjackson", favorites: ["a", "b"] };
+      let setCookie = await cookie.serialize(data);
       let session = await getSession(getCookieFromSetCookie(setCookie));
 
-      expect(session.data).toEqual({});
-    }
-  });
+      expect(session.data).toEqual(data);
+    },
+  );
 
   it('"makes the default path of cookies to be /', async () => {
     let { getSession, commitSession } = createCookieSessionStorage({
