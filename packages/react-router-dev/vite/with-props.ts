@@ -1,4 +1,4 @@
-import type { Babel, NodePath, ParseResult } from "./babel";
+import type { Babel, ParseResult } from "./babel";
 import { traverse, t } from "./babel";
 import { isRouteChunkModuleId } from "./route-chunks";
 
@@ -17,144 +17,147 @@ export const decorateComponentExportsWithProps = (
   ast: ParseResult<Babel.File>,
 ) => {
   const hocs: Array<[string, Babel.Identifier]> = [];
-  function getHocUid(path: NodePath, hocName: HocName) {
-    const uid = path.scope.generateUidIdentifier(hocName);
-    hocs.push([hocName, uid]);
-    return uid;
-  }
 
-  const generated = new WeakSet<Babel.Node>();
   // Wrapped local bindings (i.e., `export { Page as default }`) are appended
   // to the end of the module so the binding is initialized before we read it
   const trailingStatements: Babel.Statement[] = [];
 
   traverse(ast, {
-    ExportDeclaration(path) {
-      if (generated.has(path.node)) return;
-      if (path.isExportDefaultDeclaration()) {
-        const declaration = path.get("declaration");
-        // prettier-ignore
-        const expr =
-          declaration.isExpression() ? declaration.node :
-          declaration.isFunctionDeclaration() ? toFunctionExpression(declaration.node) :
-          undefined
-        if (expr) {
-          const uid = getHocUid(path, "UNSAFE_withComponentProps");
-          declaration.replaceWith(t.callExpression(uid, [expr]));
-        }
-        return;
+    // Exports can only be top-level statements, so the rest of the module
+    // isn't visited.
+    Program(program) {
+      function getHocUid(hocName: HocName) {
+        const uid = program.scope.generateUidIdentifier(hocName);
+        hocs.push([hocName, uid]);
+        return uid;
       }
 
-      if (path.isExportNamedDeclaration()) {
-        // Handle export specifiers such as:
-        //   export { default } from "./component";
-        //   export { Component as default };
-        //   export { ErrorBoundary } from "./error-boundary";
-        if (path.node.specifiers.length > 0) {
-          const source = path.node.source;
-          // Route chunk modules are decorated individually, so re-exports from
-          // them (i.e., the route chunk "index" module) must be left alone
-          if (source && isRouteChunkModuleId(source.value)) return;
-          const statements: Babel.Statement[] = [];
-          for (const specifier of path.get("specifiers")) {
-            if (!specifier.isExportSpecifier()) continue;
-            const exported = specifier.node.exported;
-            const exportedName = t.isIdentifier(exported)
-              ? exported.name
-              : exported.value;
-            const hocName: HocName | undefined =
-              exportedName === "default"
-                ? "UNSAFE_withComponentProps"
-                : isNamedComponentExport(exportedName)
-                  ? `UNSAFE_with${exportedName}Props`
-                  : undefined;
-            if (!hocName) continue;
+      program.get("body").forEach((path) => {
+        if (path.isExportDefaultDeclaration()) {
+          const declaration = path.get("declaration");
+          // prettier-ignore
+          const expr =
+            declaration.isExpression() ? declaration.node :
+            declaration.isFunctionDeclaration() ? toFunctionExpression(declaration.node) :
+            undefined
+          if (expr) {
+            const uid = getHocUid("UNSAFE_withComponentProps");
+            declaration.replaceWith(t.callExpression(uid, [expr]));
+          }
+          return;
+        }
 
-            let local: Babel.Identifier = specifier.node.local;
-            if (source) {
-              // Import the re-exported binding so we can wrap it locally
-              const imported = path.scope.generateUidIdentifier(
-                exportedName === "default" ? "Component" : exportedName,
+        if (path.isExportNamedDeclaration()) {
+          // Handle export specifiers such as:
+          //   export { default } from "./component";
+          //   export { Component as default };
+          //   export { ErrorBoundary } from "./error-boundary";
+          if (path.node.specifiers.length > 0) {
+            const source = path.node.source;
+            // Route chunk modules are decorated individually, so re-exports from
+            // them (i.e., the route chunk "index" module) must be left alone
+            if (source && isRouteChunkModuleId(source.value)) return;
+            const statements: Babel.Statement[] = [];
+            for (const specifier of path.get("specifiers")) {
+              if (!specifier.isExportSpecifier()) continue;
+              const exported = specifier.node.exported;
+              const exportedName = t.isIdentifier(exported)
+                ? exported.name
+                : exported.value;
+              const hocName: HocName | undefined =
+                exportedName === "default"
+                  ? "UNSAFE_withComponentProps"
+                  : isNamedComponentExport(exportedName)
+                    ? `UNSAFE_with${exportedName}Props`
+                    : undefined;
+              if (!hocName) continue;
+
+              let local: Babel.Identifier = specifier.node.local;
+              if (source) {
+                // Import the re-exported binding so we can wrap it locally
+                const imported = program.scope.generateUidIdentifier(
+                  exportedName === "default" ? "Component" : exportedName,
+                );
+                statements.push(
+                  t.importDeclaration(
+                    [
+                      local.name === "default"
+                        ? t.importDefaultSpecifier(imported)
+                        : t.importSpecifier(imported, local),
+                    ],
+                    t.stringLiteral(source.value),
+                  ),
+                );
+                local = imported;
+              }
+
+              const uid = getHocUid(hocName);
+              const wrapped = program.scope.generateUidIdentifier(
+                exportedName === "default" ? "default" : exportedName,
               );
-              statements.push(
-                t.importDeclaration(
-                  [
-                    local.name === "default"
-                      ? t.importDefaultSpecifier(imported)
-                      : t.importSpecifier(imported, local),
-                  ],
-                  t.stringLiteral(source.value),
-                ),
+              const exportDecl = t.exportNamedDeclaration(null, [
+                t.exportSpecifier(wrapped, t.identifier(exportedName)),
+              ]);
+              (source ? statements : trailingStatements).push(
+                t.variableDeclaration("const", [
+                  t.variableDeclarator(
+                    wrapped,
+                    t.callExpression(uid, [t.identifier(local.name)]),
+                  ),
+                ]),
+                exportDecl,
               );
-              local = imported;
+              specifier.remove();
             }
 
-            const uid = getHocUid(path, hocName);
-            const wrapped = path.scope.generateUidIdentifier(
-              exportedName === "default" ? "default" : exportedName,
-            );
-            const exportDecl = t.exportNamedDeclaration(null, [
-              t.exportSpecifier(wrapped, t.identifier(exportedName)),
-            ]);
-            generated.add(exportDecl);
-            (source ? statements : trailingStatements).push(
+            if (path.node.specifiers.length === 0) {
+              if (statements.length > 0) {
+                path.replaceWithMultiple(statements);
+              } else {
+                path.remove();
+              }
+            } else if (statements.length > 0) {
+              path.insertAfter(statements);
+            }
+            return;
+          }
+
+          const decl = path.get("declaration");
+
+          if (decl.isVariableDeclaration()) {
+            decl.get("declarations").forEach((varDeclarator) => {
+              const id = varDeclarator.get("id");
+              const init = varDeclarator.get("init");
+              const expr = init.node;
+              if (!expr) return;
+              if (!id.isIdentifier()) return;
+              const { name } = id.node;
+              if (!isNamedComponentExport(name)) return;
+              const uid = getHocUid(`UNSAFE_with${name}Props`);
+              init.replaceWith(t.callExpression(uid, [expr]));
+            });
+            return;
+          }
+
+          if (decl.isFunctionDeclaration()) {
+            const { id } = decl.node;
+            if (!id) return;
+            const { name } = id;
+            if (!isNamedComponentExport(name)) return;
+
+            const uid = getHocUid(`UNSAFE_with${name}Props`);
+            decl.replaceWith(
               t.variableDeclaration("const", [
                 t.variableDeclarator(
-                  wrapped,
-                  t.callExpression(uid, [t.identifier(local.name)]),
+                  t.identifier(name),
+                  t.callExpression(uid, [toFunctionExpression(decl.node)]),
                 ),
               ]),
-              exportDecl,
             );
-            specifier.remove();
           }
-
-          if (path.node.specifiers.length === 0) {
-            if (statements.length > 0) {
-              path.replaceWithMultiple(statements);
-            } else {
-              path.remove();
-            }
-          } else if (statements.length > 0) {
-            path.insertAfter(statements);
-          }
-          return;
         }
-
-        const decl = path.get("declaration");
-
-        if (decl.isVariableDeclaration()) {
-          decl.get("declarations").forEach((varDeclarator) => {
-            const id = varDeclarator.get("id");
-            const init = varDeclarator.get("init");
-            const expr = init.node;
-            if (!expr) return;
-            if (!id.isIdentifier()) return;
-            const { name } = id.node;
-            if (!isNamedComponentExport(name)) return;
-            const uid = getHocUid(path, `UNSAFE_with${name}Props`);
-            init.replaceWith(t.callExpression(uid, [expr]));
-          });
-          return;
-        }
-
-        if (decl.isFunctionDeclaration()) {
-          const { id } = decl.node;
-          if (!id) return;
-          const { name } = id;
-          if (!isNamedComponentExport(name)) return;
-
-          const uid = getHocUid(path, `UNSAFE_with${name}Props`);
-          decl.replaceWith(
-            t.variableDeclaration("const", [
-              t.variableDeclarator(
-                t.identifier(name),
-                t.callExpression(uid, [toFunctionExpression(decl.node)]),
-              ),
-            ]),
-          );
-        }
-      }
+      });
+      program.stop();
     },
   });
 

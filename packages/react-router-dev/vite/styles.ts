@@ -15,7 +15,7 @@ import * as babel from "./babel";
 const cssFileRegExp =
   /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/;
 // https://github.com/vitejs/vite/blob/d6bde8b03d433778aaed62afc2be0630c8131908/packages/vite/src/node/plugins/css.ts#L160
-const cssModulesRegExp = new RegExp(`\\.module${cssFileRegExp.source}`);
+export const cssModulesRegExp = new RegExp(`\\.module${cssFileRegExp.source}`);
 
 const isCssFile = (file: string) => cssFileRegExp.test(file);
 export const isCssModulesFile = (file: string) => cssModulesRegExp.test(file);

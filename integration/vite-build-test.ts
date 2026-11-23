@@ -1,5 +1,7 @@
 import * as path from "node:path";
-import { globSync, readFileSync } from "node:fs";
+import { globSync, readFileSync, writeFileSync } from "node:fs";
+import { SourceMap } from "node:module";
+import { pathToFileURL } from "node:url";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
@@ -519,4 +521,181 @@ test.describe("Build resource cleanup", () => {
       });
     }
   }
+});
+
+test.describe("Route compilation", () => {
+  viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(`${templateDisplayName} / preserves route source locations for downstream transforms`, async () => {
+      let marker = "ROUTE_SOURCE_MAP_MARKER";
+      let source = `export default () => "${marker}";`;
+      let cwd = await createProject(
+        {
+          "app/routes.ts": js`
+            import { index } from "@react-router/dev/routes";
+
+            export default [index("route.js")];
+          `,
+          "app/route.js": source,
+          "vite.config.ts": js`
+            import { writeFileSync } from "node:fs";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default {
+              build: { sourcemap: false },
+              plugins: [
+                reactRouter(),
+                {
+                  name: "record-route-source-map",
+                  enforce: "post",
+                  transform(code, id) {
+                    if (this.environment.name !== "client" || !id.endsWith("/app/route.js")) return;
+                    writeFileSync("route-source-map.json", JSON.stringify({
+                      code,
+                      map: this.getCombinedSourcemap(),
+                    }));
+                  },
+                },
+              ],
+            };
+          `,
+        },
+        templateName,
+      );
+
+      let { status, stderr } = build({ cwd });
+      expect(status, stderr.toString()).toBe(0);
+      let { code, map } = JSON.parse(
+        readFileSync(path.join(cwd, "route-source-map.json"), "utf8"),
+      );
+      let markerIndex = code.indexOf(marker);
+      expect(markerIndex).toBeGreaterThanOrEqual(0);
+      let lines = code.slice(0, markerIndex).split("\n");
+      let entry = new SourceMap(map).findEntry(
+        lines.length - 1,
+        lines.at(-1)!.length,
+      );
+      expect(entry).toMatchObject({
+        generatedLine: lines.length - 1,
+        originalLine: 0,
+        originalColumn: source.indexOf('"'),
+      });
+    });
+
+    test(`${templateDisplayName} / resolves package subpath imports in route globs`, async () => {
+      let cwd = await createProject(
+        {
+          "content/article.js": `export default "GLOB_ARTICLE_CONTENT";`,
+          "app/routes.ts": js`
+            import { index } from "@react-router/dev/routes";
+
+            export default [index("../route.tsx")];
+          `,
+          "route.tsx": js`
+            const articles = import.meta.glob("#content/*.js", {
+              eager: true,
+              import: "default",
+            });
+
+            export default function Route() {
+              return <h1>{Object.values(articles).join(", ")}</h1>;
+            }
+          `,
+        },
+        templateName,
+      );
+      let packageJsonPath = path.join(cwd, "package.json");
+      let packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+      packageJson.imports = { "#content/*": "./content/*" };
+      writeFileSync(packageJsonPath, JSON.stringify(packageJson));
+
+      let { status, stderr } = build({ cwd });
+      expect(status, stderr.toString()).toBe(0);
+      expect(
+        grep(path.join(cwd, "build/client"), /GLOB_ARTICLE_CONTENT/),
+      ).toHaveLength(1);
+    });
+
+    test(`${templateDisplayName} / reuses transformed routes and generated route chunks within each build`, async () => {
+      let route = (value: string) => js`
+        export const handle = "${value}";
+        export default function Route() {
+          return <h1>Transformed route</h1>;
+        }
+      `;
+      let cwd = await createProject(
+        {
+          "react-router.config.ts": reactRouterConfig({
+            splitRouteModules: true,
+          }),
+          "vite.config.ts": js`
+            import { resolve } from "node:path";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            let command;
+            export default {
+              plugins: [
+                {
+                  name: "add-route-export",
+                  enforce: "pre",
+                  configEnvironment(name, options, { command }) {
+                    if (command === "build" && name === "client") {
+                      options.build.rollupOptions.input.push(
+                        resolve("app/routes/_index.tsx") + "?route-chunk=clientLoader",
+                      );
+                    }
+                  },
+                  configResolved(config) {
+                    command = config.command;
+                  },
+                  transform(code, id) {
+                    if (!id.split("?")[0].endsWith("/app/routes/_index.tsx")) return;
+                    if (command === "serve") console.log("CHILD_ROUTE_COMPILATION");
+                    return {
+                      code: code.replace(
+                        /export const handle = ("[^"]+");/,
+                        "export async function clientLoader() { return $1; }",
+                      ),
+                      map: null,
+                    };
+                  },
+                },
+                reactRouter(),
+              ],
+            };
+          `,
+          "app/routes/_index.tsx": route("FIRST_BUILD"),
+        },
+        templateName,
+      );
+
+      for (let value of ["FIRST_BUILD", "SECOND_BUILD"]) {
+        writeFileSync(path.join(cwd, "app/routes/_index.tsx"), route(value));
+        let { status, stdout, stderr } = build({ cwd });
+        expect(status, stderr.toString()).toBe(0);
+        expect(
+          stdout.toString().match(/CHILD_ROUTE_COMPILATION/g),
+        ).toHaveLength(1);
+
+        let manifestFiles = globSync("build/client/assets/manifest-*.js", {
+          cwd,
+        });
+        expect(manifestFiles).toHaveLength(1);
+        let manifest = JSON.parse(
+          readFileSync(path.join(cwd, manifestFiles[0]), "utf8").slice(
+            "window.__reactRouterManifest=".length,
+            -1,
+          ),
+        );
+        let routeManifest = manifest.routes["routes/_index"];
+        expect(routeManifest.hasClientLoader).toBe(true);
+        expect(routeManifest.clientLoaderModule).toEqual(expect.any(String));
+        let { clientLoader } = await import(
+          pathToFileURL(
+            path.join(cwd, "build/client", routeManifest.clientLoaderModule),
+          ).href
+        );
+        expect(await clientLoader()).toBe(value);
+      }
+    });
+  });
 });
