@@ -58,7 +58,11 @@ test("hydrates Links with a server-only nonce", async ({ page, dev }) => {
 
   let hydrationWarnings: string[] = [];
   page.on("console", (message) => {
-    if (/hydrat|didn't match|did not match/i.test(message.text())) {
+    // Firefox forwards React's performance timestamps as console messages.
+    if (
+      (message.type() === "error" || message.type() === "warning") &&
+      /hydrat|didn't match|did not match/i.test(message.text())
+    ) {
       hydrationWarnings.push(message.text());
     }
   });
