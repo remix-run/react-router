@@ -524,6 +524,40 @@ test.describe("Build resource cleanup", () => {
 
 test.describe("Route compilation", () => {
   viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(`${templateDisplayName} / resolves package subpath imports in route globs`, async () => {
+      let cwd = await createProject(
+        {
+          "content/article.js": `export default "GLOB_ARTICLE_CONTENT";`,
+          "app/routes.ts": js`
+            import { index } from "@react-router/dev/routes";
+
+            export default [index("../route.tsx")];
+          `,
+          "route.tsx": js`
+            const articles = import.meta.glob("#content/*.js", {
+              eager: true,
+              import: "default",
+            });
+
+            export default function Route() {
+              return <h1>{Object.values(articles).join(", ")}</h1>;
+            }
+          `,
+        },
+        templateName,
+      );
+      let packageJsonPath = path.join(cwd, "package.json");
+      let packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+      packageJson.imports = { "#content/*": "./content/*" };
+      writeFileSync(packageJsonPath, JSON.stringify(packageJson));
+
+      let { status, stderr } = build({ cwd });
+      expect(status, stderr.toString()).toBe(0);
+      expect(
+        grep(path.join(cwd, "build/client"), /GLOB_ARTICLE_CONTENT/),
+      ).toHaveLength(1);
+    });
+
     test(`${templateDisplayName} / reuses transformed routes and generated route chunks within each build`, async () => {
       let route = (value: string) => js`
         export const handle = "${value}";

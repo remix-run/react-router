@@ -14,29 +14,19 @@ type HocName =
 
 export const decorateComponentExportsWithProps = (
   ast: ParseResult<Babel.File>,
-  code: string,
 ) => {
   const hocs: Array<[string, Babel.Identifier]> = [];
-  const uids = new Set<string>();
-  // Scope tracking is the expensive part of a Babel traversal, and the only
-  // thing it was needed for here was an unused name, which the source text
-  // can answer without it.
-  function getHocUid(hocName: HocName) {
-    let name = `_${hocName}`;
-    for (let i = 2; uids.has(name) || code.includes(name); i++) {
-      name = `_${hocName}${i}`;
-    }
-    uids.add(name);
-    const uid = t.identifier(name);
-    hocs.push([hocName, uid]);
-    return uid;
-  }
 
   traverse(ast, {
-    noScope: true,
     // Exports can only be top-level statements, so the rest of the module
     // isn't visited.
     Program(program) {
+      function getHocUid(hocName: HocName) {
+        const uid = program.scope.generateUidIdentifier(hocName);
+        hocs.push([hocName, uid]);
+        return uid;
+      }
+
       program.get("body").forEach((path) => {
         if (path.isExportDefaultDeclaration()) {
           const declaration = path.get("declaration");
