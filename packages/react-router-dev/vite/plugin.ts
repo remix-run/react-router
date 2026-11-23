@@ -2874,12 +2874,17 @@ function addRefreshWrapper(
   );
 }
 
+// A cyclic import can call a hoisted component factory before the module has
+// evaluated. Keep the signature callback callable before the header runs.
 const REACT_REFRESH_HEADER = `
 import RefreshRuntime from "${virtualHmrRuntime.id}";
 
 const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
 let $RefreshReg$ = () => {};
-let $RefreshSig$ = () => (type) => type;
+function $RefreshSig$() {
+  const createSignature = $RefreshSig$.createSignature;
+  return createSignature ? createSignature() : (type) => type;
+}
 
 if (import.meta.hot && !inWebWorker) {
   if (!window.__vite_plugin_react_preamble_installed__) {
@@ -2891,7 +2896,7 @@ if (import.meta.hot && !inWebWorker) {
   $RefreshReg$ = (type, id) => {
     RefreshRuntime.register(type, __SOURCE__ + " " + id)
   };
-  $RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+  $RefreshSig$.createSignature = RefreshRuntime.createSignatureFunctionForTransform;
 }`.replaceAll("\n", ""); // Header is all on one line so source maps aren't affected
 
 const REACT_REFRESH_FOOTER = `
