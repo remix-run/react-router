@@ -46,8 +46,11 @@ export function createCookieSessionStorage<
 
   return {
     async getSession(cookieHeader, options) {
+      let data = cookieHeader && (await cookie.parse(cookieHeader, options));
       return createSession(
-        (cookieHeader && (await cookie.parse(cookieHeader, options))) || {},
+        typeof data === "object" && data !== null && !Array.isArray(data)
+          ? data
+          : {},
       );
     },
     async commitSession(session, options) {
