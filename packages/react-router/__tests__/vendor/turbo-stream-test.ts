@@ -1,3 +1,7 @@
+import { execFile } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+
 import { decode, encode } from "../../vendor/turbo-stream-v2/turbo-stream";
 import {
   Deferred,
@@ -777,6 +781,54 @@ test("should encode and decode large payload and yield the event loop", async ()
   expect(currentDecoded).toBeNull();
 
   await decoded.done;
+});
+
+describe("decoder completion errors", () => {
+  const failures = [
+    ["TypeError", { name: "TypeError", message: "network error" }],
+    ["AbortError", { name: "AbortError", message: "stream aborted" }],
+    [
+      "unknown",
+      { name: "Error", message: "Deferred ID 999 not found in stream" },
+    ],
+    ["parse", { name: "SyntaxError", message: "" }],
+  ] as const;
+
+  test.each(failures)(
+    "handles ignored completion after %s",
+    async (failure) => {
+      const { stdout, stderr } = await promisify(execFile)(process.execPath, [
+        fileURLToPath(new URL("./turbo-stream-rejection.cjs", import.meta.url)),
+        failure,
+        "ignored",
+      ]);
+      expect(stderr).toBe("");
+      expect(JSON.parse(stdout)).toEqual({
+        hasDeferred: true,
+        done: "ignored",
+        deferred: "ignored",
+        unhandled: [],
+      });
+    },
+  );
+
+  test.each(failures)(
+    "rejects observed completion and deferred value after %s",
+    async (failure, error) => {
+      const { stdout, stderr } = await promisify(execFile)(process.execPath, [
+        fileURLToPath(new URL("./turbo-stream-rejection.cjs", import.meta.url)),
+        failure,
+        "observed",
+      ]);
+      expect(stderr).toBe("");
+      expect(JSON.parse(stdout)).toEqual({
+        hasDeferred: true,
+        done: error,
+        deferred: error,
+        unhandled: [],
+      });
+    },
+  );
 });
 
 type Nested = { value: number; next: Nested | null };

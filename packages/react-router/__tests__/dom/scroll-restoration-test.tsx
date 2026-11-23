@@ -17,6 +17,64 @@ import "@testing-library/jest-dom";
 import { mockFrameworkContext } from "../utils/framework";
 
 describe(`ScrollRestoration`, () => {
+  it.each([
+    { stored: null, expected: { page: 123 } },
+    { stored: false, expected: { page: 123 } },
+    { stored: true, expected: { page: 123 } },
+    { stored: 0, expected: { page: 123 } },
+    { stored: 1, expected: { page: 123 } },
+    { stored: "invalid", expected: { page: 123 } },
+    { stored: [], expected: { page: 123 } },
+    { stored: { previous: 456 }, expected: { previous: 456, page: 123 } },
+  ])(
+    "saves a scroll-position map when storage contains $stored",
+    ({ stored, expected }) => {
+      jest.restoreAllMocks();
+      let storageKey = "invalid-scroll-positions";
+      let originalScrollTo = window.scrollTo;
+      window.scrollTo = jest.fn();
+      Object.defineProperty(window, "scrollY", { writable: true, value: 123 });
+      window.sessionStorage.setItem(storageKey, JSON.stringify(stored));
+      let errors: unknown[] = [];
+      let onError = (event: ErrorEvent) => {
+        errors.push(event.error);
+        event.preventDefault();
+      };
+      window.addEventListener("error", onError);
+      let createRouter = () =>
+        createMemoryRouter([
+          {
+            path: "/",
+            element: (
+              <ScrollRestoration
+                storageKey={storageKey}
+                getKey={() => "page"}
+              />
+            ),
+          },
+        ]);
+      let router = createRouter();
+      let view = render(<RouterProvider router={router} />);
+      try {
+        window.dispatchEvent(new Event("pagehide"));
+        expect(errors).toEqual([]);
+        expect(JSON.parse(window.sessionStorage.getItem(storageKey)!)).toEqual(
+          expected,
+        );
+      } finally {
+        view.unmount();
+        router.dispose();
+        window.removeEventListener("error", onError);
+        window.sessionStorage.setItem(storageKey, "{}");
+        let resetRouter = createRouter();
+        render(<RouterProvider router={resetRouter} />).unmount();
+        resetRouter.dispose();
+        window.sessionStorage.removeItem(storageKey);
+        window.scrollTo = originalScrollTo;
+      }
+    },
+  );
+
   it("restores the scroll position for a page when re-visited", () => {
     const consoleWarnMock = jest
       .spyOn(console, "warn")
