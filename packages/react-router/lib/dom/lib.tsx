@@ -1586,6 +1586,9 @@ export interface NavLinkProps extends Omit<
     | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
 }
 
+const subscribeToNothing = () => () => {};
+const getClientSpaFallback = () => false;
+
 /**
  * Wraps {@link Link | `<Link>`} with additional props for styling active and
  * pending states.
@@ -1648,12 +1651,23 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let routerNavigation = React.useContext(DataRouterNavigationContext);
     let { navigator, basename } = React.useContext(NavigationContext);
+    let isSpaMode = React.useContext(FrameworkContext)?.isSpaMode === true;
+
+    // SPA fallback HTML is reused across URLs. Keep the link state neutral
+    // until this link hydrates, including links inside a Suspense boundary.
+    let isSpaFallback = React.useSyncExternalStore(
+      subscribeToNothing,
+      getClientSpaFallback,
+      () => isSpaMode,
+    );
+
     let isTransitioning =
       routerNavigation != null &&
       // Conditional usage is OK here because the usage of a data router is static
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useViewTransitionState(path) &&
-      viewTransition === true;
+      viewTransition === true &&
+      !isSpaFallback;
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
@@ -1686,12 +1700,14 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ? toPathname.length - 1
         : toPathname.length;
     let isActive =
-      locationPathname === toPathname ||
-      (!end &&
-        locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(endSlashPosition) === "/");
+      !isSpaFallback &&
+      (locationPathname === toPathname ||
+        (!end &&
+          locationPathname.startsWith(toPathname) &&
+          locationPathname.charAt(endSlashPosition) === "/"));
 
     let isPending =
+      !isSpaFallback &&
       nextLocationPathname != null &&
       (nextLocationPathname === toPathname ||
         (!end &&
