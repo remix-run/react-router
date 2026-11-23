@@ -12,6 +12,10 @@ test("avoids import name collisions with escaped identifiers", () => {
   let ast = parse(code, { sourceType: "module" });
   decorateComponentExportsWithProps(ast);
 
-  let output = generate(ast).code;
-  expect(() => parse(output, { sourceType: "module" })).not.toThrow();
+  let output = parse(generate(ast).code, { sourceType: "module" });
+  expect(output.program.body[0]).toMatchObject({
+    type: "ImportDeclaration",
+    source: { value: "react-router" },
+    specifiers: [{ imported: { name: "UNSAFE_withComponentProps" } }],
+  });
 });

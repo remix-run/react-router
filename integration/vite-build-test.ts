@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { globSync, readFileSync, writeFileSync } from "node:fs";
+import { SourceMap } from "node:module";
 import { pathToFileURL } from "node:url";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
@@ -524,6 +525,62 @@ test.describe("Build resource cleanup", () => {
 
 test.describe("Route compilation", () => {
   viteMajorTemplates.forEach(({ templateName, templateDisplayName }) => {
+    test(`${templateDisplayName} / preserves route source locations for downstream transforms`, async () => {
+      let marker = "ROUTE_SOURCE_MAP_MARKER";
+      let source = `export default () => "${marker}";`;
+      let cwd = await createProject(
+        {
+          "app/routes.ts": js`
+            import { index } from "@react-router/dev/routes";
+
+            export default [index("route.js")];
+          `,
+          "app/route.js": source,
+          "vite.config.ts": js`
+            import { writeFileSync } from "node:fs";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default {
+              build: { sourcemap: false },
+              plugins: [
+                reactRouter(),
+                {
+                  name: "record-route-source-map",
+                  enforce: "post",
+                  transform(code, id) {
+                    if (this.environment.name !== "client" || !id.endsWith("/app/route.js")) return;
+                    writeFileSync("route-source-map.json", JSON.stringify({
+                      code,
+                      map: this.getCombinedSourcemap(),
+                    }));
+                  },
+                },
+              ],
+            };
+          `,
+        },
+        templateName,
+      );
+
+      let { status, stderr } = build({ cwd });
+      expect(status, stderr.toString()).toBe(0);
+      let { code, map } = JSON.parse(
+        readFileSync(path.join(cwd, "route-source-map.json"), "utf8"),
+      );
+      let markerIndex = code.indexOf(marker);
+      expect(markerIndex).toBeGreaterThanOrEqual(0);
+      let lines = code.slice(0, markerIndex).split("\n");
+      let entry = new SourceMap(map).findEntry(
+        lines.length - 1,
+        lines.at(-1)!.length,
+      );
+      expect(entry).toMatchObject({
+        generatedLine: lines.length - 1,
+        originalLine: 0,
+        originalColumn: source.indexOf('"'),
+      });
+    });
+
     test(`${templateDisplayName} / resolves package subpath imports in route globs`, async () => {
       let cwd = await createProject(
         {

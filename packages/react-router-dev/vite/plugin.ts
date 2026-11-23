@@ -2517,9 +2517,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           }
           decorateComponentExportsWithProps(ast);
           return generate(ast, {
-            sourceMaps:
-              this.environment.mode !== "build" ||
-              Boolean(this.environment.config.build.sourcemap),
+            // Later transforms can consume this map even when the build
+            // doesn't emit source maps.
+            sourceMaps: true,
             filename: id,
             sourceFileName: filepath,
           });
