@@ -37,6 +37,7 @@ describe("Session", () => {
     expect(session.has("error")).toBe(false);
     expect(session.get("error")).toBeUndefined();
 
+    session.flash("user", "temporary");
     session.unset("user");
 
     expect(session.has("user")).toBe(false);
@@ -44,14 +45,16 @@ describe("Session", () => {
   });
 
   it("removes flashed values when unset() is called", () => {
-    let session = createSession();
+    let session = createSession<{ user: string }, { notice: string }>();
 
+    session.set("user", "mjackson");
     session.flash("notice", "saved");
     expect(session.has("notice")).toBe(true);
 
     session.unset("notice");
     expect(session.has("notice")).toBe(false);
     expect(session.get("notice")).toBeUndefined();
+    expect(session.get("user")).toBe("mjackson");
   });
 });
 
