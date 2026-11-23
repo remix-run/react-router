@@ -1,3 +1,7 @@
+import { execFile } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+
 import { decode, encode } from "../../vendor/turbo-stream-v2/turbo-stream";
 import {
   Deferred,
@@ -25,6 +29,124 @@ async function readStreamToString(stream: ReadableStream<Uint8Array>) {
   reader.releaseLock();
   return text;
 }
+
+describe("decoding", () => {
+  function stream(input: unknown) {
+    return new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          new TextEncoder().encode(`${JSON.stringify(input)}\n`),
+        );
+        controller.close();
+      },
+    });
+  }
+
+  const invalidIndices = [
+    "1",
+    "value",
+    null,
+    true,
+    {},
+    [],
+    ["1"],
+    "length",
+    "constructor",
+    "__proto__",
+    ["__proto__"],
+    -8,
+    0.5,
+    2,
+    100,
+    Number.MAX_SAFE_INTEGER + 1,
+  ];
+
+  describe.each(["P", "Z"])("%s references", (type) => {
+    test.each([...invalidIndices, -1, -2, -7, 1].map((index) => [index]))(
+      "rejects invalid index %j",
+      async (index) => {
+        await expect(decode(stream([[type, index]]))).rejects.toThrow(
+          SyntaxError,
+        );
+      },
+    );
+  });
+
+  describe.each<{
+    name: string;
+    payload: (index: unknown) => unknown;
+  }>([
+    { name: "array element", payload: (index) => [[1, index], "value"] },
+    { name: "object value", payload: (index) => [{ _1: index }, "key"] },
+    {
+      name: "null-prototype object value",
+      payload: (index) => [["N", { _1: index }], "key"],
+    },
+    { name: "set element", payload: (index) => [["S", index]] },
+    { name: "map key", payload: (index) => [["M", index, 1], "value"] },
+    { name: "map value", payload: (index) => [["M", 1, index], "key"] },
+    { name: "plugin argument", payload: (index) => [["Custom", index]] },
+  ])("$name references", ({ payload }) => {
+    test.each(invalidIndices.map((index) => [index]))(
+      "rejects invalid index %j",
+      async (index) => {
+        await expect(
+          decode(stream(payload(index)), {
+            plugins: [(_type, value) => ({ value })],
+          }),
+        ).rejects.toThrow(SyntaxError);
+      },
+    );
+  });
+
+  test.each(["_NaN", "_0.5", "_100"])(
+    "rejects invalid object key reference %s",
+    async (key) => {
+      await expect(decode(stream([{ [key]: 1 }, "value"]))).rejects.toThrow(
+        SyntaxError,
+      );
+    },
+  );
+
+  test.each(["name", "constructor", "__proto__"])(
+    "decodes object keys using property-key coercion (%s)",
+    async (key) => {
+      const output = await quickDecode<Record<string, unknown>>(
+        stream([{ _1: 3 }, [2], key, { _4: 5 }, "nested", "value"]),
+      );
+      expect(Object.getPrototypeOf(output)).toBe(Object.prototype);
+      expect(Object.getOwnPropertyDescriptor(output, key)).toEqual({
+        value: { nested: "value" },
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+      expect(output.nested).toBeUndefined();
+    },
+  );
+});
+
+describe.each(["name", "toString", "constructor", "__proto__", ""])(
+  "object property %j",
+  (key) => {
+    test.each([null, undefined, 1, "data", { nested: "value" }])(
+      "round trips an own property with value %j",
+      async (value) => {
+        const input = { [key]: value, other: "value" };
+        const output = await quickDecode(encode(input));
+        expect(Object.getPrototypeOf(output)).toBe(Object.prototype);
+        expect(Object.getOwnPropertyDescriptor(output, key)).toEqual({
+          value,
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
+        expect(output).toEqual(input);
+        expect(JSON.stringify(output)).toBe(JSON.stringify(input));
+      },
+    );
+  },
+);
 
 test("should encode and decode undefined", async () => {
   const input = undefined;
@@ -273,6 +395,7 @@ test("should encode and decode promise", async () => {
   expect(decoded.value).toBeInstanceOf(Promise);
   expect(await decoded.value).toEqual(await input);
   await decoded.done;
+  expect(decoded.value).toMatchObject({ status: "fulfilled", value: "foo" });
 });
 
 test("should encode and decode subsequent null from promise in object value", async () => {
@@ -299,6 +422,10 @@ test("should encode and decode rejected promise", async () => {
     await input.catch((reason) => reason),
   );
   await decoded.done;
+  expect(decoded.value).toMatchObject({
+    status: "rejected",
+    reason: new Error("foo"),
+  });
 });
 
 test("should encode and decode object with promises as values", async () => {
@@ -582,6 +709,50 @@ test("should allow many nested promises without a memory leak", async () => {
   await decoded.done;
 });
 
+test.each(["immediately", "after the first chunk"])(
+  "should handle nested deferred rejections when cancelled %s",
+  async (when) => {
+    const outer = new Deferred();
+    const inner = new Deferred();
+    const onComplete = jest.fn();
+    const stream = encode({ outer: outer.promise }, { onComplete });
+
+    if (when === "after the first chunk") {
+      const reader = stream.getReader();
+      await reader.read();
+      reader.releaseLock();
+    }
+    await stream.cancel();
+
+    outer.resolve({ inner: inner.promise });
+    // Let the encoder discover the nested promise before it rejects.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    inner.reject(new Error("Nested deferred rejection"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  },
+);
+
+test("should finish cancelled deferred encoding when aborted", async () => {
+  const abortController = new AbortController();
+  const onComplete = jest.fn();
+  const stream = encode(new Deferred().promise, {
+    signal: abortController.signal,
+    onComplete,
+  });
+  const reader = stream.getReader();
+  await reader.read();
+  await reader.cancel();
+  reader.releaseLock();
+
+  expect(onComplete).not.toHaveBeenCalled();
+  abortController.abort(new Error("Server Timeout"));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  expect(onComplete).toHaveBeenCalledTimes(1);
+});
+
 test("should encode large payload", async () => {
   const input = createDeeplyNestedObject();
   await readStreamToString(encode(input));
@@ -610,6 +781,54 @@ test("should encode and decode large payload and yield the event loop", async ()
   expect(currentDecoded).toBeNull();
 
   await decoded.done;
+});
+
+describe("decoder completion errors", () => {
+  const failures = [
+    ["TypeError", { name: "TypeError", message: "network error" }],
+    ["AbortError", { name: "AbortError", message: "stream aborted" }],
+    [
+      "unknown",
+      { name: "Error", message: "Deferred ID 999 not found in stream" },
+    ],
+    ["parse", { name: "SyntaxError", message: "" }],
+  ] as const;
+
+  test.each(failures)(
+    "handles ignored completion after %s",
+    async (failure) => {
+      const { stdout, stderr } = await promisify(execFile)(process.execPath, [
+        fileURLToPath(new URL("./turbo-stream-rejection.cjs", import.meta.url)),
+        failure,
+        "ignored",
+      ]);
+      expect(stderr).toBe("");
+      expect(JSON.parse(stdout)).toEqual({
+        hasDeferred: true,
+        done: "ignored",
+        deferred: "ignored",
+        unhandled: [],
+      });
+    },
+  );
+
+  test.each(failures)(
+    "rejects observed completion and deferred value after %s",
+    async (failure, error) => {
+      const { stdout, stderr } = await promisify(execFile)(process.execPath, [
+        fileURLToPath(new URL("./turbo-stream-rejection.cjs", import.meta.url)),
+        failure,
+        "observed",
+      ]);
+      expect(stderr).toBe("");
+      expect(JSON.parse(stdout)).toEqual({
+        hasDeferred: true,
+        done: error,
+        deferred: error,
+        unhandled: [],
+      });
+    },
+  );
 });
 
 type Nested = { value: number; next: Nested | null };

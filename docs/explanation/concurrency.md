@@ -6,9 +6,6 @@ title: Network Concurrency Management
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 When building web applications, managing network requests can be a daunting task. The challenges of ensuring up-to-date data and handling simultaneous requests often lead to complex logic in the application to deal with interruptions and race conditions. React Router simplifies this process by automating network management while mirroring and expanding upon the intuitive behavior of web browsers.
 
 To help understand how React Router handles concurrency, it's important to remember that after `form` submissions, React Router will fetch fresh data from the `loader`s. This is called revalidation.

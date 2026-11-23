@@ -16,6 +16,7 @@ export function RemixRootDefaultHydrateFallback() {
       {ENABLE_DEV_WARNINGS ? (
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               console.log(

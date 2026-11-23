@@ -6,9 +6,6 @@ title: Hot Module Replacement
 
 [MODES: framework]
 
-<br/>
-<br/>
-
 Hot Module Replacement is a technique for updating modules in your app without needing to reload the page.
 It's a great developer experience, and React Router supports it when using Vite.
 

@@ -26,6 +26,7 @@ export function getHydrationData({
   routes: DataRouteObject[];
   getRouteInfo: (routeId: string) => {
     clientLoader: ClientLoaderFunction | undefined;
+    clientMiddleware?: DataRouteObject["middleware"];
     hasLoader: boolean;
     hasHydrateFallback: boolean;
   };

@@ -127,9 +127,6 @@ navigate("/some/route", { replace: true });
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 To prevent [`<ScrollRestoration>`](../components/ScrollRestoration) from resetting
 the scroll position, use the `preventScrollReset` option.
 
