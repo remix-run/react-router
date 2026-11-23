@@ -4,6 +4,7 @@ import { expect } from "@playwright/test";
 import stripAnsi from "strip-ansi";
 import dedent from "dedent";
 
+import type { Files } from "./helpers/vite.js";
 import {
   test,
   createProject,
@@ -213,7 +214,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 });
 
 test.describe("Vite / server-only escape hatch", async () => {
-  let files = async ({ port }) => ({
+  let files: Files = async ({ port }) => ({
     "vite.config.ts": dedent`
       import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
@@ -284,13 +285,17 @@ test.describe("Vite / server-only module imported by a Vitest test file", () => 
 
       export const signup = () => ({ serverOnly });
     `,
+    "tests/setup.ts": String.raw`
+      import { expect } from "vitest";
+      import { serverOnly } from "../app/utils.server";
+
+      expect(serverOnly).toBe("SERVER_ONLY");
+    `,
     "tests/signup.test.ts": String.raw`
       import { expect, test } from "vitest";
-      import { serverOnly } from "../app/utils.server";
       import { signup } from "../app/actions/signup";
 
       test("signup", () => {
-        expect(serverOnly).toBe("SERVER_ONLY");
         expect(signup()).toEqual({ serverOnly: "SERVER_ONLY" });
       });
     `,
@@ -305,28 +310,76 @@ test.describe("Vite / server-only module imported by a Vitest test file", () => 
     };
   `;
 
-  let vitestBin = path.resolve(
-    import.meta.dirname,
-    "..",
-    "node_modules",
-    "vitest",
-    "vitest.mjs",
-  );
-
-  test("vitest can import .server modules", async () => {
+  test("Vitest tests and setup files can import .server modules", async () => {
     let cwd = await createProject({
       ...files,
+      "run-vitest.mjs": String.raw`
+        import { createVitest } from "vitest/node";
+
+        let vitest = await createVitest("test", { watch: false });
+        try {
+          await vitest.start();
+        } finally {
+          await vitest.close();
+        }
+      `,
       "vite.config.ts": viteConfigWith(
-        `test: { environment: "jsdom", include: ["tests/**/*.test.ts"] },`,
+        `test: {
+          environment: "jsdom",
+          include: ["tests/**/*.test.ts"],
+          setupFiles: ["./tests/setup.ts"],
+        },`,
       ),
     });
-    let result = spawnSync(process.argv[0], [vitestBin, "run"], {
+    let result = spawnSync(process.argv[0], ["run-vitest.mjs"], {
       cwd,
-      env: { ...process.env, FORCE_COLOR: undefined, NO_COLOR: "1" },
+      env: {
+        ...process.env,
+        VITEST: undefined,
+        FORCE_COLOR: undefined,
+        NO_COLOR: "1",
+      },
+      encoding: "utf8",
     });
-    let output = stripAnsi(result.stdout.toString() + result.stderr.toString());
+    expect(result.error).toBeUndefined();
+    let output = stripAnsi(result.stdout + result.stderr);
     expect(output).not.toMatch("Server-only module referenced by client");
     expect(result.status, output).toBe(0);
+  });
+
+  test("Vite dev still rejects client imports with VITEST set", async () => {
+    let cwd = await createProject({
+      "app/utils.server.ts": serverOnlyModule,
+      "app/client.ts": String.raw`
+        export { serverOnly } from "./utils.server";
+      `,
+      "vite.config.ts": viteConfigWith(""),
+      "transform.mjs": String.raw`
+        import { createServer } from "vite";
+
+        let server = await createServer({
+          server: { middlewareMode: true, ws: false, watch: null },
+        });
+        try {
+          await server.transformRequest("/app/client.ts");
+        } finally {
+          await server.close();
+        }
+      `,
+    });
+    let result = spawnSync(process.argv[0], ["transform.mjs"], {
+      cwd,
+      env: {
+        ...process.env,
+        VITEST: "true",
+        FORCE_COLOR: undefined,
+        NO_COLOR: "1",
+      },
+      encoding: "utf8",
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.status, result.stderr).toBe(1);
+    expect(result.stderr).toMatch("Server-only module referenced by client");
   });
 
   test("build with mode 'test' still rejects .server modules in client code", async () => {

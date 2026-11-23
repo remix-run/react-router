@@ -2145,22 +2145,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           viteCommand === "serve" &&
           (options as { scan?: boolean })?.scan === true;
 
-        // Vitest runs a Vite dev server to execute test files, which may
-        // legitimately import server-only modules (e.g. testing a loader or
-        // action). Keyed on VITEST (set by Vitest itself) rather than
-        // `mode === "test"` so browser dev servers used for e2e runs keep this
-        // guard. Vitest browser mode runs test files as client code, so the
-        // guard stays on there too. Never relax this for builds.
-        let isVitestBrowserMode = Boolean(
-          (viteConfig as { test?: { browser?: { enabled?: boolean } } })?.test
-            ?.browser?.enabled,
-        );
-        let isTestRunner =
-          viteCommand === "serve" &&
-          Boolean(process.env.VITEST) &&
-          !isVitestBrowserMode;
-
-        if (isOptimizeDeps || options?.ssr || isTestRunner) return;
+        if (isOptimizeDeps || options?.ssr) return;
 
         let isResolving = options?.custom?.["react-router:dot-server"] ?? false;
         if (isResolving) return;
@@ -2175,6 +2160,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (!isDotServer) return;
 
         if (!importer) return;
+
+        // Vitest uses client transforms for some tests that execute in Node
+        // (e.g. jsdom). Its root and project runners install distinct resolver
+        // plugins. Keep the guard on for servers that listen and Browser Mode.
+        let { command, plugins, server } = this.environment.getTopLevelConfig();
+        if (
+          command === "serve" &&
+          server.middlewareMode &&
+          plugins.some(
+            ({ name }) =>
+              name === "vitest:resolve-core" || name === "vitest:resolve-root",
+          ) &&
+          !plugins.some(({ name }) => name === "vitest:browser")
+        ) {
+          return;
+        }
+
         if (viteCommand !== "build" && importer.endsWith(".html")) {
           // Vite has a special `index.html` importer for `resolveId` within `transformRequest`
           // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/transformRequest.ts#L158
