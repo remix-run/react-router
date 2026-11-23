@@ -1365,4 +1365,115 @@ test.describe("SPA Mode", () => {
       "app/routes/about.tsx",
     ]);
   });
+
+  test("hydrates NavLink active state for a deep link", async ({ page }) => {
+    let fixture = await createFixture({
+      spaMode: true,
+      files: {
+        "app/root.tsx": js`
+          import { lazy, Suspense, useEffect, useState } from "react";
+          import { Outlet, Scripts, useSearchParams } from "react-router";
+
+          const Menu = lazy(() => import("./layout-menu"));
+
+          export function Layout({ children }: { children: React.ReactNode }) {
+            let [searchParams] = useSearchParams();
+            let [initialTab] = useState(() => searchParams.get("tab") ?? "");
+            useEffect(() => {
+              document.body.dataset.initialTab = initialTab;
+            }, [initialTab]);
+
+            return (
+              <html lang="en">
+                <head>
+                  <meta charSet="utf-8" />
+                  <meta name="viewport" content="width=device-width, initial-scale=1" />
+                </head>
+                <body>
+                  <Suspense>
+                    <Menu />
+                  </Suspense>
+                  {children}
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+
+          export default function App() {
+            return <Outlet />;
+          }
+        `,
+        "app/layout-menu.tsx": js`
+          import { NavLink } from "react-router";
+
+          export default function Menu() {
+            return (
+              <nav>
+                <NavLink to="/" end>Home</NavLink>
+                <NavLink to="/other">Other</NavLink>
+              </nav>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1>Home page</h1>;
+          }
+        `,
+        "app/routes/other.tsx": js`
+          export default function Other() {
+            return <h1>Other page</h1>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let menu = Promise.withResolvers<void>();
+
+    try {
+      await page.route("**/assets/layout-menu-*.js", async (route) => {
+        await menu.promise;
+        await route.continue();
+      });
+      let html = await (await fixture.requestDocument("/")).text();
+      let anchors = html.match(/<a\b[^>]*>/g) ?? [];
+      expect(anchors).toHaveLength(2);
+      for (let anchor of anchors) {
+        expect(anchor).not.toMatch(/\bactive\b|aria-current=/);
+      }
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/other?tab=details", false);
+      await expect(page.locator("body")).toHaveAttribute(
+        "data-initial-tab",
+        "details",
+      );
+      await expect(page.locator("nav a")).toHaveCount(2);
+      await expect(page.locator("nav a.active")).toHaveCount(0);
+      await expect(page.locator("nav a[aria-current]")).toHaveCount(0);
+      menu.resolve();
+      await expect(page.locator("h1")).toHaveText("Other page");
+      await expect(page.locator('a[href="/"]')).not.toHaveClass(/\bactive\b/);
+      await expect(page.locator('a[href="/other"]')).toHaveClass(/\bactive\b/);
+      await expect(page.locator('a[href="/other"]')).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+
+      await app.clickLink("/");
+      await expect(page.locator("h1")).toHaveText("Home page");
+      await expect(page.locator("body")).toHaveAttribute(
+        "data-initial-tab",
+        "details",
+      );
+      await expect(page.locator('a[href="/"]')).toHaveClass(/\bactive\b/);
+      await expect(page.locator('a[href="/other"]')).not.toHaveClass(
+        /\bactive\b/,
+      );
+    } finally {
+      menu.resolve();
+      appFixture.close();
+    }
+  });
 });
