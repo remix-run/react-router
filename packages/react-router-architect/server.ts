@@ -123,7 +123,15 @@ export async function sendReactRouterResponse(
     if (isBase64Encoded) {
       body = await readableStreamToString(nodeResponse.body, "base64");
     } else {
-      body = await nodeResponse.text();
+      // API Gateway reads unflagged bodies as UTF-8; send other bytes as base64
+      let bytes = Buffer.from(await nodeResponse.arrayBuffer());
+      let decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+      try {
+        body = decoder.decode(bytes);
+      } catch {
+        body = bytes.toString("base64");
+        isBase64Encoded = true;
+      }
     }
   }
 

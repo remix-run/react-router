@@ -443,6 +443,39 @@ describe("sendReactRouterResponse", () => {
     expect(result.body).toMatch(image.toString("base64"));
   });
 
+  it.each(["video/mp4", "image/x-icon", "Image/JPEG"])(
+    "handles resource routes with binary data sent as %s",
+    async (contentType) => {
+      let image = await fsp.readFile(path.join(__dirname, "554828.jpeg"));
+
+      let response = new Response(image, {
+        headers: { "content-type": contentType },
+      });
+
+      let result = await sendReactRouterResponse(response);
+
+      let body = Buffer.from(
+        result.body!,
+        result.isBase64Encoded ? "base64" : "utf8",
+      );
+      expect(body.equals(image)).toBe(true);
+    },
+  );
+
+  it.each([
+    ["utf-8 text", "caf\u00e9 \ud83d\udc4b"],
+    ["a byte order mark", "\ufeffname,city\nZo\u00eb,Kyiv\n"],
+  ])("handles resource routes with %s", async (_, text) => {
+    let response = new Response(text, {
+      headers: { "content-type": "text/csv; charset=utf-8" },
+    });
+
+    let result = await sendReactRouterResponse(response);
+
+    expect(result.isBase64Encoded).toBe(false);
+    expect(result.body).toBe(text);
+  });
+
   it("handles responses with immutable headers and cookies", async () => {
     // Responses from fetch() have immutable headers
     let server = http.createServer((_req, res) => {
