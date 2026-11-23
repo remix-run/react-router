@@ -66,7 +66,7 @@ export interface Session<Data = SessionData, FlashData = Data> {
   /**
    * Removes a value from the session.
    */
-  unset(name: keyof Data & string): void;
+  unset(name: (keyof Data | keyof FlashData) & string): void;
 }
 
 export type FlashSessionData<Data, FlashData> = Partial<
@@ -140,7 +140,8 @@ export const createSession: CreateSessionFunction = <
       map.set(flash(name), value);
     },
     unset(name) {
-      map.delete(name);
+      map.delete(name as keyof Data);
+      map.delete(flash(name as keyof FlashData & string));
     },
   };
 };
