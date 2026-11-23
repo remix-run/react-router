@@ -1,4 +1,5 @@
 import type * as Vite from "vite";
+import type { ReactRouterBuildContext } from "../build";
 import { createHash } from "node:crypto";
 import { init as initEsModuleLexer } from "es-module-lexer";
 import * as Path from "pathe";
@@ -34,6 +35,7 @@ import { loadDotenv } from "../load-dotenv";
 import { validatePluginOrder } from "../plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "../plugins/warn-on-client-source-maps";
 import { prerender } from "../plugins/prerender";
+import { getPrerenderRedirectHtml } from "../prerender-redirect";
 import { getPrerenderPaths } from "../plugin";
 
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
@@ -219,6 +221,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
 
         return {
+          __reactRouterBuildContext: {
+            close: () => configLoader.close(),
+          } satisfies ReactRouterBuildContext,
           resolve: {
             dedupe: [
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
@@ -412,7 +417,8 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
         );
       },
       configurePreviewServer(previewServer) {
-        const clientBuildDirectory = getClientBuildDirectory(config);
+        const clientBuildDirectory =
+          getClientBuildDirectory(resolvedViteConfig);
         if (
           (config.prerender || config.ssr === false) &&
           process.env.IS_RR_BUILD_REQUEST !== "yes"
@@ -470,11 +476,10 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
           };
         }
       },
-      buildApp: {
-        order: "post",
-        async handler() {
+      async buildEnd(error) {
+        if (error) {
           await configLoader.close();
-        },
+        }
       },
     },
     (() => {
@@ -622,6 +627,9 @@ export function reactRouterRSCVitePlugin(): Vite.PluginOption[] {
     },
     {
       name: "react-router/rsc/virtual-client-version",
+      // Run after the Vite RSC plugin, including its post-ordered
+      // `generateBundle` hook in 0.5.36 and later.
+      enforce: "post",
       resolveId(id) {
         if (id === virtual.clientVersion.id) {
           return virtual.clientVersion.resolvedId;
@@ -637,6 +645,7 @@ export default assetsManifest.clientVersion;
             : `export default "development";`;
         }
       },
+      // Use `generateBundle` so builds with `write: false` also get a version.
       generateBundle: {
         order: "post",
         async handler() {
@@ -724,11 +733,11 @@ export default assetsManifest.clientVersion;
     prerender({
       config() {
         return {
-          buildDirectory: getClientBuildDirectory(config),
           concurrency: getPrerenderConcurrencyConfig(config),
         };
       },
       logFile: (path) => logger.info(`Prerendered ${colors.bold(path)}`),
+      cleanup: () => configLoader.close(),
       async requests() {
         const prerenderPaths = new Set(
           await getPrerenderPaths(
@@ -797,23 +806,8 @@ export default assetsManifest.clientVersion;
         // approach used by Astro as well, so there's some precedent.
         // https://github.com/withastro/roadmap/issues/466
         // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
-        let location = response.headers.get("Location");
-        // A short delay causes Google to interpret the redirect as temporary.
-        // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
-        let delay = response.status === 302 ? 2 : 0;
         let redirectBody = isRedirect
-          ? `<!doctype html>
-<head>
-<title>Redirecting to: ${location}</title>
-<meta http-equiv="refresh" content="${delay};url=${location}">
-<meta name="robots" content="noindex">
-</head>
-<body>
-	<a href="${location}">
-  Redirecting from <code>${url.pathname}</code> to <code>${location}</code>
-</a>
-</body>
-</html>`
+          ? getPrerenderRedirectHtml(response, url.pathname)
           : "";
 
         let files: { path: string; contents: Uint8Array | string }[] = [
@@ -870,6 +864,17 @@ export default assetsManifest.clientVersion;
         return files;
       },
     }),
+    {
+      name: "react-router/rsc/build-end",
+      enforce: "post",
+      sharedDuringBuild: true,
+      buildApp: {
+        order: "post",
+        async handler() {
+          await configLoader.close();
+        },
+      },
+    },
   ];
 }
 
@@ -948,9 +953,8 @@ function createRSCOptimizeDepsRouteModulesPlugin({
   };
 }
 
-const getClientBuildDirectory = (
-  reactRouterConfig: ResolvedReactRouterConfig,
-) => path.join(reactRouterConfig.buildDirectory, "client");
+const getClientBuildDirectory = (viteConfig: Vite.ResolvedConfig) =>
+  path.resolve(viteConfig.root, viteConfig.environments.client.build.outDir);
 
 function getPrerenderConcurrencyConfig(
   reactRouterConfig: ResolvedReactRouterConfig,

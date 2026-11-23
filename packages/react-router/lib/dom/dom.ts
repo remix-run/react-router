@@ -1,4 +1,4 @@
-import { warning } from "../router/history";
+import { createPath, parsePath, warning } from "../router/history";
 import type { RelativeRoutingType } from "../router/router";
 import type { FormEncType, HTMLFormMethod } from "../router/utils";
 import { stripBasename } from "../router/utils";
@@ -25,7 +25,7 @@ export function isInputElement(object: any): object is HTMLInputElement {
 type LimitedMouseEvent = Pick<
   MouseEvent,
   "button" | "metaKey" | "altKey" | "ctrlKey" | "shiftKey"
->;
+> & { currentTarget: Element | null };
 
 function isModifiedEvent(event: LimitedMouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
@@ -35,10 +35,16 @@ export function shouldProcessLinkClick(
   event: LimitedMouseEvent,
   target?: string,
 ) {
+  let element = event.currentTarget;
   return (
     event.button === 0 && // Ignore everything but left clicks
     (!target || target === "_self") && // Let browser handle "target=_blank" etc.
-    !isModifiedEvent(event) // Ignore clicks with modifier keys
+    !isModifiedEvent(event) && // Ignore clicks with modifier keys
+    !(
+      (element?.localName === "a" || element?.localName === "area") &&
+      element.hasAttribute("href") &&
+      element.hasAttribute("download")
+    ) // Let the browser handle download links
   );
 }
 
@@ -254,6 +260,8 @@ const supportedFormEncTypes: Set<FormEncType> = new Set([
 ]);
 
 function getFormEncType(encType: string | null) {
+  // `enctype` and `formenctype` keywords are ASCII case-insensitive in HTML
+  encType = encType?.toLowerCase() ?? null;
   if (encType != null && !supportedFormEncTypes.has(encType as FormEncType)) {
     warning(
       false,
@@ -264,6 +272,16 @@ function getFormEncType(encType: string | null) {
     return null;
   }
   return encType;
+}
+
+function stripBasenameFromAction(action: string, basename: string) {
+  // Without a basename, preserve explicit targets such as "?" and "#".
+  // Turning them into an empty action changes index-route targeting.
+  if (basename === "/") return action;
+
+  let path = parsePath(action);
+  let pathname = stripBasename(path.pathname || "", basename);
+  return pathname == null ? null : createPath({ ...path, pathname });
 }
 
 export function getFormSubmissionInfo(
@@ -287,7 +305,7 @@ export function getFormSubmissionInfo(
     // prefixed to ensure non-JS scenarios work, so strip it since we'll
     // re-prefix in the router
     let attr = target.getAttribute("action");
-    action = attr ? stripBasename(attr, basename) : null;
+    action = attr ? stripBasenameFromAction(attr, basename) : null;
     method = target.getAttribute("method") || defaultMethod;
     encType = getFormEncType(target.getAttribute("enctype")) || defaultEncType;
 
@@ -311,7 +329,7 @@ export function getFormSubmissionInfo(
     // prefixed to ensure non-JS scenarios work, so strip it since we'll
     // re-prefix in the router
     let attr = target.getAttribute("formaction") || form.getAttribute("action");
-    action = attr ? stripBasename(attr, basename) : null;
+    action = attr ? stripBasenameFromAction(attr, basename) : null;
 
     method =
       target.getAttribute("formmethod") ||

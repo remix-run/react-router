@@ -12,14 +12,25 @@
  * Once discovery completes, interrupted loaders must still be restarted.
  */
 import { createMemoryHistory } from "../../lib/router/history";
-import { type Router, createRouter } from "../../lib/router/router";
+import { getSingleFetchDataStrategyImpl } from "../../lib/dom/ssr/single-fetch";
+import {
+  type Router,
+  createRouter,
+  createStaticHandler,
+} from "../../lib/router/router";
 import { type DataRouteObject } from "../../lib/router/utils";
 import { getFetcherData } from "./utils/data-router-setup";
-import { createDeferred, tick } from "./utils/utils";
+import { createDeferred, createFormData, tick } from "./utils/utils";
 
 let router: Router;
 
-describe("fetcher revalidation vs. lazy route discovery race", () => {
+for (let customDiscovery of [false, true]) {
+  describe(`fetcher discovery race (custom discovery: ${customDiscovery})`, () => {
+    testDiscoveryRace(customDiscovery);
+  });
+}
+
+function testDiscoveryRace(unstable_customRouteDiscovery: boolean) {
   afterEach(() => {
     router.dispose();
     // @ts-expect-error
@@ -33,6 +44,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     const apiLoaderCalls: string[] = [];
 
     router = createRouter({
+      future: { unstable_customRouteDiscovery },
       history: createMemoryHistory(),
       routes: [
         {
@@ -83,9 +95,8 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
 
     expect(splatLoaderCalls.length).toBe(0);
 
-    // 3. The original in-flight load survives (it was never abortable —
-    //    fetchControllers isn't registered until after discovery) and fires
-    //    the *correct* request once discovery completes.
+    // 3. Revalidation leaves discovery running, so the original load fires
+    //    the correct request once discovery completes.
     manifestDfd.resolve([
       {
         id: "api",
@@ -106,12 +117,305 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     expect(fetcherData.get(key)).toBe("API");
   });
 
+  it.each([false, true])(
+    "does not complete a navigation awaiting discovery with a fetcher action revalidation (subscriber navigation: %s)",
+    async (subscriberNavigation) => {
+      const manifestDfd = createDeferred();
+      const revalidationDfd = createDeferred();
+      let detailLoads = 0;
+      let editLoaderRan = false;
+
+      router = createRouter({
+        future: { unstable_customRouteDiscovery },
+        history: createMemoryHistory({ initialEntries: ["/detail"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            children: [
+              {
+                id: "detail",
+                path: "detail",
+                loader: () =>
+                  ++detailLoads === 2 ? revalidationDfd.promise : null,
+              },
+              { id: "api", path: "api", action: () => null },
+            ],
+          },
+        ],
+        async patchRoutesOnNavigation({ path, patch }) {
+          if (path === "/detail/edit") {
+            await manifestDfd.promise;
+            patch("root", [
+              {
+                id: "edit",
+                path: "detail/edit",
+                loader: () => {
+                  editLoaderRan = true;
+                  return null;
+                },
+              },
+            ]);
+          }
+        },
+      }).initialize();
+      await tick();
+
+      if (subscriberNavigation) {
+        router.subscribe((state) => {
+          if (state.navigation.location?.pathname === "/interrupted") {
+            router.navigate("/detail/edit");
+          }
+        });
+      }
+
+      // A fetcher action completes and its revalidation of /detail stays pending
+      const key = "my-fetcher";
+      router.fetch(key, "root", "/api", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await tick();
+      expect(router.state.fetchers.get(key)?.state).toBe("loading");
+
+      // Navigate to a route that is not discovered yet
+      router.navigate(subscriberNavigation ? "/interrupted" : "/detail/edit");
+      await tick();
+      expect(router.state.navigation.state).toBe("loading");
+
+      // The revalidation settles while the navigation awaits discovery. It must
+      // not commit the navigation with the current page's matches.
+      revalidationDfd.resolve(null);
+      await tick();
+      expect(router.state.navigation.state).toBe("loading");
+      expect(router.state.location.pathname).toBe("/detail");
+
+      manifestDfd.resolve(null);
+      await tick();
+      await tick();
+
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.location.pathname).toBe("/detail/edit");
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "root",
+        "edit",
+      ]);
+      expect(editLoaderRan).toBe(true);
+      expect(router.getFetcher(key).state).toBe("idle");
+    },
+  );
+
+  it.each([false, true])(
+    "revalidates the current URL and matches when an action finishes during discovery (splat: %s)",
+    async (withSplat) => {
+      let discoveryDfd = createDeferred();
+      let actionDfd = createDeferred();
+      let detailLoader = jest.fn(
+        ({ request }: { request: Request }) => request.url,
+      );
+      let editLoader = jest.fn(() => "EDIT");
+      let serverRoutes = [
+        {
+          id: "root",
+          path: "/",
+          loader: () => "ROOT",
+          children: [
+            { id: "detail", path: "detail", loader: detailLoader },
+            { id: "edit", path: "detail/edit", loader: editLoader },
+            { id: "api", path: "api", action: () => actionDfd.promise },
+          ],
+        },
+      ];
+      let { query } = createStaticHandler(serverRoutes);
+      let singleFetchRequests: Array<{ url: string; routeIds?: string[] }> = [];
+      let serverHandler = (_: unknown, serverLoad?: unknown) => {
+        if (typeof serverLoad !== "function") {
+          throw new Error("Missing server handler");
+        }
+        return serverLoad();
+      };
+
+      router = createRouter({
+        future: { unstable_customRouteDiscovery },
+        history: createMemoryHistory({
+          initialEntries: ["/detail?current=1#hash"],
+        }),
+        hydrationData: { loaderData: { root: "ROOT", detail: "INITIAL" } },
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: serverHandler,
+            shouldRevalidate: () => false,
+            children: [
+              { id: "detail", path: "detail", loader: serverHandler },
+              { id: "api", path: "api", action: serverHandler },
+              ...(withSplat
+                ? [{ id: "splat", path: "*", loader: serverHandler }]
+                : []),
+            ],
+          },
+        ],
+        async patchRoutesOnNavigation({ path, patch }) {
+          if (path === "/detail/edit") {
+            await discoveryDfd.promise;
+            patch("root", [
+              { id: "edit", path: "detail/edit", loader: serverHandler },
+            ]);
+          }
+        },
+        dataStrategy: getSingleFetchDataStrategyImpl(
+          () => router,
+          (match) => ({
+            hasLoader: match.route.loader != null,
+            hasClientLoader: false,
+          }),
+          async ({ request }, routeIds) => {
+            singleFetchRequests.push({ url: request.url, routeIds });
+            // The real server matches the request URL before filtering _routes.
+            let result = await query(request, {
+              filterMatchesToLoad: (m) =>
+                !routeIds || routeIds.includes(m.route.id),
+            });
+            if (result instanceof Response)
+              throw new Error("Unexpected response");
+            let data =
+              request.method === "GET" ? result.loaderData : result.actionData;
+            return {
+              status: result.statusCode,
+              data: {
+                routes: Object.fromEntries(
+                  Object.entries(data || {}).map(([id, data]) => [
+                    id,
+                    { data },
+                  ]),
+                ),
+              },
+            };
+          },
+          true,
+        ),
+      }).initialize();
+
+      let fetcherData = getFetcherData(router);
+      router.fetch("mutation", "root", "/api", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await tick();
+      let navigation = router.navigate("/detail/edit?target=1");
+      await tick();
+      await actionDfd.resolve("ACTION");
+      await tick();
+
+      expect(singleFetchRequests).toEqual([
+        { url: "http://localhost/api", routeIds: ["api"] },
+        { url: "http://localhost/detail?current=1", routeIds: ["detail"] },
+      ]);
+      expect(detailLoader).toHaveBeenCalledTimes(1);
+      expect(detailLoader.mock.calls[0][0].request.url).toBe(
+        "http://localhost/detail?current=1",
+      );
+      expect(router.state.loaderData).toEqual({
+        root: "ROOT",
+        detail: "http://localhost/detail?current=1",
+      });
+      expect(router.state.errors).toBeNull();
+      expect(router.state.navigation.state).toBe("loading");
+      expect(router.state.location.pathname).toBe("/detail");
+      expect(router.getFetcher("mutation").state).toBe("idle");
+      expect(fetcherData.get("mutation")).toBe("ACTION");
+
+      await discoveryDfd.resolve();
+      await navigation;
+      expect(router.state.location.pathname).toBe("/detail/edit");
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "root",
+        "edit",
+      ]);
+      expect(router.state.loaderData).toEqual({ root: "ROOT", edit: "EDIT" });
+      expect(router.state.errors).toBeNull();
+      expect(editLoader).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("allows a fetcher reload to complete a known navigation after aborting unresolved discovery", async () => {
+    let discoveryDfd = createDeferred();
+    let actionDfd = createDeferred();
+    let navigationLoaderDfd = createDeferred();
+    let discoverySignal: AbortSignal | undefined;
+    let loaderSignals: AbortSignal[] = [];
+    router = createRouter({
+      future: { unstable_customRouteDiscovery },
+      history: createMemoryHistory({ initialEntries: ["/detail"] }),
+      hydrationData: { loaderData: { detail: "DETAIL" } },
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          children: [
+            { id: "detail", path: "detail", loader: () => "DETAIL" },
+            { id: "api", path: "api", action: () => actionDfd.promise },
+            {
+              id: "known",
+              path: "known",
+              loader({ request }) {
+                loaderSignals.push(request.signal);
+                return loaderSignals.length === 1
+                  ? navigationLoaderDfd.promise
+                  : "UPDATED";
+              },
+            },
+          ],
+        },
+      ],
+      async patchRoutesOnNavigation({ path, signal }) {
+        if (path === "/undiscovered") {
+          discoverySignal = signal;
+          await discoveryDfd.promise;
+        }
+      },
+    }).initialize();
+
+    let fetcherData = getFetcherData(router);
+    router.fetch("mutation", "root", "/api", {
+      formMethod: "post",
+      formData: createFormData({}),
+    });
+    await tick();
+    let abandonedNavigation = router.navigate("/undiscovered");
+    await tick();
+    router.navigate("/known");
+    await tick();
+    expect(discoverySignal?.aborted).toBe(true);
+    expect(loaderSignals).toHaveLength(1);
+
+    await actionDfd.resolve("ACTION");
+    await tick();
+    expect(loaderSignals).toHaveLength(2);
+    expect(loaderSignals[0].aborted).toBe(true);
+    expect(loaderSignals[1].aborted).toBe(false);
+    expect(router.state.navigation.state).toBe("idle");
+    expect(router.state.location.pathname).toBe("/known");
+    expect(router.state.loaderData).toEqual({ known: "UPDATED" });
+    expect(router.getFetcher("mutation").state).toBe("idle");
+    expect(fetcherData.get("mutation")).toBe("ACTION");
+
+    await discoveryDfd.resolve();
+    await abandonedNavigation;
+    await navigationLoaderDfd.resolve("STALE");
+    await tick();
+    expect(router.state.loaderData).toEqual({ known: "UPDATED" });
+    expect(router.state.errors).toBeNull();
+  });
+
   it("does not revalidate a fetcher during discovery without a splat route", async () => {
     const manifestDfd = createDeferred<DataRouteObject[]>();
     const apiLoaderDfd = createDeferred();
     const apiLoaderCalls: string[] = [];
 
     router = createRouter({
+      future: { unstable_customRouteDiscovery },
       history: createMemoryHistory(),
       routes: [
         {
@@ -171,6 +475,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
         let splatLoader = jest.fn(() => "SPLAT");
 
         router = createRouter({
+          future: { unstable_customRouteDiscovery },
           history: createMemoryHistory(),
           routes: [
             {
@@ -258,6 +563,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
       let initialSignal: AbortSignal | undefined;
 
       router = createRouter({
+        future: { unstable_customRouteDiscovery },
         history: createMemoryHistory(),
         routes: [
           { id: "root", path: "/", action: () => actionDfd.promise },
@@ -342,6 +648,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
       let splatLoader = jest.fn(() => "SPLAT");
 
       router = createRouter({
+        future: { unstable_customRouteDiscovery },
         history: createMemoryHistory(),
         routes: [
           { id: "root", path: "/", action: () => null },
@@ -430,6 +737,7 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     let discoveringPaths: string[] = [];
 
     router = createRouter({
+      future: { unstable_customRouteDiscovery },
       history: createMemoryHistory(),
       routes: [
         { id: "root", path: "/" },
@@ -455,11 +763,13 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     await tick();
     expect(discoveringPaths).toEqual(["/first", "/second"]);
 
-    // Both discoveries are pending for the same key. Completing the older one
-    // must only update its own load record, not the record for /second.
+    // Opting in makes discovery abortable when reusing a fetcher key. Neither
+    // mode should let the older load clear the new load's discovery state.
     await firstDiscoveryDfd.resolve();
     await tick();
-    expect(firstLoader).toHaveBeenCalledTimes(1);
+    expect(firstLoader).toHaveBeenCalledTimes(
+      unstable_customRouteDiscovery ? 0 : 1,
+    );
     expect(secondLoader).not.toHaveBeenCalled();
 
     let revalidation = router.revalidate();
@@ -477,4 +787,4 @@ describe("fetcher revalidation vs. lazy route discovery race", () => {
     expect(router.getFetcher(key).state).toBe("idle");
     expect(router.state.errors).toBeNull();
   });
-});
+}

@@ -327,11 +327,16 @@ test.describe("loader in an app", async () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton("/no-action");
+    await expect(page.locator("h1")).toHaveText("405 Method Not Allowed");
     let html = await app.getHtml();
     expect(html).toMatch("405 Method Not Allowed");
-    expect(logs[0]).toContain(
-      'Route "routes/no-action" does not have an action',
-    );
+    await expect
+      .poll(() => logs)
+      .toContainEqual(
+        expect.stringContaining(
+          'Route "routes/no-action" does not have an action',
+        ),
+      );
   });
 });
 
