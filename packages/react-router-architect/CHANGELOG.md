@@ -1,5 +1,16 @@
 # `@react-router/architect`
 
+## v8.5.3
+
+### Patch Changes
+
+- Preserve binary response bodies and text byte order marks in `sendReactRouterResponse` ([#15814](https://github.com/remix-run/react-router/pull/15814))
+  - Preserve binary bodies even when their content type is absent from `binaryTypes`
+  - Preserve a leading byte order mark in text bodies
+- Updated dependencies:
+  - [`react-router@8.5.3`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.3)
+  - [`@react-router/node@8.5.3`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.3)
+
 ## v8.5.2
 
 ### Patch Changes
