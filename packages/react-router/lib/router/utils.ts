@@ -1703,9 +1703,13 @@ export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
+const MAX_OPTIONAL_PATH_SEGMENTS = 12;
+
 /**
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
+ *
+ * Throws if the pattern contains more than 12 optional (`?`) markers.
  *
  * @public
  * @category Utils
@@ -1725,8 +1729,22 @@ export function matchPath<Path extends string>(
     pattern = { path: pattern, caseSensitive: false, end: true };
   }
 
+  let { path } = pattern;
+  let optionalSegments = 0;
+  for (
+    let index = path.indexOf("?");
+    index !== -1;
+    index = path.indexOf("?", index + 1)
+  ) {
+    if (++optionalSegments > MAX_OPTIONAL_PATH_SEGMENTS) {
+      throw new Error(
+        `Path pattern ${JSON.stringify(path)} exceeds the limit of ${MAX_OPTIONAL_PATH_SEGMENTS} optional segments.`,
+      );
+    }
+  }
+
   let [matcher, compiledParams] = compilePath(
-    pattern.path,
+    path,
     pattern.caseSensitive,
     pattern.end,
   );
