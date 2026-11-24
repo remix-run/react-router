@@ -1,1 +1,1 @@
-Fix the request URL taking the `Host` port when `trust proxy` is enabled and `X-Forwarded-Host` has no port (e.g., `https://example.com:3000/...` behind a proxy), which made form submissions fail the action origin check
+Fix request URL ports behind Express proxies by using the port from `X-Forwarded-Host` when Express trusts the connection. The proxy must include any non-default public port in `X-Forwarded-Host` so that the request URL matches the action origin.

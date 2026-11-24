@@ -89,28 +89,24 @@ export function createRemixRequest(
   req: express.Request,
   res: express.Response,
 ): Request {
-  // req.hostname doesn't include port information so grab that from
-  // `X-Forwarded-Host` or `Host`, skipping any bracketed IPv6 address
-  // (e.g., `[::1]:3000`) so its colons aren't mistaken for the port
-  let ipv6 = /^\[.*?\]/;
-  let forwardedHost = req.app?.enabled("trust proxy")
-    ? req.get("X-Forwarded-Host")
-    : undefined;
-  let [, hostnamePortStr] = forwardedHost
-    ? forwardedHost.split(",")[0].trimEnd().replace(ipv6, "").split(":")
-    : [];
-  let [, hostPortStr] = req.get("host")?.replace(ipv6, "").split(":") ?? [];
-  let hostnamePort = Number.parseInt(hostnamePortStr, 10);
-  let hostPort = Number.parseInt(hostPortStr, 10);
-  let port = Number.isSafeInteger(hostnamePort)
-    ? hostnamePort
-    : // the Host port belongs to the proxy's upstream, not the forwarded host
-      !forwardedHost && Number.isSafeInteger(hostPort)
-      ? hostPort
-      : "";
-  // Use req.hostname here as it respects the "trust proxy" setting
-  let hostname = req.hostname.split(/[\\/?#@]/)[0] || "localhost";
-  let resolvedHost = `${hostname}${port ? `:${port}` : ""}`;
+  // Express resolves req.hostname without a port. Apply its per-connection
+  // trust check to select the header we read the port from.
+  let trustProxy = req.app?.get("trust proxy fn");
+  let forwardedHost = req.get("X-Forwarded-Host");
+  let host =
+    forwardedHost && trustProxy?.(req.socket?.remoteAddress, 0)
+      ? forwardedHost.split(",")[0].trimEnd()
+      : req.get("Host") || "";
+
+  // Skip any bracketed IPv6 address when looking for the port separator.
+  let offset = host.startsWith("[") ? host.indexOf("]") + 1 : 0;
+  let portIndex = host.indexOf(":", offset);
+  let port = Number.parseInt(
+    portIndex === -1 ? "" : host.slice(portIndex + 1),
+    10,
+  );
+  let hostname = req.hostname?.split(/[\\/?#@]/)[0] || "localhost";
+  let resolvedHost = `${hostname}${port && Number.isSafeInteger(port) ? `:${port}` : ""}`;
   // Use `req.originalUrl` so Remix is aware of the full path
   let url = new URL(`${req.protocol}://${resolvedHost}${req.originalUrl}`);
 
