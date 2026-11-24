@@ -2127,6 +2127,28 @@ function testDomRouter(
           "render",
         ]);
       });
+
+      it("restores falsy location state on POP and router initialization", async () => {
+        let testWindow = getWindow("/");
+        let routes: RouteObject[] = [{ path: "*", Component: () => null }];
+        let router = createTestRouter(routes, { window: testWindow });
+
+        await router.navigate("/saved", { state: false });
+        await router.navigate("/other");
+        await router.navigate(-1);
+        expect(router.state.location).toMatchObject({
+          pathname: "/saved",
+          state: false,
+        });
+        router.dispose();
+
+        let reloaded = createTestRouter(routes, { window: testWindow });
+        expect(reloaded.state.location).toMatchObject({
+          pathname: "/saved",
+          state: false,
+        });
+        reloaded.dispose();
+      });
     });
 
     describe("history action", () => {
