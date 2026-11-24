@@ -1,3 +1,3 @@
-Be defensive against leading double slashes in static router `encodeLocation()`
+Handle leading double slashes in static router `encodeLocation()`
 
-- Prevents `TypeError: Invalid URL` during SSR in `<ServerRouter>`, `<StaticRouterProvider>`, and `<StaticRouter>` when encoding locations with leading double slashes (such as query-only or hash-only `<NavLink>`s on double-slash request URLs)
+- Prevent `TypeError: Invalid URL` during SSR in `<ServerRouter>`, `<StaticRouterProvider>`, and `<StaticRouter>`, including when rendering query-only or hash-only `<NavLink>` destinations on double-slash request URLs

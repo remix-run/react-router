@@ -1,1 +1,1 @@
-Discard invalid persisted scroll-position records so page hide can save new positions without throwing or silently losing them.
+Discard invalid persisted scroll positions so new positions can be saved when the page is hidden
