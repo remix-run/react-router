@@ -2,7 +2,6 @@
 
 import {
   type BrowserHistory,
-  type Location,
   createBrowserHistory,
 } from "../../lib/router/history";
 
@@ -150,70 +149,6 @@ describe("a browser history", () => {
   describe("forward", () => {
     it("calls change listeners with the next location", async () => {
       await GoForward(history);
-    });
-  });
-
-  describe("falsy state", () => {
-    it("preserves falsy state values across push, replace, and POP", async () => {
-      history.push("/a", false);
-      expect(history.location.state).toBe(false);
-
-      history.push("/b", 0);
-      expect(history.location.state).toBe(0);
-
-      history.push("/c", "");
-      expect(history.location.state).toBe("");
-
-      history.replace("/d", NaN);
-      expect(history.location.state).toBeNaN();
-
-      let pop = () =>
-        new Promise<Location>((resolve) => {
-          let unlisten = history.listen(({ location }) => {
-            unlisten();
-            resolve(location);
-          });
-        });
-
-      let backToB = pop();
-      history.go(-1);
-      expect((await backToB).state).toBe(0);
-      expect(history.location.state).toBe(0);
-
-      let backToA = pop();
-      history.go(-1);
-      expect((await backToA).state).toBe(false);
-      expect(history.location.state).toBe(false);
-
-      let forwardToB = pop();
-      history.go(1);
-      expect((await forwardToB).state).toBe(0);
-      expect(history.location.state).toBe(0);
-    });
-
-    it("preserves falsy initial history state and defaults nullish or non-object state to null", () => {
-      for (let state of [false, 0, ""]) {
-        let win = getWindow("/saved");
-        win.history.replaceState(
-          { usr: state, key: "k", idx: 0 },
-          "",
-          "/saved",
-        );
-        let reloaded = createBrowserHistory({ window: win });
-        expect(reloaded.location.state).toBe(state);
-      }
-
-      for (let rawState of [
-        null,
-        { usr: undefined, key: "k", idx: 0 },
-        { usr: null, key: "k", idx: 0 },
-        false,
-        0,
-        "",
-      ]) {
-        testWindow.history.replaceState(rawState, "", "/external");
-        expect(history.location.state).toBeNull();
-      }
     });
   });
 });

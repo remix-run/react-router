@@ -98,8 +98,9 @@ describe("useLocation", () => {
     ["BrowserRouter", BrowserRouter, false],
     ["HashRouter", HashRouter, true],
   ] as const)(
-    "preserves falsy state passed via useNavigate in %s",
+    "preserves falsy state after push and replace navigations in %s",
     async (_name, RouterComponent, isHash) => {
+      let renderer!: TestRenderer.ReactTestRenderer;
       let navigate!: ReturnType<typeof useNavigate>;
       let currentLocation!: ReturnType<typeof useLocation>;
 
@@ -110,24 +111,31 @@ describe("useLocation", () => {
       }
 
       TestRenderer.act(() => {
-        TestRenderer.create(
+        renderer = TestRenderer.create(
           <RouterComponent window={getWindow("/", isHash)}>
             <Routes>
-              <Route path="/" element={<Capture />} />
-              <Route path="/sub" element={<Capture />} />
+              <Route path="*" element={<Capture />} />
             </Routes>
           </RouterComponent>,
         );
       });
 
       for (let state of [0, false, ""]) {
-        let doNavigate = navigate;
         await TestRenderer.act(async () => {
-          doNavigate("/sub", { state });
+          navigate("/sub", { state });
         });
-        expect(currentLocation.pathname).toBe("/sub");
-        expect(currentLocation.state).toBe(state);
+        expect(currentLocation).toMatchObject({ pathname: "/sub", state });
       }
+
+      await TestRenderer.act(async () => {
+        navigate("/replaced", { replace: true, state: NaN });
+      });
+      expect(currentLocation).toMatchObject({
+        pathname: "/replaced",
+        state: NaN,
+      });
+
+      TestRenderer.act(() => renderer.unmount());
     },
   );
 });

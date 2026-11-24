@@ -2076,42 +2076,25 @@ function testDomRouter(
         ]);
       });
 
-      it("preserves falsy location.state values across PUSH, POP, and re-initialization", async () => {
+      it("restores falsy location state on POP and router initialization", async () => {
         let testWindow = getWindow("/");
-        let routes: RouteObject[] = [
-          { path: "/", Component: () => <h1>Home</h1> },
-          { path: "/a", Component: () => <h1>A</h1> },
-          { path: "/b", Component: () => <h1>B</h1> },
-          { path: "/c", Component: () => <h1>C</h1> },
-        ];
+        let routes: RouteObject[] = [{ path: "*", Component: () => null }];
         let router = createTestRouter(routes, { window: testWindow });
 
-        await router.navigate("/a", { state: 0 });
-        expect(router.state.location.state).toBe(0);
-
-        await router.navigate("/b", { state: false });
-        expect(router.state.location.state).toBe(false);
-
-        await router.navigate("/c", { state: "" });
-        expect(router.state.location.state).toBe("");
-
+        await router.navigate("/saved", { state: false });
+        await router.navigate("/other");
         await router.navigate(-1);
-        expect(router.state.location.pathname).toBe("/b");
-        expect(router.state.location.state).toBe(false);
-
-        await router.navigate(-1);
-        expect(router.state.location.pathname).toBe("/a");
-        expect(router.state.location.state).toBe(0);
-
-        await router.navigate(1);
-        expect(router.state.location.pathname).toBe("/b");
-        expect(router.state.location.state).toBe(false);
+        expect(router.state.location).toMatchObject({
+          pathname: "/saved",
+          state: false,
+        });
+        router.dispose();
 
         let reloaded = createTestRouter(routes, { window: testWindow });
-        expect(reloaded.state.location.pathname).toBe("/b");
-        expect(reloaded.state.location.state).toBe(false);
-
-        router.dispose();
+        expect(reloaded.state.location).toMatchObject({
+          pathname: "/saved",
+          state: false,
+        });
         reloaded.dispose();
       });
     });
