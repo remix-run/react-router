@@ -1,5 +1,19 @@
 # `react-router`
 
+## v7.18.7
+
+### Patch Changes
+
+- Declare `@types/react` as an optional peer dependency so the shipped type definitions resolve React types under strict (non-hoisted) node_modules layouts ([#15824](https://github.com/remix-run/react-router/pull/15824))
+- Reject excessively large optional route path combinations in `matchPath`. Each pattern may contain up to 12 optional (`?`) markers. ([#15829](https://github.com/remix-run/react-router/pull/15829))
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- Avoid false 404s in RSC Framework and RSC Data modes when navigating while eager route discovery is still streaming route definitions ([#15799](https://github.com/remix-run/react-router/pull/15799))
+- Align CSRF handling in RSC Framework and RSC Data modes with standard Framework Mode request flows ([#15830](https://github.com/remix-run/react-router/pull/15830))
+
 ## v7.18.6
 
 ### Patch Changes

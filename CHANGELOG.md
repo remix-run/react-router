@@ -13,6 +13,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v7.18.7](#v7187)
   - [v7.18.6](#v7186)
   - [v7.18.5](#v7185)
   - [v7.18.4](#v7184)
@@ -184,6 +185,25 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.0.0](#v600)
 
 </details>
+
+## v7.18.7
+
+Date: 2026-11-24
+
+### Patch Changes
+
+- `react-router` - Declare `@types/react` as an optional peer dependency so the shipped type definitions resolve React types under strict (non-hoisted) node_modules layouts ([#15824](https://github.com/remix-run/react-router/pull/15824))
+- `react-router` - Reject excessively large optional route path combinations in `matchPath`. Each pattern may contain up to 12 optional (`?`) markers. ([#15829](https://github.com/remix-run/react-router/pull/15829))
+
+### Unstable Changes
+
+⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+
+- `react-router` - Avoid false 404s in RSC Framework and RSC Data modes when navigating while eager route discovery is still streaming route definitions ([#15799](https://github.com/remix-run/react-router/pull/15799))
+- `react-router` - Align CSRF handling in RSC Framework and RSC Data modes with standard Framework Mode request flows ([#15830](https://github.com/remix-run/react-router/pull/15830))
+- `@react-router/dev` - Fix missing prerendered pages and loader data when using `unstable_previewServerPrerendering` with server bundles ([#15800](https://github.com/remix-run/react-router/pull/15800))
+
+**Full Changelog**: [`v7.18.6...v7.18.7`](https://github.com/remix-run/react-router/compare/react-router@7.18.6...react-router@7.18.7)
 
 ## v7.18.6
 
