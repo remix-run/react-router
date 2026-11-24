@@ -1,5 +1,42 @@
 # `@react-router/dev`
 
+## v8.5.3
+
+### Patch Changes
+
+- Keep the dev server running when a route has an invalid export with `ssr: false` and `prerender` ([#15591](https://github.com/remix-run/react-router/pull/15591))
+  - Report the invalid export as a Vite error
+- Allow `.server` imports in Vitest tests that run in Node with the default middleware-mode server ([#15563](https://github.com/remix-run/react-router/pull/15563))
+  - Continue checking `.server` imports in Browser Mode and when the test runner's Vite server listens, such as single-project runs with `--ui` or `--api`
+- Fix a circular type error when arrow function route components access `matches` ([#15163](https://github.com/remix-run/react-router/pull/15163))
+  - Generate the current route's entry in `Matches` with `loaderData` directly to avoid a circular reference to the route module
+- Allow web workers to import JSX modules, including components that use hooks, during development ([#15635](https://github.com/remix-run/react-router/pull/15635))
+- Updated dependencies:
+  - [`react-router@8.5.3`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.3)
+  - [`@react-router/node@8.5.3`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.3)
+  - [`@react-router/serve@8.5.3`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.3)
+
+## v8.5.2
+
+### Patch Changes
+
+- Cache client route chunk analysis using normalized route paths and disable dependency optimization in the child compiler, including explicitly included dependencies ([#15329](https://github.com/remix-run/react-router/pull/15329))
+- Serialize concurrent type generation to prevent filesystem races between `react-router dev` and `react-router typegen` ([#15293](https://github.com/remix-run/react-router/pull/15293))
+  - Report a timeout with cleanup instructions if the typegen lock cannot be acquired within 30 seconds
+- Pass route component props to exports declared with export specifiers ([#15544](https://github.com/remix-run/react-router/pull/15544))
+  - Pass props such as `loaderData` and `params` to `default`, `ErrorBoundary`, and `HydrateFallback` exports
+  - Support re-exports such as `export { default } from "./component"` and local aliases such as `export { Page as default }`
+- Improve handling of prerendered redirect destinations in Framework Mode and unstable RSC Framework Mode ([#15786](https://github.com/remix-run/react-router/pull/15786))
+- Declare an empty source map for the placeholder chunk of a route export that can't be split, so Rollup no longer warns that `react-router:split-route-modules` dropped the source map ([#15520](https://github.com/remix-run/react-router/pull/15520))
+- Preserve RSC client middleware when route components update via HMR ([#15763](https://github.com/remix-run/react-router/pull/15763))
+- Fix RSC Framework Mode builds failing with "Vite RSC assets manifest not found" when using `@vitejs/plugin-rsc` 0.5.36 or later ([#15672](https://github.com/remix-run/react-router/pull/15672))
+  - Preserve client version checks when the client build uses `write: false`
+- Avoid adding `isbot` to dependencies when `ssr: false` ([#15668](https://github.com/remix-run/react-router/pull/15668))
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+  - [`@react-router/node@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.2)
+  - [`@react-router/serve@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.2)
+
 ## v8.5.1
 
 ### Patch Changes

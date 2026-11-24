@@ -448,36 +448,23 @@ describe("redirects", () => {
     });
   });
 
-  it("normalizes mixed leading separators in redirects", async () => {
-    let locations = [
+  it("normalizes same-origin mixed leading separators in raw redirects", async () => {
+    for (let location of [
       "\\\\localhost/parent",
       "/\\localhost/parent",
       "\\/localhost/parent",
-    ];
-
-    for (let location of locations) {
-      let t = setup({ routes: REDIRECT_ROUTES });
-
-      let A = await t.navigate("/parent/child", {
-        formMethod: "post",
-        formData: createFormData({}),
+    ]) {
+      let t = setup({
+        routes: [
+          { id: "start", path: "/start", loader: true },
+          { id: "parent", path: "/parent" },
+        ],
       });
-
-      let B = await A.actions.child.redirectReturn(
-        location,
-        undefined,
-        undefined,
-        ["parent"],
+      let navigation = await t.navigate("/start");
+      await navigation.loaders.start.resolve(
+        new Response(null, { status: 302, headers: { Location: location } }),
       );
-      await B.loaders.parent.resolve("PARENT");
-      expect(t.router.state.location).toMatchObject({
-        hash: "",
-        pathname: "/parent",
-        search: "",
-        state: {
-          _isRedirect: true,
-        },
-      });
+      expect(t.router.state.location.pathname).toBe("/parent");
       expect(t.window.location.assign).not.toHaveBeenCalled();
     }
   });

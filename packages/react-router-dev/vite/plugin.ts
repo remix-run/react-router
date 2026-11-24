@@ -97,6 +97,7 @@ import { validatePluginOrder } from "./plugins/validate-plugin-order";
 import { warnOnClientSourceMaps } from "./plugins/warn-on-client-source-maps";
 import type { PrerenderRequest } from "./plugins/prerender";
 import { prerender } from "./plugins/prerender";
+import { getPrerenderRedirectHtml } from "./prerender-redirect";
 
 export type LoadCssContents = (
   viteDevServer: Vite.ViteDevServer,
@@ -2267,7 +2268,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
             // Check for invalid APIs when SSR is disabled
             if (!ctx.reactRouterConfig.ssr) {
               invariant(viteConfig);
-              validateSsrFalsePrerenderExports(
+              await validateSsrFalsePrerenderExports(
                 viteConfig,
                 ctx,
                 reactRouterServerManifest,
@@ -2318,6 +2319,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
         if (!isDotServer) return;
 
         if (!importer) return;
+
+        // Vitest uses client transforms for some tests that execute in Node
+        // (e.g. jsdom). Its root and project runners install distinct resolver
+        // plugins. Keep the guard on for servers that listen and Browser Mode.
+        let { command, plugins, server } = this.environment.getTopLevelConfig();
+        if (
+          command === "serve" &&
+          server.middlewareMode &&
+          plugins.some(
+            ({ name }) =>
+              name === "vitest:resolve-core" || name === "vitest:resolve-root",
+          ) &&
+          !plugins.some(({ name }) => name === "vitest:browser")
+        ) {
+          return;
+        }
+
         if (viteCommand !== "build" && importer.endsWith(".html")) {
           // Vite has a special `index.html` importer for `resolveId` within `transformRequest`
           // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/transformRequest.ts#L158
@@ -2819,24 +2837,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = () => {
           // approach used by Astro as well, so there's some precedent.
           // https://github.com/withastro/roadmap/issues/466
           // https://github.com/withastro/astro/blob/main/packages/astro/src/core/routing/3xx.ts
-          let location = response.headers.get("Location");
-          // A short delay causes Google to interpret the redirect as temporary.
-          // https://developers.google.com/search/docs/crawling-indexing/301-redirects#metarefresh
-          let delay = response.status === 302 ? 2 : 0;
-          let escapedLocation = escapeHtml(location ?? "");
-          let escapedPathname = escapeHtml(pathname);
-          html = `<!doctype html>
-<head>
-<title>Redirecting to: ${escapedLocation}</title>
-<meta http-equiv="refresh" content="${delay};url=${escapedLocation}">
-<meta name="robots" content="noindex">
-</head>
-<body>
-	<a href="${escapedLocation}">
-    Redirecting from <code>${escapedPathname}</code> to <code>${escapedLocation}</code>
-  </a>
-</body>
-</html>`;
+          html = getPrerenderRedirectHtml(response, pathname);
         } else if (response.status !== 200) {
           throw new Error(
             `Prerender (html): Received a ${response.status} status code from ` +
@@ -2991,12 +2992,17 @@ function addRefreshWrapper(
   );
 }
 
+// A cyclic import can call a hoisted component factory before the module has
+// evaluated. Keep the signature callback callable before the header runs.
 const REACT_REFRESH_HEADER = `
 import RefreshRuntime from "${virtualHmrRuntime.id}";
 
 const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
-let prevRefreshReg;
-let prevRefreshSig;
+let $RefreshReg$ = () => {};
+function $RefreshSig$() {
+  const createSignature = $RefreshSig$.createSignature;
+  return createSignature ? createSignature() : (type) => type;
+}
 
 if (import.meta.hot && !inWebWorker) {
   if (!window.__vite_plugin_react_preamble_installed__) {
@@ -3005,18 +3011,14 @@ if (import.meta.hot && !inWebWorker) {
     );
   }
 
-  prevRefreshReg = window.$RefreshReg$;
-  prevRefreshSig = window.$RefreshSig$;
-  window.$RefreshReg$ = (type, id) => {
+  $RefreshReg$ = (type, id) => {
     RefreshRuntime.register(type, __SOURCE__ + " " + id)
   };
-  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+  $RefreshSig$.createSignature = RefreshRuntime.createSignatureFunctionForTransform;
 }`.replaceAll("\n", ""); // Header is all on one line so source maps aren't affected
 
 const REACT_REFRESH_FOOTER = `
 if (import.meta.hot && !inWebWorker) {
-  window.$RefreshReg$ = prevRefreshReg;
-  window.$RefreshSig$ = prevRefreshSig;
   RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
     RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
     import.meta.hot.accept((nextExports) => {
@@ -4077,19 +4079,4 @@ function createSpaModeRequest(
     }),
     metadata: { type: "spa", path: "/" },
   };
-}
-
-// Note: Duplicated from react-router/lib/dom/ssr/markup
-// Must be kept in sync with the original implementation.
-const ESCAPE_REGEX = /[&><\u2028\u2029]/g;
-const ESCAPE_LOOKUP: { [match: string]: string } = {
-  "&": "\\u0026",
-  ">": "\\u003e",
-  "<": "\\u003c",
-  "\u2028": "\\u2028",
-  "\u2029": "\\u2029",
-};
-
-function escapeHtml(html: string) {
-  return html.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
 }

@@ -25,7 +25,7 @@ export function isInputElement(object: any): object is HTMLInputElement {
 type LimitedMouseEvent = Pick<
   MouseEvent,
   "button" | "metaKey" | "altKey" | "ctrlKey" | "shiftKey"
->;
+> & { currentTarget: Element | null };
 
 function isModifiedEvent(event: LimitedMouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
@@ -35,10 +35,16 @@ export function shouldProcessLinkClick(
   event: LimitedMouseEvent,
   target?: string,
 ) {
+  let element = event.currentTarget;
   return (
     event.button === 0 && // Ignore everything but left clicks
     (!target || target === "_self") && // Let browser handle "target=_blank" etc.
-    !isModifiedEvent(event) // Ignore clicks with modifier keys
+    !isModifiedEvent(event) && // Ignore clicks with modifier keys
+    !(
+      (element?.localName === "a" || element?.localName === "area") &&
+      element.hasAttribute("href") &&
+      element.hasAttribute("download")
+    ) // Let the browser handle download links
   );
 }
 
@@ -254,6 +260,8 @@ const supportedFormEncTypes: Set<FormEncType> = new Set([
 ]);
 
 function getFormEncType(encType: string | null) {
+  // `enctype` and `formenctype` keywords are ASCII case-insensitive in HTML
+  encType = encType?.toLowerCase() ?? null;
   if (encType != null && !supportedFormEncTypes.has(encType as FormEncType)) {
     warning(
       false,

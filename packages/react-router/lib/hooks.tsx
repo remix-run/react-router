@@ -10,6 +10,7 @@ import {
   IsDataRouteContext,
   LocationContext,
   NavigationContext,
+  RSCErrorAlreadyReportedContext,
   RSCRouterContext,
   RouteContext,
   RouteErrorContext,
@@ -570,6 +571,10 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123`
  * then `params.postId` will be `"123"`.
  *
+ * Param values are URI-decoded, so `/posts/hello%20world` gives
+ * `params.postId === "hello world"`. There's no need to call
+ * `decodeURIComponent` on them yourself.
+ *
  * @example
  * import { useParams } from "react-router";
  *
@@ -975,6 +980,7 @@ export function useRoutesImpl(
 
 function DefaultErrorComponent() {
   let error = useRouteError();
+  let alreadyReported = React.useContext(RSCErrorAlreadyReportedContext);
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
     : error instanceof Error
@@ -987,10 +993,12 @@ function DefaultErrorComponent() {
 
   let devInfo = null;
   if (ENABLE_DEV_WARNINGS) {
-    console.error(
-      "Error handled by React Router default ErrorBoundary:",
-      error,
-    );
+    if (!alreadyReported) {
+      console.error(
+        "Error handled by React Router default ErrorBoundary:",
+        error,
+      );
+    }
 
     devInfo = (
       <>
@@ -1954,26 +1962,36 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   // hiding and showing the component, or a new `router`), so it can briefly
   // point at a key that has already been deleted.
   let activeBlockerKey = React.useRef("");
+  // Layout effects run before passive cleanup on router replacement, so the
+  // key may still belong to the previous router when registration runs.
+  let activeBlockerRouter = React.useRef<typeof router | null>(null);
 
   // This effect is in charge of blocker key assignment and deletion (which is
   // tightly coupled to the key)
   React.useEffect(() => {
     let key = String(++blockerId);
     activeBlockerKey.current = key;
+    activeBlockerRouter.current = router;
     setBlockerKey(key);
     return () => {
       activeBlockerKey.current = "";
+      activeBlockerRouter.current = null;
       router.deleteBlocker(key);
     };
   }, [router]);
 
   // This effect handles assigning the blockerFunction.  This is to handle
-  // unstable blocker function identities, and happens only after the prior
-  // effect so we don't get an orphaned blockerFunction in the router with a
+  // unstable blocker function identities, and waits for key assignment so we
+  // don't get an orphaned blockerFunction in the router with a
   // key of "".  Until then we just have the IDLE_BLOCKER.  It also skips a
   // stale `blockerKey` so a deleted key is never registered again.
-  React.useEffect(() => {
-    if (blockerKey !== "" && blockerKey === activeBlockerKey.current) {
+  // Register before child passive effects can navigate with a stale predicate.
+  React.useLayoutEffect(() => {
+    if (
+      blockerKey !== "" &&
+      blockerKey === activeBlockerKey.current &&
+      router === activeBlockerRouter.current
+    ) {
       router.getBlocker(blockerKey, blockerFunction);
     }
   }, [router, blockerKey, blockerFunction]);
@@ -2050,6 +2068,36 @@ type UseRoute<RouteId extends keyof RouteModules | unknown> = {
     unknown;
 };
 
+/**
+ * Returns the current route's `handle`, `loaderData`, and `actionData`, or
+ * those of a matched route identified by `routeId`.
+ *
+ * Omit `routeId` to read the current route. Pass a route ID to infer the
+ * fields from registered route module types. Without an ID, the fields
+ * are typed as `unknown`.
+ *
+ * @example
+ * import { unstable_useRoute as useRoute } from "react-router";
+ *
+ * let currentRoute = useRoute();
+ * let rootRoute = useRoute("root");
+ *
+ * // A registered non-root route may not currently be matched:
+ * let dashboard = useRoute("routes/dashboard");
+ * if (dashboard) {
+ *   console.log(dashboard.handle, dashboard.loaderData);
+ * }
+ *
+ * @name unstable_useRoute
+ * @public
+ * @category Hooks
+ * @mode framework
+ * @mode data
+ * @param args An optional route ID. Omit it to read the current route.
+ * @returns An object with the route's `handle`, `loaderData`, and
+ * `actionData`, or `undefined` if the specified route is not matched.
+ * Individual fields can be `undefined` when the handle or data is unavailable.
+ */
 export function useRoute<Args extends UseRouteArgs>(
   ...args: Args
 ): UseRouteResult<Args> {
