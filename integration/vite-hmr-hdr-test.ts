@@ -61,6 +61,43 @@ templates.forEach((template) => {
       await workflow({ isRsc, page, edit, url });
     });
 
+    test("loads a component created through a cyclic import", async ({
+      page,
+      edit,
+      $,
+    }) => {
+      await edit({
+        "app/cyclic-counter.tsx": tsx`
+          import { useState } from "react";
+          export { Counter } from "./create-counter";
+
+          export function createCounter() {
+            return function Counter() {
+              const [count] = useState(0);
+              return <button>Count: {count}</button>;
+            };
+          }
+        `,
+        "app/create-counter.ts": tsx`
+          import { createCounter } from "./cyclic-counter";
+          export const Counter = createCounter();
+        `,
+      });
+
+      const port = await getPort();
+      const url = `http://localhost:${port}`;
+      const dev = $(`pnpm dev --port ${port}`);
+      await Stream.match(dev.stdout, url);
+      await page.goto(url);
+
+      const type = await page.evaluate(async (moduleUrl) => {
+        const { Counter } = await import(moduleUrl);
+        return typeof Counter;
+      }, "/app/cyclic-counter.tsx");
+      expect(type).toBe("function");
+      expect(page.errors).toEqual([]);
+    });
+
     test("express", async ({ page, edit, $ }) => {
       await edit({
         "server.mjs": isRsc ? Express.rsc() : Express.server(),
