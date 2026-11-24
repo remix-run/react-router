@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { redirect } from "../../lib/router/utils";
+import { redirect, redirectDocument, replace } from "../../lib/router/utils";
 
 describe("json", () => {
   it("sets the Content-Type header", () => {
@@ -87,4 +87,56 @@ describe("redirect", () => {
     let response = redirect("/profile", 301);
     expect(response.status).toEqual(301);
   });
+});
+
+describe.each([
+  ["redirect", redirect],
+  ["redirectDocument", redirectDocument],
+  ["replace", replace],
+])("%s init", (_name, redirectResponse) => {
+  it("does not change a shared init used by another response", () => {
+    let headers = new Headers({ "X-Remix": "is awesome" });
+    let init = { headers };
+    let response = redirectResponse("/login", init);
+
+    expect(response.status).toEqual(302);
+    expect(response.headers.get("Location")).toEqual("/login");
+    expect(response.headers.get("X-Remix")).toEqual("is awesome");
+    expect(new Response(null, init).status).toEqual(200);
+    expect(init).toStrictEqual({ headers });
+    expect([...headers]).toEqual([["x-remix", "is awesome"]]);
+  });
+
+  it("preserves headers from an init prototype getter", () => {
+    class CustomResponseInit {
+      get headers() {
+        return { "X-Remix": "is awesome" };
+      }
+    }
+    let init = new CustomResponseInit();
+    let response = redirectResponse("/login", init);
+
+    expect(response.status).toEqual(302);
+    expect(response.headers.get("Location")).toEqual("/login");
+    expect(response.headers.get("X-Remix")).toEqual("is awesome");
+    expect(Object.keys(init)).toEqual([]);
+  });
+
+  it.each([undefined, 307])(
+    "accepts a frozen init with status %s",
+    (status) => {
+      let init = Object.freeze({
+        status,
+        statusText: "Custom status",
+        headers: { "X-Remix": "is awesome" },
+      });
+      let response = redirectResponse("/login", init);
+
+      expect(response.status).toEqual(status ?? 302);
+      expect(response.statusText).toEqual("Custom status");
+      expect(response.headers.get("Location")).toEqual("/login");
+      expect(response.headers.get("X-Remix")).toEqual("is awesome");
+      expect(init.status).toEqual(status);
+    },
+  );
 });

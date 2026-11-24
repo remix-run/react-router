@@ -57,6 +57,7 @@ export const DataRouterNavigationContext =
 DataRouterNavigationContext.displayName = "DataRouterNavigation";
 
 export const RSCRouterContext = React.createContext<boolean>(false);
+export const RSCErrorAlreadyReportedContext = React.createContext(false);
 
 export function useIsRSCRouterContext(): boolean {
   return React.useContext(RSCRouterContext);
@@ -89,7 +90,9 @@ export const FetchersContext =
   React.createContext<FetchersContextObject | null>(null);
 FetchersContext.displayName = "Fetchers";
 
-export const AwaitContext = React.createContext<TrackedPromise | null>(null);
+export const AwaitContext = React.createContext<
+  TrackedPromise | PromiseSettledResult<unknown> | null
+>(null);
 AwaitContext.displayName = "Await";
 
 export const AwaitContextProvider = (

@@ -6,9 +6,6 @@ title: Middleware
 
 [MODES: framework, data]
 
-<br/>
-<br/>
-
 Middleware allows you to run code before and after the [`Response`][Response] generation for the matched path. This enables [common patterns][common-patterns] like authentication, logging, error handling, and data preprocessing in a reusable way.
 
 Middleware runs in a nested chain, executing from parent routes to child routes on the way "down" to your route handlers, then from child routes back to parent routes on the way "up" after a [`Response`][Response] is generated.
@@ -473,6 +470,12 @@ Which `ErrorBoundary` is rendered will differ based on whether your middleware t
 ## Common Patterns
 
 ### Authentication
+
+Middleware on a protected route or a common ancestor can authenticate and authorize a request before the matched loaders and actions run.
+
+Loaders run in parallel and can be requested independently, so parent loaders are not capable of "protecting" child route loaders or actions. Each protected loader and action must perform its own checks unless appropriate server middleware enforces them before the handler runs.
+
+<docs-warning>Attach authorization middleware to the protected route or layout instead of gating its checks with literal pathname-prefix comparisons such as `url.pathname.startsWith("/admin")`. Literal checks may miss potential URL encodings that React Router route matching would cover.</docs-warning>
 
 ```tsx filename=app/middleware/auth.ts
 import { redirect } from "react-router";

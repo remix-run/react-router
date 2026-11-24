@@ -6,9 +6,6 @@ title: React Transitions
 
 [MODES: framework, data, declarative]
 
-<br/>
-<br/>
-
 [React 18][react-18] introduced the concept of "transitions" which allow you to differentiate urgent from non-urgent UI updates. To learn more about React Transitions and "concurrent rendering" Please refer to React's official documentation:
 
 - [What is Concurrent React][concurrent]
