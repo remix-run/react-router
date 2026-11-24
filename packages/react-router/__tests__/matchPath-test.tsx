@@ -245,6 +245,26 @@ describe("matchPath", () => {
   });
 });
 
+describe("matchPath with many optional segments", () => {
+  const pattern =
+    "/catalog/" + Array.from({ length: 12 }, (_, i) => `:level${i}?`).join("/");
+  const pathname =
+    "/catalog/" + Array.from({ length: 12 }, (_, i) => `item${i}`).join("/");
+
+  it("matches a pattern at the optional segment limit", () => {
+    expect(matchPath(pattern, pathname)).toMatchObject({
+      pathname,
+      params: { level0: "item0", level11: "item11" },
+    });
+  });
+
+  it("counts static and dynamic optional segments toward the same limit", () => {
+    expect(() =>
+      matchPath(`${pattern}/view/preview?`, `${pathname}/view`),
+    ).toThrow("exceeds the limit of 12 optional segments");
+  });
+});
+
 describe("matchPath optional dynamic segments", () => {
   it("should match when optional segment is provided", () => {
     const match = matchPath("/:lang?/user/:id", "/en/user/123");
