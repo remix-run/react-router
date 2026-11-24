@@ -41,7 +41,7 @@
 
 ### Unstable Changes
 
-⚠️  _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
+⚠️ _[Unstable features](https://reactrouter.com/community/api-development-strategy#unstable-flags) are not recommended for production use_
 
 - Report RSC loader, action, and middleware errors through `unstable_matchRSCServerRequest`'s `onError` handler ([#15598](https://github.com/remix-run/react-router/pull/15598))
   - Log request errors with `console.error` by default unless the request was aborted
