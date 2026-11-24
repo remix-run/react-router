@@ -1,0 +1,1 @@
+Fix stale route modules in Safari after reloading a page that received an HMR update during `react-router dev`. Dev HTML responses are now sent with `Cache-Control: no-cache`, and dev route and entry module URLs include Vite's HMR timestamp so browsers fetch the latest modules on reload.
