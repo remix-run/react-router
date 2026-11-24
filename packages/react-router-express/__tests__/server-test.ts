@@ -345,6 +345,27 @@ describe("express createRemixRequest", () => {
     expect(remixRequest.url).toBe("http://example.com:8443/foo/bar");
   });
 
+  it.each([
+    ["loopback", "http://example.com/foo/bar"],
+    ["linklocal", "http://localhost:3000/foo/bar"],
+  ])(
+    "selects the host and port with trust proxy set to %s",
+    async (trust, url) => {
+      let app = express();
+      app.set("trust proxy", trust);
+      app.use((req, res) => {
+        res.send(createRemixRequest(req, res).url);
+      });
+
+      let response = await supertest(app)
+        .get("/foo/bar")
+        .set("Host", "localhost:3000")
+        .set("X-Forwarded-Host", "example.com");
+
+      expect(response.text).toBe(url);
+    },
+  );
+
   it.each(["[::1]", "[fd00:1234::1]"])(
     "reads the port after the IPv6 host %s",
     async (hostname) => {
@@ -406,7 +427,7 @@ describe("express createRemixRequest", () => {
       url: "/foo/bar",
       method: "GET",
       protocol: "http",
-      hostname: "localhost/invalid",
+      hostname: "custom.example/invalid",
       headers: {
         Host: "localhost:3000",
       },
@@ -415,7 +436,7 @@ describe("express createRemixRequest", () => {
 
     let remixRequest = createRemixRequest(expressRequest, expressResponse);
 
-    expect(remixRequest.url).toBe("http://localhost:3000/foo/bar");
+    expect(remixRequest.url).toBe("http://custom.example:3000/foo/bar");
   });
 
   it("falls back for invalid host values", async () => {
@@ -425,7 +446,7 @@ describe("express createRemixRequest", () => {
       protocol: "http",
       hostname: "/invalid",
       headers: {
-        Host: "localhost:3000",
+        Host: "example.com:3000",
       },
     });
     let expressResponse = createResponse();
