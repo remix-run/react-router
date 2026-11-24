@@ -201,7 +201,69 @@ describe("create-react-router CLI", () => {
     expect(status).toBe(0);
     expect(existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(
+      JSON.parse(readFileSync(path.join(projectDir, "package.json"), "utf8"))
+        .name,
+    ).toBe("prompts");
   });
+
+  it("succeeds when the initial Git commit fails", async () => {
+    let projectDir = getProjectDir("git-commit-failure");
+    let gitConfig = path.join(TEMP_DIR, "empty-gitconfig");
+    writeFileSync(gitConfig, "");
+
+    let { status, stderr } = await execCreateReactRouter({
+      args: [projectDir, "--no-install", "--no-agent-skills", "--git-init"],
+      interactive: false,
+      env: {
+        GIT_CONFIG_NOSYSTEM: "1",
+        GIT_CONFIG_GLOBAL: gitConfig,
+      },
+    });
+
+    expect(status).toBe(0);
+    expect(existsSync(path.join(projectDir, ".git"))).toBeTruthy();
+    expect(stderr).toContain(
+      "Git initialized, but the initial add/commit failed.",
+    );
+    expect(() =>
+      execFileSync("git", ["rev-parse", "--verify", "HEAD"], {
+        cwd: projectDir,
+        stdio: "ignore",
+      }),
+    ).toThrow();
+  });
+
+  it.each(["relative", "trailing-separator", "absolute", "current"])(
+    "uses the directory basename for a %s project path",
+    async (kind) => {
+      let projectDir = getProjectDir(`project-name-${kind}`);
+      let cwd = TEMP_DIR;
+      let argument = projectDir;
+      if (kind === "relative") {
+        argument = path.relative(cwd, projectDir);
+      } else if (kind === "trailing-separator") {
+        argument = `.${path.sep}${path.relative(cwd, projectDir)}${path.sep}`;
+      } else if (kind === "current") {
+        mkdirSync(projectDir);
+        cwd = projectDir;
+        argument = ".";
+      }
+
+      let { status, stderr } = await execCreateReactRouter({
+        args: [argument, "--no-install", "--no-git-init", "--no-agent-skills"],
+        interactive: false,
+        cwd,
+      });
+
+      expect(stderr.trim()).toBeFalsy();
+      expect(status).toBe(0);
+      expect(
+        JSON.parse(readFileSync(path.join(projectDir, "package.json"), "utf8"))
+          .name,
+      ).toBe(path.basename(projectDir));
+    },
+  );
 
   it("supports the --yes flag", async () => {
     let projectDir = getProjectDir("yes");

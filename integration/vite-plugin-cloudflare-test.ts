@@ -1,6 +1,8 @@
 import { expect } from "@playwright/test";
 import dedent from "dedent";
 import getPort from "get-port";
+import fs from "node:fs";
+import path from "node:path";
 
 import {
   build,
@@ -14,8 +16,12 @@ const tsx = dedent;
 const css = dedent;
 
 function defineFiles({
+  auxiliaryWorker = false,
   reversePlugins = false,
-}: { reversePlugins?: boolean } = {}): Files {
+}: {
+  auxiliaryWorker?: boolean;
+  reversePlugins?: boolean;
+} = {}): Files {
   const files: Files = async ({ port }) => {
     const inspectorPort = await getPort();
 
@@ -29,7 +35,13 @@ function defineFiles({
       ${await viteConfig.server({ port })}
       plugins: [
         cloudflare({
+          ${
+            auxiliaryWorker
+              ? 'auxiliaryWorkers: [{ configPath: "./wrangler.auxiliary.toml" }],'
+              : ""
+          }
           inspectorPort: ${inspectorPort},
+          ${auxiliaryWorker ? "persistState: false," : ""}
           viteEnvironment: { name: "ssr" },
         }),
         reactRouter(),
@@ -58,6 +70,29 @@ function defineFiles({
           padding: 20px;
         }
       `,
+      ...(auxiliaryWorker
+        ? {
+            "react-router.config.ts": tsx`
+              import type { Config } from "@react-router/dev/config";
+
+              export default {
+                prerender: ["/"],
+              } satisfies Config;
+            `,
+            "workers/auxiliary.ts": tsx`
+              export default {
+                fetch() {
+                  return new Response("Hello from auxiliary Worker");
+                },
+              } satisfies ExportedHandler;
+            `,
+            "wrangler.auxiliary.toml": `
+              name = "auxiliary-worker"
+              compatibility_date = "2025-03-17"
+              main = "./workers/auxiliary.ts"
+            `,
+          }
+        : {}),
     };
   };
   return files;
@@ -194,5 +229,18 @@ test.describe("vite-plugin-cloudflare", () => {
     const buildResult = build({ cwd });
 
     expect(buildResult.status).toBe(0);
+  });
+
+  test("prerenders with an auxiliary Worker", async () => {
+    const files = defineFiles({ auxiliaryWorker: true, reversePlugins: true });
+    const cwd = await createProject(
+      await files({ port: 0 }),
+      "vite-plugin-cloudflare-template",
+    );
+
+    const buildResult = build({ cwd });
+
+    expect(buildResult.status).toBe(0);
+    expect(fs.existsSync(path.join(cwd, "build/client/index.html"))).toBe(true);
   });
 });

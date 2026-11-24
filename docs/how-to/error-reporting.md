@@ -6,9 +6,6 @@ title: Error Reporting
 
 [MODES: framework,data]
 
-<br/>
-<br/>
-
 React Router catches errors in your route modules and sends them to [error boundaries](./error-boundary) to prevent blank pages when errors occur. However, `ErrorBoundary` isn't sufficient for logging and reporting errors.
 
 ## Server Errors
@@ -138,5 +135,5 @@ See also:
 [entryclient]: ../api/framework-conventions/entry.client.tsx
 [hydratedrouter]: ../api/framework-routers/HydratedRouter
 [routerprovider]: ../api/data-routers/RouterProvider
-[hydratedrouter-onerror]: ../api/framework-routers/HydratedRouter#onError
-[routerprovider-onerror]: ../api/data-routers/RouterProvider#onError
+[hydratedrouter-onerror]: ../api/framework-routers/HydratedRouter#onerror
+[routerprovider-onerror]: ../api/data-routers/RouterProvider#onerror

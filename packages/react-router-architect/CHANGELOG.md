@@ -1,5 +1,44 @@
 # `@react-router/architect`
 
+## v8.5.3
+
+### Patch Changes
+
+- Preserve binary response bodies and text byte order marks in `sendReactRouterResponse` ([#15814](https://github.com/remix-run/react-router/pull/15814))
+  - Preserve binary bodies even when their content type is absent from `binaryTypes`
+  - Preserve a leading byte order mark in text bodies
+- Updated dependencies:
+  - [`react-router@8.5.3`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.3)
+  - [`@react-router/node@8.5.3`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.3)
+
+## v8.5.2
+
+### Patch Changes
+
+- Fix the request URL when the `Host` header is an IPv6 address (e.g., `[::1]:3333`), which made `new URL()` throw ([#15660](https://github.com/remix-run/react-router/pull/15660))
+- Fix `sendReactRouterResponse` throwing `TypeError: immutable` when a `fetch()` response sets cookies ([#15714](https://github.com/remix-run/react-router/pull/15714))
+- Updated dependencies:
+  - [`react-router@8.5.2`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.2)
+  - [`@react-router/node@8.5.2`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.2)
+
+## v8.5.1
+
+### Patch Changes
+
+- Preserve binary request bodies in the Architect adapter ([#15652](https://github.com/remix-run/react-router/pull/15652))
+  - Avoid decoding base64-encoded bodies to UTF-8 strings for content types other than `multipart/form-data`
+- Updated dependencies:
+  - [`react-router@8.5.1`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.1)
+  - [`@react-router/node@8.5.1`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.1)
+
+## v8.5.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.0`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.0)
+  - [`@react-router/node@8.5.0`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.0)
+
 ## v8.4.0
 
 ### Patch Changes

@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
+import { createRequestHandler } from "react-router";
+import type { ServerBuild } from "react-router";
 
 import {
   createAppFixture,
@@ -20,6 +22,87 @@ test.describe("SPA Mode", () => {
     test.describe(`splitRouteModules: ${splitRouteModules}`, () => {
       test.describe("custom builds", () => {
         test.describe("build errors", () => {
+          let createApiOnlyProject = () =>
+            createProject({
+              "react-router.config.ts": reactRouterConfig({
+                ssr: "unstable_api-only",
+                splitRouteModules,
+              }),
+              "app/routes/api.tsx": String.raw`
+                export async function loader() {
+                  return { message: "hello" };
+                }
+
+                export async function action() {
+                  return { ok: true };
+                }
+
+                export async function clientLoader() {
+                  return { message: "CLIENT_LOADER" };
+                }
+
+                export async function clientAction() {
+                  return { ok: "CLIENT_ACTION" };
+                }
+
+                export function ErrorBoundary() {
+                  return "ERROR_UI_ONLY";
+                }
+
+                export function HydrateFallback() {
+                  return "HYDRATE_UI_ONLY";
+                }
+
+                export default function Component() {
+                  return "UI_ONLY";
+                }
+              `,
+            });
+
+          test("preserves server loaders and actions in an API-only server build", async () => {
+            let cwd = await createApiOnlyProject();
+
+            let result = build({ cwd });
+            expect(result.status).toBe(0);
+            let serverBuildPath = path.join(cwd, "build/server/index.js");
+            expect(fs.existsSync(serverBuildPath)).toBe(true);
+            let serverBuild = fs.readFileSync(serverBuildPath, "utf8");
+            expect(serverBuild).toContain("hello");
+            expect(serverBuild).not.toContain("UI_ONLY");
+            expect(serverBuild).not.toContain("CLIENT_LOADER");
+            expect(serverBuild).not.toContain("CLIENT_ACTION");
+
+            let clientAssetsPath = path.join(cwd, "build/client/assets");
+            let clientAssets = fs.readdirSync(clientAssetsPath);
+            expect(
+              clientAssets.some((asset) =>
+                fs
+                  .readFileSync(path.join(clientAssetsPath, asset), "utf8")
+                  .includes("CLIENT_LOADER"),
+              ),
+            ).toBe(true);
+            expect(
+              clientAssets.some((asset) =>
+                fs
+                  .readFileSync(path.join(clientAssetsPath, asset), "utf8")
+                  .includes("CLIENT_ACTION"),
+              ),
+            ).toBe(true);
+          });
+
+          test("does not handle document requests in API-only mode", async () => {
+            let cwd = await createApiOnlyProject();
+
+            let result = build({ cwd });
+            expect(result.status).toBe(0);
+            let serverBuildPath = path.join(cwd, "build/server/index.js");
+            let serverBuild = (await import(serverBuildPath)) as ServerBuild;
+            let response = await createRequestHandler(serverBuild)(
+              new Request("http://localhost/api"),
+            );
+            expect(response.status).toBe(404);
+          });
+
           test("errors on server-only exports", async () => {
             let cwd = await createProject({
               "react-router.config.ts": reactRouterConfig({
@@ -1281,5 +1364,126 @@ test.describe("SPA Mode", () => {
       "app/root.tsx",
       "app/routes/about.tsx",
     ]);
+  });
+
+  test("hydrates NavLink active state for a deep link", async ({ page }) => {
+    let fixture = await createFixture({
+      spaMode: true,
+      files: {
+        "app/root.tsx": js`
+          import { lazy, Suspense, useEffect, useState } from "react";
+          import { Outlet, Scripts, useSearchParams } from "react-router";
+
+          const Menu = lazy(() => import("./layout-menu"));
+
+          export function Layout({ children }: { children: React.ReactNode }) {
+            let [searchParams] = useSearchParams();
+            let [initialTab] = useState(() => searchParams.get("tab") ?? "");
+            useEffect(() => {
+              document.body.dataset.initialTab = initialTab;
+            }, [initialTab]);
+
+            return (
+              <html lang="en">
+                <head>
+                  <meta charSet="utf-8" />
+                  <meta name="viewport" content="width=device-width, initial-scale=1" />
+                </head>
+                <body>
+                  <Suspense>
+                    <Menu />
+                  </Suspense>
+                  {children}
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+
+          export default function App() {
+            return <Outlet />;
+          }
+        `,
+        "app/layout-menu.tsx": js`
+          import { NavLink } from "react-router";
+
+          export default function Menu() {
+            return (
+              <nav>
+                <NavLink to="/" end>Home</NavLink>
+                <NavLink to="/other">Other</NavLink>
+              </nav>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1>Home page</h1>;
+          }
+        `,
+        "app/routes/other.tsx": js`
+          export default function Other() {
+            return <h1>Other page</h1>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let releaseMenu!: () => void;
+    let menuReady = new Promise<void>((resolve) => {
+      releaseMenu = resolve;
+    });
+
+    try {
+      await page.route("**/assets/layout-menu-*.js", async (route) => {
+        await menuReady;
+        await route.continue();
+      });
+      let html = await (await fixture.requestDocument("/")).text();
+      let anchors = html.match(/<a\b[^>]*>/g) ?? [];
+      expect(anchors).toHaveLength(2);
+      for (let anchor of anchors) {
+        expect(anchor).not.toMatch(/\bactive\b|aria-current=/);
+      }
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await Promise.all([
+        page.waitForRequest("**/assets/layout-menu-*.js"),
+        app.goto("/other?tab=details", false),
+      ]);
+      await expect(page.locator("body")).toHaveAttribute(
+        "data-initial-tab",
+        "details",
+      );
+      await expect(page.locator("nav a")).toHaveCount(2);
+      await expect(page.locator("nav a.active")).toHaveCount(0);
+      await expect(page.locator("nav a[aria-current]")).toHaveCount(0);
+      let otherLink = page.locator('a[href="/other"]');
+      let prerenderedOtherLink = await otherLink.evaluateHandle((link) => link);
+      releaseMenu();
+      await expect(page.locator("h1")).toHaveText("Other page");
+      await expect(page.locator('a[href="/"]')).not.toHaveClass(/\bactive\b/);
+      await expect(otherLink).toHaveClass(/\bactive\b/);
+      await expect(otherLink).toHaveAttribute("aria-current", "page");
+      expect(
+        await otherLink.evaluate(
+          (link, original) => link === original,
+          prerenderedOtherLink,
+        ),
+      ).toBe(true);
+      await expect(page.locator("nav a[aria-current]")).toHaveCount(1);
+
+      await app.clickLink("/");
+      await expect(page.locator("h1")).toHaveText("Home page");
+      await expect(page.locator("body")).toHaveAttribute(
+        "data-initial-tab",
+        "details",
+      );
+      await expect(page.locator('a[href="/"]')).toHaveClass(/\bactive\b/);
+      await expect(otherLink).not.toHaveClass(/\bactive\b/);
+    } finally {
+      releaseMenu();
+      appFixture.close();
+    }
   });
 });

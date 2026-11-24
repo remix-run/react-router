@@ -3,10 +3,13 @@ import { pathToFileURL } from "node:url";
 import { expect, type Page } from "@playwright/test";
 
 import {
+  build,
+  createProject,
   reactRouterConfig,
   test,
   type Files,
   type TemplateName,
+  viteConfig,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -92,6 +95,34 @@ async function interceptWithStaleClientVersion(page: Page) {
 }
 
 test.describe("RSC client versions", () => {
+  test("renders a server component on the initial request with a client loader", async ({
+    page,
+    dev,
+  }) => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.ts": await viteConfig.basic({ port, templateName }),
+      ...getFiles(),
+      "app/routes.ts": js`
+        import { type RouteConfig, index } from "@react-router/dev/routes";
+
+        export default [index("routes/home.tsx")] satisfies RouteConfig;
+      `,
+      "app/routes/home.tsx": js`
+        export function clientLoader() {
+          return null;
+        }
+
+        export function ServerComponent() {
+          return <h1>Hello</h1>;
+        }
+      `,
+    });
+    let { port } = await dev(files, templateName);
+
+    await page.goto(`http://localhost:${port}/`);
+    await expect(page.getByRole("heading", { name: "Hello" })).toBeVisible();
+  });
+
   test("derives the client version from the Vite RSC assets manifest", async ({
     page,
     request,
@@ -139,6 +170,63 @@ test.describe("RSC client versions", () => {
       "/other?token=abc123&ref=campaign#section1",
     );
     expect(documentRequests).toHaveLength(1);
+  });
+
+  test("preserves client versions when the client build does not write files", async () => {
+    let cwd = await createProject(
+      {
+        ...getFiles(),
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
+          import react from "@vitejs/plugin-react";
+          import rsc from "@vitejs/plugin-rsc";
+
+          export default defineConfig({
+            environments: {
+              client: { build: { write: false } },
+            },
+            plugins: [
+              reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true }),
+              react(),
+              rsc(),
+            ],
+          });
+        `,
+      },
+      templateName,
+    );
+    expect(build({ cwd }).status).toBe(0);
+
+    let { fetchServer } = await import(
+      pathToFileURL(path.join(cwd, "build/server/index.js")).href
+    );
+    let staleResponse = await fetchServer(
+      new Request("http://localhost/other.manifest?version=stale"),
+    );
+    expect(staleResponse.status).toBe(204);
+    expect(staleResponse.headers.get("X-Remix-Reload-Document")).toBe("true");
+
+    let manifests = await Promise.all(
+      ["build/server", "build/server/__ssr_build"].map(async (directory) => {
+        let { default: manifest } = await import(
+          pathToFileURL(
+            path.join(cwd, directory, "__vite_rsc_assets_manifest.js"),
+          ).href
+        );
+        return manifest;
+      }),
+    );
+    let { clientVersion, ...versionedManifestValues } = manifests[0];
+    expect(clientVersion).toBe(
+      await getClientVersion(JSON.stringify(versionedManifestValues)),
+    );
+    expect(manifests[1].clientVersion).toBe(clientVersion);
+
+    let currentResponse = await fetchServer(
+      new Request(`http://localhost/other.manifest?version=${clientVersion}`),
+    );
+    expect(currentResponse.status).toBe(200);
   });
 
   test("defers an eager discovery mismatch until navigation, then reloads the destination", async ({

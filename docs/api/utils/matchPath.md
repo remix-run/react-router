@@ -25,6 +25,8 @@ https://github.com/remix-run/react-router/blob/main/packages/react-router/lib/ro
 Performs pattern matching on a URL pathname and returns information about
 the match.
 
+Throws if the pattern contains more than 12 optional (`?`) markers.
+
 ## Signature
 
 ```tsx

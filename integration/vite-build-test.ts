@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import { globSync } from "node:fs";
+import { globSync, readFileSync } from "node:fs";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
@@ -381,4 +381,142 @@ test.describe("Build", () => {
       });
     });
   });
+});
+
+test.describe("Custom build environments", () => {
+  for (let { templateName, templateDisplayName } of viteMajorTemplates) {
+    test(`uses the active server environment outDir (${templateDisplayName})`, async () => {
+      let cwd = await createProject(
+        {
+          "react-router.config.ts": reactRouterConfig({ prerender: false }),
+          "vite.config.ts": js`
+            import path from "node:path";
+            import { BuildEnvironment, defineConfig } from "vite";
+            import { reactRouter } from "@react-router/dev/vite";
+
+            export default defineConfig({
+              plugins: [reactRouter()],
+              build: {
+                assetsInlineLimit: 0,
+                createEnvironment(name, config) {
+                  return new BuildEnvironment(name, config, {
+                    options: name === "ssr" ? {
+                      build: {
+                        outDir: path.resolve(config.root, "custom/server"),
+                      },
+                    } : {},
+                  });
+                },
+              },
+            });
+          `,
+          "app/server-only.txt": "server-only asset",
+          "app/routes/_index.tsx": js`
+            import serverOnly from "../server-only.txt?url";
+
+            export function loader() {
+              return { serverOnly };
+            }
+
+            export default function Index() {
+              return <h1>Index</h1>;
+            }
+          `,
+        },
+        templateName,
+      );
+
+      let result = build({ cwd });
+      expect(result.stderr.toString(), result.stdout.toString()).toBeFalsy();
+      expect(result.status).toBe(0);
+      expect(globSync("custom/server/index.js", { cwd })).toHaveLength(1);
+      expect(
+        globSync("build/client/assets/server-only-*.txt", { cwd }),
+      ).toHaveLength(1);
+      expect(
+        globSync("custom/server/assets/server-only-*.txt", { cwd }),
+      ).toEqual([]);
+      expect(globSync("custom/server/.vite/manifest.json", { cwd })).toEqual(
+        [],
+      );
+    });
+  }
+});
+
+test.describe("Build resource cleanup", () => {
+  for (let templateName of [
+    "vite-7-template",
+    "vite-8-template",
+    "rsc-vite-framework",
+  ] as const) {
+    for (let order of ["pre", "post"] as const) {
+      test(`${templateName} closes config-loader resources when a ${order} buildApp hook fails`, async () => {
+        let cwd = await createProject(
+          {
+            "react-router.config.ts": reactRouterConfig({ prerender: false }),
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              ${
+                templateName === "rsc-vite-framework"
+                  ? js`
+                    import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
+                    import react from "@vitejs/plugin-react";
+                    import rsc from "@vitejs/plugin-rsc";
+                  `
+                  : 'import { reactRouter } from "@react-router/dev/vite";'
+              }
+
+              export default defineConfig({
+                plugins: [
+                  ${
+                    templateName === "rsc-vite-framework"
+                      ? "reactRouterRSC({ __runningWithinTheReactRouterMonoRepo: true }), react(), rsc(),"
+                      : "reactRouter(),"
+                  }
+                  {
+                    name: "build-error",
+                    buildApp: {
+                      order: "${order}",
+                      handler() {
+                        throw new Error("${order} build failed");
+                      },
+                    },
+                  },
+                ],
+              });
+            `,
+            "track-resources.mjs": js`
+              import fs from "node:fs";
+              // Load Vite's own dependency-level signal handlers before measuring.
+              import "vite";
+              let listenersBefore = process.listenerCount("SIGTERM");
+
+              // Vite retains each config-loader server through its shutdown
+              // callback until server.close() removes it, even with watch disabled.
+              process.on("exit", () => {
+                fs.writeFileSync("BUILD_RESOURCES.json", JSON.stringify({
+                  listenersBefore,
+                  listenersAfter: process.listenerCount("SIGTERM"),
+                }));
+              });
+            `,
+          },
+          templateName,
+        );
+
+        let result = build({
+          cwd,
+          env: {
+            NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --import ./track-resources.mjs`,
+          },
+        });
+        expect(result.stderr.toString()).toContain(`${order} build failed`);
+        expect(result.status).toBe(1);
+        let { listenersBefore, listenersAfter } = JSON.parse(
+          readFileSync(path.join(cwd, "BUILD_RESOURCES.json"), "utf8"),
+        );
+        expect(listenersAfter).toBe(listenersBefore);
+      });
+    }
+  }
 });
