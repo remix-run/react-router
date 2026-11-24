@@ -29,6 +29,10 @@ their parent routes.
 Assuming a route pattern like `/posts/:postId` is matched by `/posts/123`
 then `params.postId` will be `"123"`.
 
+Param values are URI-decoded, so `/posts/hello%20world` gives
+`params.postId === "hello world"`. There's no need to call
+`decodeURIComponent` on them yourself.
+
 ```tsx
 import { useParams } from "react-router";
 
