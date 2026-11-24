@@ -1,1 +1,1 @@
-Keep a navigation that is awaiting lazy route discovery from being completed with the previous page's matches when a fetcher action revalidation settles in that window
+Prevent fetcher action revalidation from completing a navigation with stale route matches while lazy route discovery is pending
