@@ -7,6 +7,115 @@ import { routeRSCServerRequest } from "../../lib/rsc/server.ssr";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
+  describe("request validation", () => {
+    describe.each(["/action", "/action.rsc"])("%s", (pathname) => {
+      test.each(["POST", "PUT", "PATCH", "DELETE"])(
+        "returns 400 for invalid %s requests",
+        async (method) => {
+          let calls: string[] = [];
+          let errors: unknown[] = [];
+          let request = new Request(`https://remix.run${pathname}`, {
+            method,
+            headers: { Origin: "https://other.example" },
+            body: "intent=mutate",
+          });
+          let response = await matchRSCServerRequest({
+            createTemporaryReferenceSet: () => ({}),
+            request,
+            onError: (error) => errors.push(error),
+            routes: [
+              {
+                id: "action",
+                path: "/action",
+                Component: () => null,
+                middleware: [
+                  async (_, next) => {
+                    calls.push("middleware");
+                    return next();
+                  },
+                ],
+                loader() {
+                  calls.push("loader");
+                  return null;
+                },
+                action() {
+                  calls.push("action");
+                  return null;
+                },
+              },
+            ],
+            generateResponse(match) {
+              calls.push("generateResponse");
+              return new Response("Encoded Flight", {
+                status: match.statusCode,
+              });
+            },
+          });
+
+          expect(response.status).toBe(400);
+          expect(calls).toEqual([]);
+          expect(errors).toHaveLength(1);
+          expect(errors[0]).toBeInstanceOf(Error);
+
+          let result = await routeRSCServerRequest({
+            request,
+            serverResponse: response,
+            createFromReadableStream() {
+              throw new Error("Rejected requests should not decode Flight");
+            },
+            renderHTML() {
+              throw new Error("Rejected requests should not render HTML");
+            },
+          });
+          expect(result).toBe(response);
+          expect(await result.text()).toBe("Bad Request");
+        },
+      );
+    });
+
+    test.each([
+      { origin: "https://remix.run", allowedActionOrigins: undefined },
+      {
+        origin: "https://trusted.example",
+        allowedActionOrigins: ["trusted.example"],
+      },
+    ])("processes valid submissions from $origin", async (options) => {
+      let calls: string[] = [];
+      let response = await matchRSCServerRequest({
+        allowedActionOrigins: options.allowedActionOrigins,
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/action", {
+          method: "POST",
+          headers: { Origin: options.origin },
+          body: "intent=mutate",
+        }),
+        routes: [
+          {
+            id: "action",
+            path: "/action",
+            Component: () => null,
+            middleware: [
+              async ({ request }, next) => {
+                calls.push(`middleware ${request.method}`);
+                return next();
+              },
+            ],
+            action() {
+              calls.push("action");
+              return null;
+            },
+          },
+        ],
+        generateResponse(match) {
+          return new Response("Encoded Flight", { status: match.statusCode });
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(calls).toEqual(["middleware POST", "action"]);
+    });
+  });
+
   test("switches to initial discovery above the pathname work limit", async () => {
     let routeDiscovery = Object.freeze({ mode: "lazy" } as const);
     let routes: RSCRouteConfigEntry[] = [
