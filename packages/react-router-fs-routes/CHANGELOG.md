@@ -1,5 +1,12 @@
 # `@react-router/fs-routes`
 
+## v7.18.7
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@7.18.7`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@7.18.7)
+
 ## v7.18.6
 
 ### Patch Changes
