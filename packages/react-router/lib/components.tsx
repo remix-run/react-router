@@ -76,6 +76,7 @@ import {
   useRoutesImpl,
 } from "./hooks";
 import { FrameworkContext } from "./dom/ssr/components";
+import type { RouteDiscoveryRuntime } from "./dom/ssr/route-discovery";
 import type { ViewTransition } from "./dom/global";
 import { warnOnce } from "./server-runtime/warnings";
 import type { ClientInstrumentation } from "./router/instrumentation";
@@ -761,6 +762,12 @@ export function RouterProvider({
     [state.fetchers],
   );
 
+  // Read this outside of `MemoizedDataRoutes` so `FrameworkContext` updates
+  // (i.e., on every `<HydratedRouter>` location change) don't bypass the memo
+  // and re-render the route tree with stale router state
+  let discoveryRuntime =
+    React.useContext(FrameworkContext)?.routeDiscoveryRuntime;
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -788,6 +795,7 @@ export function RouterProvider({
                       state={state}
                       isStatic={false}
                       onError={onError}
+                      discoveryRuntime={discoveryRuntime}
                     />
                   </Router>
                 </ViewTransitionContext.Provider>
@@ -837,12 +845,14 @@ export function DataRoutes({
   state,
   isStatic,
   onError,
+  discoveryRuntime,
 }: {
   routes: DataRouteObject[];
   manifest: RouteManifest;
   state: RouterState;
   isStatic: boolean;
   onError?: ClientOnErrorFunction;
+  discoveryRuntime?: RouteDiscoveryRuntime;
 }): React.ReactElement | null {
   let dataRouterContext = React.useContext(DataRouterContext);
 
@@ -851,8 +861,6 @@ export function DataRoutes({
     "You must render this element inside a <DataRouterContext.Provider> element",
   );
 
-  let discoveryRuntime =
-    React.useContext(FrameworkContext)?.routeDiscoveryRuntime;
   React.useEffect(() => {
     // This effect runs after the initialized route tree commits and its hooks
     // register. Descendants still suspended behind their own boundaries do not

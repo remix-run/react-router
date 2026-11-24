@@ -10,6 +10,7 @@ import {
   IsDataRouteContext,
   LocationContext,
   NavigationContext,
+  RSCErrorAlreadyReportedContext,
   RSCRouterContext,
   RouteContext,
   RouteErrorContext,
@@ -570,6 +571,10 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123`
  * then `params.postId` will be `"123"`.
  *
+ * Param values are URI-decoded, so `/posts/hello%20world` gives
+ * `params.postId === "hello world"`. There's no need to call
+ * `decodeURIComponent` on them yourself.
+ *
  * @example
  * import { useParams } from "react-router";
  *
@@ -975,6 +980,7 @@ export function useRoutesImpl(
 
 function DefaultErrorComponent() {
   let error = useRouteError();
+  let alreadyReported = React.useContext(RSCErrorAlreadyReportedContext);
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
     : error instanceof Error
@@ -987,10 +993,12 @@ function DefaultErrorComponent() {
 
   let devInfo = null;
   if (ENABLE_DEV_WARNINGS) {
-    console.error(
-      "Error handled by React Router default ErrorBoundary:",
-      error,
-    );
+    if (!alreadyReported) {
+      console.error(
+        "Error handled by React Router default ErrorBoundary:",
+        error,
+      );
+    }
 
     devInfo = (
       <>

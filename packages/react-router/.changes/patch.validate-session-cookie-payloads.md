@@ -1,1 +1,0 @@
-Treat session cookies with an invalid payload shape as empty sessions. Storage adapters receive only nonempty string session IDs, and cookie-backed sessions accept only non-array objects as session data.
