@@ -571,6 +571,10 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  * Assuming a route pattern like `/posts/:postId` is matched by `/posts/123`
  * then `params.postId` will be `"123"`.
  *
+ * Param values are URI-decoded, so `/posts/hello%20world` gives
+ * `params.postId === "hello world"`. There's no need to call
+ * `decodeURIComponent` on them yourself.
+ *
  * @example
  * import { useParams } from "react-router";
  *
