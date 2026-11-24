@@ -415,7 +415,12 @@ export function HydratedRouter(props: HydratedRouterProps) {
   );
   React.useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      setCriticalCss(undefined);
+      // Keep this update from interrupting hydration of pending Suspense
+      // boundaries, which would discard their server HTML and client-render
+      // them instead.
+      React.startTransition(() => {
+        setCriticalCss(undefined);
+      });
     }
   }, []);
   React.useEffect(() => {

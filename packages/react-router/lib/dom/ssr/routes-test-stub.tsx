@@ -195,6 +195,7 @@ function processRoutes(
       id: route.id,
       path: route.path,
       index: route.index,
+      caseSensitive: route.caseSensitive,
       Component: route.Component
         ? withComponentProps(route.Component)
         : undefined,
@@ -226,6 +227,7 @@ function processRoutes(
       id: route.id,
       path: route.path,
       index: route.index,
+      caseSensitive: route.caseSensitive,
       parentId,
       hasAction: route.action != null,
       hasLoader: route.loader != null,

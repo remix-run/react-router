@@ -159,7 +159,8 @@ A version derived from the client build output used to detect stale clients duri
 
 ### opts.onError
 
-An optional error handler that will be called with any errors that occur during the request processing.
+An optional error handler that will be called with any errors that occur during the request processing. Defaults to logging errors
+with `console.error` unless the request was aborted.
 
 ### opts.request
 

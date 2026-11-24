@@ -54,7 +54,11 @@ export function createReactRouterRequest(
   event: APIGatewayProxyEventV2,
 ): Request {
   let rawHost = event.requestContext.domainName || event.headers.host || "";
-  let [hostname, portStr] = rawHost.split(":");
+  // A bracketed IPv6 address (e.g., `[::1]:3333`) has colons of its own, so
+  // take it as a whole and look for the port after it
+  let ipv6 = /^\[.*?\]/;
+  let hostname = rawHost.match(ipv6)?.[0] ?? rawHost.split(":")[0];
+  let [, portStr] = rawHost.replace(ipv6, "").split(":");
   hostname = hostname.split(/[\\/?#@]/)[0] || "localhost";
   let hostPort = Number.parseInt(portStr ?? "", 10);
   let port = Number.isSafeInteger(hostPort) ? hostPort : undefined;
@@ -119,7 +123,15 @@ export async function sendReactRouterResponse(
     if (isBase64Encoded) {
       body = await readableStreamToString(nodeResponse.body, "base64");
     } else {
-      body = await nodeResponse.text();
+      // API Gateway reads unflagged bodies as UTF-8; send other bytes as base64
+      let bytes = Buffer.from(await nodeResponse.arrayBuffer());
+      let decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+      try {
+        body = decoder.decode(bytes);
+      } catch {
+        body = bytes.toString("base64");
+        isBase64Encoded = true;
+      }
     }
   }
 

@@ -2194,5 +2194,81 @@ describe("router dataStrategy", () => {
         expect(t.router.state.location.pathname).toBe("/page");
       },
     );
+
+    it.each([
+      { actionError: true, replace: undefined, expected: "PUSH" },
+      { actionError: true, replace: true, expected: "REPLACE" },
+      { actionError: true, replace: false, expected: "PUSH" },
+      { actionError: false, replace: undefined, expected: "REPLACE" },
+    ])(
+      "reports $expected after a same-location submission (actionError=$actionError, replace=$replace)",
+      async ({ actionError, replace, expected }) => {
+        let seen: Array<string | null> = [];
+        let loaders = createDeferred();
+        let error = new Error("Action failed");
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              loader: true,
+              children: [
+                {
+                  id: "page",
+                  path: "page",
+                  loader: true,
+                  action: true,
+                  ErrorBoundary: () => null,
+                },
+              ],
+            },
+          ],
+          initialEntries: ["/page"],
+          hydrationData: { loaderData: { root: "ROOT", page: "PAGE" } },
+          dataStrategy: async ({
+            matches,
+            unstable_navigationType,
+            request,
+          }) => {
+            if (request.method === "GET") {
+              seen.push(unstable_navigationType);
+              await loaders.promise;
+            }
+            return Object.fromEntries(
+              matches
+                .filter((m) => m.shouldCallHandler())
+                .map((m) => [
+                  m.route.id,
+                  request.method === "POST" && actionError
+                    ? { type: "error", result: error }
+                    : { type: "data", result: m.route.id },
+                ]),
+            );
+          },
+        });
+
+        let navigation = t.router.navigate("/page", {
+          formMethod: "post",
+          formData: createFormData({}),
+          replace,
+        });
+        await tick();
+
+        expect(t.router.state.navigation.state).toBe("loading");
+        expect({
+          loadingAction: t.router.state.navigation.historyAction,
+          loaderActions: seen,
+        }).toEqual({ loadingAction: expected, loaderActions: [expected] });
+
+        await loaders.resolve(undefined);
+        await navigation;
+
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.historyAction).toBe(expected);
+        expect(t.router.state.errors).toEqual(
+          actionError ? { page: error } : null,
+        );
+      },
+    );
   });
 });

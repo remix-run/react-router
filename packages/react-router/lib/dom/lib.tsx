@@ -45,6 +45,7 @@ import {
   stripBasename,
 } from "../router/utils";
 import { ABSOLUTE_URL_REGEX } from "../router/url";
+import { validateDocumentNavigationTarget } from "../router/navigation";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type * as _ from "./global";
@@ -1401,14 +1402,15 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     }
 
     let isSpaLink = !(parsed.isExternal || reloadDocument);
+    let renderedHref =
+      (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href;
+    validateDocumentNavigationTarget(renderedHref);
     let link = (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
         {...prefetchHandlers}
-        href={
-          (isSpaLink ? maskedHref : undefined) || parsed.absoluteURL || href
-        }
+        href={renderedHref}
         onClick={isSpaLink ? handleClick : onClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
@@ -1584,6 +1586,9 @@ export interface NavLinkProps extends Omit<
     | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
 }
 
+const subscribeToNothing = () => () => {};
+const getClientSpaFallback = () => false;
+
 /**
  * Wraps {@link Link | `<Link>`} with additional props for styling active and
  * pending states.
@@ -1646,12 +1651,23 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let routerNavigation = React.useContext(DataRouterNavigationContext);
     let { navigator, basename } = React.useContext(NavigationContext);
+    let isSpaMode = React.useContext(FrameworkContext)?.isSpaMode === true;
+
+    // SPA fallback HTML is reused across URLs. Keep the link state neutral
+    // until this link hydrates, including links inside a Suspense boundary.
+    let isSpaFallback = React.useSyncExternalStore(
+      subscribeToNothing,
+      getClientSpaFallback,
+      () => isSpaMode,
+    );
+
     let isTransitioning =
       routerNavigation != null &&
       // Conditional usage is OK here because the usage of a data router is static
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useViewTransitionState(path) &&
-      viewTransition === true;
+      viewTransition === true &&
+      !isSpaFallback;
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
@@ -1684,12 +1700,14 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ? toPathname.length - 1
         : toPathname.length;
     let isActive =
-      locationPathname === toPathname ||
-      (!end &&
-        locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(endSlashPosition) === "/");
+      !isSpaFallback &&
+      (locationPathname === toPathname ||
+        (!end &&
+          locationPathname.startsWith(toPathname) &&
+          locationPathname.charAt(endSlashPosition) === "/"));
 
     let isPending =
+      !isSpaFallback &&
       nextLocationPathname != null &&
       (nextLocationPathname === toPathname ||
         (!end &&
@@ -2128,7 +2146,9 @@ export function ScrollRestoration({
       }
     } catch (error: unknown) {
       console.error(error);
-      sessionStorage.removeItem(storageKey);
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {}
     }
   }).toString();
 
@@ -2705,7 +2725,9 @@ export function useFormAction(
       path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
   }
 
-  return createPath(path);
+  let formAction = createPath(path);
+  validateDocumentNavigationTarget(formAction);
+  return formAction;
 }
 
 /**
@@ -3121,7 +3143,13 @@ export function useScrollRestoration({
           storageKey || SCROLL_RESTORATION_STORAGE_KEY,
         );
         if (sessionPositions) {
-          savedScrollPositions = JSON.parse(sessionPositions);
+          let parsedPositions = JSON.parse(sessionPositions);
+          savedScrollPositions =
+            parsedPositions &&
+            typeof parsedPositions === "object" &&
+            !Array.isArray(parsedPositions)
+              ? parsedPositions
+              : {};
         }
       } catch {
         // no-op, use default empty object

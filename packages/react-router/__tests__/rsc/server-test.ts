@@ -1,4 +1,5 @@
 import * as React from "react";
+import { renderToReadableStream } from "react-dom/server.edge";
 import { renderToString } from "react-dom/server.node";
 
 import {
@@ -7,7 +8,10 @@ import {
   type RSCMatch,
   type RSCRouteConfigEntry,
 } from "../../lib/rsc/server.rsc";
-import { routeRSCServerRequest } from "../../lib/rsc/server.ssr";
+import {
+  RSCStaticRouter,
+  routeRSCServerRequest,
+} from "../../lib/rsc/server.ssr";
 import { URL_LIMIT } from "../../lib/dom/ssr/fog-of-war";
 
 describe("RSC server", () => {
@@ -213,6 +217,115 @@ describe("RSC server", () => {
     expect(await response.text()).toBe("Resource body");
   });
 
+  describe("request validation", () => {
+    describe.each(["/action", "/action.rsc"])("%s", (pathname) => {
+      test.each(["POST", "PUT", "PATCH", "DELETE"])(
+        "returns 400 for invalid %s requests",
+        async (method) => {
+          let calls: string[] = [];
+          let errors: unknown[] = [];
+          let request = new Request(`https://remix.run${pathname}`, {
+            method,
+            headers: { Origin: "https://other.example" },
+            body: "intent=mutate",
+          });
+          let response = await matchRSCServerRequest({
+            createTemporaryReferenceSet: () => ({}),
+            request,
+            onError: (error) => errors.push(error),
+            routes: [
+              {
+                id: "action",
+                path: "/action",
+                Component: () => null,
+                middleware: [
+                  async (_, next) => {
+                    calls.push("middleware");
+                    return next();
+                  },
+                ],
+                loader() {
+                  calls.push("loader");
+                  return null;
+                },
+                action() {
+                  calls.push("action");
+                  return null;
+                },
+              },
+            ],
+            generateResponse(match) {
+              calls.push("generateResponse");
+              return new Response("Encoded Flight", {
+                status: match.statusCode,
+              });
+            },
+          });
+
+          expect(response.status).toBe(400);
+          expect(calls).toEqual([]);
+          expect(errors).toHaveLength(1);
+          expect(errors[0]).toBeInstanceOf(Error);
+
+          let result = await routeRSCServerRequest({
+            request,
+            serverResponse: response,
+            createFromReadableStream() {
+              throw new Error("Rejected requests should not decode Flight");
+            },
+            renderHTML() {
+              throw new Error("Rejected requests should not render HTML");
+            },
+          });
+          expect(result).toBe(response);
+          expect(await result.text()).toBe("Bad Request");
+        },
+      );
+    });
+
+    test.each([
+      { origin: "https://remix.run", allowedActionOrigins: undefined },
+      {
+        origin: "https://trusted.example",
+        allowedActionOrigins: ["trusted.example"],
+      },
+    ])("processes valid submissions from $origin", async (options) => {
+      let calls: string[] = [];
+      let response = await matchRSCServerRequest({
+        allowedActionOrigins: options.allowedActionOrigins,
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/action", {
+          method: "POST",
+          headers: { Origin: options.origin },
+          body: "intent=mutate",
+        }),
+        routes: [
+          {
+            id: "action",
+            path: "/action",
+            Component: () => null,
+            middleware: [
+              async ({ request }, next) => {
+                calls.push(`middleware ${request.method}`);
+                return next();
+              },
+            ],
+            action() {
+              calls.push("action");
+              return null;
+            },
+          },
+        ],
+        generateResponse(match) {
+          return new Response("Encoded Flight", { status: match.statusCode });
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(calls).toEqual(["middleware POST", "action"]);
+    });
+  });
+
   describe("manifest requests", () => {
     test("rejects manifest requests over the URL limit", async () => {
       let path = `/${"a".repeat(URL_LIMIT)}.manifest`;
@@ -247,6 +360,87 @@ describe("RSC server", () => {
 
       expect(response.status).toBe(200);
       expect(match?.payload.type).toBe("manifest");
+    });
+  });
+
+  describe("request methods", () => {
+    test.each(["GET", "HEAD"])(
+      "handles %s resource responses",
+      async (method) => {
+        let finishCancellation = () => {};
+        let cancel = jest.fn(
+          () =>
+            new Promise<void>((_, reject) => {
+              finishCancellation = () => reject(new Error("Stream closed"));
+            }),
+        );
+        let body = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode("Hello"));
+          },
+          pull(controller) {
+            controller.close();
+          },
+          cancel,
+        });
+        let middlewareHasBody = false;
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/resource", { method }),
+          routes: [
+            {
+              id: "resource",
+              path: "/resource",
+              middleware: [
+                async (_, next) => {
+                  let response = await next();
+                  middlewareHasBody = response.body !== null;
+                  response.headers.set("X-Middleware", "yes");
+                  return response;
+                },
+              ],
+              loader: () =>
+                new Response(body, {
+                  status: 201,
+                  statusText: "Created",
+                  headers: {
+                    "Content-Type": "text/plain",
+                    "Content-Length": "5",
+                  },
+                }),
+            },
+          ],
+          generateResponse() {
+            throw new Error(
+              "Resource response should not be encoded as Flight",
+            );
+          },
+        });
+
+        expect(middlewareHasBody).toBe(true);
+        expect(response.status).toBe(201);
+        expect(response.statusText).toBe("Created");
+        expect(response.headers.get("Content-Type")).toBe("text/plain");
+        expect(response.headers.get("Content-Length")).toBe("5");
+        expect(response.headers.get("X-Middleware")).toBe("yes");
+        expect(response.body === null).toBe(method === "HEAD");
+        expect(await response.text()).toBe(method === "HEAD" ? "" : "Hello");
+        expect(cancel).toHaveBeenCalledTimes(method === "HEAD" ? 1 : 0);
+        finishCancellation();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+    );
+
+    test("preserves HEAD Flight bodies for SSR rendering", async () => {
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/", { method: "HEAD" }),
+        routes: [{ id: "root", path: "/", Component: () => null }],
+        generateResponse: () => new Response("Encoded Flight"),
+      });
+
+      expect(response.headers.get("React-Router-Resource")).toBeNull();
+      expect(await response.text()).toBe("Encoded Flight");
     });
   });
 
@@ -372,48 +566,56 @@ describe("RSC server", () => {
       },
     );
 
-    test("tags non-RSC middleware responses as React-Router-Resource", async () => {
-      let generateResponseCalled = false;
-      let response = await matchRSCServerRequest({
-        createTemporaryReferenceSet: () => ({}),
-        request: new Request("https://remix.run/docs/intro.md"),
-        routes: [
-          {
-            id: "root",
-            path: "/",
-            middleware: [
-              async ({ request }, next) => {
-                let url = new URL(request.url);
-                if (url.pathname.endsWith(".md")) {
-                  return new Response("# MARKDOWN_BODY", {
-                    headers: { "Content-Type": "text/markdown; charset=utf-8" },
-                  });
-                }
-                return next();
-              },
-            ],
-            children: [
-              {
-                id: "intro",
-                path: "docs/intro.md",
-                Component: () => null,
-              },
-            ],
+    test.each(["GET", "HEAD"])(
+      "tags %s non-RSC middleware responses as React-Router-Resource",
+      async (method) => {
+        let generateResponseCalled = false;
+        let response = await matchRSCServerRequest({
+          createTemporaryReferenceSet: () => ({}),
+          request: new Request("https://remix.run/docs/intro.md", { method }),
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              middleware: [
+                async ({ request }, next) => {
+                  let url = new URL(request.url);
+                  if (url.pathname.endsWith(".md")) {
+                    return new Response("# MARKDOWN_BODY", {
+                      headers: {
+                        "Content-Type": "text/markdown; charset=utf-8",
+                      },
+                    });
+                  }
+                  return next();
+                },
+              ],
+              children: [
+                {
+                  id: "intro",
+                  path: "docs/intro.md",
+                  Component: () => null,
+                },
+              ],
+            },
+          ],
+          generateResponse() {
+            generateResponseCalled = true;
+            return new Response(null);
           },
-        ],
-        generateResponse() {
-          generateResponseCalled = true;
-          return new Response(null);
-        },
-      });
+        });
 
-      expect(generateResponseCalled).toBe(false);
-      expect(response.headers.get("React-Router-Resource")).toBe("true");
-      expect(response.headers.get("Content-Type")).toBe(
-        "text/markdown; charset=utf-8",
-      );
-      expect(await response.text()).toBe("# MARKDOWN_BODY");
-    });
+        expect(generateResponseCalled).toBe(false);
+        expect(response.headers.get("React-Router-Resource")).toBe("true");
+        expect(response.headers.get("Content-Type")).toBe(
+          "text/markdown; charset=utf-8",
+        );
+        expect(response.body === null).toBe(method === "HEAD");
+        expect(await response.text()).toBe(
+          method === "HEAD" ? "" : "# MARKDOWN_BODY",
+        );
+      },
+    );
 
     test("routeRSCServerRequest passes through tagged resource response without decoding as Flight", async () => {
       let serverResponse = new Response("# MARKDOWN_BODY", {
@@ -573,6 +775,200 @@ describe("RSC server", () => {
     expect(payload.routeDiscovery.mode).toBe("initial");
     expect((await payload.patches).map((patch) => patch.id)).toEqual(["other"]);
     expect(routeDiscovery.mode).toBe("lazy");
+  });
+
+  describe("error reporting", () => {
+    let consoleError: jest.SpyInstance;
+    let abortController: AbortController;
+
+    beforeEach(() => {
+      consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      abortController = new AbortController();
+    });
+
+    afterEach(() => {
+      consoleError.mockRestore();
+    });
+
+    let routes: RSCRouteConfigEntry[] = [
+      {
+        id: "root",
+        path: "/",
+        Component: () => null,
+        ErrorBoundary: () => null,
+        children: [
+          {
+            id: "loader-error",
+            path: "loader-error",
+            Component: () => null,
+            loader() {
+              throw new Error("LOADER_ERROR");
+            },
+          },
+          {
+            id: "action-error",
+            path: "action-error",
+            Component: () => null,
+            action() {
+              throw new Error("ACTION_ERROR");
+            },
+          },
+          {
+            id: "middleware-error",
+            path: "middleware-error",
+            Component: () => null,
+            middleware: [
+              () => {
+                throw new Error("MIDDLEWARE_ERROR");
+              },
+            ],
+          },
+          {
+            id: "post-middleware-error",
+            path: "post-middleware-error",
+            Component: () => null,
+            async action({ request }) {
+              await request.formData();
+              return null;
+            },
+            middleware: [
+              async (_, next) => {
+                await next();
+                throw new Error("POST_MIDDLEWARE_ERROR");
+              },
+            ],
+          },
+          {
+            id: "thrown-response",
+            path: "thrown-response",
+            Component: () => null,
+            loader() {
+              throw new Response("Nope", { status: 401 });
+            },
+          },
+          {
+            id: "aborted-resource",
+            path: "aborted-resource",
+            loader() {
+              abortController.abort();
+              throw new Error("ABORTED_ERROR");
+            },
+          },
+        ],
+      },
+    ];
+
+    function match(request: Request, onError?: (error: unknown) => void) {
+      return matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request,
+        routes,
+        onError,
+        generateResponse(match) {
+          return new Response(null, { status: match.statusCode });
+        },
+      });
+    }
+
+    test.each([
+      ["loader", new Request("https://remix.run/loader-error"), "LOADER_ERROR"],
+      [
+        "action",
+        new Request("https://remix.run/action-error", {
+          method: "POST",
+          body: new URLSearchParams({ a: "b" }),
+        }),
+        "ACTION_ERROR",
+      ],
+      [
+        "middleware",
+        new Request("https://remix.run/middleware-error"),
+        "MIDDLEWARE_ERROR",
+      ],
+      [
+        "post-form-action middleware",
+        new Request("https://remix.run/post-middleware-error", {
+          method: "POST",
+          body: new URLSearchParams({ a: "b" }),
+        }),
+        "POST_MIDDLEWARE_ERROR",
+      ],
+    ])("calls onError with %s errors", async (_, request, message) => {
+      let onError = jest.fn();
+      let response = await match(request, onError);
+      expect(response.status).toBe(500);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(new Error(message));
+    });
+
+    test("does not call onError with thrown responses", async () => {
+      let onError = jest.fn();
+      let response = await match(
+        new Request("https://remix.run/thrown-response"),
+        onError,
+      );
+      expect(response.status).toBe(401);
+      expect(onError).not.toHaveBeenCalled();
+    });
+
+    test("logs errors with console.error when no onError is provided", async () => {
+      await match(new Request("https://remix.run/loader-error"));
+      expect(consoleError).toHaveBeenCalledTimes(1);
+      expect(consoleError).toHaveBeenCalledWith(new Error("LOADER_ERROR"));
+    });
+
+    test("logs an RSC Data loader error once when SSR renders the default boundary", async () => {
+      let error = new Error("LOADER_ERROR");
+      let payload: RSCMatch["payload"] | undefined;
+      let response = await matchRSCServerRequest({
+        createTemporaryReferenceSet: () => ({}),
+        request: new Request("https://remix.run/"),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            Component: () => null,
+            loader() {
+              throw error;
+            },
+          },
+        ],
+        generateResponse(match) {
+          payload = match.payload;
+          return new Response(null, { status: match.statusCode });
+        },
+      });
+      expect(response.status).toBe(500);
+
+      let decoded = Object.assign(Promise.resolve(payload!), {
+        formState: Promise.resolve(undefined),
+      });
+      let stream = await renderToReadableStream(
+        React.createElement(RSCStaticRouter, { getPayload: () => decoded }),
+      );
+      expect(await new Response(stream).text()).toContain(
+        "Unexpected Application Error!",
+      );
+      expect(consoleError).toHaveBeenCalledTimes(1);
+      expect(consoleError).toHaveBeenCalledWith(error);
+    });
+
+    test("logs the underlying error for internal error responses", async () => {
+      await match(new Request("https://remix.run/does-not-exist"));
+      expect(consoleError).toHaveBeenCalledTimes(1);
+      expect(consoleError).toHaveBeenCalledWith(
+        new Error('No route matches URL "/does-not-exist"'),
+      );
+    });
+
+    test("does not log errors for aborted requests", async () => {
+      await match(
+        new Request("https://remix.run/aborted-resource", {
+          signal: abortController.signal,
+        }),
+      );
+      expect(consoleError).not.toHaveBeenCalled();
+    });
   });
 });
 
