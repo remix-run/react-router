@@ -1,1 +1,1 @@
-Improve handling of invalid requests in RSC Framework and RSC Data modes.
+Align CSRF handling in RSC Framework and RSC Data modes with standard Framework Mode request flows
