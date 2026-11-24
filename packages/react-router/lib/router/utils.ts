@@ -2,6 +2,7 @@ import * as React from "react";
 import type { Equal, Expect } from "../types/utils";
 import type { Action as NavigationType, Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
+import { validateDocumentNavigationTarget } from "./navigation";
 import {
   ABSOLUTE_URL_REGEX,
   normalizeProtocolRelativeUrl,
@@ -717,7 +718,7 @@ export type BaseRouteObject = {
   action?: ActionFunction | boolean;
   /**
    * The route shouldRevalidate function.
-   * See [`shouldRevalidate`](../../start/data/route-object#shouldRevalidate).
+   * See [`shouldRevalidate`](../../start/data/route-object#shouldrevalidate).
    */
   shouldRevalidate?: ShouldRevalidateFunction;
   /**
@@ -1574,13 +1575,14 @@ export function encodePathParam(value: string): string {
 /**
  * Returns a path with params interpolated.
  *
- * Param values are percent-encoded for use in a path segment: characters that
- * would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
+ * Named param values are percent-encoded for use in a path segment: characters
+ * that would change the URL structure (`/`, `?`, `#`, `%`, whitespace, non-ASCII)
  * are escaped, while characters that RFC 3986 allows literally in a path
  * segment (`$ & + , ; = : @`) are kept as-is. Note this differs from query-string
  * encoding (`encodeURIComponent`/`URLSearchParams`), where those characters are
- * delimiters and must be escaped. Splat (`*`) values are encoded per segment,
- * preserving `/` separators.
+ * delimiters and must be escaped. Splat (`*`) values are interpolated without
+ * per-segment encoding. Leading URL separators and schemes are handled so
+ * interpolated values remain paths.
  *
  * See [RFC 3986 §3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3)
  *
@@ -1644,7 +1646,14 @@ export function generatePath<Path extends string>(
     // Remove empty segments
     .filter((segment) => !!segment);
 
-  return prefix + segments.join("/");
+  // Leading separators must not produce a protocol-relative URL.
+  let result = (prefix + segments.join("/")).replace(/^[\\/]{2,}/, "/");
+  if (!prefix && (path.startsWith(":") || path === "*")) {
+    // Escape a leading URL scheme introduced by a relative pattern's params.
+    result = result.replace(/^([a-z][a-z0-9+.-]*):/i, "$1%3A");
+  }
+  validateDocumentNavigationTarget(result);
+  return result;
 }
 
 /**
@@ -1694,9 +1703,13 @@ export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
+const MAX_OPTIONAL_PATH_SEGMENTS = 12;
+
 /**
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
+ *
+ * Throws if the pattern contains more than 12 optional (`?`) markers.
  *
  * @public
  * @category Utils
@@ -1716,8 +1729,22 @@ export function matchPath<Path extends string>(
     pattern = { path: pattern, caseSensitive: false, end: true };
   }
 
+  let { path } = pattern;
+  let optionalSegments = 0;
+  for (
+    let index = path.indexOf("?");
+    index !== -1;
+    index = path.indexOf("?", index + 1)
+  ) {
+    if (++optionalSegments > MAX_OPTIONAL_PATH_SEGMENTS) {
+      throw new Error(
+        `Path pattern ${JSON.stringify(path)} exceeds the limit of ${MAX_OPTIONAL_PATH_SEGMENTS} optional segments.`,
+      );
+    }
+  }
+
   let [matcher, compiledParams] = compilePath(
-    pattern.path,
+    path,
     pattern.caseSensitive,
     pattern.end,
   );
@@ -2212,15 +2239,18 @@ export type RedirectFunction = (
  * header.
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
+  validateDocumentNavigationTarget(url);
   let responseInit = init;
   if (typeof responseInit === "number") {
     responseInit = { status: responseInit };
-  } else if (typeof responseInit.status === "undefined") {
-    responseInit.status = 302;
   }
 
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
+
+  if (typeof responseInit.status === "undefined") {
+    responseInit = { ...responseInit, status: 302 };
+  }
 
   return new Response(null, { ...responseInit, headers });
 };

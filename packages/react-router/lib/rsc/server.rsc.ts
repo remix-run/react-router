@@ -189,6 +189,7 @@ type RSCRouteConfigEntryBase = {
   action?: ActionFunction;
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: MiddlewareFunction<any>[];
   ErrorBoundary?: React.ComponentType<any>;
   handle?: any;
   headers?: HeadersFunction;
@@ -236,6 +237,7 @@ type RSCRouteDataMatch = Omit<RouteMatch, "route"> & {
 export type RSCRouteManifest = {
   clientAction?: ClientActionFunction;
   clientLoader?: ClientLoaderFunction;
+  clientMiddleware?: MiddlewareFunction<any>[];
   element?: React.ReactElement | false;
   errorElement?: React.ReactElement;
   handle?: any;
@@ -403,7 +405,8 @@ export type RouteDiscovery =
  * @param opts.clientVersion A version derived from the client build output used
  * to detect stale clients during lazy route discovery.
  * @param opts.onError An optional error handler that will be called with any
- * errors that occur during the request processing.
+ * errors that occur during the request processing. Defaults to logging errors
+ * with `console.error` unless the request was aborted.
  * @param opts.request The [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)
  * to match against.
  * @param opts.requestContext An instance of {@link RouterContextProvider}
@@ -463,6 +466,15 @@ export async function matchRSCServerRequest({
   };
 
   let url = new URL(request.url);
+
+  onError ??= (error: unknown) => {
+    if (!request.signal.aborted) {
+      console.error(
+        // @ts-expect-error This is "private" from users but intended for internal use
+        isRouteErrorResponse(error) && error.error ? error.error : error,
+      );
+    }
+  };
 
   basename = basename || "/";
   let normalizedPath = url.pathname;
@@ -529,13 +541,14 @@ export async function matchRSCServerRequest({
     !leafMatch.route.Component &&
     !leafMatch.route.ErrorBoundary
   ) {
-    return generateResourceResponse(
+    let response = await generateResourceResponse(
       routerRequest,
       staticHandler,
       leafMatch.route.id,
       requestContext,
       onError,
     );
+    return normalizeResourceResponse(request, response);
   }
 
   let response = await generateRenderResponse(
@@ -558,6 +571,26 @@ export async function matchRSCServerRequest({
   // The front end uses this to know whether a 4xx/5xx status came from app code
   // or never reached the origin server
   response.headers.set("X-Remix-Response", "yes");
+  return normalizeResourceResponse(request, response);
+}
+
+function normalizeResourceResponse(
+  request: Request,
+  response: Response,
+): Response {
+  if (
+    request.method === "HEAD" &&
+    response.headers.get("React-Router-Resource") === "true"
+  ) {
+    // Release a discarded resource stream after middleware has finished, without
+    // waiting for cleanup or letting a cancellation error change the response.
+    response.body?.cancel().catch(() => {});
+    return new Response(null, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+  }
   return response;
 }
 
@@ -878,6 +911,16 @@ async function generateRenderResponse(
   routeDiscovery: RouteDiscovery | undefined,
   clientVersion: string | undefined,
 ): Promise<Response> {
+  if (isMutationMethod(request.method)) {
+    try {
+      throwIfPotentialCSRFAttack(request, allowedActionOrigins);
+    } catch (error) {
+      onError?.(error);
+      // Pass the rejection through SSR without rendering application code.
+      return tagResourceResponse(new Response("Bad Request", { status: 400 }));
+    }
+  }
+
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
   // will happen in the subsequent revalidation request
@@ -890,6 +933,7 @@ async function generateRenderResponse(
       : null;
 
   let actionResult: Promise<unknown> | undefined;
+  let handledSubmission = false;
   const ctx: ServerContext = {
     request,
     runningAction: false,
@@ -911,65 +955,53 @@ async function generateRenderResponse(
         // POST `request` to `query` and process our action there.
         let formState: ReactFormState | undefined;
         let skipRevalidation = false;
-        let potentialCSRFAttackError: unknown | undefined;
-        if (isMutationMethod(request.method)) {
-          try {
-            throwIfPotentialCSRFAttack(request, allowedActionOrigins);
-          } catch (error) {
-            onError?.(error);
-            potentialCSRFAttackError = error;
-            request = new Request(request.url, {
-              method: "GET",
-              headers: request.headers,
-              signal: request.signal,
-            });
+        // A middleware error can invoke this callback again after the route
+        // action has already consumed the POST body.
+        if (isSubmission && !handledSubmission) {
+          handledSubmission = true;
+          ctx.runningAction = true;
+          let result = await processServerAction(
+            request,
+            basename,
+            decodeReply,
+            loadServerAction,
+            decodeAction,
+            decodeFormState,
+            onError,
+            temporaryReferences,
+          ).finally(() => {
+            ctx.runningAction = false;
+          });
+
+          if (isResponse(result)) {
+            return generateRedirectResponse(
+              result,
+              actionResult,
+              basename,
+              isDataRequest,
+              generateResponse,
+              temporaryReferences,
+              result === ctx.redirect
+                ? undefined
+                : (ctx.redirect as unknown as Response)?.headers,
+            );
           }
 
-          if (!potentialCSRFAttackError) {
-            ctx.runningAction = true;
-            let result = await processServerAction(
-              request,
+          skipRevalidation = result?.skipRevalidation ?? false;
+          actionResult = result?.actionResult;
+          formState = result?.formState;
+          request = result?.revalidationRequest ?? request;
+
+          if (ctx.redirect) {
+            return generateRedirectResponse(
+              ctx.redirect,
+              actionResult,
               basename,
-              decodeReply,
-              loadServerAction,
-              decodeAction,
-              decodeFormState,
-              onError,
+              isDataRequest,
+              generateResponse,
               temporaryReferences,
-            ).finally(() => {
-              ctx.runningAction = false;
-            });
-
-            if (isResponse(result)) {
-              return generateRedirectResponse(
-                result,
-                actionResult,
-                basename,
-                isDataRequest,
-                generateResponse,
-                temporaryReferences,
-                result === ctx.redirect
-                  ? undefined
-                  : (ctx.redirect as unknown as Response)?.headers,
-              );
-            }
-
-            skipRevalidation = result?.skipRevalidation ?? false;
-            actionResult = result?.actionResult;
-            formState = result?.formState;
-            request = result?.revalidationRequest ?? request;
-
-            if (ctx.redirect) {
-              return generateRedirectResponse(
-                ctx.redirect,
-                actionResult,
-                basename,
-                isDataRequest,
-                generateResponse,
-                temporaryReferences,
-                undefined,
-              );
-            }
+              undefined,
+            );
           }
         }
 
@@ -990,11 +1022,13 @@ async function generateRenderResponse(
           );
         }
 
-        if (potentialCSRFAttackError) {
-          staticContext.errors ??= {};
-          staticContext.errors[staticContext.matches[0].route.id] =
-            potentialCSRFAttackError;
-          staticContext.statusCode = 400;
+        if (staticContext.errors) {
+          Object.values(staticContext.errors).forEach((error) => {
+            // @ts-expect-error This is "private" from users but intended for internal use
+            if (!isRouteErrorResponse(error) || error.error) {
+              onError?.(error);
+            }
+          });
         }
 
         return generateStaticContextResponse(
@@ -1394,6 +1428,7 @@ async function getRSCRouteMatch({
   return {
     clientAction: route.clientAction,
     clientLoader: route.clientLoader,
+    clientMiddleware: route.clientMiddleware,
     element,
     errorElement,
     handle: route.handle,
@@ -1441,6 +1476,7 @@ async function getManifestRoute(
   return {
     clientAction: route.clientAction,
     clientLoader: route.clientLoader,
+    clientMiddleware: route.clientMiddleware,
     handle: route.handle,
     hasAction: !!route.action,
     hasComponent: !!route.Component,

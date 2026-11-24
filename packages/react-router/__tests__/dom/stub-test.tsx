@@ -421,3 +421,46 @@ test("all routes have ids", () => {
 
   expect(matchesWithoutIds).toHaveLength(0);
 });
+
+test("respects caseSensitive on routes", () => {
+  let RoutesStub = createRoutesStub([
+    {
+      path: "/",
+      Component() {
+        return <Outlet />;
+      },
+      children: [
+        {
+          path: "About",
+          caseSensitive: true,
+          Component: () => <div>UPPER</div>,
+        },
+        {
+          path: "about",
+          caseSensitive: true,
+          Component: () => <div>LOWER</div>,
+        },
+        {
+          path: "Settings",
+          caseSensitive: true,
+          Component: () => <div>SETTINGS</div>,
+        },
+        {
+          path: "*",
+          Component: () => <div>FALLBACK</div>,
+        },
+      ],
+    },
+  ]);
+
+  let upper = render(<RoutesStub initialEntries={["/About"]} />);
+  expect(screen.getByText("UPPER")).toBeInTheDocument();
+  upper.unmount();
+
+  let lower = render(<RoutesStub initialEntries={["/about"]} />);
+  expect(screen.getByText("LOWER")).toBeInTheDocument();
+  lower.unmount();
+
+  render(<RoutesStub initialEntries={["/settings"]} />);
+  expect(screen.getByText("FALLBACK")).toBeInTheDocument();
+});
