@@ -839,6 +839,19 @@ async function generateRenderResponse(
   allowedActionOrigins: string[] | undefined,
   routeDiscovery: RouteDiscovery | undefined,
 ): Promise<Response> {
+  if (isMutationMethod(request.method)) {
+    try {
+      throwIfPotentialCSRFAttack(request, allowedActionOrigins);
+    } catch (error) {
+      onError?.(error);
+      // Pass the rejection through SSR without rendering application code.
+      return new Response("Bad Request", {
+        status: 400,
+        headers: { "React-Router-Resource": "true" },
+      });
+    }
+  }
+
   // If this is a RR submission, we just want the `actionData` but don't want
   // to call any loaders or render any components back in the response - that
   // will happen in the subsequent revalidation request
@@ -880,65 +893,48 @@ async function generateRenderResponse(
         // POST `request` to `query` and process our action there.
         let formState: unknown;
         let skipRevalidation = false;
-        let potentialCSRFAttackError: unknown | undefined;
         if (isMutationMethod(request.method)) {
-          try {
-            throwIfPotentialCSRFAttack(request, allowedActionOrigins);
-          } catch (error) {
-            onError?.(error);
-            potentialCSRFAttackError = error;
-            // Downgrade the request to a GET so that `query` below cannot
-            // execute any route `action` for this potential CSRF attack
-            request = new Request(request.url, {
-              method: "GET",
-              headers: request.headers,
-              signal: request.signal,
-            });
+          ctx.runningAction = true;
+          let result = await processServerAction(
+            request,
+            basename,
+            decodeReply,
+            loadServerAction,
+            decodeAction,
+            decodeFormState,
+            onError,
+            temporaryReferences,
+          ).finally(() => {
+            ctx.runningAction = false;
+          });
+
+          if (isResponse(result)) {
+            return generateRedirectResponse(
+              result,
+              actionResult,
+              basename,
+              isDataRequest,
+              generateResponse,
+              temporaryReferences,
+              (ctx.redirect as unknown as Response)?.headers,
+            );
           }
 
-          if (!potentialCSRFAttackError) {
-            ctx.runningAction = true;
-            let result = await processServerAction(
-              request,
+          skipRevalidation = result?.skipRevalidation ?? false;
+          actionResult = result?.actionResult;
+          formState = result?.formState;
+          request = result?.revalidationRequest ?? request;
+
+          if (ctx.redirect) {
+            return generateRedirectResponse(
+              ctx.redirect,
+              actionResult,
               basename,
-              decodeReply,
-              loadServerAction,
-              decodeAction,
-              decodeFormState,
-              onError,
+              isDataRequest,
+              generateResponse,
               temporaryReferences,
-            ).finally(() => {
-              ctx.runningAction = false;
-            });
-
-            if (isResponse(result)) {
-              return generateRedirectResponse(
-                result,
-                actionResult,
-                basename,
-                isDataRequest,
-                generateResponse,
-                temporaryReferences,
-                (ctx.redirect as unknown as Response)?.headers,
-              );
-            }
-
-            skipRevalidation = result?.skipRevalidation ?? false;
-            actionResult = result?.actionResult;
-            formState = result?.formState;
-            request = result?.revalidationRequest ?? request;
-
-            if (ctx.redirect) {
-              return generateRedirectResponse(
-                ctx.redirect,
-                actionResult,
-                basename,
-                isDataRequest,
-                generateResponse,
-                temporaryReferences,
-                undefined,
-              );
-            }
+              undefined,
+            );
           }
         }
 
@@ -957,13 +953,6 @@ async function generateRenderResponse(
             temporaryReferences,
             ctx.redirect?.headers,
           );
-        }
-
-        if (potentialCSRFAttackError) {
-          staticContext.errors ??= {};
-          staticContext.errors[staticContext.matches[0].route.id] =
-            potentialCSRFAttackError;
-          staticContext.statusCode = 400;
         }
 
         return generateStaticContextResponse(
