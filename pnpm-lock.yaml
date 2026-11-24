@@ -883,6 +883,9 @@ importers:
 
   packages/react-router:
     dependencies:
+      '@types/react':
+        specifier: ^18.0.27
+        version: 18.2.18
       cookie:
         specifier: ^1.0.1
         version: 1.1.1
