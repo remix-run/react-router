@@ -21,7 +21,7 @@ import {
   data,
   redirect,
 } from "../../lib/router/utils";
-import { cleanup } from "./utils/data-router-setup";
+import { cleanup, createDeferred } from "./utils/data-router-setup";
 import { createFormData, invariant, tick } from "./utils/utils";
 
 let router: Router;
@@ -220,6 +220,68 @@ describe("context/middleware", () => {
           parent: "PARENT MIDDLEWARE (amended from child)",
         }),
       });
+    });
+
+    it("does not commit a navigation interrupted while awaiting getContext", async () => {
+      let bDfd = createDeferred();
+      let history = createMemoryHistory();
+      router = createRouter({
+        history,
+        routes: [
+          { path: "/" },
+          { id: "a", path: "/a" },
+          { id: "b", path: "/b", loader: () => bDfd.promise },
+        ],
+        getContext: () => new RouterContextProvider(),
+      });
+      let idleLocations: string[] = [];
+      router.subscribe((state) => {
+        if (state.navigation.state === "idle") {
+          idleLocations.push(state.location.pathname);
+        }
+      });
+      router.initialize();
+      await tick();
+
+      router.navigate("/a");
+      router.navigate("/b");
+      await bDfd.resolve("B");
+
+      expect(router.state.location.pathname).toBe("/b");
+      expect(history.location.pathname).toBe("/b");
+      expect(router.state.loaderData).toEqual({ b: "B" });
+      expect(idleLocations).toEqual(["/b"]);
+    });
+
+    it("does not leave the router loading when an interrupted navigation's getContext resolves last", async () => {
+      let contextDfds: ReturnType<typeof createDeferred>[] = [];
+      let aLoader = jest.fn(() => "A");
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          { path: "/" },
+          { id: "a", path: "/a", loader: aLoader },
+          { id: "b", path: "/b" },
+        ],
+        getContext: () => {
+          let dfd = createDeferred();
+          contextDfds.push(dfd);
+          return dfd.promise;
+        },
+      });
+      router.initialize();
+      await tick();
+
+      router.navigate("/a");
+      router.navigate("/b");
+      await contextDfds[1].resolve(new RouterContextProvider());
+      expect(router.state.location.pathname).toBe("/b");
+      expect(router.state.navigation.state).toBe("idle");
+
+      await contextDfds[0].resolve(new RouterContextProvider());
+      expect(router.state.location.pathname).toBe("/b");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(aLoader).not.toHaveBeenCalled();
     });
   });
 
