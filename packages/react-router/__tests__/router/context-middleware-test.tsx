@@ -283,6 +283,91 @@ describe("context/middleware", () => {
       expect(router.state.navigation.state).toBe("idle");
       expect(aLoader).not.toHaveBeenCalled();
     });
+
+    describe("fetchers superseded while awaiting getContext", () => {
+      // Each fetch gets its own getContext promise so the test controls resolve order
+      function setup(route: Record<string, any>) {
+        let contextDfds: ReturnType<typeof createDeferred>[] = [];
+        router = createRouter({
+          history: createMemoryHistory(),
+          routes: [{ path: "/" }, { id: "a", path: "/a", ...route }],
+          getContext: () => {
+            let dfd = createDeferred();
+            contextDfds.push(dfd);
+            return dfd.promise;
+          },
+        });
+        router.initialize();
+        return contextDfds;
+      }
+
+      // Fetchers are removed from state once idle and unmounted, so record what gets published
+      function recordPublished(key: string) {
+        let published: unknown[] = [];
+        router.subscribe((state) => {
+          let fetcher = state.fetchers.get(key);
+          if (fetcher?.state === "idle" && fetcher.data !== undefined) {
+            published.push(fetcher.data);
+          }
+        });
+        return published;
+      }
+
+      it("a newer load wins when the older load's getContext resolves last", async () => {
+        let loader = jest.fn(({ request }: { request: Request }) =>
+          new URL(request.url).searchParams.get("v"),
+        );
+        let dfds = setup({ loader });
+        let published = recordPublished("k");
+        router.fetch("k", "a", "/a?v=old");
+        router.fetch("k", "a", "/a?v=new");
+        await dfds[1].resolve(new RouterContextProvider());
+        await tick();
+        await dfds[0].resolve(new RouterContextProvider());
+        await tick();
+
+        expect(loader).toHaveBeenCalledTimes(1);
+        expect(published).toEqual(["new"]);
+      });
+
+      it("a newer submission wins when the older submission's getContext resolves last", async () => {
+        let action = jest.fn(({ request }: { request: Request }) =>
+          new URL(request.url).searchParams.get("v"),
+        );
+        let dfds = setup({ action });
+        let published = recordPublished("k");
+        router.fetch("k", "a", "/a?v=old", {
+          formMethod: "POST",
+          body: createFormData({}),
+        });
+        router.fetch("k", "a", "/a?v=new", {
+          formMethod: "POST",
+          body: createFormData({}),
+        });
+        await dfds[1].resolve(new RouterContextProvider());
+        await tick();
+        await dfds[0].resolve(new RouterContextProvider());
+        await tick();
+
+        expect(action).toHaveBeenCalledTimes(1);
+        expect(published).toEqual(["new"]);
+      });
+
+      it("resetFetcher right after a load stops that load from restoring its data", async () => {
+        let loader = jest.fn(() => "old");
+        let dfds = setup({ loader });
+        router.fetch("k", "a", "/a");
+        router.resetFetcher("k");
+        await dfds[0].resolve(new RouterContextProvider());
+        await tick();
+
+        expect(loader).not.toHaveBeenCalled();
+        expect(router.getFetcher("k")).toMatchObject({
+          state: "idle",
+          data: undefined,
+        });
+      });
+    });
   });
 
   describe("middleware - client side", () => {
