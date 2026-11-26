@@ -10,6 +10,8 @@ describe("client version mismatch", () => {
   let fogOfWar: FogOfWar;
   let stored: Map<string, string>;
   let reload: jest.Mock;
+  let documentReload: jest.Mock;
+  let currentHref: string;
   let windowEvents: EventTarget;
   let originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   let originalStorage = Object.getOwnPropertyDescriptor(
@@ -25,6 +27,8 @@ describe("client version mismatch", () => {
     jest.useFakeTimers();
     stored = new Map();
     reload = jest.fn();
+    documentReload = jest.fn();
+    currentHref = "http://localhost/";
     windowEvents = new EventTarget();
     Object.defineProperty(globalThis, "window", {
       configurable: true,
@@ -35,10 +39,13 @@ describe("client version mismatch", () => {
         location: {
           origin: "http://localhost",
           get href() {
-            return "http://localhost/";
+            return currentHref;
           },
           set href(path: string) {
             reload(path);
+          },
+          reload() {
+            documentReload();
           },
         },
       },
@@ -69,6 +76,33 @@ describe("client version mismatch", () => {
         Reflect.deleteProperty(globalThis, key);
       }
     }
+  });
+
+  it("reloads the document when the target only differs by hash", async () => {
+    currentHref = "http://localhost/page#settings";
+    let settled = jest.fn();
+    fogOfWar
+      .handleClientVersionMismatch(true, "v1", "http://localhost/page#settings")
+      .then(settled, settled);
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(documentReload).toHaveBeenCalledTimes(1);
+    expect(reload).not.toHaveBeenCalled();
+    expect(settled).not.toHaveBeenCalled();
+    expect(stored.get(storageKey)).toBe("v1");
+  });
+
+  it("reloads when the captured URL and the current URL differ only by hash", async () => {
+    currentHref = "http://localhost/page#other";
+    fogOfWar.handleClientVersionMismatch(
+      true,
+      "v1",
+      "http://localhost/page#settings",
+    );
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(documentReload).toHaveBeenCalledTimes(1);
+    expect(reload).not.toHaveBeenCalled();
   });
 
   it("holds concurrent mismatches behind the pending document reload", async () => {

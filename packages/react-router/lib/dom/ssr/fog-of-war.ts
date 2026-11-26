@@ -291,6 +291,22 @@ const MANIFEST_VERSION_STORAGE_KEY = "react-router-manifest-version";
 const MANIFEST_RELOAD_TIMEOUT = 5000;
 let pendingManifestReload: Promise<never> | undefined;
 
+// Assigning location.href when the URL differs only by its hash is a fragment
+// navigation, so the document never reloads. location.reload() keeps the hash.
+function reloadWouldStayOnThisDocument(target: string): boolean {
+  try {
+    let current = new URL(window.location.href);
+    let next = new URL(target, current);
+    return (
+      next.origin === current.origin &&
+      next.pathname === current.pathname &&
+      next.search === current.search
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function handleClientVersionMismatch(
   needsReload: boolean,
   version: string,
@@ -376,8 +392,14 @@ export async function handleClientVersionMismatch(
   window.addEventListener("pageshow", onPageShow);
 
   // Reload the destination on navigations, or the current page on fetcher calls.
+  // A same-document target has to go through location.reload(); assigning href
+  // only moves the hash.
   try {
-    window.location.href = errorReloadPath;
+    if (reloadWouldStayOnThisDocument(errorReloadPath)) {
+      window.location.reload();
+    } else {
+      window.location.href = errorReloadPath;
+    }
     console.warn("Detected manifest version mismatch, reloading...");
   } catch {
     failReload();
