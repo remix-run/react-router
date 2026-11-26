@@ -1,6 +1,6 @@
 import { createMemoryHistory } from "../../lib/router/history";
 import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
-import { ErrorResponseImpl, redirect } from "../../lib/router/utils";
+import { ErrorResponseImpl, data, redirect } from "../../lib/router/utils";
 import type { ShouldRevalidateFunctionArgs } from "../../lib/router/utils";
 import { urlMatch } from "./utils/custom-matchers";
 import { cleanup, getFetcherData, setup } from "./utils/data-router-setup";
@@ -1167,6 +1167,80 @@ describe("shouldRevalidate", () => {
       actionData: null,
       errors: { index: new ErrorResponseImpl(500, "", "ERROR 500") },
     });
+
+    router.dispose();
+  });
+
+  it("does not revalidate after actions throwing 4xx/5xx data() with flag", async () => {
+    let count = -1;
+    let statuses = [400, 500];
+    let rootLoader = jest.fn(() => "ROOT " + count);
+    let actionStatuses: Array<number | undefined> = [];
+
+    let history = createMemoryHistory();
+    let router = createRouter({
+      history,
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          loader: async () => rootLoader(),
+          shouldRevalidate: ({ actionStatus, defaultShouldRevalidate }) => {
+            actionStatuses.push(actionStatus);
+            return defaultShouldRevalidate;
+          },
+          children: [
+            {
+              id: "index",
+              index: true,
+              ErrorBoundary: () => null,
+              action: () => {
+                throw data("ERROR", { status: statuses[++count] });
+              },
+            },
+          ],
+        },
+      ],
+      hydrationData: {
+        loaderData: {
+          root: "ROOT",
+        },
+      },
+    });
+    router.initialize();
+
+    router.navigate("/?index", {
+      formMethod: "post",
+      formData: createFormData({ gosh: "dang" }),
+    });
+    await tick();
+    expect(rootLoader.mock.calls.length).toBe(0);
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      loaderData: { root: "ROOT" },
+      actionData: null,
+      errors: {
+        index: expect.objectContaining({ status: 400, data: "ERROR" }),
+      },
+    });
+
+    router.navigate("/?index", {
+      formMethod: "post",
+      formData: createFormData({ gosh: "dang" }),
+    });
+    await tick();
+    expect(rootLoader.mock.calls.length).toBe(0);
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      loaderData: { root: "ROOT" },
+      actionData: null,
+      errors: {
+        index: expect.objectContaining({ status: 500, data: "ERROR" }),
+      },
+    });
+    expect(actionStatuses).toEqual([400, 500]);
 
     router.dispose();
   });

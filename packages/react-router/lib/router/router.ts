@@ -7127,7 +7127,7 @@ async function convertDataStrategyResultToDataResult(
       return {
         type: ResultType.error,
         error: dataWithResponseInitToErrorResponse(result),
-        statusCode: isRouteErrorResponse(result) ? result.status : undefined,
+        statusCode: result.init?.status,
         headers: result.init?.headers
           ? new Headers(result.init.headers)
           : undefined,
