@@ -343,6 +343,58 @@ test.describe("API-only Mode", () => {
   });
 });
 
+test("serves the default manifest path with routeDiscovery mode lazy and no manifestPath", async () => {
+  let fixture = await createFixture({
+    files: {
+      "react-router.config.ts": reactRouterConfig({
+        ssr: "unstable_api-only",
+        routeDiscovery: { mode: "lazy" },
+      }),
+      "app/root.tsx": js`
+        import { Outlet, Scripts } from "react-router";
+        export function Layout({ children }) {
+          return <html><head /><body>{children}<Scripts /></body></html>;
+        }
+        export function HydrateFallback() { return <p>Loading...</p>; }
+        export default function Root() { return <Outlet />; }
+      `,
+      "app/routes/_index.tsx": js`
+        export function loader() { return { server: "root-loader" }; }
+        export default function Index() { return null; }
+      `,
+    },
+  });
+  expect(fixture.build?.routeDiscovery).toEqual({ mode: "lazy" });
+
+  let servePort = await getPort();
+  let serveServer = await spawnTestServer({
+    cwd: fixture.projectDir,
+    command: [
+      process.argv[0],
+      "node_modules/@react-router/serve/dist/cli.js",
+      "build/server/index.js",
+    ],
+    env: {
+      NODE_ENV: "production",
+      PORT: String(servePort),
+    },
+    regex: new RegExp(`react-router-serve.*localhost:${servePort}\\s`),
+  });
+
+  try {
+    let response = await fetch(
+      `http://localhost:${servePort}/__manifest?paths=%2F&version=${fixture.build!.assets.version}`,
+    );
+    expect(response.status).toBe(200);
+    expect(Object.keys(await response.json()).sort()).toEqual([
+      "root",
+      "routes/_index",
+    ]);
+  } finally {
+    serveServer.stop();
+  }
+});
+
 test("rejects API-only mode in RSC Framework Mode", async () => {
   let cwd = await createProject(
     {
