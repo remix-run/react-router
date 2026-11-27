@@ -87,6 +87,8 @@ interface PrefetchHandlers {
 export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers,
+  onPrefetch?: () => void,
+  href?: string,
 ): [boolean, React.RefObject<T | null>, PrefetchHandlers] {
   let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
@@ -95,11 +97,17 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     theirElementProps;
 
   let ref = React.useRef<T>(null);
+  let onPrefetchRef = React.useRef(onPrefetch);
+  let isPrefetching = prefetch !== "none" && shouldPrefetch;
+
+  // Keep the latest callback without making its identity a prefetch trigger.
+  React.useEffect(() => {
+    onPrefetchRef.current = onPrefetch;
+  }, [onPrefetch]);
 
   React.useEffect(() => {
-    if (prefetch === "render") {
-      setShouldPrefetch(true);
-    }
+    setMaybePrefetch(false);
+    setShouldPrefetch(prefetch === "render");
 
     if (prefetch === "viewport") {
       let callback: IntersectionObserverCallback = (entries) => {
@@ -117,7 +125,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   }, [prefetch]);
 
   React.useEffect(() => {
-    if (maybePrefetch) {
+    if (prefetch === "intent" && maybePrefetch) {
       let id = setTimeout(() => {
         setShouldPrefetch(true);
       }, 100);
@@ -125,7 +133,13 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
         clearTimeout(id);
       };
     }
-  }, [maybePrefetch]);
+  }, [maybePrefetch, prefetch]);
+
+  React.useEffect(() => {
+    if (isPrefetching) {
+      onPrefetchRef.current?.();
+    }
+  }, [isPrefetching, href]);
 
   let setIntent = () => {
     setMaybePrefetch(true);
@@ -136,18 +150,21 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     setShouldPrefetch(false);
   };
 
-  // No prefetching if not using SSR
-  if (!frameworkContext) {
+  // Page links can only be prefetched in Framework Mode, but `onPrefetch` can
+  // run in any mode
+  if (!frameworkContext && !onPrefetch) {
     return [false, ref, {}];
   }
 
+  let shouldPrefetchPageLinks = frameworkContext != null && isPrefetching;
+
   if (prefetch !== "intent") {
-    return [shouldPrefetch, ref, {}];
+    return [shouldPrefetchPageLinks, ref, {}];
   }
 
   // When using prefetch="intent" we need to attach focus/hover listeners
   return [
-    shouldPrefetch,
+    shouldPrefetchPageLinks,
     ref,
     {
       onFocus: composeEventHandlers(onFocus, setIntent),
