@@ -7,6 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import * as React from "react";
+import { flushSync as reactDomFlushSync } from "react-dom";
 import {
   Outlet,
   RouterProvider,
@@ -92,6 +93,52 @@ describe("react transitions", () => {
       await waitFor(() => screen.getByText("Page"));
       await waitFor(() => screen.getByText("Increment:2"));
       expect(screen.getByText("Navigation:idle")).toBeDefined();
+    });
+
+    it("flushes a loading navigation outside an outer transition", async () => {
+      let loaderDfd = createDeferred();
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          Component() {
+            let navigation = useNavigation();
+            return (
+              <>
+                <p>{`Navigation:${navigation.state}`}</p>
+                <Outlet />
+              </>
+            );
+          },
+          children: [
+            { index: true, Component: () => <Link to="/page">Go to page</Link> },
+            {
+              path: "page",
+              loader: () => loaderDfd.promise,
+              Component: () => <h1>Page</h1>,
+            },
+          ],
+        },
+      ]);
+      let flushSync = jest.fn(reactDomFlushSync);
+
+      render(
+        <RouterProvider router={router} flushSync={flushSync} />,
+      );
+      await waitFor(() => screen.getByText("Go to page"));
+
+      await act(async () => {
+        React.startTransition(() => {
+          router.navigate("/page");
+        });
+        await tick();
+      });
+      await waitFor(() => screen.getByText("Navigation:loading"));
+      expect(flushSync).toHaveBeenCalledTimes(1);
+
+      loaderDfd.resolve(null);
+      await waitFor(() => screen.getByText("Page"));
+      expect(screen.getByText("Navigation:idle")).toBeDefined();
+      expect(flushSync).toHaveBeenCalledTimes(1);
     });
 
     it("normal submissions surface all updates", async () => {
