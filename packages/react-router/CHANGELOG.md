@@ -1,5 +1,18 @@
 # `react-router`
 
+## v8.5.4
+
+### Patch Changes
+
+- Stop a navigation interrupted while awaiting `getContext`, so it no longer commits after the newer navigation or leaves `navigation.state` stuck at `"loading"` ([#15718](https://github.com/remix-run/react-router/pull/15718))
+
+- Preserve falsy `location.state` values in `createBrowserHistory()` and `createHashHistory()` ([#15821](https://github.com/remix-run/react-router/pull/15821))
+  - Use nullish coalescing when reading `history.state.usr` so falsy values (`false`, `0`, `""`, `NaN`) are not coerced to `null` across `<BrowserRouter>`, `<HashRouter>`, `createBrowserRouter()`, `createHashRouter()`, and `<HydratedRouter>`
+
+- Fix unmatched navigations crashing when multiple top-level routes have no root layout route ([#15650](https://github.com/remix-run/react-router/pull/15650))
+
+  Preserve the synthetic 404 match when synchronizing route elements so unmatched navigations and revalidations reach the default error boundary.
+
 ## v8.5.3
 
 ### Patch Changes

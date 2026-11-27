@@ -1,5 +1,13 @@
 # `@react-router/architect`
 
+## v8.5.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`react-router@8.5.4`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.4)
+  - [`@react-router/node@8.5.4`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.4)
+
 ## v8.5.3
 
 ### Patch Changes

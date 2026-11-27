@@ -1,1 +1,0 @@
-Fix request URL ports behind Express proxies by using the port from `X-Forwarded-Host` when Express trusts the connection. The proxy must include any non-default public port in `X-Forwarded-Host` so that the request URL matches the action origin.

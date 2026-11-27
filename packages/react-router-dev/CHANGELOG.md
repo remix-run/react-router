@@ -1,5 +1,15 @@
 # `@react-router/dev`
 
+## v8.5.4
+
+### Patch Changes
+
+- Don't watch files in the `reactRouter` Vite plugin's child compiler during `vite preview` and prerendering, which previously watched the build output and slowed down large prerenders ([#15539](https://github.com/remix-run/react-router/pull/15539))
+- Updated dependencies:
+  - [`react-router@8.5.4`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.4)
+  - [`@react-router/node@8.5.4`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.4)
+  - [`@react-router/serve@8.5.4`](https://github.com/remix-run/react-router/releases/tag/@react-router/serve@8.5.4)
+
 ## v8.5.3
 
 ### Patch Changes
