@@ -2896,10 +2896,23 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    let abortController = new AbortController();
     // Create a new context per fetch
-    let scopedContext = init.getContext
-      ? await init.getContext()
-      : new RouterContextProvider();
+    let scopedContext: RouterContextProvider;
+    if (init.getContext) {
+      // Register while awaiting getContext so a newer call on this key can abort us.
+      // Unregister afterwards so the handlers' own interrupt logic is unchanged.
+      fetchControllers.set(key, abortController);
+      scopedContext = await init.getContext();
+      if (fetchControllers.get(key) === abortController) {
+        fetchControllers.delete(key);
+      }
+      if (abortController.signal.aborted) {
+        return;
+      }
+    } else {
+      scopedContext = new RouterContextProvider();
+    }
     let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
@@ -2914,6 +2927,7 @@ export function createRouter(init: RouterInit): Router {
         preventScrollReset,
         submission,
         opts && opts.defaultShouldRevalidate,
+        abortController,
       );
       return;
     }
@@ -2933,6 +2947,7 @@ export function createRouter(init: RouterInit): Router {
       scopedContext,
       flushSync,
       preventScrollReset,
+      abortController,
       submission,
     );
   }
@@ -2956,6 +2971,7 @@ export function createRouter(init: RouterInit): Router {
     preventScrollReset: boolean,
     submission: Submission,
     callSiteDefaultShouldRevalidate: boolean | undefined,
+    abortController: AbortController,
   ) {
     if (!future.unstable_customRouteDiscovery) interruptActiveLoads();
     fetchLoadMatches.delete(key);
@@ -2966,7 +2982,6 @@ export function createRouter(init: RouterInit): Router {
       flushSync,
     });
 
-    let abortController = new AbortController();
     if (future.unstable_customRouteDiscovery) {
       fetchControllers.set(key, abortController);
     }
@@ -3358,6 +3373,7 @@ export function createRouter(init: RouterInit): Router {
     scopedContext: RouterContextProvider,
     flushSync: boolean,
     preventScrollReset: boolean,
+    abortController: AbortController,
     submission?: Submission,
   ) {
     let { routeId, path } = loadMatch;
@@ -3371,7 +3387,6 @@ export function createRouter(init: RouterInit): Router {
       { flushSync },
     );
 
-    let abortController = new AbortController();
     if (future.unstable_customRouteDiscovery) {
       fetchControllers.set(key, abortController);
     }
