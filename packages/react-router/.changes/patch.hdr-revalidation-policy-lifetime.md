@@ -1,0 +1,3 @@
+Keep the Hot Data Revalidation opt-out in effect for the whole revalidation in development
+
+The override that forces updated routes to revalidate after a loader edit only applied to the first `shouldRevalidate` call. A single HDR pass consults that policy three times - once when the router picks matches to load, then again when Single Fetch preflights and resolves them - so the user-defined logic took over mid-flight. An edited route with `shouldRevalidate` returning `false` kept its stale `useLoaderData()` value, and an unedited route with `shouldRevalidate` returning `true` revalidated even though HDR had opted it out. Normal revalidation is unaffected, and user-defined logic resumes once the HDR pass finishes.
