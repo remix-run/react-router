@@ -97,6 +97,7 @@ interface FutureConfig {
   unstable_customRouteDiscovery: boolean;
   unstable_enableNodeReadableStream: boolean;
   unstable_optimizeDeps: boolean;
+  unstable_routeModuleTypes: boolean;
 }
 
 type SplitRouteModulesOption = boolean | "enforce";
@@ -801,6 +802,8 @@ async function resolveConfig({
       userAndPresetConfigs.future?.unstable_enableNodeReadableStream ?? false,
     unstable_optimizeDeps:
       userAndPresetConfigs.future?.unstable_optimizeDeps ?? false,
+    unstable_routeModuleTypes:
+      userAndPresetConfigs.future?.unstable_routeModuleTypes ?? false,
   };
 
   let allowedActionOrigins = userAndPresetConfigs.allowedActionOrigins ?? false;

@@ -2,11 +2,15 @@ import tsx from "dedent";
 import { expect } from "@playwright/test";
 
 import { test } from "./helpers/fixtures";
+import { reactRouterConfig } from "./helpers/vite";
 import * as Stream from "./helpers/stream";
 import getPort from "get-port";
 
 test.use({
   files: {
+    "react-router.config.ts": reactRouterConfig({
+      future: { unstable_routeModuleTypes: true },
+    }),
     "app/expect-type.ts": tsx`
       export type Expect<T extends true> = T
 
