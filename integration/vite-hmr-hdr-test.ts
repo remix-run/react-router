@@ -145,6 +145,7 @@ templates.forEach((template) => {
         `,
         "app/routes/mdx.mdx": mdx`
           import { Counter } from "../component";
+          export const frontmatter = { title: "MDX Title" };
 
           # MDX Title (HMR: 0)
 
@@ -160,6 +161,11 @@ templates.forEach((template) => {
 
       await page.goto(url + "/mdx", { waitUntil: "networkidle" });
 
+      let fullNavigations = 0;
+      page.on("framenavigated", (frame) => {
+        if (frame === page.mainFrame()) fullNavigations++;
+      });
+
       await expect(page.locator("h1")).toHaveText("MDX Title (HMR: 0)");
       let button = page.locator("button");
       await expect(button).toHaveText("Count: 0");
@@ -174,6 +180,7 @@ templates.forEach((template) => {
 
       await expect(page.locator("h1")).toHaveText("MDX Title (HMR: 1)");
       await expect(page.locator("button")).toHaveText("Count: 1");
+      expect(fullNavigations).toBe(0);
 
       expect(page.errors).toEqual([]);
     });
