@@ -311,7 +311,7 @@ export function createMemoryHistory(
     },
     createHref,
     createURL(to) {
-      return new URL(createHref(to), "http://localhost");
+      return createBrowserURLImpl(null, to);
     },
     encodeLocation(to: To) {
       let path = typeof to === "string" ? parsePath(to) : to;
@@ -783,7 +783,7 @@ function getUrlBasedHistory(
 }
 
 export function createBrowserURLImpl(
-  windowImpl: Window,
+  windowImpl: Window | null | undefined,
   to: To,
   isAbsolute = false,
 ): URL {
