@@ -2074,6 +2074,11 @@ export type ScrollRestorationProps = ScriptsProps & {
  * }
  * ```
  *
+ * The saved scroll position is restored as soon as a navigation completes, so
+ * the page has to be tall enough to scroll there at that point. Data from route
+ * `loader`s is already rendered by then, but data that a component fetches after
+ * it renders (for example in a `useEffect`) is not, so the position is lost.
+ *
  * This component renders an inline `<script>` to prevent scroll flashing. The
  * `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
  * If not provided in Framework Mode, it will default to any
