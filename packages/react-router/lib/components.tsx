@@ -437,6 +437,11 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
+  // Snapshot of `fetcherData` for each `fetchers` Map handed to React, so a
+  // render before a transition commits doesn't see newer fetcher data
+  let fetcherDataByFetchers = React.useRef(
+    new WeakMap<RouterState["fetchers"], Map<string, any>>(),
+  );
   let handledErrors = React.useRef(
     new WeakSet<NonNullable<RouterState["errors"]>>(),
   );
@@ -469,12 +474,15 @@ export function RouterProvider({
         );
       }
 
+      let nextFetcherData = new Map(fetcherData.current);
       newState.fetchers.forEach((fetcher, key) => {
         if (fetcher.data !== undefined) {
-          fetcherData.current.set(key, fetcher.data);
+          nextFetcherData.set(key, fetcher.data);
         }
       });
-      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
+      deletedFetchers.forEach((key) => nextFetcherData.delete(key));
+      fetcherData.current = nextFetcherData;
+      fetcherDataByFetchers.current.set(newState.fetchers, nextFetcherData);
 
       warnOnce(
         flushSync === false || reactDomFlushSyncImpl != null,
@@ -757,7 +765,9 @@ export function RouterProvider({
   let fetchersContext = React.useMemo(
     () => ({
       fetchers: state.fetchers,
-      fetcherData: fetcherData.current,
+      fetcherData:
+        fetcherDataByFetchers.current.get(state.fetchers) ??
+        fetcherData.current,
     }),
     [state.fetchers],
   );
