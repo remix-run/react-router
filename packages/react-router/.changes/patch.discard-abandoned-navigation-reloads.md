@@ -1,0 +1,1 @@
+Discard fetcher action reload results for an abandoned navigation, including restarted POP navigations and revalidations, so stale data, errors, and redirects cannot replace the current page or interrupt its newer navigation
