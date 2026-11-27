@@ -199,6 +199,7 @@ export function StaticRouterProvider({
     initialized: state.initialized,
     renderFallback: state.renderFallback,
     restoreScrollPosition: state.restoreScrollPosition,
+    restoreElementScrollPositions: state.restoreElementScrollPositions,
     preventScrollReset: state.preventScrollReset,
     blockers: state.blockers,
   };
