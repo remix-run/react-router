@@ -1,0 +1,1 @@
+Fix a crash when a route module cache slot is empty (`Cannot read properties of undefined (reading 'links')`). `loadRouteModule` now imports the module instead of returning that slot, so prefetch and `route.lazy` both receive a real module.
