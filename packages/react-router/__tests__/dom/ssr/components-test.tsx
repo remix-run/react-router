@@ -14,6 +14,7 @@ import {
 import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import {
   FrameworkContext,
+  resetIsHydrated,
   usePrefetchBehavior,
 } from "../../../lib/dom/ssr/components";
 import {
@@ -532,6 +533,9 @@ describe("<Links />", () => {
 });
 
 describe("<Scripts />", () => {
+  beforeEach(() => {
+    resetIsHydrated();
+  });
   it("propagates nonce to modulepreload links", async () => {
     let staticHandlerContext = await createStaticHandler([
       { id: "root", path: "/" },
@@ -607,6 +611,78 @@ describe("<Scripts />", () => {
         'link[rel="modulepreload"][href="preload-b.js"]',
       ),
     ).toHaveAttribute("nonce", "test-nonce");
+  });
+
+  it("propagates modulePreloadFetchPriority to route modulepreload links", async () => {
+    let staticHandlerContext = await createStaticHandler([
+      { id: "root", path: "/" },
+    ]).query(new Request("http://localhost/"));
+
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context",
+    );
+
+    let context = mockEntryContext({
+      staticHandlerContext,
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+        },
+        entry: {
+          imports: ["preload-a.js", "preload-b.js"],
+          module: "entry.js",
+        },
+        url: "manifest.js",
+        version: "",
+      },
+      routeDiscovery: { mode: "initial", manifestPath: "/__manifest" },
+      routeModules: {
+        root: {
+          default: () => (
+            <>
+              <h1>Root</h1>
+              <Scripts modulePreloadFetchPriority="low" />
+            </>
+          ),
+        },
+      },
+    });
+
+    let { container } = render(
+      <ServerRouter context={context} url="http://localhost/" />,
+    );
+
+    // Entry and manifest preloads should NOT have fetchpriority lowered
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="manifest.js"]',
+      ),
+    ).not.toHaveAttribute("fetchpriority");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="entry.js"]',
+      ),
+    ).not.toHaveAttribute("fetchpriority");
+
+    // Route preloads should have fetchpriority="low"
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="preload-a.js"]',
+      ),
+    ).toHaveAttribute("fetchpriority", "low");
+    expect(
+      container.ownerDocument.querySelector(
+        'link[rel="modulepreload"][href="preload-b.js"]',
+      ),
+    ).toHaveAttribute("fetchpriority", "low");
   });
 
   it("propagates the ServerRouter nonce to default HydrateFallback scripts when a route has a clientLoader without a HydrateFallback", async () => {
