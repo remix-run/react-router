@@ -54,7 +54,7 @@ ReactDOM.createRoot(root).render(
 
 ## Framework
 
-Framework Mode wraps Data Mode with a Vite plugin to add the full React Router experience with:
+Framework Mode wraps Data Mode with a build tool integration to add the full React Router experience with:
 
 - type-safe `href`
 - type-safe Route Module API
