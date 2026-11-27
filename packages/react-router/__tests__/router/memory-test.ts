@@ -56,6 +56,44 @@ describe("a memory history", () => {
     expect(unencodedHref).toEqual("/#abc");
   });
 
+  describe("createURL", () => {
+    it("treats leading double slashes as part of the pathname", () => {
+      let history = createMemoryHistory();
+
+      let stringUrl = history.createURL("//about?tab=1#top");
+      expect(stringUrl.origin).toBe("http://localhost");
+      expect(stringUrl.pathname).toBe("//about");
+      expect(stringUrl.search).toBe("?tab=1");
+      expect(stringUrl.hash).toBe("#top");
+
+      let objectUrl = history.createURL({
+        pathname: "//about",
+        search: "?tab=1",
+        hash: "#top",
+      });
+      expect(objectUrl.origin).toBe("http://localhost");
+      expect(objectUrl.pathname).toBe("//about");
+      expect(objectUrl.search).toBe("?tab=1");
+      expect(objectUrl.hash).toBe("#top");
+    });
+
+    it("treats leading backslashes as path separators", () => {
+      let history = createMemoryHistory();
+      expect(history.createURL("\\\\about").pathname).toBe("//about");
+      expect(history.createURL("/\\about").pathname).toBe("//about");
+      expect(history.createURL("\\/about").pathname).toBe("//about");
+    });
+
+    it("keeps absolute URLs intact", () => {
+      let history = createMemoryHistory();
+      let url = history.createURL("https://example.com/about?tab=1#top");
+      expect(url.origin).toBe("https://example.com");
+      expect(url.pathname).toBe("/about");
+      expect(url.search).toBe("?tab=1");
+      expect(url.hash).toBe("#top");
+    });
+  });
+
   describe("the initial location", () => {
     it("has a key", () => {
       InitialLocationHasKey(history);
