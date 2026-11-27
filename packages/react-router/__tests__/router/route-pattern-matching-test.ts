@@ -209,6 +209,31 @@ describe("unstable route-pattern matching", () => {
     expect(matches?.[1].route.path).toBe("archive/:year?/:month?");
   });
 
+  it("matches leading optional segments", () => {
+    let router = createMemoryRouter(
+      [
+        { path: ":lang?", id: "home" },
+        { path: ":lang?/categories", id: "categories" },
+        { path: "*", id: "splat" },
+      ],
+      {
+        future: routePatternFuture,
+        initialEntries: ["/categories"],
+      },
+    );
+
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["categories"]);
+    expect(router.state.matches[0].params).toEqual({});
+
+    let matches = router.match("/en/categories");
+    expect(matches?.map((m) => m.route.id)).toEqual(["categories"]);
+    expect(matches?.[0].params).toEqual({ lang: "en" });
+
+    matches = router.match("/en");
+    expect(matches?.map((m) => m.route.id)).toEqual(["home"]);
+    expect(matches?.[0].params).toEqual({ lang: "en" });
+  });
+
   it("matches splat routes", () => {
     let router = createMemoryRouter(
       [
