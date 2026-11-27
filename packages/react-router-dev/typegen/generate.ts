@@ -365,6 +365,9 @@ function getRouteAnnotations({
 
         // ServerErrorBoundary
         export type ServerErrorBoundaryProps = Annotations["ServerErrorBoundaryProps"];
+
+        // Layout
+        export type LayoutProps = Annotations["LayoutProps"];
       }
     `;
   return { filename, content };
