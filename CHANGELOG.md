@@ -16,6 +16,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
+  - [v8.5.4](#v854)
   - [v8.5.3](#v853)
   - [v8.5.2](#v852)
   - [v8.5.1](#v851)
@@ -123,6 +124,27 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v7.0.0](#v700)
 
 </details>
+
+## v8.5.4
+
+Date: 2026-11-27
+
+### Patch Changes
+
+- `react-router` - Stop a navigation interrupted while awaiting `getContext`, so it no longer commits after the newer navigation or leaves `navigation.state` stuck at `"loading"` ([#15718](https://github.com/remix-run/react-router/pull/15718))
+
+- `react-router` - Preserve falsy `location.state` values in `createBrowserHistory()` and `createHashHistory()` ([#15821](https://github.com/remix-run/react-router/pull/15821))
+  - Use nullish coalescing when reading `history.state.usr` so falsy values (`false`, `0`, `""`, `NaN`) are not coerced to `null` across `<BrowserRouter>`, `<HashRouter>`, `createBrowserRouter()`, `createHashRouter()`, and `<HydratedRouter>`
+
+- `react-router` - Fix unmatched navigations crashing when multiple top-level routes have no root layout route ([#15650](https://github.com/remix-run/react-router/pull/15650))
+
+  Preserve the synthetic 404 match when synchronizing route elements so unmatched navigations and revalidations reach the default error boundary.
+
+- `@react-router/dev` - Don't watch files in the `reactRouter` Vite plugin's child compiler during `vite preview` and prerendering, which previously watched the build output and slowed down large prerenders ([#15539](https://github.com/remix-run/react-router/pull/15539))
+
+- `@react-router/express` - Fix request URL ports behind Express proxies by using the port from `X-Forwarded-Host` when Express trusts the connection. The proxy must include any non-default public port in `X-Forwarded-Host` so that the request URL matches the action origin. ([#15760](https://github.com/remix-run/react-router/pull/15760))
+
+**Full Changelog**: [`v8.5.3...v8.5.4`](https://github.com/remix-run/react-router/compare/react-router@8.5.3...react-router@8.5.4)
 
 ## v8.5.3
 

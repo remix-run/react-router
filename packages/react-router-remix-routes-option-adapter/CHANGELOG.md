@@ -1,5 +1,12 @@
 # `@react-router/remix-config-routes-adapter`
 
+## v8.5.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - [`@react-router/dev@8.5.4`](https://github.com/remix-run/react-router/releases/tag/@react-router/dev@8.5.4)
+
 ## v8.5.3
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # `@react-router/express`
 
+## v8.5.4
+
+### Patch Changes
+
+- Fix request URL ports behind Express proxies by using the port from `X-Forwarded-Host` when Express trusts the connection. The proxy must include any non-default public port in `X-Forwarded-Host` so that the request URL matches the action origin. ([#15760](https://github.com/remix-run/react-router/pull/15760))
+- Updated dependencies:
+  - [`react-router@8.5.4`](https://github.com/remix-run/react-router/releases/tag/react-router@8.5.4)
+  - [`@react-router/node@8.5.4`](https://github.com/remix-run/react-router/releases/tag/@react-router/node@8.5.4)
+
 ## v8.5.3
 
 ### Patch Changes
