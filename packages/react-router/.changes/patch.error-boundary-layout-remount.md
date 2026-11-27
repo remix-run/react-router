@@ -1,0 +1,1 @@
+Keep ancestor layouts mounted when a data error surfaces to an error boundary — for data errors, `RenderErrorBoundary` now renders the same `RenderedRoute` element tree as the happy path instead of swapping in a different element type, which previously remounted the entire subtree (including the framework-mode root `Layout`) and lost its state
