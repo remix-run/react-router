@@ -377,7 +377,21 @@ export async function handleClientVersionMismatch(
 
   // Reload the destination on navigations, or the current page on fetcher calls.
   try {
-    window.location.href = errorReloadPath;
+    let currentUrl = window.location.href;
+    let targetUrl = new URL(errorReloadPath, currentUrl).href;
+    let [targetDocument, fragment] = targetUrl.split("#", 2);
+    if (
+      fragment !== undefined &&
+      targetDocument === currentUrl.split("#", 1)[0]
+    ) {
+      // Assigning a fragment on the current URL keeps the old document alive.
+      if (targetUrl !== currentUrl) {
+        window.history.replaceState(window.history.state, "", targetUrl);
+      }
+      window.location.reload();
+    } else {
+      window.location.href = errorReloadPath;
+    }
     console.warn("Detected manifest version mismatch, reloading...");
   } catch {
     failReload();
