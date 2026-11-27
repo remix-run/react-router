@@ -558,6 +558,201 @@ test.each(["eager", "imperative"] as const)(
   },
 );
 
+test.each([false, true])(
+  "aborted navigation cannot reload during default backoff (custom handler: %s)",
+  async (customHandler) => {
+    jest.useFakeTimers();
+    let { runtime } = setup();
+    let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let error = jest.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockImplementation(async () => mismatch());
+    if (customHandler) {
+      runtime.register({
+        current: { onManifestMismatch: (event) => event.defaultBehavior() },
+      });
+    }
+    sessionStorage.setItem(
+      "react-router-manifest-recovery",
+      JSON.stringify({ attempts: 1, expiresAt: Date.now() + 30_000 }),
+    );
+    let controller = new AbortController();
+    try {
+      let discovery = runtime.discover(
+        ["/b"],
+        "navigation",
+        "/b",
+        controller.signal,
+      );
+      await jest.advanceTimersByTimeAsync(0);
+      controller.abort();
+      await expect(discovery).resolves.toEqual({ type: "aborted" });
+      await jest.advanceTimersByTimeAsync(6000);
+      expect(warn).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+    } finally {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      sessionStorage.removeItem("react-router-manifest-recovery");
+    }
+  },
+);
+
+test("completing the route tree during backoff supersedes document recovery", async () => {
+  jest.useFakeTimers();
+  let { runtime } = setup();
+  let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+  jest.spyOn(console, "error").mockImplementation(() => {});
+  fetchMock.mockImplementation(async () => mismatch());
+  sessionStorage.setItem(
+    "react-router-manifest-recovery",
+    JSON.stringify({ attempts: 1, expiresAt: Date.now() + 30_000 }),
+  );
+  let settled = jest.fn();
+  try {
+    runtime.discover(["/b"], "navigation", "/b").then(settled, settled);
+    await jest.advanceTimersByTimeAsync(0);
+    await runtime.loadAllRoutes();
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(settled.mock.calls).toEqual([[{ type: "success" }]]);
+    expect(warn).not.toHaveBeenCalled();
+  } finally {
+    window.dispatchEvent(
+      Object.assign(new Event("pageshow"), { persisted: true }),
+    );
+    await jest.advanceTimersByTimeAsync(0);
+    jest.clearAllTimers();
+    jest.useRealTimers();
+    sessionStorage.removeItem("react-router-manifest-recovery");
+  }
+});
+
+test.each([false, true])(
+  "an aborted compatible sibling cannot reload during backoff (custom handler: %s)",
+  async (customHandler) => {
+    jest.useFakeTimers();
+    let { runtime } = setup();
+    let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let error = jest.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(mismatch());
+    if (customHandler) {
+      runtime.register({
+        current: { onManifestMismatch: (event) => event.defaultBehavior() },
+      });
+    }
+    sessionStorage.setItem(
+      "react-router-manifest-recovery",
+      JSON.stringify({ attempts: 1, expiresAt: Date.now() + 30_000 }),
+    );
+    let first = new AbortController();
+    let sibling = new AbortController();
+    let firstSettled = jest.fn();
+    let siblingSettled = jest.fn();
+    try {
+      runtime
+        .discover(["/a"], "navigation", "/a", first.signal)
+        .then(firstSettled, firstSettled);
+      await jest.advanceTimersByTimeAsync(0);
+      first.abort();
+      runtime
+        .discover(["/b"], "navigation", "/b", sibling.signal)
+        .then(siblingSettled, siblingSettled);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      sibling.abort();
+      await jest.advanceTimersByTimeAsync(1000);
+
+      expect(warn).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+      expect(firstSettled.mock.calls).toEqual([[{ type: "aborted" }]]);
+      expect(siblingSettled.mock.calls).toEqual([[{ type: "aborted" }]]);
+      expect(runtime.discoveredPaths.size).toBe(0);
+    } finally {
+      window.dispatchEvent(
+        Object.assign(new Event("pageshow"), { persisted: true }),
+      );
+      await jest.advanceTimersByTimeAsync(0);
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      sessionStorage.removeItem("react-router-manifest-recovery");
+    }
+  },
+);
+
+test.each([false, true])(
+  "completing the route tree supersedes recovery with a compatible sibling (custom handler: %s)",
+  async (customHandler) => {
+    jest.useFakeTimers();
+    let { runtime } = setup();
+    let warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let error = jest.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce(mismatch());
+    if (customHandler) {
+      runtime.register({
+        current: { onManifestMismatch: (event) => event.defaultBehavior() },
+      });
+    }
+    sessionStorage.setItem(
+      "react-router-manifest-recovery",
+      JSON.stringify({ attempts: 1, expiresAt: Date.now() + 30_000 }),
+    );
+    let firstSettled = jest.fn();
+    let siblingSettled = jest.fn();
+    try {
+      runtime
+        .discover(["/a"], "navigation", "/a")
+        .then(firstSettled, firstSettled);
+      await jest.advanceTimersByTimeAsync(0);
+      runtime
+        .discover(["/b"], "navigation", "/b")
+        .then(siblingSettled, siblingSettled);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      await runtime.loadAllRoutes();
+      await jest.advanceTimersByTimeAsync(1000);
+
+      expect(warn).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+      expect(firstSettled.mock.calls).toEqual([[{ type: "success" }]]);
+      expect(siblingSettled.mock.calls).toEqual([[{ type: "success" }]]);
+    } finally {
+      window.dispatchEvent(
+        Object.assign(new Event("pageshow"), { persisted: true }),
+      );
+      await jest.advanceTimersByTimeAsync(0);
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      sessionStorage.removeItem("react-router-manifest-recovery");
+    }
+  },
+);
+
+test.each([false, true])(
+  "default recovery rejects after exhausting its budget (custom handler: %s)",
+  async (customHandler) => {
+    let { runtime } = setup();
+    fetchMock.mockImplementation(async () => mismatch());
+    if (customHandler) {
+      runtime.register({
+        current: { onManifestMismatch: (event) => event.defaultBehavior() },
+      });
+    }
+    sessionStorage.setItem(
+      "react-router-manifest-recovery",
+      JSON.stringify({ attempts: 3, expiresAt: Date.now() + 30_000 }),
+    );
+    try {
+      await expect(
+        runtime.discover(["/b"], "navigation", "/b"),
+      ).rejects.toThrow(
+        "Unable to discover routes due to manifest version mismatch.",
+      );
+      expect(runtime.state).toBe("partial");
+    } finally {
+      sessionStorage.removeItem("react-router-manifest-recovery");
+    }
+  },
+);
+
 test.each(["eager", "imperative"] as const)(
   "concurrent %s and navigation mismatches keep source-specific default recovery",
   async (source) => {
@@ -566,7 +761,10 @@ test.each(["eager", "imperative"] as const)(
     fetchMock.mockImplementation(async () => mismatch());
     // Make default navigation recovery reject via its reload-loop guard, instead
     // of starting a document navigation that jsdom cannot perform.
-    sessionStorage.setItem("react-router-manifest-version", "a");
+    sessionStorage.setItem(
+      "react-router-manifest-recovery",
+      JSON.stringify({ attempts: 3, expiresAt: Date.now() + 30_000 }),
+    );
     try {
       let [eager, navigation] = await Promise.allSettled([
         runtime.discover(["/a"], source, null),
@@ -584,7 +782,7 @@ test.each(["eager", "imperative"] as const)(
       });
       expect(warn).toHaveBeenCalledTimes(source === "eager" ? 1 : 0);
     } finally {
-      sessionStorage.removeItem("react-router-manifest-version");
+      sessionStorage.removeItem("react-router-manifest-recovery");
     }
   },
 );
