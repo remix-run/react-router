@@ -85,11 +85,19 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
     }
 
     let decoded = decodePath(pathname);
+    // `decodePath` leaves a pathname with a malformed percent-encoding (e.g.
+    // /users/%) undecoded so it still matches as literal text. route-pattern
+    // can't decode it and would match nothing, so escape its `%` characters.
+    let lookupPathname = hasMalformedPercentEncoding(pathname)
+      ? pathname.replace(/%/g, "%25")
+      : pathname;
     let url = new URL("http://reactrouter.local");
     // Every route pattern accepts a trailing slash. Include one for trie lookup
     // so a terminal splat can match an empty segment (e.g. /files for files/*).
     // Reconstruct matches below using the original pathname and params.
-    url.pathname = pathname.endsWith("/") ? pathname : `${pathname}/`;
+    url.pathname = lookupPathname.endsWith("/")
+      ? lookupPathname
+      : `${lookupPathname}/`;
     invariant(
       this.#state,
       "Route pattern routes must be initialized before matching.",
@@ -114,6 +122,19 @@ export class RoutePatternDataRouteMatcher implements DataRouteMatcher {
     }
 
     return null;
+  }
+}
+
+function hasMalformedPercentEncoding(pathname: string): boolean {
+  if (!pathname.includes("%")) {
+    return false;
+  }
+
+  try {
+    decodeURIComponent(pathname);
+    return false;
+  } catch {
+    return true;
   }
 }
 
