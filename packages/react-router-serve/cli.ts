@@ -227,7 +227,7 @@ async function run() {
       serverBuild.routeDiscovery.mode === "lazy"
         ? path.posix.join(
             serverBuild.basename ?? "/",
-            serverBuild.routeDiscovery.manifestPath,
+            serverBuild.routeDiscovery.manifestPath ?? "/__manifest",
           )
         : undefined;
 
