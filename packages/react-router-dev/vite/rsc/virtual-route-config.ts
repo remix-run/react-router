@@ -136,8 +136,14 @@ export default [`;
 }
 
 function createRouteId(file: string, appDirectory: string) {
+  // Route config files are relative to the app directory, but they may also be
+  // absolute. Match the IDs generated for non-RSC Framework Mode
+  // (i.e. `routes/home` for `app/routes/home.tsx`)
+  let relativeFile = path.isAbsolute(file)
+    ? path.relative(appDirectory, file)
+    : file;
   return path
-    .relative(appDirectory, file)
-    .replace(/\\+/, "/")
-    .slice(0, -path.extname(file).length);
+    .normalize(relativeFile)
+    .replace(/\\/g, "/")
+    .slice(0, -path.extname(relativeFile).length);
 }
