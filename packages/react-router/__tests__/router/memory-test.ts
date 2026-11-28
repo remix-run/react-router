@@ -56,6 +56,31 @@ describe("a memory history", () => {
     expect(unencodedHref).toEqual("/#abc");
   });
 
+  it("knows how to create URLs", () => {
+    const url = history.createURL("/the/path?the=query#the-hash");
+    expect(url.origin).toEqual("http://localhost");
+    expect(url.pathname).toEqual("/the/path");
+    expect(url.search).toEqual("?the=query");
+    expect(url.hash).toEqual("#the-hash");
+  });
+
+  it("treats leading double slashes as part of the pathname", () => {
+    const targets = ["//about?tab=1#top", "\\\\about", "/\\about", "\\/about"];
+    for (const to of targets) {
+      const url = history.createURL(to);
+      expect(url.origin).toEqual("http://localhost");
+      expect(url.pathname).toEqual("//about");
+      expect(url.search).toEqual(to === targets[0] ? "?tab=1" : "");
+      expect(url.hash).toEqual(to === targets[0] ? "#top" : "");
+    }
+  });
+
+  it("keeps the origin of absolute URLs", () => {
+    const url = history.createURL("https://example.com/about");
+    expect(url.origin).toEqual("https://example.com");
+    expect(url.pathname).toEqual("/about");
+  });
+
   describe("the initial location", () => {
     it("has a key", () => {
       InitialLocationHasKey(history);

@@ -75,6 +75,25 @@ describe("a memory router", () => {
     router.dispose();
   });
 
+  it("keeps leading double slashes in the request URL", async () => {
+    let loaderSpy = jest.fn();
+    let router = createRouter({
+      routes: [
+        {
+          path: "*",
+          loader: loaderSpy,
+        },
+      ],
+      history: createMemoryHistory({ initialEntries: ["//about?tab=1"] }),
+    });
+
+    await router.initialize();
+    expect(loaderSpy.mock.calls[0][0].request.url).toBe(
+      "http://localhost//about?tab=1",
+    );
+    router.dispose();
+  });
+
   it("can create URLs without window", async () => {
     let shouldRevalidateSpy = jest.fn();
 
